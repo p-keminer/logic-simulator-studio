@@ -7,6 +7,8 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ---
 
+# Status: Debugging VHDL/Verilog export and FSM Editor
+
 ## Features
 
 ### Circuit Editor
