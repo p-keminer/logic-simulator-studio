@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Claude Code tool directory
+.claude/
+
+# Dev scaffolding / build helper scripts (not part of the project source)
+write-p*.js
+_b64helper.js
+_build.js
+_runner.js
+
+# Windows filesystem artifacts
+nul

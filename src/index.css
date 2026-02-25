@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* ─── Signal animations ──────────────────────────────────────────────── */
+
+@keyframes wire-pulse {
+  0% {
+    opacity: 0.9;
+    stroke-width: 7;
+  }
+  50% {
+    opacity: 0.5;
+    stroke-width: 4;
+  }
+  100% {
+    opacity: 0;
+    stroke-width: 1;
+  }
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ─── SVG Overrides ────────────────────────────────────────────────────── */
+
+svg text {
+  user-select: none;
+  -webkit-user-select: none;
+}
