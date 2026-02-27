@@ -34,3 +34,6 @@ _runner.js
 
 # Windows filesystem artifacts
 nul
+
+# Security
+.env

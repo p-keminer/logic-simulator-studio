@@ -86,9 +86,12 @@ export function FsmStateTable() {
             {stateList.map(s =>
               inputCombos.map((combo, ci) => {
                 const { ns, mealyOut } = findNext(s.id, combo.vals);
+                // Display MSB-first to match the column header (outputNames[0] = MSB)
+                const toBitStr = (v: number) =>
+                  outputNames.map((_, i) => ((v >> (outputCount - 1 - i)) & 1)).join('');
                 const outStr = archType === 'moore'
-                  ? s.output.toString(2).padStart(outputCount, '0')
-                  : (mealyOut != null ? mealyOut.toString(2).padStart(outputCount, '0') : '—');
+                  ? toBitStr(s.output)
+                  : (mealyOut != null ? toBitStr(mealyOut) : '—');
                 return (
                   <tr key={`${s.id}-${ci}`}
                     style={ci===0 ? { borderTop:'1px solid #1e293b' } : {}}>

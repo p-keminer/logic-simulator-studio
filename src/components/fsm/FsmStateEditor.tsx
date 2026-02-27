@@ -14,7 +14,16 @@ export function FsmStateEditor({ state, onClose }: Props) {
 
   const save = () => {
     dispatch({ type:'UPDATE_STATE', payload:{ id:state.id, label:label.trim()||state.label, output, isInitial:initial } });
-    if (initial) dispatch({ type:'SET_INITIAL', payload:{ id:state.id } });
+    if (initial) {
+      // SET_INITIAL ensures exactly one initial state by clearing all others
+      dispatch({ type:'SET_INITIAL', payload:{ id:state.id } });
+    } else if (state.isInitial) {
+      // User unchecked "initial" for the current initial state → promote first other state
+      const others = Object.values(fsm.states).filter(s => s.id !== state.id);
+      if (others.length > 0 && !others.some(s => s.isInitial)) {
+        dispatch({ type:'SET_INITIAL', payload:{ id: others[0].id } });
+      }
+    }
     onClose();
   };
 

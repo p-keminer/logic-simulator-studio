@@ -7,7 +7,37 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ---
 
-# Status: Debugging VHDL/Verilog export and FSM Editor
+# Status: Still debugging VHDL/Verilog export and FSM Editor
+
+---
+
+# Changelog
+
+## Recent Fixes
+
+### FSM Editor
+- Grid now correctly moves with pan/zoom (via `patternTransform`)
+- Double-click on a transition opens the editor directly (no extra click required)
+- Moore output labels and State Table now display bits MSB-first (consistent with column headers)
+- Label background width adapts dynamically to label length
+- Unchecking "initial" on the only initial state now promotes another state automatically
+
+### Verilog / VHDL Export
+- Unsupported gate types (CLOCK, PUSH_BTN, ROM, RAM, Custom IC, …) are now excluded from export
+- Port declarations no longer produce trailing-comma syntax errors
+- Sequential gate outputs are now correctly declared as `reg` (Verilog) instead of `wire`
+- `CONST_HIGH` / `CONST_LOW` generate proper `assign` / signal statements
+- Improved primitive keyword mapping for multi-input gates
+- Multi-line gate blocks are correctly indented
+- Removed unnecessary `STD_LOGIC_UNSIGNED` import from VHDL output
+
+### Flip-Flop HDL Implementations
+- **SR-Latch**: now generates synthesisable cross-coupled NOR primitives
+- **D-FF**: expanded to proper multi-line `always` block (Verilog) / `process` (VHDL)
+- **D-FF with async reset**: full async-reset behavioral model added
+- **JK-FF**: complete behavioral model with J/K/toggle cases
+- **T-FF**: toggle behavioral model added
+- **D-Latch**: level-sensitive latch model added
 
 ## Features
 

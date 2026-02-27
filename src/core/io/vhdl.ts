@@ -5,6 +5,13 @@ function sanitize(id: string) {
   return id.replace(/[^a-zA-Z0-9_]/g, '_');
 }
 
+// Gate types that have no direct VHDL equivalent and should be excluded from logic
+const EXCLUDE_FROM_VHDL = new Set([
+  'CLOCK', 'PUSH_BTN', 'JUNCTION', 'TEXT_NOTE',
+  'OUTPUT_LED_7SEG', 'DOT_MATRIX', 'STEPPER_MOTOR', 'ADC8',
+  'ROM256', 'RAM256', 'CUSTOM_IC',
+]);
+
 function buildPortMap(circuit: Circuit) {
   const byPort: Record<string, string> = {};
   let swIdx = 0, wIdx = 0, ledIdx = 0;
@@ -30,7 +37,7 @@ function buildPortMap(circuit: Circuit) {
 
 const VHDL_PRIM: Record<string, string> = {
   AND: 'and', OR: 'or', NOT: 'not', NAND: 'nand', NOR: 'nor',
-  XOR: 'xor', XNOR: 'xnor', BUFFER: 'buf',
+  XOR: 'xor', XNOR: 'xnor',
   AND3: 'and', AND4: 'and', OR3: 'or', OR4: 'or',
   NAND3: 'nand', NAND4: 'nand', NOR3: 'nor', NOR4: 'nor', XOR3: 'xor',
 };
@@ -50,18 +57,32 @@ export function generateVHDL(circuit: Circuit): string {
       inputs.push(byPort[`${gate.id}:out`] ?? `sw_${gate.id}`);
     } else if (gate.typeId === 'OUTPUT_LED') {
       outputs.push(byPort[`${gate.id}:in`] ?? `led_${gate.id}`);
-    } else if (gate.typeId !== 'TEXT_NOTE') {
+    } else if (!EXCLUDE_FROM_VHDL.has(gate.typeId) && gateRegistry.has(gate.typeId)) {
       const def = gateRegistry.get(gate.typeId);
+
+      // Collect internal signal declarations
       for (const out of def.outputs) {
         const s = byPort[`${gate.id}:${out.id}`];
         if (s && !inputs.includes(s) && !outputs.includes(s)) signals.add(s);
       }
-      if (def.toVHDL) {
-        const line = def.toVHDL(gate, byPort);
-        (def.isSynchronous ? ffLogic : logic).push('  ' + line);
+
+      // Generate VHDL for this gate
+      let line: string;
+      if (gate.typeId === 'CONST_HIGH') {
+        const s = byPort[`${gate.id}:out`];
+        line = s ? `${s} <= '1'; -- CONST_HIGH` : '-- CONST_HIGH (unconnected)';
+      } else if (gate.typeId === 'CONST_LOW') {
+        const s = byPort[`${gate.id}:out`];
+        line = s ? `${s} <= '0'; -- CONST_LOW` : '-- CONST_LOW (unconnected)';
+      } else if (def.toVHDL) {
+        line = def.toVHDL(gate, byPort);
       } else {
-        (def.isSynchronous ? ffLogic : logic).push('  ' + defaultGateVHDL(gate, byPort));
+        line = defaultGateVHDL(gate, byPort);
       }
+
+      // Multi-line support: indent each line of the block
+      const indented = line.split('\n').map(l => '  ' + l).join('\n');
+      (def.isSynchronous ? ffLogic : logic).push(indented);
     }
   }
 
@@ -76,12 +97,12 @@ export function generateVHDL(circuit: Circuit): string {
     ``,
     `library IEEE;`,
     `use IEEE.STD_LOGIC_1164.ALL;`,
-    `use IEEE.STD_LOGIC_UNSIGNED.ALL;`,
     ``,
     `entity ${entityName} is`,
-    `  Port (`,
-    portLines.join(';\n'),
-    `  );`,
+    ...(portLines.length > 0
+      ? [`  Port (`, portLines.join(';\n'), `  );`]
+      : [`  -- no ports`]
+    ),
     `end ${entityName};`,
     ``,
     `architecture Behavioral of ${entityName} is`,
@@ -106,16 +127,18 @@ function defaultGateVHDL(gate: GateInstance, byPort: Record<string, string>): st
   const def = gateRegistry.get(gate.typeId);
   const prim = VHDL_PRIM[gate.typeId];
   const outs = def.outputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `w_${gate.id}_${p.id}`);
-  const ins = def.inputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `'0'`);
+  const ins  = def.inputs.map((p)  => byPort[`${gate.id}:${p.id}`] ?? `'0'`);
 
-  if (!prim || def.isSynchronous) {
-    return `-- ${gate.typeId} ${gate.id}: manual implementation required`;
+  if (!prim) {
+    return `-- ${gate.typeId} (${gate.id}): manual VHDL implementation required`;
   }
 
-  if (gate.typeId === 'NOT' || gate.typeId === 'BUFFER') {
-    return `${outs[0]} <= ${gate.typeId === 'NOT' ? 'not ' : ''}${ins[0]}; -- ${gate.id}`;
+  if (gate.typeId === 'NOT') {
+    return `${outs[0]} <= not ${ins[0]}; -- ${gate.id}`;
+  }
+  if (gate.typeId === 'BUFFER') {
+    return `${outs[0]} <= ${ins[0]}; -- BUFFER ${gate.id}`;
   }
 
-  const op = prim;
-  return `${outs[0]} <= ${ins.join(` ${op} `)}; -- ${gate.id}`;
+  return `${outs[0]} <= ${ins.join(` ${prim} `)}; -- ${gate.id}`;
 }

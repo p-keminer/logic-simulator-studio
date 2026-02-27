@@ -329,6 +329,14 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
     setSelectedIds(new Set());
   }, []);
 
+  // ── Übergang doppelklicken → direkt öffnen ───────────────────────────────────
+  const handleTransDoubleClick = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedTransId(id);
+    setSelectedIds(new Set());
+    setTransEditId(id);
+  }, []);
+
   // ── Render ───────────────────────────────────────────────────────────────────
   const stateList    = Object.values(fsm.states);
   const connectSrc   = connectFrom ? fsm.states[connectFrom] : null;
@@ -366,12 +374,14 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
               <path d="M0,1 L9,5 L0,9 Z" fill={fill} />
             </marker>
           ))}
-          <pattern id="fsm-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          {/* Grid pattern moves with pan/zoom via patternTransform */}
+          <pattern id="fsm-grid" width="40" height="40" patternUnits="userSpaceOnUse"
+            patternTransform={`translate(${pan.x.toFixed(1)},${pan.y.toFixed(1)}) scale(${zoom.toFixed(4)})`}>
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0f172a" strokeWidth="0.5" />
           </pattern>
         </defs>
 
-        {/* Hintergrund-Gitter (fest, außerhalb der Transformationsgruppe) */}
+        {/* Hintergrund-Gitter (skaliert und verschoben mit Pan/Zoom) */}
         <rect width={VB_W} height={VB_H} fill="url(#fsm-grid)" />
 
         {/* ── World-space-Gruppe (Zoom + Pan) ───────────────────────────── */}
@@ -388,6 +398,7 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
                 fsm={fsm}
                 isSelected={selectedTransId === t.id}
                 onClick={e => handleTransClick(t.id, e)}
+                onDoubleClick={e => handleTransDoubleClick(t.id, e)}
               />
             );
           })}
@@ -442,7 +453,7 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
         )}
         {selectedTransId && mode === 'select' && (
           <text x={12} y={VB_H - 12} fontSize={10} fill="#475569" fontFamily="monospace">
-            Klicken = Auswählen  |  Doppelklick = Bearbeiten  |  Entf = Löschen
+            Doppelklick = Bearbeiten  |  Entf = Löschen
           </text>
         )}
         {mode === 'select' && selectedIds.size === 0 && !selectedTransId && (

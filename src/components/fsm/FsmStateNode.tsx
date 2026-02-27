@@ -14,8 +14,9 @@ export function FsmStateNode({ state, isSelected, isConnectSource, archType, out
   const stroke      = isSelected ? '#60a5fa' : isConnectSource ? '#facc15' : '#64748b';
   const strokeW     = (isSelected || isConnectSource) ? 2.5 : 1.5;
   const fill        = isSelected ? '#1e3a5f' : '#0f172a';
+  // outputNames[0] = LSB (bit 0), outputNames[n-1] = MSB → display MSB-first (left to right)
   const outputLabel = archType === 'moore'
-    ? `/ ${outputNames.map((_, i) => ((state.output >> i) & 1)).reverse().join('')}`
+    ? `/ ${outputNames.map((_, i) => ((state.output >> (outputNames.length - 1 - i)) & 1)).join('')}`
     : '';
 
   // Self-loop badge – shown above the state when it is the connect source
