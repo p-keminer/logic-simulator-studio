@@ -13,7 +13,7 @@ const dualOutputs = [
 gateRegistry.register({
   typeId: 'AND_C',
   label: 'AND±',
-  category: 'logic_comp',
+  category: 'logic_comp_out',
   width: 90, height: 60,
   inputs: [
     { id: 'a', label: 'A', relativeX: 0, relativeY: 0.33 },
@@ -31,7 +31,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'OR_C',
   label: 'OR±',
-  category: 'logic_comp',
+  category: 'logic_comp_out',
   width: 90, height: 60,
   inputs: [
     { id: 'a', label: 'A', relativeX: 0, relativeY: 0.33 },
@@ -49,7 +49,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'XOR_C',
   label: 'XOR±',
-  category: 'logic_comp',
+  category: 'logic_comp_out',
   width: 90, height: 60,
   inputs: [
     { id: 'a', label: 'A', relativeX: 0, relativeY: 0.33 },
@@ -67,7 +67,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'NAND_C',
   label: 'NAND±',
-  category: 'logic_comp',
+  category: 'logic_comp_out',
   width: 90, height: 60,
   inputs: [
     { id: 'a', label: 'A', relativeX: 0, relativeY: 0.33 },
@@ -85,7 +85,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'NOR_C',
   label: 'NOR±',
-  category: 'logic_comp',
+  category: 'logic_comp_out',
   width: 90, height: 60,
   inputs: [
     { id: 'a', label: 'A', relativeX: 0, relativeY: 0.33 },

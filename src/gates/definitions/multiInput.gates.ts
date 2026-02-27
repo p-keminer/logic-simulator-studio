@@ -23,7 +23,7 @@ function makeInputs(n: number) {
 gateRegistry.register({
   typeId: 'AND3',
   label: 'AND3',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -36,7 +36,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'AND4',
   label: 'AND4',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -49,7 +49,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'NAND3',
   label: 'NAND3',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -61,7 +61,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'NAND4',
   label: 'NAND4',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -75,7 +75,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'OR3',
   label: 'OR3',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -87,7 +87,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'OR4',
   label: 'OR4',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -99,7 +99,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'NOR3',
   label: 'NOR3',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -111,7 +111,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'NOR4',
   label: 'NOR4',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
@@ -125,7 +125,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'XOR3',
   label: 'XOR3',
-  category: 'logic_mi',
+  category: 'logic_multi',
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],

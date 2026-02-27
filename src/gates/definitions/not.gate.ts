@@ -4,7 +4,7 @@ import { NotShape } from '../shapes/NotShape';
 gateRegistry.register({
   typeId: 'NOT',
   label: 'NOT',
-  category: 'logic',
+  category: 'logic_basic',
   width: 70,
   height: 50,
   inputs: [

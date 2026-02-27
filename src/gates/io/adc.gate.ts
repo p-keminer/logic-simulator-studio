@@ -5,7 +5,7 @@ import { ADCShape } from '../shapes/ADCShape';
 const adcDef: GateDefinition = {
   typeId: 'ADC8',
   label: 'ADC 8-bit',
-  category: 'io',
+  category: 'input',
   width: 140,
   height: 120,
   inputs: [],

@@ -15,7 +15,7 @@ const qqnOutputs = [
 gateRegistry.register({
   typeId: 'SR_LATCH',
   label: 'SR',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 70,
   inputs: [
     { id: 's', label: 'S', relativeX: 0, relativeY: 0.3 },
@@ -66,7 +66,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'D_FF',
   label: 'D-FF',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 80,
   inputs: [
     { id: 'd',   label: 'D',   relativeX: 0, relativeY: 0.3 },
@@ -116,7 +116,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'D_FF_R',
   label: 'D-FF/R',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 100,
   inputs: [
     { id: 'd',   label: 'D',   relativeX: 0, relativeY: 0.25 },
@@ -173,7 +173,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'JK_FF',
   label: 'JK-FF',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 90,
   inputs: [
     { id: 'j',   label: 'J',   relativeX: 0, relativeY: 0.25 },
@@ -237,7 +237,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'T_FF',
   label: 'T-FF',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 80,
   inputs: [
     { id: 't',   label: 'T',   relativeX: 0, relativeY: 0.3 },
@@ -287,7 +287,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'D_LATCH',
   label: 'D-Latch',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 80,
   inputs: [
     { id: 'd',  label: 'D', relativeX: 0, relativeY: 0.3 },

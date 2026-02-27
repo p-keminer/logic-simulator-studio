@@ -4,7 +4,7 @@ import { PushButtonShape } from '../shapes/PushButtonShape';
 gateRegistry.register({
   typeId: 'PUSH_BTN',
   label: 'Taster',
-  category: 'io',
+  category: 'input',
   width: 64,
   height: 64,
   inputs: [],

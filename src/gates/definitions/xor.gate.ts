@@ -4,7 +4,7 @@ import { XorShape } from '../shapes/XorShape';
 gateRegistry.register({
   typeId: 'XOR',
   label: 'XOR',
-  category: 'logic',
+  category: 'logic_basic',
   width: 80,
   height: 60,
   inputs: [

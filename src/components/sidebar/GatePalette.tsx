@@ -3,19 +3,40 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { GatePaletteItem } from './GatePaletteItem';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  logic:      'Logikgatter',
-  logic_mi:   'Mehrfach-Eingänge / MUX',
-  logic_comp: 'Kompl. / Vergleicher / ALU',
-  sequential: 'Flip-Flops & Latches',
-  register:   'Register',
-  io:         'Ein-/Ausgabe',
-  annotation: 'Anmerkungen',
-  ic74:       '74xx ICs',
-  custom:     'Benutzerdefiniert',
-  memory:     'Speicher (RAM / ROM)',
+  logic_basic:     'Grundgatter',
+  logic_multi:     'Mehrfacheingänge',
+  logic_special:   'Spezielle Treiber',
+  logic_comp_out:  'Komplementärausgänge',
+  mux:             'Multiplexer / Demultiplexer',
+  bus:             'Bus & Splitter',
+  arith:           'Vergleicher & Arithmetik',
+  flipflop:        'Latches & Flip-Flops',
+  register:        'Register',
+  memory:          'Speicher (RAM / ROM)',
+  input:           'Eingabe',
+  output:          'Ausgabe',
+  annotation:      'Anmerkungen',
+  ic74:            '74xx ICs',
+  custom:          'Benutzerdefiniert',
 };
 
-const ALL_CATEGORIES = ['logic','logic_mi','logic_comp','sequential','register','memory','io','annotation','ic74','custom'] as const;
+const ALL_CATEGORIES = [
+  'logic_basic',
+  'logic_multi',
+  'logic_special',
+  'logic_comp_out',
+  'mux',
+  'bus',
+  'arith',
+  'flipflop',
+  'register',
+  'memory',
+  'input',
+  'output',
+  'annotation',
+  'ic74',
+  'custom',
+] as const;
 
 export function GatePalette() {
   const allGates = gateRegistry.getAll();

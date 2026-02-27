@@ -4,7 +4,7 @@ import { NandShape } from '../shapes/NandShape';
 gateRegistry.register({
   typeId: 'NAND',
   label: 'NAND',
-  category: 'logic',
+  category: 'logic_basic',
   width: 80,
   height: 60,
   inputs: [

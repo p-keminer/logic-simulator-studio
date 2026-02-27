@@ -4,7 +4,7 @@ import { SchmittShape } from '../shapes/SchmittShape';
 gateRegistry.register({
   typeId: 'SCHMITT',
   label: 'Schmitt',
-  category: 'logic',
+  category: 'logic_special',
   width: 70, height: 50,
   inputs:  [{ id: 'a', label: 'A', relativeX: 0, relativeY: 0.5 }],
   outputs: [{ id: 'y', label: 'Y', relativeX: 1, relativeY: 0.5 }],

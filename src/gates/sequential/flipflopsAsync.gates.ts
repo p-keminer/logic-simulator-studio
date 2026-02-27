@@ -23,7 +23,7 @@ function asyncSR(s: number, r: number): number | null {
 gateRegistry.register({
   typeId: 'D_FF_ASSR',
   label: 'D-FF/SR',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 110,
   inputs: [
     { id: 'd',   label: 'D',   relativeX: 0, relativeY: 0.20 },
@@ -53,7 +53,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'JK_FF_ASSR',
   label: 'JK-FF/SR',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 130,
   inputs: [
     { id: 'j',   label: 'J',   relativeX: 0, relativeY: 0.15 },
@@ -89,7 +89,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'T_FF_ASSR',
   label: 'T-FF/SR',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 110,
   inputs: [
     { id: 't',   label: 'T',   relativeX: 0, relativeY: 0.20 },

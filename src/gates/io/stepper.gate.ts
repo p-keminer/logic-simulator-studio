@@ -20,7 +20,7 @@ const CCW_NEXT: Record<string, string> = {
 gateRegistry.register({
   typeId: 'STEPPER_VIZ',
   label: 'Stepper',
-  category: 'io',
+  category: 'output',
   width: 120,
   height: 120,
   inputs: [

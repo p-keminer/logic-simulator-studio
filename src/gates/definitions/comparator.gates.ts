@@ -5,7 +5,7 @@ import { FlipFlopShape } from '../shapes/FlipFlopShape';
 gateRegistry.register({
   typeId: 'CMP1',
   label: 'CMP',
-  category: 'logic_comp',
+  category: 'arith',
   width: 80, height: 80,
   inputs: [
     { id: 'a', label: 'A', relativeX: 0, relativeY: 0.3 },
@@ -29,7 +29,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'CMP4',
   label: 'CMP4',
-  category: 'logic_comp',
+  category: 'arith',
   width: 90, height: 200,
   inputs: [
     { id: 'a0',   label: 'A0',   relativeX: 0, relativeY: 0.07 },

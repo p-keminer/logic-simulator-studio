@@ -4,7 +4,7 @@ import { InputSwitchShape } from '../shapes/InputSwitchShape';
 gateRegistry.register({
   typeId: 'INPUT_SWITCH',
   label: 'Schalter',
-  category: 'io',
+  category: 'input',
   width: 80,
   height: 44,
   inputs: [],

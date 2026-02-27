@@ -6,7 +6,7 @@ import type { SignalValue } from '../../core/types';
 gateRegistry.register({
   typeId: 'SPLIT4',
   label: 'BUS-4',
-  category: 'logic_mi',
+  category: 'bus',
   width: 30, height: 80,
   inputs: [
     { id: 'a0', label: '0', relativeX: 0, relativeY: 0.12 },
@@ -34,7 +34,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'SPLIT8',
   label: 'BUS-8',
-  category: 'logic_mi',
+  category: 'bus',
   width: 30, height: 160,
   inputs: [
     { id: 'a0', label: '0', relativeX: 0, relativeY: 0.06 },

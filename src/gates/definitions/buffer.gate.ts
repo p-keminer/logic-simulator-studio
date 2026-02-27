@@ -4,7 +4,7 @@ import { BufferShape } from '../shapes/BufferShape';
 gateRegistry.register({
   typeId: 'BUFFER',
   label: 'Buffer',
-  category: 'logic',
+  category: 'logic_basic',
   width: 70,
   height: 50,
   inputs: [

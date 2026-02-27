@@ -6,7 +6,7 @@ import type { SignalValue } from '../../core/types';
 gateRegistry.register({
   typeId: 'MUX2',
   label: 'MUX2',
-  category: 'logic_mi',
+  category: 'mux',
   width: 80, height: 90,
   inputs: [
     { id: 'd0', label: 'D0', relativeX: 0, relativeY: 0.22 },
@@ -28,7 +28,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'MUX4',
   label: 'MUX4',
-  category: 'logic_mi',
+  category: 'mux',
   width: 80, height: 130,
   inputs: [
     { id: 'd0', label: 'D0', relativeX: 0, relativeY: 0.13 },
@@ -55,7 +55,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'DEMUX2',
   label: 'DEMUX2',
-  category: 'logic_mi',
+  category: 'mux',
   width: 80, height: 90,
   inputs: [
     { id: 'd', label: 'D', relativeX: 0, relativeY: 0.35 },
@@ -78,7 +78,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'DEMUX4',
   label: 'DEMUX4',
-  category: 'logic_mi',
+  category: 'mux',
   width: 80, height: 130,
   inputs: [
     { id: 'd',  label: 'D',  relativeX: 0, relativeY: 0.20 },

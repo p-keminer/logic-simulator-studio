@@ -4,7 +4,7 @@ import { OrShape } from '../shapes/OrShape';
 gateRegistry.register({
   typeId: 'OR',
   label: 'OR',
-  category: 'logic',
+  category: 'logic_basic',
   width: 80,
   height: 60,
   inputs: [

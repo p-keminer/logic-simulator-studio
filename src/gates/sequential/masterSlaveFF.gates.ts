@@ -15,7 +15,7 @@ const qqnOutputs = [
 gateRegistry.register({
   typeId: 'MS_JK_FF',
   label: 'MS-JK',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 90,
   inputs: [
     { id: 'j',   label: 'J',   relativeX: 0, relativeY: 0.25 },
@@ -57,7 +57,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'SR_FF_EDGE',
   label: 'SR-E',
-  category: 'sequential',
+  category: 'flipflop',
   width: 80, height: 90,
   inputs: [
     { id: 's',   label: 'S',   relativeX: 0, relativeY: 0.25 },

@@ -4,7 +4,7 @@ import { ConstShape } from '../shapes/ConstShape';
 gateRegistry.register({
   typeId: 'CONST_HIGH',
   label: 'VCC (1)',
-  category: 'io',
+  category: 'input',
   width: 50,
   height: 40,
   inputs: [],
@@ -18,7 +18,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: 'CONST_LOW',
   label: 'GND (0)',
-  category: 'io',
+  category: 'input',
   width: 50,
   height: 40,
   inputs: [],

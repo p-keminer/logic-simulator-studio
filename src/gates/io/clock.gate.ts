@@ -4,7 +4,7 @@ import { ClockShape } from '../shapes/ClockShape';
 gateRegistry.register({
   typeId: 'CLOCK',
   label: 'Taktgenerator',
-  category: 'io',
+  category: 'input',
   width: 80,
   height: 50,
   inputs: [],

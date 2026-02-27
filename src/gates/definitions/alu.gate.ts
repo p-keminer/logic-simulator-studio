@@ -10,7 +10,7 @@ import type { SignalValue } from '../../core/types';
 gateRegistry.register({
   typeId: 'ALU4',
   label: 'ALU',
-  category: 'logic_comp',
+  category: 'arith',
   width: 100, height: 260,
   inputs: [
     { id: 'a0',  label: 'A0',  relativeX: 0, relativeY: 0.05 },

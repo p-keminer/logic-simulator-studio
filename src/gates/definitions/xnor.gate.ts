@@ -4,7 +4,7 @@ import { XnorShape } from '../shapes/XnorShape';
 gateRegistry.register({
   typeId: 'XNOR',
   label: 'XNOR',
-  category: 'logic',
+  category: 'logic_basic',
   width: 80,
   height: 60,
   inputs: [

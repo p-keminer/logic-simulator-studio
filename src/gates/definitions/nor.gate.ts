@@ -4,7 +4,7 @@ import { NorShape } from '../shapes/NorShape';
 gateRegistry.register({
   typeId: 'NOR',
   label: 'NOR',
-  category: 'logic',
+  category: 'logic_basic',
   width: 80,
   height: 60,
   inputs: [

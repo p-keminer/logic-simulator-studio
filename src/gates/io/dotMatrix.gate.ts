@@ -4,7 +4,7 @@ import { DotMatrixShape } from '../shapes/DotMatrixShape';
 gateRegistry.register({
   typeId: 'DOTMATRIX8',
   label: '8×8 Dot Matrix',
-  category: 'io',
+  category: 'output',
   width: 180,
   height: 180,
   inputs: [

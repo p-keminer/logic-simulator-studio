@@ -5,7 +5,7 @@ import { FlipFlopShape } from '../shapes/FlipFlopShape';
 gateRegistry.register({
   typeId: 'TRIBUF',
   label: 'TRI',
-  category: 'logic',
+  category: 'logic_special',
   width: 80, height: 70,
   inputs: [
     { id: 'a',  label: 'A',   relativeX: 0, relativeY: 0.35 },

@@ -4,7 +4,7 @@ import { OutputLedShape } from '../shapes/OutputLedShape';
 gateRegistry.register({
   typeId: 'OUTPUT_LED',
   label: 'LED',
-  category: 'io',
+  category: 'output',
   width: 60,
   height: 60,
   inputs: [

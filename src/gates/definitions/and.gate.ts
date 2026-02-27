@@ -4,7 +4,7 @@ import { AndShape } from '../shapes/AndShape';
 gateRegistry.register({
   typeId: 'AND',
   label: 'AND',
-  category: 'logic',
+  category: 'logic_basic',
   width: 80,
   height: 60,
   inputs: [
