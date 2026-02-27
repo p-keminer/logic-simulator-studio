@@ -30,8 +30,6 @@ export interface SimBuffer {
   outputs: Record<string, Record<string, SignalValue>>;
   /** Interner Zustand von Gattern (Flip-Flop Q, Clock-Wert, etc.): gateId → state */
   customStates: Record<string, Record<string, unknown>>;
-  /** Ticks seit letztem Toggle pro CLOCK-Gatter */
-  clockCounters: Record<string, number>;
   /** Monotoner Tick-Zähler */
   tick: number;
 }
@@ -43,9 +41,8 @@ export interface SimBuffer {
  * Seed-Werte kommen von `gate.outputSignals` und `gate.customState`.
  */
 export function initBuffer(circuit: Circuit): SimBuffer {
-  const outputs:       Record<string, Record<string, SignalValue>> = {};
-  const customStates:  Record<string, Record<string, unknown>>     = {};
-  const clockCounters: Record<string, number>                      = {};
+  const outputs:      Record<string, Record<string, SignalValue>> = {};
+  const customStates: Record<string, Record<string, unknown>>     = {};
 
   for (const gate of Object.values(circuit.gates)) {
     outputs[gate.id] = {};
@@ -56,11 +53,10 @@ export function initBuffer(circuit: Circuit): SimBuffer {
       }
     } catch { /* unbekannter Typ → leere Ausgabe */ }
 
-    customStates[gate.id]  = { ...(gate.customState ?? {}) };
-    if (gate.typeId === 'CLOCK') clockCounters[gate.id] = 0;
+    customStates[gate.id] = { ...(gate.customState ?? {}) };
   }
 
-  return { outputs, customStates, clockCounters, tick: 0 };
+  return { outputs, customStates, tick: 0 };
 }
 
 /**
@@ -77,17 +73,15 @@ export function syncBuffer(
   circuit:       Circuit,
   isClockPaused: boolean,
 ): SimBuffer {
-  const outputs       = { ...buffer.outputs };
-  const customStates  = { ...buffer.customStates };
-  const clockCounters = { ...buffer.clockCounters };
-  const circuitIds    = new Set(Object.keys(circuit.gates));
+  const outputs      = { ...buffer.outputs };
+  const customStates = { ...buffer.customStates };
+  const circuitIds   = new Set(Object.keys(circuit.gates));
 
   // Gelöschte Gatter aus Buffer entfernen
   for (const id of Object.keys(outputs)) {
     if (!circuitIds.has(id)) {
       delete outputs[id];
       delete customStates[id];
-      delete clockCounters[id];
     }
   }
 
@@ -101,8 +95,7 @@ export function syncBuffer(
           outputs[gate.id][port.id] = (gate.outputSignals[port.id]?.value ?? 0) as SignalValue;
         }
       } catch { /* unbekannter Typ */ }
-      customStates[gate.id]  = { ...(gate.customState ?? {}) };
-      if (gate.typeId === 'CLOCK') clockCounters[gate.id] = 0;
+      customStates[gate.id] = { ...(gate.customState ?? {}) };
       continue;
     }
 
@@ -118,25 +111,25 @@ export function syncBuffer(
       continue;
     }
 
-    // CLOCK: Frequenz synchronisieren; Wert nur wenn Takt pausiert (manuelle Schritte)
+    // CLOCK: Frequenz synchronisieren; bei Pause den Wert übernehmen und tickCounter
+    // zurücksetzen, damit das Timing nach Resume korrekt bleibt.
     if (gate.typeId === 'CLOCK') {
       const freq = (gate.customState?.frequency as number) ?? 1;
       if (isClockPaused) {
-        // Wenn pausiert, übernimmt der Buffer den via GATE_CLOCK_TICK gesetzten Wert
         customStates[gate.id] = {
           ...customStates[gate.id],
-          value:     (gate.customState?.value as 0 | 1) ?? 0,
-          frequency: freq,
+          value:       (gate.customState?.value as 0 | 1) ?? 0,
+          frequency:   freq,
+          tickCounter: 0,
         };
       } else {
-        // Wenn laufend, verwaltet der Tick-Engine den Wert intern
         customStates[gate.id] = { ...customStates[gate.id], frequency: freq };
       }
     }
     // Alle anderen Gatter (Logik, Flip-Flops): Zustand vollständig vom Tick-Engine verwaltet
   }
 
-  return { outputs, customStates, clockCounters, tick: buffer.tick };
+  return { outputs, customStates, tick: buffer.tick };
 }
 
 // ── Wire-Map ──────────────────────────────────────────────────────────────────
@@ -173,13 +166,18 @@ export function runOneTick(
 ): SimBuffer {
   const nextOutputs:      Record<string, Record<string, SignalValue>> = {};
   const nextCustomStates: Record<string, Record<string, unknown>>     = {};
-  const nextClockCounters                                              = { ...buffer.clockCounters };
 
   for (const gate of Object.values(circuit.gates)) {
     let def;
     try { def = gateRegistry.get(gate.typeId); } catch { continue; }
 
-    const cs = buffer.customStates[gate.id] ?? gate.customState ?? {};
+    let cs: Record<string, unknown> = buffer.customStates[gate.id] ?? gate.customState ?? {};
+
+    // CLOCK-Gatter: Pausezustand injizieren, damit stateUpdate nicht vorantreibt
+    // wenn der Takt eingefroren ist (Settle-Phase oder explizite Pause).
+    if (gate.typeId === 'CLOCK') {
+      cs = { ...cs, _paused: isClockPaused };
+    }
 
     // ── Phase 1: Eingänge aus AKTUELLEM Buffer lesen ──────────────────────
     const inputValues: Record<string, SignalValue> = {};
@@ -197,42 +195,16 @@ export function runOneTick(
       nextOutputs[gate.id][portId] = val as SignalValue;
     }
 
-    // Zustand für zustandsbehaftete Gatter (Flip-Flops, Register, etc.)
+    // Zustand für zustandsbehaftete Gatter (Flip-Flops, Register, Clock, etc.)
     nextCustomStates[gate.id] = def.stateUpdate
-      ? def.stateUpdate(
-          inputValues,
-          outputValues as Record<string, SignalValue>,
-          cs,
-        )
+      ? def.stateUpdate(inputValues, outputValues as Record<string, SignalValue>, cs)
       : ({ ...cs } as Record<string, unknown>);
   }
 
-  // ── CLOCK-Zähler vorantreiben (nur wenn nicht pausiert) ───────────────────
-  if (!isClockPaused) {
-    for (const gate of Object.values(circuit.gates)) {
-      if (gate.typeId !== 'CLOCK') continue;
-
-      const freq           = Math.max(0.1, Math.min(100, (nextCustomStates[gate.id]?.frequency as number) ?? 1));
-      const toggleInterval = Math.max(1, Math.round(SIM_TICKS_PER_SEC / (freq * 2)));
-
-      nextClockCounters[gate.id] = (buffer.clockCounters[gate.id] ?? 0) + 1;
-
-      if (nextClockCounters[gate.id] >= toggleInterval) {
-        const cur = (nextCustomStates[gate.id]?.value as 0 | 1) ?? 0;
-        nextCustomStates[gate.id] = {
-          ...nextCustomStates[gate.id],
-          value: (cur ^ 1) as 0 | 1,
-        };
-        nextClockCounters[gate.id] = 0;
-      }
-    }
-  }
-
   return {
-    outputs:       nextOutputs,
-    customStates:  nextCustomStates,
-    clockCounters: nextClockCounters,
-    tick:          buffer.tick + 1,
+    outputs:      nextOutputs,
+    customStates: nextCustomStates,
+    tick:         buffer.tick + 1,
   };
 }
 
