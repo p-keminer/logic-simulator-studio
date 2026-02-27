@@ -46,12 +46,13 @@ export function generateVHDL(circuit: Circuit): string {
   const entityName = sanitize(circuit.name) || 'circuit';
   const byPort = buildPortMap(circuit);
 
-  const inputs: string[] = [];
+  const inputs: string[]  = [];
   const outputs: string[] = [];
   const signals = new Set<string>();
-  const logic: string[] = [];
+  const logic: string[]   = [];
   const ffLogic: string[] = [];
 
+  // ── Pass 1: collect entity ports and internal signals ─────────────────────
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'INPUT_SWITCH') {
       inputs.push(byPort[`${gate.id}:out`] ?? `sw_${gate.id}`);
@@ -59,35 +60,85 @@ export function generateVHDL(circuit: Circuit): string {
       outputs.push(byPort[`${gate.id}:in`] ?? `led_${gate.id}`);
     } else if (!EXCLUDE_FROM_VHDL.has(gate.typeId) && gateRegistry.has(gate.typeId)) {
       const def = gateRegistry.get(gate.typeId);
-
-      // Collect internal signal declarations
       for (const out of def.outputs) {
         const s = byPort[`${gate.id}:${out.id}`];
         if (s && !inputs.includes(s) && !outputs.includes(s)) signals.add(s);
       }
-
-      // Generate VHDL for this gate
-      let line: string;
-      if (gate.typeId === 'CONST_HIGH') {
-        const s = byPort[`${gate.id}:out`];
-        line = s ? `${s} <= '1'; -- CONST_HIGH` : '-- CONST_HIGH (unconnected)';
-      } else if (gate.typeId === 'CONST_LOW') {
-        const s = byPort[`${gate.id}:out`];
-        line = s ? `${s} <= '0'; -- CONST_LOW` : '-- CONST_LOW (unconnected)';
-      } else if (def.toVHDL) {
-        line = def.toVHDL(gate, byPort);
-      } else {
-        line = defaultGateVHDL(gate, byPort);
-      }
-
-      // Multi-line support: indent each line of the block
-      const indented = line.split('\n').map(l => '  ' + l).join('\n');
-      (def.isSynchronous ? ffLogic : logic).push(indented);
     }
   }
 
+  // ── Bug fix 1: undeclared signals used by logic gates (e.g. CLOCK → process)
+  // must appear as entity input ports.
+  for (const gate of Object.values(circuit.gates)) {
+    if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    for (const inp of def.inputs) {
+      const wName = byPort[`${gate.id}:${inp.id}`];
+      if (wName && !inputs.includes(wName) && !outputs.includes(wName) && !signals.has(wName)) {
+        inputs.push(wName);
+      }
+    }
+  }
+
+  // ── Bug fix 2: VHDL pre-2008 forbids reading 'out' ports.
+  // FF outputs that are entity out-ports need a readable internal signal (_q).
+  // The process uses the _q signal; a concurrent assignment drives the port.
+  const ffByPort = { ...byPort };      // modified port map used only for FF code generation
+  const qAssignments: string[] = [];   // e.g. "  w_1 <= w_1_q;"
+
+  for (const gate of Object.values(circuit.gates)) {
+    if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    if (!def.isSynchronous) continue;
+
+    for (const out of def.outputs) {
+      const s = byPort[`${gate.id}:${out.id}`];
+      if (!s || !outputs.includes(s)) continue; // only affected when the signal is an out port
+
+      const qName = `${s}_q`;
+      if (signals.has(qName)) continue; // already handled (e.g. two FFs driving same output)
+
+      // Redirect every byPort entry that resolves to this out-port signal to the _q variant
+      for (const k of Object.keys(ffByPort)) {
+        if (ffByPort[k] === s) ffByPort[k] = qName;
+      }
+      signals.add(qName);
+      qAssignments.push(`  ${s} <= ${qName};`);
+    }
+  }
+
+  // ── Pass 2: generate logic using the correct port map per gate type ────────
+  for (const gate of Object.values(circuit.gates)) {
+    if (
+      gate.typeId === 'INPUT_SWITCH' ||
+      gate.typeId === 'OUTPUT_LED'   ||
+      EXCLUDE_FROM_VHDL.has(gate.typeId) ||
+      !gateRegistry.has(gate.typeId)
+    ) continue;
+
+    const def     = gateRegistry.get(gate.typeId);
+    const portMap = def.isSynchronous ? ffByPort : byPort;
+
+    let line: string;
+    if (gate.typeId === 'CONST_HIGH') {
+      const s = portMap[`${gate.id}:out`];
+      line = s ? `${s} <= '1'; -- CONST_HIGH` : '-- CONST_HIGH (unconnected)';
+    } else if (gate.typeId === 'CONST_LOW') {
+      const s = portMap[`${gate.id}:out`];
+      line = s ? `${s} <= '0'; -- CONST_LOW` : '-- CONST_LOW (unconnected)';
+    } else if (def.toVHDL) {
+      line = def.toVHDL(gate, portMap);
+    } else {
+      line = defaultGateVHDL(gate, portMap);
+    }
+
+    const indented = line.split('\n').map(l => '  ' + l).join('\n');
+    (def.isSynchronous ? ffLogic : logic).push(indented);
+  }
+
+  // ── Assemble output ───────────────────────────────────────────────────────
   const portLines: string[] = [
-    ...inputs.map((n) => `    ${n} : in STD_LOGIC`),
+    ...inputs.map((n)  => `    ${n} : in STD_LOGIC`),
     ...outputs.map((n) => `    ${n} : out STD_LOGIC`),
   ];
 
@@ -112,6 +163,7 @@ export function generateVHDL(circuit: Circuit): string {
     `begin`,
     ``,
     ...(logic.length > 0 ? [...logic, ``] : []),
+    ...(qAssignments.length > 0 ? [...qAssignments, ``] : []),
     ...(ffLogic.length > 0 ? [
       `  -- Sequential / registered logic`,
       ...ffLogic,
