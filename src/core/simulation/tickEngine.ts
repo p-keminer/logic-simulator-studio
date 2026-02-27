@@ -111,7 +111,8 @@ export function syncBuffer(
       gate.typeId === 'INPUT_SWITCH' ||
       gate.typeId === 'PUSH_BTN'     ||
       gate.typeId === 'CONST_HIGH'   ||
-      gate.typeId === 'CONST_LOW'
+      gate.typeId === 'CONST_LOW'    ||
+      gate.typeId === 'ADC8'
     ) {
       customStates[gate.id] = { ...customStates[gate.id], ...(gate.customState ?? {}) };
       continue;

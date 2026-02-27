@@ -36,6 +36,35 @@ gateRegistry.register({
   description: '7-Segment mit BCD-Dekoder (Ziffer 0–9)',
 });
 
+// Dual 7-segment display: direct segment inputs a1–g1 (left digit) + a2–g2 (right digit)
+gateRegistry.register({
+  typeId: 'SEG7_DUAL',
+  label: '7-Seg Dual (a–g)',
+  category: 'output',
+  width: 148,
+  height: 120,
+  inputs: [
+    { id: 'a1', label: 'A1', relativeX: 0, relativeY: 0.07 },
+    { id: 'b1', label: 'B1', relativeX: 0, relativeY: 0.18 },
+    { id: 'c1', label: 'C1', relativeX: 0, relativeY: 0.28 },
+    { id: 'd1', label: 'D1', relativeX: 0, relativeY: 0.38 },
+    { id: 'e1', label: 'E1', relativeX: 0, relativeY: 0.48 },
+    { id: 'f1', label: 'F1', relativeX: 0, relativeY: 0.58 },
+    { id: 'g1', label: 'G1', relativeX: 0, relativeY: 0.68 },
+    { id: 'a2', label: 'A2', relativeX: 1, relativeY: 0.07 },
+    { id: 'b2', label: 'B2', relativeX: 1, relativeY: 0.18 },
+    { id: 'c2', label: 'C2', relativeX: 1, relativeY: 0.28 },
+    { id: 'd2', label: 'D2', relativeX: 1, relativeY: 0.38 },
+    { id: 'e2', label: 'E2', relativeX: 1, relativeY: 0.48 },
+    { id: 'f2', label: 'F2', relativeX: 1, relativeY: 0.58 },
+    { id: 'g2', label: 'G2', relativeX: 1, relativeY: 0.68 },
+  ],
+  outputs: [],
+  evaluate: () => ({}),
+  shapeComponent: SevenSegDualShape,
+  description: '2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)',
+});
+
 // Dual 7-segment display: tens digit (t3–t0) + ones digit (d3–d0) → shows 00–99
 gateRegistry.register({
   typeId: 'SEG7_BCD_2',

@@ -61,36 +61,47 @@ export function SevenSegDualShape({ gate, definition, isSelected, inputSignals, 
   const H = definition.height;
   const stroke = isSelected ? GATE_SELECTED_STROKE : GATE_STROKE;
 
-  // Tens digit
-  const tensSegs = bcdSegs(
-    inputSignals['t3']?.value ?? 0,
-    inputSignals['t2']?.value ?? 0,
-    inputSignals['t1']?.value ?? 0,
-    inputSignals['t0']?.value ?? 0,
-  );
-  // Ones digit
-  const onesSegs = bcdSegs(
-    inputSignals['d3']?.value ?? 0,
-    inputSignals['d2']?.value ?? 0,
-    inputSignals['d1']?.value ?? 0,
-    inputSignals['d0']?.value ?? 0,
-  );
+  let leftSegs: boolean[];
+  let rightSegs: boolean[];
+
+  if (definition.typeId === 'SEG7_DUAL') {
+    // Direct segment inputs: a1–g1 for left digit, a2–g2 for right digit
+    leftSegs = ['a1','b1','c1','d1','e1','f1','g1'].map(
+      id => (inputSignals[id]?.value ?? 0) === 1
+    );
+    rightSegs = ['a2','b2','c2','d2','e2','f2','g2'].map(
+      id => (inputSignals[id]?.value ?? 0) === 1
+    );
+  } else {
+    // BCD mode (SEG7_BCD_2)
+    leftSegs = bcdSegs(
+      inputSignals['t3']?.value ?? 0,
+      inputSignals['t2']?.value ?? 0,
+      inputSignals['t1']?.value ?? 0,
+      inputSignals['t0']?.value ?? 0,
+    );
+    rightSegs = bcdSegs(
+      inputSignals['d3']?.value ?? 0,
+      inputSignals['d2']?.value ?? 0,
+      inputSignals['d1']?.value ?? 0,
+      inputSignals['d0']?.value ?? 0,
+    );
+  }
 
   const oy  = 8;
   const sw  = 34;
   const sh  = 76;
-  const gap = 10; // gap between the two digits
-  const ox1 = 16;          // tens digit x-offset
-  const ox2 = ox1 + sw + gap + 12; // ones digit x-offset
+  const gap = 10;
+  const ox1 = 16;
+  const ox2 = ox1 + sw + gap + 12;
 
   return (
     <g onPointerDown={(e) => onPointerDown(e, gate.id)} style={{ cursor: 'grab' }}>
       <rect x={0} y={0} width={W} height={H} rx={6} fill="#0a1628" stroke={stroke} strokeWidth={isSelected ? 2 : 1.5} />
-      {/* Display background spanning both digits */}
       <rect x={ox1-6} y={oy-4} width={(ox2+sw+8)-(ox1-6)} height={sh+8} rx={4} fill="#060d1a" />
 
-      <SingleDisplay ox={ox1} oy={oy} sw={sw} sh={sh} segs={tensSegs} />
-      <SingleDisplay ox={ox2} oy={oy} sw={sw} sh={sh} segs={onesSegs} />
+      <SingleDisplay ox={ox1} oy={oy} sw={sw} sh={sh} segs={leftSegs} />
+      <SingleDisplay ox={ox2} oy={oy} sw={sw} sh={sh} segs={rightSegs} />
 
       <PortDots gate={gate} definition={definition} inputSignals={inputSignals} onPortClick={onPortClick} />
     </g>
