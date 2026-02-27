@@ -9,6 +9,16 @@ interface Props {
 
 type Lang = 'verilog' | 'vhdl';
 
+function fallbackCopy(text: string, onSuccess: () => void) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+  document.body.appendChild(el);
+  el.select();
+  try { document.execCommand('copy'); onSuccess(); } catch { /* ignore */ }
+  document.body.removeChild(el);
+}
+
 function download(content: string, filename: string, mime = 'text/plain') {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -35,10 +45,16 @@ export function ExportModal({ onClose }: Props) {
   }, [onClose]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(code).then(() => {
+    const onSuccess = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    };
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(onSuccess).catch(() => fallbackCopy(code, onSuccess));
+    } else {
+      fallbackCopy(code, onSuccess);
+    }
   };
 
   return (
