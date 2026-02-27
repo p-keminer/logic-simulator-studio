@@ -216,8 +216,8 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         dispatch({ type: 'SIMULATION_APPLY', payload: result });
       }
 
-      // ── Timing-Snapshots batch-pushen (immer, unabhängig von anyChanged) ──
-      if (newSnaps.length > 0) {
+      // ── Timing-Snapshots batch-pushen (nur wenn sich etwas verändert hat) ──
+      if (anyChanged && newSnaps.length > 0) {
         setTimingHistory(prev => {
           const next = [...prev, ...newSnaps];
           return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
