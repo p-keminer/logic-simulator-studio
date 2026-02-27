@@ -102,6 +102,23 @@ export function generateVerilog(circuit: Circuit): string {
     }
   }
 
+  // Bug fix 1: any signal consumed by logic but not yet declared (e.g. CLOCK → FF clock pin)
+  // must appear as an input port.
+  for (const gate of Object.values(circuit.gates)) {
+    if (EXCLUDE_FROM_VERILOG.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    for (const inp of def.inputs) {
+      const wName = byPort[`${gate.id}:${inp.id}`];
+      if (wName && !inputs.includes(wName) && !outputs.includes(wName) && !wires.has(wName) && !regs.has(wName)) {
+        inputs.push(wName);
+      }
+    }
+  }
+
+  // Bug fix 2: if a signal was added to regs before its OUTPUT_LED was processed,
+  // it now appears in both sets → remove the duplicate from regs.
+  for (const name of outputs) regs.delete(name);
+
   // Build port declarations without trailing comma issues
   const portParts: string[] = [];
   for (const name of inputs)  portParts.push(`  input  wire ${name}`);

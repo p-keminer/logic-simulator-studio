@@ -9,8 +9,20 @@ import {
 } from '../core/simulation/tickEngine';
 import type { SimBuffer, WireMap } from '../core/simulation/tickEngine';
 
-const MAX_HISTORY  = 200;
+const MAX_HISTORY  = 1000;
 const AUTOSAVE_KEY = 'lgsim_autosave';
+
+/**
+ * Einen Snapshot alle N Simulations-Ticks aufnehmen.
+ * Damit ist der x-Achsen-Abstand im Timing-Diagramm immer exakt N Ticks –
+ * unabhängig davon, wie viele Ticks ein RAF-Frame enthält.
+ * → Kein Jitter mehr in der Rechteckwelle.
+ *
+ * Bei SIM_TICKS_PER_SEC=500 und SAMPLE_EVERY=5:
+ *   100 Snapshots/s → MAX_HISTORY=1000 → 10 s gespeichert
+ *   Für 1 Hz-Clock: Toggle alle 250 Ticks = 50 Diagram-Steps → perfekte Rechteckwelle
+ */
+const SAMPLE_EVERY = 5;
 
 export function loadSavedCircuit(): Circuit | null {
   try {
@@ -52,13 +64,14 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   isClockPausedRef.current = isClockPaused;
 
   // ── Tick-Engine-Zustand ───────────────────────────────────────────────────
-  const simBufferRef    = useRef<SimBuffer | null>(null);
-  const wireMapRef      = useRef<WireMap>(new Map());
-  const needsSettleRef  = useRef(true);   // Initial settle beim ersten Frame
-  const rafRef          = useRef(0);
-  const lastTsRef       = useRef(0);      // Letzter RAF-Timestamp
-  const stepRef         = useRef(0);      // Timing-History-Schrittzähler
-  const isFirstRender   = useRef(true);
+  const simBufferRef     = useRef<SimBuffer | null>(null);
+  const wireMapRef       = useRef<WireMap>(new Map());
+  const needsSettleRef   = useRef(true);   // Initial settle beim ersten Frame
+  const rafRef           = useRef(0);
+  const lastTsRef        = useRef(0);      // Letzter RAF-Timestamp
+  const stepRef          = useRef(0);      // Timing-History-Schrittzähler
+  const sampleCounterRef = useRef(0);      // Zählt Ticks zwischen Snapshots
+  const isFirstRender    = useRef(true);
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
 
@@ -152,12 +165,36 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       }
 
       // ── Normale Ticks für diesen Frame ───────────────────────────────────
+      // Snapshots werden INNERHALB des Tick-Loops aufgenommen (alle SAMPLE_EVERY Ticks),
+      // damit der Abstand auf der x-Achse des Timing-Diagramms exakt N Simulations-Ticks
+      // beträgt – unabhängig von der variablen RAF-Framerate. Das eliminiert den Jitter
+      // in der Rechteckwelle vollständig.
       const ticksToRun = Math.max(1, Math.round(SIM_TICKS_PER_SEC * delta / 1000));
       const preTickBuf = buf; // Referenz für Geradzahliger-Oszillator-Fix
+      const newSnaps: TimingSnapshot[] = [];
+
       for (let i = 0; i < ticksToRun; i++) {
         const next = runOneTick(c, buf, wireMapRef.current, isClockPausedRef.current);
         if (!isStable(buf, next)) anyChanged = true;
         buf = next;
+
+        // Jeden SAMPLE_EVERY-ten Tick einen Snapshot aufnehmen
+        sampleCounterRef.current++;
+        if (sampleCounterRef.current >= SAMPLE_EVERY) {
+          sampleCounterRef.current = 0;
+          const step = ++stepRef.current;
+          const wireValues: Record<string, SignalValue> = {};
+          for (const wire of Object.values(c.wires)) {
+            wireValues[wire.id] = (buf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
+          }
+          const gateValues: Record<string, SignalValue> = {};
+          for (const [gId, ports] of Object.entries(buf.outputs)) {
+            for (const [pId, val] of Object.entries(ports)) {
+              gateValues[`${gId}:${pId}`] = val;
+            }
+          }
+          newSnaps.push({ step, wireValues, gateValues });
+        }
       }
 
       // ── Geradzahliger Oszillator-Fix ──────────────────────────────────────
@@ -177,22 +214,12 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       if (anyChanged) {
         const result = buildSimResult(buf, c);
         dispatch({ type: 'SIMULATION_APPLY', payload: result });
+      }
 
-        // Timing-History-Snapshot aufzeichnen
-        const step = ++stepRef.current;
-        const wireValues: Record<string, SignalValue> = {};
-        for (const wire of Object.values(c.wires)) {
-          wireValues[wire.id] = (buf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
-        }
-        const gateValues: Record<string, SignalValue> = {};
-        for (const [gId, ports] of Object.entries(buf.outputs)) {
-          for (const [pId, val] of Object.entries(ports)) {
-            gateValues[`${gId}:${pId}`] = val;
-          }
-        }
+      // ── Timing-Snapshots batch-pushen (immer, unabhängig von anyChanged) ──
+      if (newSnaps.length > 0) {
         setTimingHistory(prev => {
-          const snap: TimingSnapshot = { step, wireValues, gateValues };
-          const next = [...prev, snap];
+          const next = [...prev, ...newSnaps];
           return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
         });
       }
