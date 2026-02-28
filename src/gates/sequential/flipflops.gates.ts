@@ -310,22 +310,28 @@ gateRegistry.register({
   toVerilog: (g, w) => {
     const en = w[`${g.id}:en`] ?? "1'b0";
     const d  = w[`${g.id}:d`]  ?? "1'b0";
-    const q  = w[`${g.id}:q`]  ?? `w_${sanitize(g.id)}_q`;
+    const q  = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `always @(*) begin`,
-      `  if (${en}) ${q} <= ${d};`,
+      `  if (${en}) begin`,
+      `    ${q}  <= ${d};`,
+      `    ${qn} <= ~${d};`,
+      `  end`,
       `end // D-Latch ${g.id}`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
     const en = w[`${g.id}:en`] ?? "'0'";
     const d  = w[`${g.id}:d`]  ?? "'0'";
-    const q  = w[`${g.id}:q`]  ?? `w_${sanitize(g.id)}_q`;
+    const q  = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `process(${en}, ${d})`,
       `begin`,
       `  if ${en} = '1' then`,
-      `    ${q} <= ${d};`,
+      `    ${q}  <= ${d};`,
+      `    ${qn} <= not ${d};`,
       `  end if;`,
       `end process; -- D-Latch ${g.id}`,
     ].join('\n');
