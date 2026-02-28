@@ -25,6 +25,10 @@ class GateRegistry {
     return this.registry.has(typeId);
   }
 
+  unregister(typeId: GateTypeId): void {
+    this.registry.delete(typeId);
+  }
+
   getAll(): GateDefinition[] {
     return Array.from(this.registry.values());
   }

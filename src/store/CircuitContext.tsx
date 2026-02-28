@@ -28,7 +28,7 @@ const SAMPLE_EVERY = 25;
 
 export function loadSavedCircuit(): Circuit | null {
   try {
-    const s = localStorage.getItem(AUTOSAVE_KEY);
+    const s = sessionStorage.getItem(AUTOSAVE_KEY);
     return s ? (JSON.parse(s) as Circuit) : null;
   } catch { return null; }
 }
@@ -80,8 +80,19 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   // ── Auto-Save ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
-    try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(circuit)); } catch { /* quota */ }
+    try { sessionStorage.setItem(AUTOSAVE_KEY, JSON.stringify(circuit)); } catch { /* quota */ }
   }, [circuit]);
+
+  // ── beforeunload-Warnung wenn Canvas nicht leer ───────────────────────────
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (Object.keys(circuit.gates).length > 0) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [circuit.gates]);
 
   // ── Strukturelle Änderungen → Settle anfordern ────────────────────────────
   // (Gate hinzugefügt/entfernt, Draht gezogen/getrennt, Input-Schalter umgelegt)
