@@ -2,12 +2,14 @@
 // Signal type rule: continuous / gate-primitive driver → wire; procedural driver → reg.
 import type { Circuit, GateInstance } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
+import { sanitizeVerilog, makeUnique } from './identSanitize';
 
 interface WireMap {
   /** portKey "gateId:portId" → signal name */
   byPort: Record<string, string>;
 }
 
+/** Fast sanitize for internal gate IDs (always safe — never keywords, never start with digit). */
 function sanitize(id: string) {
   return id.replace(/[^a-zA-Z0-9_]/g, '_');
 }
@@ -47,11 +49,14 @@ function renderVerilogExtraRegs(
 
 function buildWireMap(circuit: Circuit): WireMap {
   const byPort: Record<string, string> = {};
+  // Track all assigned port names to guarantee uniqueness after sanitizing.
+  const usedPortNames = new Set<string>();
 
   let swIdx = 0;
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'INPUT_SWITCH') {
-      const name = gate.label ? sanitize(gate.label) : `sw_${swIdx++}`;
+      const raw  = gate.label ? sanitizeVerilog(gate.label, 'signal') : `sw_${swIdx++}`;
+      const name = makeUnique(raw, usedPortNames);
       byPort[`${gate.id}:out`] = name;
     }
   }
@@ -70,7 +75,8 @@ function buildWireMap(circuit: Circuit): WireMap {
     if (gate.typeId === 'OUTPUT_LED') {
       const inKey = `${gate.id}:in`;
       if (!byPort[inKey]) {
-        const name = gate.label ? sanitize(gate.label) : `led_${ledIdx++}`;
+        const raw  = gate.label ? sanitizeVerilog(gate.label, 'signal') : `led_${ledIdx++}`;
+        const name = makeUnique(raw, usedPortNames);
         byPort[inKey] = name;
       }
     }
@@ -82,11 +88,11 @@ function buildWireMap(circuit: Circuit): WireMap {
 /** Convert a port label to a safe Verilog identifier (strips leading /, sanitizes). */
 function portIdent(label: string | undefined, fallback: string): string {
   const raw = (label ?? fallback).replace(/^\/+/, 'n'); // /OE → nOE, /CS → nCS
-  return sanitize(raw).replace(/^_+/, '') || sanitize(fallback);
+  return sanitizeVerilog(raw, 'signal') || sanitizeVerilog(fallback, 'signal');
 }
 
 export function generateVerilog(circuit: Circuit): string {
-  const moduleName = sanitize(circuit.name) || 'circuit';
+  const moduleName = sanitizeVerilog(circuit.name || 'circuit', 'module');
   const { byPort } = buildWireMap(circuit);
 
   // ── Phase 0: Pre-populate byPort for unconnected gate input pins ──────────────

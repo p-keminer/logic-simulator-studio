@@ -7,6 +7,8 @@ import { HelpModal } from './HelpModal';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { TruthTableModal } from '../panels/TruthTableModal';
 import { CustomICModal } from '../panels/CustomICModal';
+import { RacePanel } from '../panels/RacePanel';
+import { SimulationMode } from '../../store/simulationMode';
 
 interface Props {
   showTiming: boolean;
@@ -15,13 +17,21 @@ interface Props {
 }
 
 export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
-  const { circuit, dispatch, isClockPaused, setIsClockPaused, stepOneClock } = useCircuitContext();
+  const {
+    circuit, dispatch,
+    isClockPaused, setIsClockPaused, stepOneClock,
+    simulationMode, setSimulationMode,
+    races,
+  } = useCircuitContext();
   const [error, setError] = useState<string | null>(null);
   const [circuitName, setCircuitName] = useState(circuit.name);
   const [showExport, setShowExport] = useState(false);
   const [showTruth, setShowTruth] = useState(false);
   const [showCustomIC, setShowCustomIC] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showRacePanel, setShowRacePanel] = useState(false);
+
+  const isGateDelay = simulationMode === SimulationMode.GATE_DELAY;
 
   const handleSave = () => downloadCircuit(circuit);
 
@@ -109,6 +119,21 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
           className="px-2.5 py-1 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded transition-colors font-mono">
           IC
         </button>
+        <button
+          onClick={() => setSimulationMode(isGateDelay ? SimulationMode.ZERO_DELAY : SimulationMode.GATE_DELAY)}
+          title={isGateDelay ? 'Gate-Delay aktiv: Klick → Zero-Delay' : 'Zero-Delay aktiv: Klick → Gate-Delay'}
+          className={"px-2.5 py-1 text-xs font-medium border rounded transition-colors font-mono " + (isGateDelay ? "text-orange-300 bg-orange-900/40 border-orange-700" : "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600")}>
+          {isGateDelay ? '⏱ GD' : '⚡ ZD'}
+        </button>
+        {isGateDelay && races.length > 0 && (
+          <button
+            onClick={() => setShowRacePanel(true)}
+            title={`${races.length} Race(s) erkannt — Klick für Details`}
+            className="px-2.5 py-1 text-xs font-medium text-red-300 bg-red-900/40 border border-red-700 rounded transition-colors font-mono animate-pulse"
+          >
+            ⚠ {races.length}
+          </button>
+        )}
         <div className="h-4 w-px bg-slate-700" />
         <button
           onClick={() => setIsClockPaused(!isClockPaused)}
@@ -140,6 +165,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
       {showTruth     && <TruthTableModal onClose={() => setShowTruth(false)} />}
       {showCustomIC  && <CustomICModal onClose={() => setShowCustomIC(false)} />}
       {showHelp      && <HelpModal onClose={() => setShowHelp(false)} />}
+      {showRacePanel && <RacePanel onClose={() => setShowRacePanel(false)} />}
     </header>
   );
 }

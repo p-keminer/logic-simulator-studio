@@ -1,6 +1,8 @@
 import type { Circuit, GateInstance } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
+import { sanitizeVHDL, makeUnique } from './identSanitize';
 
+/** Fast sanitize for internal gate IDs (always safe — never keywords, never start with digit). */
 function sanitize(id: string) {
   return id.replace(/[^a-zA-Z0-9_]/g, '_');
 }
@@ -49,16 +51,19 @@ function renderVHDLExtraSignals(
 /** Convert a port label to a safe VHDL identifier (strips leading /, sanitizes). */
 function portIdent(label: string | undefined, fallback: string): string {
   const raw = (label ?? fallback).replace(/^\/+/, 'n'); // /OE → nOE
-  return sanitize(raw).replace(/^_+/, '') || sanitize(fallback);
+  return sanitizeVHDL(raw, 'signal') || sanitizeVHDL(fallback, 'signal');
 }
 
 function buildPortMap(circuit: Circuit) {
   const byPort: Record<string, string> = {};
+  // Track assigned port names to guarantee uniqueness after sanitizing.
+  const usedPortNames = new Set<string>();
   let swIdx = 0, wIdx = 0, ledIdx = 0;
 
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'INPUT_SWITCH') {
-      byPort[`${gate.id}:out`] = gate.label ? sanitize(gate.label) : `sw_${swIdx++}`;
+      const raw  = gate.label ? sanitizeVHDL(gate.label, 'signal') : `sw_${swIdx++}`;
+      byPort[`${gate.id}:out`] = makeUnique(raw, usedPortNames);
     }
   }
   for (const wire of Object.values(circuit.wires)) {
@@ -69,7 +74,10 @@ function buildPortMap(circuit: Circuit) {
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'OUTPUT_LED') {
       const k = `${gate.id}:in`;
-      if (!byPort[k]) byPort[k] = gate.label ? sanitize(gate.label) : `led_${ledIdx++}`;
+      if (!byPort[k]) {
+        const raw  = gate.label ? sanitizeVHDL(gate.label, 'signal') : `led_${ledIdx++}`;
+        byPort[k] = makeUnique(raw, usedPortNames);
+      }
     }
   }
   return byPort;
@@ -83,7 +91,7 @@ const VHDL_PRIM: Record<string, string> = {
 };
 
 export function generateVHDL(circuit: Circuit): string {
-  const entityName = sanitize(circuit.name) || 'circuit';
+  const entityName = sanitizeVHDL(circuit.name || 'circuit', 'entity');
   const byPort = buildPortMap(circuit);
 
   // Phase 0: Pre-populate byPort for unconnected gate input pins.

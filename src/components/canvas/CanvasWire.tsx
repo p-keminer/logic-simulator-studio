@@ -12,16 +12,22 @@ interface Props {
 }
 
 export function CanvasWire({ wire, onContextMenu }: Props) {
-  const { circuit, dispatch } = useCircuitContext();
+  const { circuit, dispatch, raceNetIds } = useCircuitContext();
   const dragIndex = useRef<number | null>(null);
 
   const fromGate = circuit.gates[wire.from.gateId];
   const toGate   = circuit.gates[wire.to.gateId];
   if (!fromGate || !toGate) return null;
 
-  const pathData    = computeWirePath(wire, fromGate, toGate);
-  const isHigh      = wire.signal.value === 1;
-  const strokeColor = wire.color || (isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR);
+  const pathData = computeWirePath(wire, fromGate, toGate);
+  const isHigh   = wire.signal.value === 1;
+
+  // Race condition: override wire color with red if this wire's source net is affected.
+  const netId   = `${wire.from.gateId}:${wire.from.portId}`;
+  const isRace  = raceNetIds.has(netId);
+  const RACE_COLOR = '#ef4444';
+
+  const strokeColor = isRace ? RACE_COLOR : (wire.color || (isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR));
   const pulseKey    = `${wire.id}-${wire.signal.version}`;
 
   const handleClick = (e: React.MouseEvent) => {
@@ -78,10 +84,10 @@ export function CanvasWire({ wire, onContextMenu }: Props) {
       <path
         d={pathData}
         stroke={wire.isSelected ? '#60a5fa' : strokeColor}
-        strokeWidth={isHigh ? 2.5 : 1.5}
+        strokeWidth={isRace ? 2.5 : (isHigh ? 2.5 : 1.5)}
         fill="none"
         strokeLinecap="round"
-        filter={isHigh && !wire.color ? 'url(#glow-green)' : undefined}
+        filter={isHigh && !wire.color && !isRace ? 'url(#glow-green)' : undefined}
         style={{ transition: 'stroke 200ms ease, stroke-width 200ms ease', pointerEvents: 'none' }}
       />
 

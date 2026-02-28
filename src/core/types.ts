@@ -176,6 +176,26 @@ export interface SimulationResult {
   evaluationOrder: string[];
 }
 
+// ─── Race Condition ────────────────────────────────────────────────────────────
+
+/**
+ * Describes a detected race condition in GATE_DELAY simulation mode.
+ * A race occurs when two or more events target the same netId at the same time
+ * but originate from different source gates or carry conflicting values.
+ */
+export interface RaceInfo {
+  /** Unique identifier for this race event (time:netId) */
+  raceId: string;
+  /** Simulation time (tick) when the race occurs */
+  time: number;
+  /** Affected net: 'gateId:portId' of the output driving the net */
+  netId: string;
+  /** Gate IDs of all competing drivers */
+  gateIds: string[];
+  /** Signal values attempted by the competing drivers */
+  values: SignalValue[];
+}
+
 // ─── Timing Diagram ───────────────────────────────────────────────────────────
 
 export interface TimingSnapshot {
