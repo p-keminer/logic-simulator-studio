@@ -14,15 +14,17 @@ const AUTOSAVE_KEY = 'lgsim_autosave';
 
 /**
  * Einen Snapshot alle N Simulations-Ticks aufnehmen.
- * Damit ist der x-Achsen-Abstand im Timing-Diagramm immer exakt N Ticks –
- * unabhängig davon, wie viele Ticks ein RAF-Frame enthält.
- * → Kein Jitter mehr in der Rechteckwelle.
+ * Sampling ist tick-genau (dank sampleCounterRef), daher ist der zeitliche
+ * Abstand zwischen je zwei aufeinander folgenden Snapshots immer exakt
+ * SAMPLE_EVERY Ticks — unabhängig von der variablen RAF-Framerate.
+ * → Index-basierte X-Achse im TimingDiagram ist jitter-frei.
  *
- * Bei SIM_TICKS_PER_SEC=500 und SAMPLE_EVERY=5:
- *   100 Snapshots/s → MAX_HISTORY=1000 → 10 s gespeichert
- *   Für 1 Hz-Clock: Toggle alle 250 Ticks = 50 Diagram-Steps → perfekte Rechteckwelle
+ * Bei SIM_TICKS_PER_SEC=500 und SAMPLE_EVERY=25:
+ *   20 Snapshots/s → MAX_HISTORY=1000 → 50 s gespeichert
+ *   Für 1 Hz-Clock: Toggle alle 250 Ticks = 10 Diagram-Steps pro Halbperiode
+ *   → Bei STEP_W=3px: 30px/Halbwelle, 60px/Periode → ~11 Zyklen auf 700px ✓
  */
-const SAMPLE_EVERY = 5;
+const SAMPLE_EVERY = 25;
 
 export function loadSavedCircuit(): Circuit | null {
   try {
@@ -156,7 +158,8 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       let anyChanged = false;
 
       // ── Settle-Phase: Schaltung nach Änderungen stabilisieren ────────────
-      // Clocks sind dabei eingefroren → rein kombinatorische Propagation
+      // Clocks sind dabei eingefroren → rein kombinatorische Propagation.
+      // Läuft auch während der Pause, damit Schalter-Änderungen sofort propagieren.
       if (needsSettleRef.current) {
         needsSettleRef.current = false;
         const result = runUntilStable(c, buf, wireMapRef.current);
@@ -164,29 +167,39 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         buf = result.buffer;
       }
 
+      // ── Pause-Guard ───────────────────────────────────────────────────────
+      // Wenn der Takt pausiert ist, werden KEINE normalen Ticks ausgeführt und
+      // KEINE Snapshots ins Timing-Diagramm geschrieben. Das Diagramm friert
+      // sofort ein. Die Schaltungsanzeige (Canvas) wird aber noch aktualisiert,
+      // falls die Settle-Phase etwas geändert hat (z. B. Schalter umgelegt).
+      if (isClockPausedRef.current) {
+        simBufferRef.current = buf;
+        if (anyChanged) {
+          const result = buildSimResult(buf, c);
+          dispatch({ type: 'SIMULATION_APPLY', payload: result });
+        }
+        rafRef.current = requestAnimationFrame(frame);
+        return;
+      }
+
       // ── Normale Ticks für diesen Frame ───────────────────────────────────
-      // Snapshots werden INNERHALB des Tick-Loops aufgenommen (alle SAMPLE_EVERY Ticks),
-      // damit der Abstand auf der x-Achse des Timing-Diagramms exakt N Simulations-Ticks
-      // beträgt – unabhängig von der variablen RAF-Framerate. Das eliminiert den Jitter
-      // in der Rechteckwelle vollständig.
+      // Snapshots werden alle SAMPLE_EVERY Ticks aufgenommen. Da dieser Zähler
+      // tick-genau ist, liegt zwischen je zwei Snapshots immer exakt SAMPLE_EVERY
+      // Ticks — die Index-basierte X-Achse im TimingDiagram ist dadurch jitter-frei.
       const ticksToRun = Math.max(1, Math.round(SIM_TICKS_PER_SEC * delta / 1000));
       const preTickBuf = buf; // Referenz für Geradzahliger-Oszillator-Fix
       const newSnaps: TimingSnapshot[] = [];
 
       for (let i = 0; i < ticksToRun; i++) {
-        const next = runOneTick(c, buf, wireMapRef.current, isClockPausedRef.current);
+        const next = runOneTick(c, buf, wireMapRef.current, false);
         if (!isStable(buf, next)) anyChanged = true;
         buf = next;
 
-        // Jeden SAMPLE_EVERY-ten Tick einen Snapshot aufnehmen.
-        // Snapshots werden IMMER aufgenommen – unabhängig davon, ob sich Ausgaben
-        // geändert haben. Nur so sind zwischen Taktflanken (wenn Ausgaben stabil
-        // bleiben) korrekte Zeitabstände im Diagramm sichtbar.
         sampleCounterRef.current++;
         if (sampleCounterRef.current >= SAMPLE_EVERY) {
           sampleCounterRef.current = 0;
           const step = ++stepRef.current;
-          const tick = buf.tick; // Absoluter Tick-Zähler für tick-genaue X-Achse
+          const tick = buf.tick;
           const wireValues: Record<string, SignalValue> = {};
           for (const wire of Object.values(c.wires)) {
             wireValues[wire.id] = (buf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
@@ -205,9 +218,8 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       // Für Rückkopplungsschleifen mit geradzahliger Periode (NOT-NOT-Ring,
       // SR-Latch metastabil): Nach exakt ticksToRun Ticks landen wir am gleichen
       // Ausgangszustand. Ein Extra-Tick bricht die Symmetrie.
-      // Nur ausführen wenn anyChanged (Ausgaben schwingen) UND wir zurück am Start sind.
       if (anyChanged && isStable(preTickBuf, buf)) {
-        buf = runOneTick(c, buf, wireMapRef.current, isClockPausedRef.current);
+        buf = runOneTick(c, buf, wireMapRef.current, false);
       }
 
       simBufferRef.current = buf;
@@ -218,9 +230,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         dispatch({ type: 'SIMULATION_APPLY', payload: result });
       }
 
-      // ── Timing-Snapshots IMMER pushen (nicht nur bei anyChanged) ──────────
-      // Zwischen Taktflanken sind Ausgaben stabil → anyChanged=false, aber der
-      // Zeitverlauf muss trotzdem im Diagramm sichtbar sein (horizontale Linie).
+      // ── Timing-Snapshots pushen ────────────────────────────────────────────
       if (newSnaps.length > 0) {
         setTimingHistory(prev => {
           const next = [...prev, ...newSnaps];
