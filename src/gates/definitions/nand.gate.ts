@@ -15,7 +15,6 @@ gateRegistry.register({
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
   evaluate: ({ a, b }) => ({ out: ((a & b) === 1 ? 0 : 1) }),
-  toVerilog: (gate) => `nand g_${gate.id}(${gate.id}_out, ${gate.id}_a, ${gate.id}_b);`,
   shapeComponent: NandShape,
   description: 'Negiertes AND – LOW nur wenn alle Eingänge HIGH',
 });

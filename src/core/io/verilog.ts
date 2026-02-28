@@ -115,9 +115,10 @@ export function generateVerilog(circuit: Circuit): string {
     }
   }
 
-  // Bug fix 2: if a signal was added to regs before its OUTPUT_LED was processed,
-  // it now appears in both sets → remove the duplicate from regs.
-  for (const name of outputs) regs.delete(name);
+  // Bug fix 2: due to non-deterministic gate iteration order, a signal may have
+  // been added to regs or wires before its OUTPUT_LED was processed.
+  // Remove any duplicate declarations — the port list already covers these signals.
+  for (const name of outputs) { regs.delete(name); wires.delete(name); }
 
   // Build port declarations without trailing comma issues
   const portParts: string[] = [];
@@ -151,7 +152,7 @@ export function generateVerilog(circuit: Circuit): string {
 function defaultGateVerilog(gate: GateInstance, byPort: Record<string, string>): string {
   const def  = gateRegistry.get(gate.typeId);
   const ins  = def.inputs.map((p)  => byPort[`${gate.id}:${p.id}`] ?? `1'b0`);
-  const outs = def.outputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `w_${gate.id}_${p.id}`);
+  const outs = def.outputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `w_${sanitize(gate.id)}_${p.id}`);
 
   // Map type to Verilog primitive keyword
   const PRIM_MAP: Record<string, string> = {

@@ -14,7 +14,6 @@ gateRegistry.register({
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
   evaluate: ({ a }) => ({ out: a }),
-  toVerilog: (gate) => `buf g_${gate.id}(${gate.id}_out, ${gate.id}_a);`,
   shapeComponent: BufferShape,
   description: 'Leitet Signal weiter (kein Einfluss auf Logikpegel)',
 });

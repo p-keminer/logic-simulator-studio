@@ -130,7 +130,10 @@ export function generateVHDL(circuit: Circuit): string {
     ) continue;
 
     const def     = gateRegistry.get(gate.typeId);
-    const portMap = def.isSynchronous ? ffByPort : byPort;
+    // ffByPort leitet FF-Ausgangs-Out-Ports auf Shadow-Signale (_q) um.
+    // Gilt für ALLE Gates: auch kombinatorische Gates (z.B. XOR) dürfen
+    // keinen VHDL-Out-Port als Eingang lesen — sie müssen das Shadow-Signal nutzen.
+    const portMap = ffByPort;
 
     let line: string;
     if (gate.typeId === 'CONST_HIGH') {
@@ -191,7 +194,7 @@ export function generateVHDL(circuit: Circuit): string {
 function defaultGateVHDL(gate: GateInstance, byPort: Record<string, string>): string {
   const def = gateRegistry.get(gate.typeId);
   const prim = VHDL_PRIM[gate.typeId];
-  const outs = def.outputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `w_${gate.id}_${p.id}`);
+  const outs = def.outputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `w_${sanitize(gate.id)}_${p.id}`);
   const ins  = def.inputs.map((p)  => byPort[`${gate.id}:${p.id}`] ?? `'0'`);
 
   if (!prim) {

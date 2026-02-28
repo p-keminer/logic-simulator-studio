@@ -28,7 +28,6 @@ gateRegistry.register({
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
   evaluate: ({ a, b, c }) => ({ out: ((a & b & c) as 0 | 1) }),
-  toVerilog: (g, w) => `and g_${g.id}(${w[g.id + ':out'] ?? 'w_' + g.id}, ${w[g.id + ':a'] ?? '0'}, ${w[g.id + ':b'] ?? '0'}, ${w[g.id + ':c'] ?? '0'});`,
   shapeComponent: And3Shape,
   description: '3-Eingang AND',
 });
@@ -41,7 +40,6 @@ gateRegistry.register({
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
   evaluate: ({ a, b, c, d }) => ({ out: ((a & b & c & d) as 0 | 1) }),
-  toVerilog: (g, w) => `and g_${g.id}(${w[g.id + ':out'] ?? 'w_' + g.id}, ${w[g.id + ':a'] ?? '0'}, ${w[g.id + ':b'] ?? '0'}, ${w[g.id + ':c'] ?? '0'}, ${w[g.id + ':d'] ?? '0'});`,
   shapeComponent: And4Shape,
   description: '4-Eingang AND',
 });

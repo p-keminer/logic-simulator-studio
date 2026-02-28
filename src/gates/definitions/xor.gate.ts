@@ -15,7 +15,6 @@ gateRegistry.register({
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
   evaluate: ({ a, b }) => ({ out: ((a ^ b) as 0 | 1) }),
-  toVerilog: (gate) => `xor g_${gate.id}(${gate.id}_out, ${gate.id}_a, ${gate.id}_b);`,
   shapeComponent: XorShape,
   description: 'HIGH wenn Eingänge verschieden',
 });

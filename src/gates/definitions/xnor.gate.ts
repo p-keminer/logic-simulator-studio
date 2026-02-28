@@ -15,7 +15,6 @@ gateRegistry.register({
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
   evaluate: ({ a, b }) => ({ out: ((a ^ b) === 0 ? 1 : 0) }),
-  toVerilog: (gate) => `xnor g_${gate.id}(${gate.id}_out, ${gate.id}_a, ${gate.id}_b);`,
   shapeComponent: XnorShape,
   description: 'HIGH wenn Eingänge gleich',
 });

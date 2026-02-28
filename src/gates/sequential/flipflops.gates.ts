@@ -5,6 +5,9 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
+/** Ersetzt alle in HDL-Bezeichnern ungültigen Zeichen durch Unterstriche. */
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 const qqnOutputs = [
   { id: 'q',   label: 'Q',  relativeX: 1, relativeY: 0.35 },
   { id: 'q_n', label: 'Q̄', relativeX: 1, relativeY: 0.65 },
@@ -35,23 +38,25 @@ gateRegistry.register({
     return { q: outputs.q };
   },
   toVerilog: (g, w) => {
-    const s  = w[`${g.id}:s`]  ?? "1'b0";
-    const r  = w[`${g.id}:r`]  ?? "1'b0";
-    const q  = w[`${g.id}:q`]  ?? `w_${g.id}_q`;
-    const qn = w[`${g.id}:q_n`] ?? `w_${g.id}_qn`;
+    const sid = sanitize(g.id);
+    const s  = w[`${g.id}:s`]   ?? "1'b0";
+    const r  = w[`${g.id}:r`]   ?? "1'b0";
+    const q  = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn = w[`${g.id}:q_n`] ?? `w_${sid}_qn`;
     return [
-      `// SR-Latch ${g.id} (cross-coupled NOR)`,
-      `nor g_${g.id}_q (${q},  ${r}, ${qn});`,
-      `nor g_${g.id}_qn(${qn}, ${s}, ${q});`,
+      `// SR-Latch ${sid} (cross-coupled NOR)`,
+      `nor g_${sid}_q (${q},  ${r}, ${qn});`,
+      `nor g_${sid}_qn(${qn}, ${s}, ${q});`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
     const s  = w[`${g.id}:s`]   ?? "'0'";
     const r  = w[`${g.id}:r`]   ?? "'0'";
-    const q  = w[`${g.id}:q`]   ?? `w_${g.id}_q`;
-    const qn = w[`${g.id}:q_n`] ?? `w_${g.id}_qn`;
+    const q  = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn = w[`${g.id}:q_n`] ?? `w_${sid}_qn`;
     return [
-      `-- SR-Latch ${g.id} (cross-coupled NOR)`,
+      `-- SR-Latch ${sid} (cross-coupled NOR)`,
       `${q}  <= ${qn} nor ${r};`,
       `${qn} <= ${q}  nor ${s};`,
     ].join('\n');
@@ -86,7 +91,7 @@ gateRegistry.register({
   toVerilog: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const d   = w[`${g.id}:d`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `always @(posedge ${clk}) begin`,
       `  ${q} <= ${d};`,
@@ -96,7 +101,7 @@ gateRegistry.register({
   toVHDL: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const d   = w[`${g.id}:d`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `process(${clk})`,
       `begin`,
@@ -139,7 +144,7 @@ gateRegistry.register({
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const rst = w[`${g.id}:rst`] ?? "1'b0";
     const d   = w[`${g.id}:d`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `always @(posedge ${clk} or posedge ${rst}) begin`,
       `  if (${rst}) ${q} <= 1'b0;`,
@@ -151,7 +156,7 @@ gateRegistry.register({
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const rst = w[`${g.id}:rst`] ?? "'0'";
     const d   = w[`${g.id}:d`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `process(${clk}, ${rst})`,
       `begin`,
@@ -201,7 +206,7 @@ gateRegistry.register({
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "1'b0";
     const k   = w[`${g.id}:k`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `always @(posedge ${clk}) begin`,
       `  if      (${j} && !${k}) ${q} <= 1'b1;`,
@@ -214,7 +219,7 @@ gateRegistry.register({
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "'0'";
     const k   = w[`${g.id}:k`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `process(${clk})`,
       `begin`,
@@ -257,7 +262,7 @@ gateRegistry.register({
   toVerilog: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `always @(posedge ${clk}) begin`,
       `  if (${t}) ${q} <= ~${q};`,
@@ -267,7 +272,7 @@ gateRegistry.register({
   toVHDL: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${g.id}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
     return [
       `process(${clk})`,
       `begin`,

@@ -14,7 +14,6 @@ gateRegistry.register({
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
   evaluate: ({ a }) => ({ out: (a === 1 ? 0 : 1) }),
-  toVerilog: (gate) => `not g_${gate.id}(${gate.id}_out, ${gate.id}_a);`,
   shapeComponent: NotShape,
   description: 'Invertiert den Eingang',
 });
