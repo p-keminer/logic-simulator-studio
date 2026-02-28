@@ -94,14 +94,24 @@ export function generateVerilog(circuit: Circuit): string {
   // silently produce dead conditions like `if (1'b0 == 1'b1)` in the RTL.
   // Naming them here causes Bug-fix-1 to promote them to module input ports instead,
   // which is the correct industrial behaviour for truly unconnected pins.
-  for (const gate of Object.values(circuit.gates)) {
-    if (gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'OUTPUT_LED') continue;
-    if (EXCLUDE_FROM_VERILOG.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
-    const def = gateRegistry.get(gate.typeId);
-    for (const inp of def.inputs) {
-      const key = `${gate.id}:${inp.id}`;
-      if (byPort[key] === undefined) {
-        byPort[key] = `nc_${portIdent(inp.label, inp.id)}`;
+  //
+  // Collision guard: two gates with the same unconnected pin label (e.g. two PISO4s
+  // with open "LD") must NOT share the same nc_ name — that would silently tie them
+  // together. We track used names and add a numeric suffix on collision.
+  {
+    const usedNcNames = new Set<string>(Object.values(byPort));
+    for (const gate of Object.values(circuit.gates)) {
+      if (gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'OUTPUT_LED') continue;
+      if (EXCLUDE_FROM_VERILOG.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+      const def = gateRegistry.get(gate.typeId);
+      for (const inp of def.inputs) {
+        const key = `${gate.id}:${inp.id}`;
+        if (byPort[key] !== undefined) continue;
+        const base = `nc_${portIdent(inp.label, inp.id)}`;
+        let name = base;
+        for (let n = 2; usedNcNames.has(name); n++) name = `${base}_${n}`;
+        byPort[key] = name;
+        usedNcNames.add(name);
       }
     }
   }

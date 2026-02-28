@@ -90,14 +90,21 @@ export function generateVHDL(circuit: Circuit): string {
   // Same rationale as in verilog.ts: prevents VHDL literal constants ('0') from
   // appearing in sensitivity lists and process conditions.
   // Unconnected pins become entity input ports via Bug-fix-1 below.
-  for (const gate of Object.values(circuit.gates)) {
-    if (gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'OUTPUT_LED') continue;
-    if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
-    const def = gateRegistry.get(gate.typeId);
-    for (const inp of def.inputs) {
-      const key = `${gate.id}:${inp.id}`;
-      if (byPort[key] === undefined) {
-        byPort[key] = `nc_${portIdent(inp.label, inp.id)}`;
+  // Collision guard: same as verilog.ts — numeric suffix on duplicate base names.
+  {
+    const usedNcNames = new Set<string>(Object.values(byPort));
+    for (const gate of Object.values(circuit.gates)) {
+      if (gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'OUTPUT_LED') continue;
+      if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+      const def = gateRegistry.get(gate.typeId);
+      for (const inp of def.inputs) {
+        const key = `${gate.id}:${inp.id}`;
+        if (byPort[key] !== undefined) continue;
+        const base = `nc_${portIdent(inp.label, inp.id)}`;
+        let name = base;
+        for (let n = 2; usedNcNames.has(name); n++) name = `${base}_${n}`;
+        byPort[key] = name;
+        usedNcNames.add(name);
       }
     }
   }
