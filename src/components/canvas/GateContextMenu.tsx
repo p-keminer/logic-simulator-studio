@@ -18,6 +18,7 @@ export function GateContextMenu({ gate, screenX, screenY, onClose }: Props) {
   const [showFreqInput, setShowFreqInput] = useState(false);
   const [freqVal, setFreqVal] = useState(String((gate.customState?.frequency as number) ?? 1));
   const [showRomEditor, setShowRomEditor] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [showAdcInput, setShowAdcInput] = useState(false);
   const [adcVal, setAdcVal] = useState(
     ((gate.customState?.value as number) ?? 128).toString(16).toUpperCase().padStart(2, '0')
@@ -178,6 +179,39 @@ export function GateContextMenu({ gate, screenX, screenY, onClose }: Props) {
             onClick={() => setShowRomEditor(true)}>
             💾 ROM-Inhalt bearbeiten…
           </button>
+        )}
+
+        {gate.typeId === 'ALU4' && !showHelp && (
+          <button style={itemStyle} onMouseEnter={(e)=>hov(e,true)} onMouseLeave={(e)=>hov(e,false)}
+            onClick={() => setShowHelp(true)}>
+            ❓ Hilfe (Op-Codes)
+          </button>
+        )}
+        {gate.typeId === 'ALU4' && showHelp && (
+          <div style={{ padding:'6px 12px 8px', maxWidth:220 }}>
+            <div style={{ color:'#94a3b8', fontSize:10, fontFamily:'monospace', marginBottom:6, borderBottom:'1px solid #1e293b', paddingBottom:4 }}>
+              ALU4 — Op[2:0] Belegung
+            </div>
+            {([
+              ['000', 'ADD',   'S = A + B + CIN'],
+              ['001', 'SUB',   'S = A − B − CIN'],
+              ['010', 'AND',   'S = A & B'],
+              ['011', 'OR',    'S = A | B'],
+              ['100', 'XOR',   'S = A ^ B'],
+              ['101', 'NOT A', 'S = ~A'],
+              ['110', 'SHL',   'S = A << 1, COUT = A[3]'],
+              ['111', 'SHR',   'S = A >> 1, COUT = A[0]'],
+            ] as const).map(([code, name, desc]) => (
+              <div key={code} style={{ display:'flex', gap:6, alignItems:'baseline', marginBottom:3 }}>
+                <span style={{ fontFamily:'monospace', fontSize:10, color:'#f59e0b', minWidth:28 }}>{code}</span>
+                <span style={{ fontFamily:'monospace', fontSize:10, color:'#38bdf8', minWidth:36 }}>{name}</span>
+                <span style={{ fontFamily:'monospace', fontSize:9, color:'#64748b' }}>{desc}</span>
+              </div>
+            ))}
+            <div style={{ marginTop:6, color:'#475569', fontSize:9, fontFamily:'monospace' }}>
+              ZERO=1 wenn S[3:0]=0
+            </div>
+          </div>
         )}
 
         <div style={{ height:1, background:'#1e293b', margin:'3px 0' }} />
