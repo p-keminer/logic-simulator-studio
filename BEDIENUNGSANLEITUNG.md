@@ -1,8 +1,18 @@
+<div align="center">
+
+[🇩🇪 Deutsch](#deutsch) &nbsp;·&nbsp; [🇬🇧 English](#english)
+
+</div>
+
+---
+
+<a id="deutsch"></a>
+
 # LogicSim – Bedienungsanleitung
 
 > **Version:** aktueller Stand (Feb 2026)
 > **Sprache:** Deutsch
-> Englische Kurzreferenz → [README.md](README.md)
+> Englische Version → [jump to English](#english)
 
 ---
 
@@ -67,24 +77,22 @@ npm run dev
 Öffne anschließend **[http://localhost:5173](http://localhost:5173)** im Browser.
 Der Simulator lädt sofort – kein Backend, keine Anmeldung erforderlich.
 
-> **Tipp:** Der Entwicklungsserver unterstützt **Hot Module Replacement** – Änderungen am Quellcode werden sofort im Browser sichtbar, ohne manuelles Neu-Laden.
+> **Tipp:** Der Entwicklungsserver unterstützt **Hot Module Replacement** – Änderungen am Quellcode werden sofort im Browser sichtbar.
 
 ### Produktions-Build (optional)
-
-Für ein optimiertes, deploymentfähiges Build:
 
 ```bash
 npm run build       # Erstellt den Build in ./dist/
 npm run preview     # Lokale Vorschau des fertigen Builds
 ```
 
-Die `dist/`-Ausgabe kann auf jedem statischen Webserver (GitHub Pages, Netlify, Vercel, Apache, Nginx, …) gehostet werden – es wird kein Node.js auf dem Server benötigt.
+Die `dist/`-Ausgabe kann auf jedem statischen Webserver gehostet werden – kein Node.js auf dem Server nötig.
 
 ### Simulation beenden
 
-Der Browser-Tab schließen oder `Ctrl + C` im Terminal, in dem `npm run dev` läuft.
+Den Browser-Tab schließen oder `Ctrl + C` im Terminal.
 
-> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `localStorage` des Browsers gespeichert. Beim nächsten Öffnen von `localhost:5173` wird sie wiederhergestellt.
+> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `localStorage` gespeichert und beim nächsten Öffnen wiederhergestellt.
 
 ---
 
@@ -99,6 +107,7 @@ Der Browser-Tab schließen oder `Ctrl + C` im Terminal, in dem `npm run dev` lä
 │  Palette     │           Circuit Canvas                         │
 │  (links)     │           (Mitte/Rechts)                         │
 │              │                                                   │
+│  Suchleiste  │                                                   │
 │  Kategorien: │                                                   │
 │  • Basis     │                                                   │
 │  • Kombi.    │                                                   │
@@ -111,7 +120,7 @@ Der Browser-Tab schließen oder `Ctrl + C` im Terminal, in dem `npm run dev` lä
 | Bereich | Funktion |
 |---|---|
 | **Toolbar** | Speichern, Laden, Export, Analyse öffnen, Takt steuern |
-| **Gate-Palette** | Alle verfügbaren Gatter; per Drag & Drop auf den Canvas ziehen |
+| **Gate-Palette** | Alle verfügbaren Gatter; per Drag & Drop auf den Canvas ziehen; Suchfeld zum Filtern |
 | **Circuit Canvas** | Unendliche Zeichenfläche für Gatter, Kabel und Annotationen |
 | **Timing-Diagramm** | Signalverläufe aller angeschlossenen Leitungen über die Zeit |
 
@@ -124,6 +133,9 @@ Der Browser-Tab schließen oder `Ctrl + C` im Terminal, in dem `npm run dev` lä
 2. Auf den Canvas ziehen.
 3. Loslassen – das Gatter rastet automatisch am nächsten Rasterpunkt ein.
 
+### Suche in der Palette
+Im **Suchfeld** oben in der Palette nach Name, Typ-ID oder Beschreibung filtern. Das × schließt die Suche.
+
 ### Gatter-Kategorien in der Palette
 
 | Kategorie | Enthält |
@@ -134,32 +146,31 @@ Der Browser-Tab schließen oder `Ctrl + C` im Terminal, in dem `npm run dev` lä
 | **Ein-/Ausgabe** | Schalter, Taster, Taktgenerator, Konstant HIGH/LOW, LED, 7-Segment, ADC, Schrittmotor |
 | **ICs** | 74xx-Serie, Custom IC |
 
-### Eingänge einstellen (Eingangsanzahl)
-Einige Gatter (AND, OR, NAND, NOR, XOR, XNOR) sind in Varianten mit 2–8 Eingängen verfügbar. Die Zahl steht in Klammern hinter dem Gatternamen in der Palette.
+### Eingänge einstellen
+Einige Gatter (AND, OR, NAND, NOR, XOR, XNOR) sind in Varianten mit 2–8 Eingängen verfügbar.
 
 ---
 
 ## 3. Kabel zeichnen
 
 ### Verbindung herstellen
-1. **Linksklick auf einen Ausgangsport** (kleiner Kreis am rechten Rand eines Gatters) – das Zeichnen beginnt.
-2. Optional: **Linksklick auf freie Canvasfläche** – fügt einen Wegpunkt (Knick) ein.
-3. **Linksklick auf einen Eingangsport** (kleiner Kreis am linken Rand) – die Verbindung wird gespeichert.
+1. **Linksklick auf einen Ausgangsport** – Zeichnen beginnt.
+2. Optional: **Linksklick auf freie Canvasfläche** – fügt einen Wegpunkt ein.
+3. **Linksklick auf einen Eingangsport** – Verbindung wird gespeichert.
 
-> **Hinweis:** Ein Eingangsport kann nur **eine** Verbindung empfangen. Ausgänge können zu mehreren Eingängen verbunden werden (Fan-Out).
+> **Hinweis:** Ein Eingangsport kann nur **eine** Verbindung empfangen. Ausgänge unterstützen Fan-Out.
 
 ### Verbindung abbrechen
-- `Escape`-Taste drücken während ein Kabel in Bearbeitung ist.
+- `Escape` während ein Kabel in Bearbeitung ist.
 
 ### Rückkopplungsschleifen
-Zyklen (z. B. NOT → NOT → zurück) sind ausdrücklich **erlaubt**. Es gibt keine UI-seitige Zyklus-Sperre. Die Simulations-Engine behandelt Rückkopplungen korrekt über das Double-Buffer-Modell.
+Zyklen sind ausdrücklich **erlaubt** – die Engine behandelt sie korrekt.
 
 ### Kabel löschen
-- Rechtsklick auf ein Kabel → **Löschen** im Kontextmenü; oder
-- Kabel anklicken (selektieren) und `Delete` / `Backspace` drücken.
+- Rechtsklick → **Löschen**, oder Kabel selektieren und `Delete` drücken.
 
 ### Kabel einfärben
-- Rechtsklick auf ein Kabel → **Farbe setzen** – wähle eine Farbe zur visuellen Unterscheidung.
+- Rechtsklick → **Farbe setzen**.
 
 ---
 
@@ -167,28 +178,28 @@ Zyklen (z. B. NOT → NOT → zurück) sind ausdrücklich **erlaubt**. Es gibt k
 
 | Aktion | Eingabe |
 |---|---|
-| **Zoomen** | Mausrad scrollen (Mitte des Cursors als Zoomzentrum) |
-| **Pan (verschieben)** | `Alt`-Taste gedrückt halten + Maus ziehen |
-
-Der Canvas ist unbegrenzt – die Schaltung kann beliebig weit in alle Richtungen wachsen.
+| **Zoomen** | Mausrad scrollen |
+| **Pan** | `Alt` gedrückt halten + Maus ziehen; oder Mitteltaste + Ziehen |
 
 ---
 
 ## 5. Selektion & Bewegung
 
 ### Einzelnes Element selektieren
-- Linksklick auf ein Gatter oder ein Kabel.
+- Linksklick auf ein Gatter oder Kabel.
 
 ### Mehrere Elemente selektieren (Lasso)
-- Linksklick und Ziehen auf freier Canvasfläche → ein Auswahlrechteck entsteht.
-- Alle Gatter innerhalb des Rechtecks werden selektiert.
+- Linksklick und Ziehen auf freier Canvasfläche → Auswahlrechteck; alle Gatter darin werden selektiert.
 
 ### Selektierte Gatter verschieben
-- **Maus:** Selektierte Gatter mit Linksklick+Ziehen verschieben.
-- **Tastatur:** Pfeiltasten verschieben um einen Rasterschritt.
+- **Maus:** Linksklick + Ziehen.
+- **Tastatur:** Pfeiltasten (ein Rasterschritt); `Shift` + Pfeiltasten (5× Schritt).
 
 ### Kopieren & Einfügen
-- `Ctrl + C` / `Ctrl + V` (oder Toolbar-Buttons) für ausgewählte Gatter.
+- `Strg+C` kopiert alle selektierten Gatter und die Kabel, die ausschließlich zwischen ihnen verlaufen.
+- `Strg+V` fügt mit +24 px Versatz ein; die eingefügten Gatter sind direkt selektiert.
+- **Rechtsklick auf leeren Canvas** → „Einfügen (Strg+V)" wenn Zwischenablage gefüllt (Einfügen an Mausposition).
+- **Gate-Kontextmenü → „Kopieren"** kopiert das rechts geklickte Gatter zusammen mit der bestehenden Selektion.
 
 ### Löschen
 - `Delete` oder `Backspace` löscht alle selektierten Elemente (Gatter **und** angehängte Kabel).
@@ -201,13 +212,14 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 
 | Option | Verfügbar bei | Beschreibung |
 |---|---|---|
-| **Umbenennen** | Alle Gatter | Freitext-Beschriftung vergeben (erscheint im Gate-Header und im HDL-Export) |
+| **Kopieren** | Alle Gatter | Gatter (+ Selektion) in Zwischenablage kopieren |
+| **Umbenennen** | Alle Gatter | Freitext-Beschriftung vergeben (erscheint im Gate-Header und HDL-Export) |
 | **Drehen (90°)** | Alle Gatter | Gatter um 90° drehen (Anschlüsse rotieren mit) |
 | **LED-Farbe** | OUTPUT_LED | Leuchtfarbe der Ausgangs-LED wählen |
 | **Frequenz** | CLOCK | Taktfrequenz in Hz einstellen (0,1–100 Hz) |
 | **Hex-Wert** | ADC8 | Analogen Eingabewert als Hex-Zahl (00–FF) setzen |
 | **ROM-Inhalt bearbeiten** | ROM256 | Hex-Editor für den ROM-Speicher öffnen |
-| **Hilfe (Op-Codes)** | ALU4 | Zeigt alle 8 Op-Code-Belegungen direkt im Menü an |
+| **Hilfe (Op-Codes)** | ALU4 | Zeigt alle 8 Op-Code-Belegungen direkt im Menü |
 | **Löschen** | Alle Gatter | Gatter und alle angebundenen Kabel entfernen |
 
 ---
@@ -215,16 +227,13 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 ## 7. Schalter & Taster bedienen
 
 ### Eingabe-Schalter (`INPUT_SWITCH`)
-- **Linksklick** auf den Schalter: Wechselt zwischen **HIGH (1)** und **LOW (0)**.
-- Die Ausgabe-LED (Farbe) zeigt den aktuellen Zustand.
-- Änderungen lösen sofort eine Settle-Phase in der Simulation aus.
+- **Linksklick**: Wechselt zwischen **HIGH (1)** und **LOW (0)**.
 
 ### Taster (`PUSH_BTN`)
-- **Linksklick** auf den Taster: Setzt den Ausgang kurzzeitig auf **HIGH (1)** für ~150 ms, danach automatische Rückkehr auf **LOW (0)**.
-- Geeignet für Impuls-basierte Schaltungen (z. B. Zähler-Reset).
+- **Linksklick**: Setzt Ausgang kurzzeitig auf **HIGH (1)** für ~150 ms, dann automatisch zurück auf **LOW (0)**.
 
 ### Konstante Quellen
-- **CONST_HIGH** / **CONST_LOW** liefern dauerhaft 1 bzw. 0 ohne Benutzerinteraktion.
+- **CONST_HIGH** / **CONST_LOW** liefern dauerhaft 1 bzw. 0.
 
 ---
 
@@ -232,65 +241,43 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 
 ### Taktgenerator (`CLOCK`)
 - Liefert ein periodisches HIGH/LOW-Signal.
-- Frequenz einstellbar per Rechtsklick → **Eigenschaften** (Perioden-Ticks konfigurieren).
+- Frequenz einstellbar per Rechtsklick → **Frequenz** (0,1–100 Hz).
 
 ### Takt pausieren
-- **Toolbar-Button „Pause"** (⏸): Alle Taktgeneratoren werden eingefroren, kombinatorische Logik propagiert weiter.
+- **Toolbar-Button „Pause"** (⏸): Alle Taktgeneratoren eingefroren; kombinatorische Logik propagiert weiter.
 
 ### Einzelschritt
-- Im Pause-Modus: **Toolbar-Button „Schritt" (⏭)**: Alle Taktgeneratoren toggeln genau einmal → die Schaltung macht einen einzigen Taktzyklus.
-- Ideal zum schrittweisen Debuggen von Flipflop-Ketten oder Zählern.
+- Im Pause-Modus: **Toolbar-Button „Schritt"** (⏭): Alle Taktgeneratoren toggeln genau einmal.
 
 ---
 
 ## 9. Wahrheitstabelle & Zustandsübergangstabelle
 
-Öffnen über die **Toolbar → „Analyse"** (oder entsprechendes Icon).
+Öffnen über **Toolbar → „Analyse"**.
 
 ### Automatische Moduswahl
 
-Der Simulator erkennt automatisch, ob die Schaltung Rückkopplungsschleifen enthält:
-
-| Schaltungstyp | Angezeigter Modus |
+| Schaltungstyp | Modus |
 |---|---|
 | Keine Zyklen (rein kombinatorisch) | **Wahrheitstabelle** |
 | Mindestens ein Zyklus (sequenziell) | **Zustandsübergangstabelle** |
 
----
-
 ### Wahrheitstabelle (kombinatorisch)
+- Listet alle **2ⁿ** Eingangskombinationen.
+- Zeigt Zwischenwerte aller Gatter-Ausgänge.
 
-- Listet alle **2ⁿ** Eingangskombinationen (n = Anzahl Eingabe-Schalter).
-- Zeigt **Zwischenwerte** aller Gatter-Ausgänge als zusätzliche Spalten.
-- Ausgangs-LEDs werden in der letzten Spaltengruppe dargestellt.
+**Farblegende:** 🔵 Blau = Eingaben · 🟢 Grün = Ausgaben · Grau = Interne Werte
 
-**Farblegende:**
-
-| Farbe | Bedeutung |
-|---|---|
-| 🔵 Blau | Externe Eingaben (Schalter) |
-| 🟢 Grün | Ausgänge (LEDs) |
-| Grau | Interne Gatterwerte |
-
----
-
-### Zustandsübergangstabelle (sequenziell / Rückkopplung)
-
-Die STT modelliert das Zeitverhalten von Schaltungen mit Gedächtnis (Latches, Flipflops, Ringoszillatoren).
-
-**Spaltenstruktur:**
+### Zustandsübergangstabelle (sequenziell)
 
 | Spaltengruppe | Farbe | Inhalt |
 |---|---|---|
-| Externe Eingaben | 🔵 Blau | Aktuelle Werte der Eingabe-Schalter |
-| Aktueller Zustand Q(t) | 🟡 Gelb/Amber | Ausgänge der Feedback-Gatter (Zustandshalter) |
+| Externe Eingaben | 🔵 Blau | Werte der Eingabe-Schalter |
+| Aktueller Zustand Q(t) | 🟡 Amber | Ausgänge der Feedback-Gatter |
 | Nächster Zustand Q(t+1) | 🟣 Lila | Zustand nach genau einem Simulations-Tick |
 | Ausgaben | 🟢 Grün | Werte der angeschlossenen LEDs |
 
-**Stabile Zeilen** (Q(t) = Q(t+1)) werden mit einem **Amber-Hintergrund** hervorgehoben – diese Zustände ändern sich bei gleichen Eingaben nicht.
-
-**Mathematische Korrektheit:**
-Pro Zeile wird **exakt ein Simulations-Tick** ausgeführt. Damit entspricht Q(t+1) der präzisen Definition des nächsten Zustands im Double-Buffer-Modell – auch bei geradzahligen Rückkopplungsschleifen (z. B. NOT-NOT-Ring) korrekt.
+**Stabile Zeilen** (Q(t) = Q(t+1)) werden mit Amber-Hintergrund hervorgehoben.
 
 **Beispiel SR-Latch:**
 
@@ -298,139 +285,87 @@ Pro Zeile wird **exakt ein Simulations-Tick** ausgeführt. Damit entspricht Q(t+
 |---|---|------|--------|---------|---------|
 | 0 | 0 | 0 | 1 | 0 | 1 | ← stabil |
 | 0 | 0 | 1 | 0 | 1 | 0 | ← stabil |
-| 0 | 1 | 0 | 1 | 0 | 1 | ← stabil (RESET) |
 | 0 | 1 | 1 | 0 | 0 | 1 | ← RESET aktiv |
 | 1 | 0 | 0 | 1 | 1 | 0 | ← SET aktiv |
-| 1 | 0 | 1 | 0 | 1 | 0 | ← stabil (SET) |
-| 1 | 1 | 0 | 1 | – | – | ← verboten |
-| 1 | 1 | 1 | 0 | – | – | ← verboten |
+| 1 | 1 | – | – | – | – | ← verboten |
 
 ---
 
 ## 10. Timing-Diagramm
 
-Das **Timing-Diagramm-Panel** am unteren Rand zeigt den zeitlichen Verlauf aller Signale.
-
-### Bedienung
-
 | Aktion | Beschreibung |
 |---|---|
-| **Panelgröße ändern** | Obere Kante des Panels mit Maus ziehen |
-| **Signal ausblenden** | Auf das Auge-Icon (👁) in der Signalzeile klicken |
+| **Panelgröße ändern** | Obere Kante des Panels ziehen |
+| **Signal ausblenden** | Auge-Icon (👁) klicken |
 | **Verlauf löschen** | Toolbar-Button „Verlauf löschen" |
 
-### Angezeigte Signale
-- **Alle Kabel** im Canvas erscheinen automatisch als Signalzeilen.
-- Pro Zeile: Signal-Name (Gate-ID:Port), HIGH/LOW-Verlauf als Rechteckkurve.
-
-### Datenrate
-- Jeder Simulations-Frame (≈60 Hz) in dem sich Signale ändern erzeugt einen Snapshot.
-- Maximal **200 Snapshots** werden im Speicher gehalten (ältere werden verworfen).
+Maximal **200 Snapshots** im Speicher (ältere werden verworfen).
 
 ---
 
 ## 11. FSM-Editor
 
-Der **Finite State Machine Editor** ermöglicht es, einen endlichen Automaten grafisch zu entwerfen und mit einem Klick in eine Logikschaltung umzuwandeln.
-
 ### Zustand erstellen
 1. FSM-Editor über die Toolbar öffnen.
-2. **Doppelklick** auf die freie FSM-Fläche → neuer Zustand wird angelegt.
-3. Zustand mit Doppelklick umbenennen / als Startzustand / Endzustand markieren.
+2. **Doppelklick** auf freie FSM-Fläche → neuer Zustand.
+3. Doppelklick zum Umbenennen / als Startzustand markieren.
 
 ### Übergang zeichnen
-1. Linksklick auf den **Ausgangs-Zustand** → Linksklick auf den **Ziel-Zustand**.
-2. Übergangslabel eingeben (Bedingungsausdruck, z. B. `a & !b`).
+1. Linksklick auf **Quell-Zustand** → Linksklick auf **Ziel-Zustand**.
+2. Übergangslabel eingeben (z. B. `a & !b`).
 
-### Bedingungsausdrücke
-Unterstützte Operatoren im Übergangslabel:
-
-| Operator | Bedeutung |
-|---|---|
-| `a` | Eingangsbit `a` ist 1 |
-| `!a` | NOT a |
-| `a & b` | a AND b |
-| `a \| b` | a OR b |
-| `a ^ b` | a XOR b |
-| `1` | Immer wahr (Epsilon-Übergang) |
+### Bedingungsoperatoren
+`!a` (NOT) · `a & b` (AND) · `a | b` (OR) · `a ^ b` (XOR) · `1` (immer wahr)
 
 ### Synthese
-- **Toolbar-Button „Synthetisieren"** (oder ⚙️-Symbol): Der FSM-Graph wird in kombinatorische + sequenzielle Logikgatter umgewandelt und direkt auf den **Circuit Canvas** platziert.
-- Die synthetisierte Schaltung enthält Flipflops für die Zustandscodierung und Logikgatter für die Übergangs- und Ausgabefunktionen.
+- **Toolbar-Button „Synthetisieren"**: FSM-Graph → Logikgatter auf dem Canvas.
 
 ---
 
 ## 12. Custom IC
 
-Das **Custom IC**-Feature kapselt eine beliebige Teilschaltung als wiederverwendbares Gatter.
-
 ### Custom IC erstellen
-1. Teilschaltung auf dem Canvas aufbauen (inkl. Eingabe-Schalter und Ausgangs-LEDs als I/O-Pins).
-2. Alle Gatter der Teilschaltung selektieren (Lasso).
+1. Teilschaltung mit Eingabe-Schaltern und Ausgangs-LEDs aufbauen.
+2. Alle Gatter selektieren (Lasso).
 3. Toolbar → **„Custom IC erstellen"** → Name vergeben.
-4. Das neue Gatter erscheint in der Palette unter **„ICs"**.
 
 ### Custom IC verwenden
-- Wie jedes andere Gatter: Drag & Drop aus der Palette auf den Canvas.
-- Interne Struktur wird simuliert; nach außen sichtbar sind nur die definierten Ports.
-
-### Custom IC bearbeiten
-- Rechtsklick auf eine Custom-IC-Instanz → **„IC öffnen"** öffnet die interne Schaltung zur Bearbeitung.
+- Drag & Drop aus der Palette; nur definierte Ports sichtbar.
 
 ---
 
 ## 13. ROM-Editor
 
-Der eingebettete **ROM-Hex-Editor** erlaubt das direkte Programmieren des ROM-Inhalts.
-
-### ROM platzieren & öffnen
-1. ROM-Gatter aus der Palette auf den Canvas ziehen.
-2. Doppelklick auf das ROM-Gatter (oder Rechtsklick → **„ROM-Editor öffnen"**).
-
-### Hex-Editor
-- Jede Zelle zeigt einen 8-Bit-Hexadezimalwert (00–FF).
-- Direktes Eintippen in die Zelle ändert den Wert.
-- Adressierung über den A-Eingangsbus; Ausgabe am D-Ausgangsbus.
+1. ROM-Gatter aus der Palette ziehen.
+2. Rechtsklick → **„ROM-Inhalt bearbeiten"**.
+3. Werte direkt als Hex (00–FF) eintippen.
 
 ---
 
 ## 14. Speichern & Laden
 
 ### Auto-Save
-Die Schaltung wird **automatisch** nach jeder Änderung im `localStorage` des Browsers gespeichert. Beim nächsten Öffnen der Seite wird der letzte Stand wiederhergestellt.
+Automatisch nach jeder Änderung im `localStorage`. Beim nächsten Öffnen wiederhergestellt.
 
-### Manuelles Speichern (JSON-Export)
-1. Toolbar → **„Speichern"** (💾).
-2. Eine `.json`-Datei wird heruntergeladen (vollständige Schaltungsbeschreibung).
+### Manuelles Speichern
+Toolbar → **„Speichern"** (💾) → `.json`-Datei wird heruntergeladen.
 
-### Laden (JSON-Import)
-1. Toolbar → **„Laden"** (📂).
-2. Eine zuvor gespeicherte `.json`-Datei auswählen.
-3. Die aktuelle Schaltung wird ersetzt.
+### Laden
+Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
 
-> **Warnung:** Beim Laden wird die aktuelle, nicht gespeicherte Schaltung überschrieben.
+> **Warnung:** Beim Laden wird die aktuelle Schaltung überschrieben.
 
 ---
 
 ## 15. Export (Verilog / VHDL / JSON)
 
-Öffnen über: **Toolbar → „Export"** (⬇️ oder entsprechendes Symbol).
+Öffnen über **Toolbar → „Export"**.
 
-### JSON
-- Vollständiges Round-Trip-Format: alle Gatter, Kabel, Positionen, Zustände.
-- Zum Weitergeben und als Backup.
-
-### Verilog
-- Generiert synthesefähiges Verilog (IEEE 1364).
-- Jedes Gatter wird als entsprechendes Verilog-Primitiv oder Assign-Statement abgebildet.
-- Geeignet für FPGA-Synthese-Tools (Vivado, Quartus, …).
-
-### VHDL
-- Generiert synthesefähiges VHDL (IEEE 1076).
-- Analoge Abbildung wie Verilog.
-- Geeignet für VHDL-basierte Design-Flows.
-
-> **Hinweis:** Rückkopplungsschleifen (Latches) werden im exportierten HDL als Latch-Inferenz abgebildet, was in synchronen Designs ggf. Warnungen in Synthesetools erzeugt.
+| Format | Hinweise |
+|---|---|
+| **JSON** | Vollständiges Round-Trip-Format |
+| **Verilog** | Synthesefähig (IEEE 1364); geeignet für Vivado, Quartus |
+| **VHDL** | Synthesefähig (IEEE 1076) |
 
 ---
 
@@ -440,62 +375,67 @@ Die Schaltung wird **automatisch** nach jeder Änderung im `localStorage` des Br
 |---|---|
 | `Delete` / `Backspace` | Ausgewählte Gatter und Kabel löschen |
 | `↑` `↓` `←` `→` | Ausgewählte Gatter um einen Rasterschritt verschieben |
-| `Escape` | Kabelzeichnen abbrechen · Auswahl aufheben |
-| `Mausrad` | Canvas zoomen (in/out) |
+| `Shift` + Pfeiltasten | Verschieben mit 5× Schritt |
+| `Strg+C` | Ausgewählte Gatter kopieren (inkl. interner Kabel) |
+| `Strg+V` | Zwischenablage einfügen (+24 px versetzt) |
+| `Escape` | Kabelzeichnen abbrechen · Auswahl aufheben · Menüs schließen |
+| `R` | Ausgewählte Gatter um 90° drehen |
+| `W` | Kabel-Modus ein/aus (Crosshair-Cursor) |
+| `X` | Snap-to-Port-Modus ein/aus (gelber Rahmen) |
+| `Mausrad` | Canvas zoomen |
 | `Alt` + Linksklick-Ziehen | Canvas verschieben (Pan) |
+| Mitteltaste + Ziehen | Canvas verschieben (Pan) |
 | Linksklick auf Ausgangsport | Kabelzeichnen starten |
 | Linksklick auf Eingangsport | Kabel fertigstellen |
 | Linksklick auf Canvas (beim Zeichnen) | Wegpunkt einfügen |
-| Rechtsklick auf Gatter | Kontextmenü (drehen, beschriften, Farbe, löschen) |
-| Rechtsklick auf Kabel | Kontextmenü (Farbe, löschen) |
+| Ziehen auf leerem Canvas | Lasso-Auswahl → Pfeiltasten zum Verschieben |
+| Rechtsklick auf Gatter | Kontextmenü (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) |
+| Rechtsklick auf Kabel | Kontextmenü (Farbe, Knotenpunkt, Löschen) |
+| Rechtsklick auf leeren Canvas | Einfügen (wenn Zwischenablage gefüllt) |
 
 ---
 
 ## 17. Häufige Fehler & Lösungen
 
 ### Signal ändert sich nicht obwohl Schalter umgelegt
-**Ursache:** Kabel nicht korrekt verbunden (Port nicht exakt getroffen).
-**Lösung:** Auf das Kabel klicken – ist es selektierbar, ist es korrekt verbunden. Andernfalls Verbindung neu ziehen.
+**Ursache:** Kabel nicht korrekt verbunden.
+**Lösung:** Kabel anklicken – ist es selektierbar, ist es korrekt verbunden. Andernfalls neu ziehen.
 
 ### Rückkopplungsschaltung zeigt keine Schwingung
-**Ursache:** NOT-NOT-Ring oder ähnliche geradzahlige Schleifen werden durch den Even-Period-Fix stabilisiert und zeigen pro Frame abwechselnde Zustände.
-**Lösung:** Timing-Diagramm öffnen – dort ist die Schwingung als alternierende 0/1-Werte sichtbar. Der Canvas zeigt bewusst nur jeden zweiten Zustand, um einen stabilen Anblick zu bieten.
+**Ursache:** Geradzahlige Schleifen werden durch den Even-Period-Fix stabilisiert.
+**Lösung:** Timing-Diagramm öffnen – die Schwingung ist dort als alternierende 0/1-Werte sichtbar.
 
 ### Zustandsübergangstabelle zeigt Q(t+1) = Q(t) für alle Zeilen
-**Ursache:** Es wurden keine Feedback-Gatter erkannt → Schaltung wird als kombinatorisch behandelt.
-**Lösung:** Prüfen ob Kabel tatsächlich einen Zyklus bilden (vom Ausgang zurück zu einem Eingang desselben Pfades). Ein echtes Feedback-Kabel muss einen Ausgangsport mit einem Eingangsport verbinden, der auf demselben Logikpfad liegt.
+**Ursache:** Keine Feedback-Gatter erkannt.
+**Lösung:** Prüfen ob Kabel tatsächlich einen Zyklus bilden (Ausgang → zurück zu einem Eingang auf demselben Pfad).
 
-### Wahrheitstabelle hat zu viele Zeilen / Browser friert ein
-**Ursache:** Mehr als ~10 Eingabe-Schalter → 2¹⁰ = 1024 Zeilen; bei 15+ Eingängen über 32.000 Zeilen.
-**Lösung:** Analyse ist auf praktikable Eingangszahlen (≤ 12–14) ausgelegt. Bei größeren Schaltungen das Timing-Diagramm oder manuelle Schalter-Tests verwenden.
+### Wahrheitstabelle friert den Browser ein
+**Ursache:** Mehr als ~12 Eingabe-Schalter (> 4096 Zeilen).
+**Lösung:** Timing-Diagramm oder manuelle Tests verwenden.
 
 ### FSM-Synthese erzeugt keine sichtbare Schaltung
-**Ursache:** FSM hat keine Übergänge definiert oder alle Übergangslabels sind syntaktisch ungültig.
-**Lösung:** Mindestens zwei Zustände und einen validen Übergang mit korrektem Ausdruck (z. B. `1`) anlegen.
+**Ursache:** Keine validen Übergänge definiert.
+**Lösung:** Mindestens zwei Zustände und einen Übergang mit gültigem Ausdruck (z. B. `1`) anlegen.
 
 ### Gespeicherte Schaltung lässt sich nicht laden
-**Ursache:** JSON-Datei gehört zu einer älteren / inkompatiblen Version des Simulators.
-**Lösung:** Schaltung manuell neu aufbauen oder JSON-Datei manuell auf das aktuelle Format anpassen (Gate-Typ-IDs prüfen).
-
----
+**Ursache:** JSON-Datei aus inkompatiblem Simulator-Stand.
+**Lösung:** Gate-Typ-IDs in der JSON-Datei manuell prüfen und anpassen.
 
 ---
 
 ## 18. Baustein-Referenz: ALU4
 
-Die **4-Bit-ALU** (`ALU4`) ist das mächtigste kombinatorische Bauteil im Simulator. Sie führt eine von 8 Operationen aus, die über drei Steuerleitungen **Op[2:0]** ausgewählt werden.
-
 ### Anschlüsse
 
 | Port | Richtung | Beschreibung |
 |---|---|---|
-| **A0–A3** | Eingang | 4-Bit Operand A (A0 = LSB, A3 = MSB) |
-| **B0–B3** | Eingang | 4-Bit Operand B (B0 = LSB, B3 = MSB) |
-| **Op0–Op2** | Eingang | Operation auswählen (Op0 = LSB, Op2 = MSB) |
-| **CIN** | Eingang | Carry-Eingang (für ADD/SUB-Kaskadierung) |
-| **S0–S3** | Ausgang | 4-Bit Ergebnis (S0 = LSB, S3 = MSB) |
-| **COUT** | Ausgang | Carry-Ausgang (Übertrag / Shift-Ausschuss) |
-| **ZERO** | Ausgang | 1, wenn Ergebnis = 0000 |
+| **A0–A3** | Eingang | 4-Bit Operand A (A0 = LSB) |
+| **B0–B3** | Eingang | 4-Bit Operand B (B0 = LSB) |
+| **Op0–Op2** | Eingang | Operation auswählen (Op0 = LSB) |
+| **CIN** | Eingang | Carry-Eingang |
+| **S0–S3** | Ausgang | 4-Bit Ergebnis (S0 = LSB) |
+| **COUT** | Ausgang | Carry-Ausgang / Shift-Ausschuss |
+| **ZERO** | Ausgang | 1 wenn Ergebnis = 0000 |
 
 ### Op-Code-Tabelle
 
@@ -507,29 +447,480 @@ Die **4-Bit-ALU** (`ALU4`) ist das mächtigste kombinatorische Bauteil im Simula
 | 0 | 1 | 1 | **OR** | S = A \| B | 0 |
 | 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
 | 1 | 0 | 1 | **NOT A** | S = ~A | 0 |
-| 1 | 1 | 0 | **SHL** | S = A << 1 (Links-Shift) | A[3] (herausgeschobenes MSB) |
-| 1 | 1 | 1 | **SHR** | S = A >> 1 (Rechts-Shift) | A[0] (herausgeschobenes LSB) |
+| 1 | 1 | 0 | **SHL** | S = A << 1 | A[3] |
+| 1 | 1 | 1 | **SHR** | S = A >> 1 | A[0] |
 
-> **Tipp:** Rechtsklick auf eine ALU4-Instanz → **❓ Hilfe (Op-Codes)** zeigt diese Tabelle direkt im Simulator als Kurzreferenz an.
+> **Tipp:** Rechtsklick auf ALU4 → **❓ Hilfe (Op-Codes)** zeigt diese Tabelle direkt im Simulator.
 
-### Beispiele
-
-**Addition 5 + 3 (ohne Carry):**
-- A = 0101 (A0=1, A1=0, A2=1, A3=0), B = 0011, Op = 000, CIN = 0
-- Ergebnis: S = 1000 (= 8), COUT = 0, ZERO = 0
-
-**Linksshift von 6 (= 0110):**
-- A = 0110, Op = 110
-- Ergebnis: S = 1100 (= 12), COUT = 0 (MSB war 0), ZERO = 0
-
-**Linksshift von 9 (= 1001):**
-- A = 1001, Op = 110
-- Ergebnis: S = 0010 (= 2), COUT = 1 (MSB A[3]=1 wird herausgeschoben), ZERO = 0
-
-### Kaskadierung mehrerer ALUs
-
-Für eine 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU verbinden (Ripple-Carry).
+### Kaskadierung
+Für 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU verbinden (Ripple-Carry).
 
 ---
 
 *Bedienungsanleitung für LogicSim – Browser-basierter Logikgatter-Simulator*
+
+---
+
+---
+
+<a id="english"></a>
+
+# LogicSim – User Manual
+
+> **Version:** current state (Feb 2026)
+> **Language:** English
+> Deutsche Version → [zurück zu Deutsch](#deutsch)
+
+---
+
+## Table of Contents
+
+0. [Installation & Getting Started](#0-installation--getting-started)
+1. [Interface Overview](#1-interface-overview)
+2. [Placing Gates](#2-placing-gates)
+3. [Drawing Wires](#3-drawing-wires)
+4. [Canvas Navigation (Zoom & Pan)](#4-canvas-navigation-zoom--pan)
+5. [Selection & Movement](#5-selection--movement)
+6. [Gate Customisation (Context Menu)](#6-gate-customisation-context-menu)
+7. [Switches & Push Buttons](#7-switches--push-buttons)
+8. [Clock Generator & Pause / Single-Step](#8-clock-generator--pause--single-step)
+9. [Truth Table & State Transition Table](#9-truth-table--state-transition-table)
+10. [Timing Diagram](#10-timing-diagram)
+11. [FSM Editor](#11-fsm-editor)
+12. [Custom IC](#12-custom-ic)
+13. [ROM Editor](#13-rom-editor)
+14. [Save & Load](#14-save--load)
+15. [Export (Verilog / VHDL / JSON)](#15-export-verilog--vhdl--json)
+16. [Keyboard Shortcuts](#16-keyboard-shortcuts)
+17. [Common Errors & Solutions](#17-common-errors--solutions)
+18. [Component Reference: ALU4](#18-component-reference-alu4)
+
+---
+
+## 0. Installation & Getting Started
+
+### Prerequisites
+
+| Software | Minimum version | Download |
+|---|---|---|
+| **Node.js** | 18 | [nodejs.org](https://nodejs.org) |
+| **npm** | 9 | (bundled with Node.js) |
+
+Check versions:
+```bash
+node --version   # e.g. v20.11.0
+npm --version    # e.g. 10.2.4
+```
+
+### First-time installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/<your-username>/logic-gate-simulator.git
+
+# 2. Enter the project folder
+cd logic-gate-simulator
+
+# 3. Install dependencies (once)
+npm install
+```
+
+### Start the development server
+
+```bash
+npm run dev
+```
+
+Then open **[http://localhost:5173](http://localhost:5173)** in your browser.
+The simulator loads immediately – no backend, no login required.
+
+> **Tip:** The development server supports **Hot Module Replacement** – source code changes appear instantly without a manual reload.
+
+### Production build (optional)
+
+```bash
+npm run build       # Creates the build in ./dist/
+npm run preview     # Local preview of the finished build
+```
+
+The `dist/` output can be hosted on any static web server (GitHub Pages, Netlify, Vercel, Apache, Nginx, …) – no Node.js required on the server.
+
+### Stopping the simulator
+
+Close the browser tab or press `Ctrl + C` in the terminal.
+
+> **Auto-Save:** The current circuit is automatically saved to the browser's `localStorage` and restored on the next visit.
+
+---
+
+## 1. Interface Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Toolbar  (Save, Load, Export, Analysis, Clock-Pause, …)        │
+├──────────────┬──────────────────────────────────────────────────┤
+│              │                                                   │
+│  Gate        │                                                   │
+│  Palette     │           Circuit Canvas                         │
+│  (left)      │           (centre / right)                       │
+│              │                                                   │
+│  Search bar  │                                                   │
+│  Categories: │                                                   │
+│  • Basic     │                                                   │
+│  • Combi.    │                                                   │
+│  • Sequential├──────────────────────────────────────────────────┤
+│  • I/O       │  Timing Diagram Panel  (bottom, resizable)       │
+│  • ICs       │                                                   │
+└──────────────┴──────────────────────────────────────────────────┘
+```
+
+| Area | Function |
+|---|---|
+| **Toolbar** | Save, load, export, open analysis tools, control clock |
+| **Gate Palette** | All available gates; drag & drop onto the canvas; search field to filter |
+| **Circuit Canvas** | Infinite drawing area for gates, wires and annotations |
+| **Timing Diagram** | Signal waveforms of all connected wires over time |
+
+---
+
+## 2. Placing Gates
+
+### Method: Drag & Drop
+1. Hold the left mouse button on a gate in the **Gate Palette**.
+2. Drag it onto the canvas.
+3. Release – the gate snaps to the nearest grid point.
+
+### Searching the palette
+Type in the **search box** at the top of the palette to filter gates by name, type ID or description. Press × to clear the filter.
+
+### Gate categories
+
+| Category | Contains |
+|---|---|
+| **Basic** | AND, OR, NOT, NAND, NOR, XOR, XNOR, Buffer, Schmitt Trigger, Tri-State |
+| **Combinational** | MUX, DEMUX, Comparator, ALU, Bus Splitter / Combiner |
+| **Sequential** | D/T/SR/JK flip-flops, Master-Slave FF, shift register, counter, RAM, ROM |
+| **I/O** | Switch, Push button, Clock, Constant HIGH/LOW, LED, 7-segment, ADC, Stepper |
+| **ICs** | 74xx series, Custom IC |
+
+### Number of inputs
+Some gates (AND, OR, NAND, NOR, XOR, XNOR) are available in variants with 2–8 inputs.
+
+---
+
+## 3. Drawing Wires
+
+### Making a connection
+1. **Left-click on an output port** (small circle on the right edge) – drawing begins.
+2. Optional: **left-click on empty canvas** – inserts a waypoint (bend).
+3. **Left-click on an input port** (small circle on the left edge) – connection saved.
+
+> **Note:** An input port can receive only **one** connection. Outputs support fan-out.
+
+### Cancelling a wire
+- Press `Escape` while a wire is in progress.
+
+### Feedback loops
+Cycles are explicitly **allowed** – the simulation engine handles them correctly.
+
+### Deleting a wire
+- Right-click → **Delete**, or select and press `Delete`.
+
+### Colouring wires
+- Right-click → **Set colour**.
+
+---
+
+## 4. Canvas Navigation (Zoom & Pan)
+
+| Action | Input |
+|---|---|
+| **Zoom** | Scroll mouse wheel |
+| **Pan** | Hold `Alt` + drag; or middle-button drag |
+
+---
+
+## 5. Selection & Movement
+
+### Select a single element
+- Left-click on a gate or wire.
+
+### Lasso selection
+- Left-click and drag on empty canvas → selection rectangle; all gates inside are selected.
+
+### Move selected gates
+- **Mouse:** left-click + drag any selected gate.
+- **Keyboard:** Arrow keys (one grid step); `Shift` + arrow keys (5× step).
+
+### Copy & Paste
+- `Ctrl+C` copies all selected gates and any wires that connect exclusively between them.
+- `Ctrl+V` pastes with a +24 px offset; pasted gates become the new selection.
+- **Right-click on empty canvas** → "Paste (Ctrl+V)" when clipboard is non-empty, pasting at the cursor position.
+- **Gate context menu → "Copy"** copies the right-clicked gate together with any other currently selected gates.
+
+### Delete
+- `Delete` or `Backspace` removes all selected elements (gates **and** attached wires).
+
+---
+
+## 6. Gate Customisation (Context Menu)
+
+Right-click on a gate to open the context menu:
+
+| Option | Available for | Description |
+|---|---|---|
+| **Copy** | All gates | Copy this gate (+ selection) to clipboard |
+| **Rename** | All gates | Assign a free-text label (shown in gate header and HDL export) |
+| **Rotate (90°)** | All gates | Rotate gate by 90° (ports rotate with it) |
+| **LED colour** | OUTPUT_LED | Choose the LED's glow colour |
+| **Frequency** | CLOCK | Set clock frequency in Hz (0.1–100 Hz) |
+| **Hex value** | ADC8 | Set analogue input value as hex (00–FF) |
+| **Edit ROM content** | ROM256 | Open the ROM hex editor |
+| **Help (Op-Codes)** | ALU4 | Shows all 8 op-code assignments in the menu |
+| **Delete** | All gates | Remove gate and all attached wires |
+
+---
+
+## 7. Switches & Push Buttons
+
+### Input Switch (`INPUT_SWITCH`)
+- **Left-click**: toggles between **HIGH (1)** and **LOW (0)**.
+
+### Push Button (`PUSH_BTN`)
+- **Left-click**: sets output to **HIGH (1)** for ~150 ms, then returns to **LOW (0)**.
+
+### Constant sources
+- **CONST_HIGH** / **CONST_LOW** permanently output 1 / 0.
+
+---
+
+## 8. Clock Generator & Pause / Single-Step
+
+### Clock generator (`CLOCK`)
+- Produces a periodic HIGH/LOW signal.
+- Frequency configurable via right-click → **Frequency** (0.1–100 Hz).
+
+### Pausing the clock
+- **Toolbar "Pause"** (⏸): all clocks frozen; combinational logic continues to propagate.
+
+### Single-step
+- In pause mode: **Toolbar "Step"** (⏭): all clocks toggle exactly once.
+
+---
+
+## 9. Truth Table & State Transition Table
+
+Open via **Toolbar → "Analysis"**.
+
+### Automatic mode selection
+
+| Circuit type | Mode shown |
+|---|---|
+| No cycles (purely combinational) | **Truth Table** |
+| At least one cycle (sequential) | **State Transition Table** |
+
+### Truth Table (combinational)
+- Lists all **2ⁿ** input combinations (n = number of input switches).
+- Shows intermediate values of all gate outputs.
+
+**Colour legend:** 🔵 Blue = inputs · 🟢 Green = outputs · Grey = internal values
+
+### State Transition Table (sequential)
+
+| Column group | Colour | Contents |
+|---|---|---|
+| External inputs | 🔵 Blue | Current values of input switches |
+| Current state Q(t) | 🟡 Amber | Outputs of feedback gates |
+| Next state Q(t+1) | 🟣 Purple | State after exactly one simulation tick |
+| Outputs | 🟢 Green | Values of connected LEDs |
+
+**Stable rows** (Q(t) = Q(t+1)) are highlighted with an amber background.
+
+**Example SR Latch:**
+
+| S | R | Q(t) | Q̄(t) | Q(t+1) | Q̄(t+1) |
+|---|---|------|--------|---------|---------|
+| 0 | 0 | 0 | 1 | 0 | 1 | ← stable |
+| 0 | 0 | 1 | 0 | 1 | 0 | ← stable |
+| 0 | 1 | 1 | 0 | 0 | 1 | ← RESET active |
+| 1 | 0 | 0 | 1 | 1 | 0 | ← SET active |
+| 1 | 1 | – | – | – | – | ← forbidden |
+
+---
+
+## 10. Timing Diagram
+
+| Action | Description |
+|---|---|
+| **Resize panel** | Drag the top edge of the panel |
+| **Hide signal** | Click the eye icon (👁) in the signal row |
+| **Clear history** | Toolbar button "Clear history" |
+
+Maximum **200 snapshots** kept in memory (older ones are discarded).
+
+---
+
+## 11. FSM Editor
+
+### Creating a state
+1. Open the FSM editor via the toolbar.
+2. **Double-click** on empty FSM area → new state created.
+3. Double-click the state to rename it / mark as initial / final state.
+
+### Drawing a transition
+1. Left-click the **source state** → left-click the **target state**.
+2. Enter a transition label (e.g. `a & !b`).
+
+### Condition operators
+`!a` (NOT) · `a & b` (AND) · `a | b` (OR) · `a ^ b` (XOR) · `1` (always true)
+
+### Synthesis
+- **Toolbar "Synthesise"**: FSM graph → combinational + sequential logic gates placed on the canvas.
+
+---
+
+## 12. Custom IC
+
+### Creating a Custom IC
+1. Build the sub-circuit with input switches and output LEDs as I/O pins.
+2. Select all gates (lasso).
+3. Toolbar → **"Create Custom IC"** → assign a name.
+4. The new gate appears in the palette under **"ICs"**.
+
+### Using a Custom IC
+- Drag & drop from palette; only defined ports are visible from outside.
+
+---
+
+## 13. ROM Editor
+
+1. Drag the ROM gate from the palette.
+2. Right-click → **"Edit ROM content"**.
+3. Type values directly as hex (00–FF).
+
+---
+
+## 14. Save & Load
+
+### Auto-save
+Automatically saved to `localStorage` after every change. Restored on next page open.
+
+### Manual save
+Toolbar → **"Save"** (💾) → downloads a `.json` file.
+
+### Load
+Toolbar → **"Load"** (📂) → select a `.json` file. The current circuit is replaced.
+
+> **Warning:** Loading overwrites the current unsaved circuit.
+
+---
+
+## 15. Export (Verilog / VHDL / JSON)
+
+Open via **Toolbar → "Export"**.
+
+| Format | Notes |
+|---|---|
+| **JSON** | Full round-trip format for sharing and backup |
+| **Verilog** | Synthesisable (IEEE 1364); suitable for Vivado, Quartus |
+| **VHDL** | Synthesisable (IEEE 1076) |
+
+---
+
+## 16. Keyboard Shortcuts
+
+| Key / Combination | Action |
+|---|---|
+| `Delete` / `Backspace` | Delete selected gates and wires |
+| `↑` `↓` `←` `→` | Move selected gates by one grid step |
+| `Shift` + arrow keys | Move selected gates by 5× grid step |
+| `Ctrl+C` | Copy selected gates (and internal wires) |
+| `Ctrl+V` | Paste clipboard (+24 px offset) |
+| `Escape` | Cancel wire drawing · clear selection · close menus |
+| `R` | Rotate selected gate(s) by 90° |
+| `W` | Toggle wire-draw mode (crosshair cursor) |
+| `X` | Toggle snap-to-port mode (yellow outline) |
+| Mouse wheel | Zoom canvas in / out |
+| `Alt` + left-click drag | Pan viewport |
+| Middle-button drag | Pan viewport |
+| Left-click output port | Start wire |
+| Left-click input port | Finish wire |
+| Left-click canvas (while drawing) | Insert waypoint |
+| Drag on empty canvas | Lasso selection → use arrow keys to move |
+| Right-click gate | Context menu (copy, rotate, rename, colour, delete, …) |
+| Right-click wire | Context menu (colour, junction, delete) |
+| Right-click empty canvas | Paste at cursor (if clipboard non-empty) |
+
+---
+
+## 17. Common Errors & Solutions
+
+### Signal does not change even though the switch was toggled
+**Cause:** Wire not connected correctly (port not hit exactly).
+**Solution:** Click the wire – if it can be selected, it is correctly connected. Otherwise redraw.
+
+### Feedback circuit shows no oscillation
+**Cause:** Even-length loops (e.g. NOT-NOT ring) are stabilised by the even-period fix.
+**Solution:** Open the timing diagram – the oscillation is visible there as alternating 0/1 values.
+
+### State transition table shows Q(t+1) = Q(t) for all rows
+**Cause:** No feedback gates detected; circuit treated as combinational.
+**Solution:** Verify that wires actually form a cycle (output port → input port on the same logic path).
+
+### Truth table freezes the browser
+**Cause:** More than ~12 input switches (> 4096 rows).
+**Solution:** Use the timing diagram or manual switch tests for larger circuits.
+
+### FSM synthesis produces no visible circuit
+**Cause:** No valid transitions defined.
+**Solution:** Create at least two states and one transition with a valid expression (e.g. `1`).
+
+### Saved circuit cannot be loaded
+**Cause:** JSON file from an incompatible simulator version.
+**Solution:** Rebuild manually or inspect the gate type IDs in the JSON file.
+
+---
+
+## 18. Component Reference: ALU4
+
+### Ports
+
+| Port | Direction | Description |
+|---|---|---|
+| **A0–A3** | Input | 4-bit operand A (A0 = LSB) |
+| **B0–B3** | Input | 4-bit operand B (B0 = LSB) |
+| **Op0–Op2** | Input | Select operation (Op0 = LSB) |
+| **CIN** | Input | Carry input (for ADD/SUB cascading) |
+| **S0–S3** | Output | 4-bit result (S0 = LSB) |
+| **COUT** | Output | Carry output / shifted-out bit |
+| **ZERO** | Output | 1 when result = 0000 |
+
+### Op-code table
+
+| Op2 | Op1 | Op0 | Operation | Formula | COUT |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | **ADD** | S = A + B + CIN | Carry bit 4 |
+| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borrow bit |
+| 0 | 1 | 0 | **AND** | S = A & B | 0 |
+| 0 | 1 | 1 | **OR** | S = A \| B | 0 |
+| 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
+| 1 | 0 | 1 | **NOT A** | S = ~A | 0 |
+| 1 | 1 | 0 | **SHL** | S = A << 1 (left shift) | A[3] (shifted-out MSB) |
+| 1 | 1 | 1 | **SHR** | S = A >> 1 (right shift) | A[0] (shifted-out LSB) |
+
+> **Tip:** Right-click any ALU4 instance → **❓ Help (Op-Codes)** shows this table directly in the simulator.
+
+### Examples
+
+**Addition 5 + 3:**  A = 0101, B = 0011, Op = 000, CIN = 0 → S = 1000 (= 8), COUT = 0
+
+**Left-shift of 6 (= 0110):**  A = 0110, Op = 110 → S = 1100 (= 12), COUT = 0
+
+**Left-shift of 9 (= 1001):**  A = 1001, Op = 110 → S = 0010 (= 2), COUT = 1
+
+### Cascading multiple ALUs
+For an 8-bit addition: connect COUT of the lower-order ALU to CIN of the higher-order ALU (ripple-carry).
+
+---
+
+*User Manual for LogicSim – Browser-based Logic Gate Simulator*
