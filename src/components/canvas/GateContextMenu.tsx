@@ -18,6 +18,10 @@ export function GateContextMenu({ gate, screenX, screenY, onClose }: Props) {
   const [showFreqInput, setShowFreqInput] = useState(false);
   const [freqVal, setFreqVal] = useState(String((gate.customState?.frequency as number) ?? 1));
   const [showRomEditor, setShowRomEditor] = useState(false);
+  const [showAdcInput, setShowAdcInput] = useState(false);
+  const [adcVal, setAdcVal] = useState(
+    ((gate.customState?.value as number) ?? 128).toString(16).toUpperCase().padStart(2, '0')
+  );
 
   const handleRename = () => {
     onClose();
@@ -121,6 +125,45 @@ export function GateContextMenu({ gate, screenX, screenY, onClose }: Props) {
                   const freq = parseFloat(freqVal);
                   if (!isNaN(freq) && freq >= 0.1 && freq <= 100)
                     dispatch({ type:'GATE_SET_FREQ', payload:{ gateId:gate.id, frequency:freq } });
+                  onClose();
+                }}
+                style={{ background:'#1d4ed8', border:'none', color:'#fff', borderRadius:4, padding:'2px 8px', cursor:'pointer', fontSize:11, fontFamily:'monospace' }}>
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
+        {gate.typeId === 'ADC8' && !showAdcInput && (
+          <button style={itemStyle} onMouseEnter={(e)=>hov(e,true)} onMouseLeave={(e)=>hov(e,false)}
+            onClick={() => setShowAdcInput(true)}>
+            🔢 Hex-Wert eingeben…
+          </button>
+        )}
+        {gate.typeId === 'ADC8' && showAdcInput && (
+          <div style={{ padding:'4px 12px 8px' }}>
+            <div style={{ color:'#94a3b8', fontSize:10, fontFamily:'monospace', marginBottom:4 }}>Hex-Wert (00–FF)</div>
+            <div style={{ display:'flex', gap:4 }}>
+              <input
+                autoFocus
+                type="text" maxLength={2} value={adcVal}
+                onChange={(e) => setAdcVal(e.target.value.toUpperCase().replace(/[^0-9A-F]/g, ''))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const parsed = parseInt(adcVal, 16);
+                    if (!isNaN(parsed))
+                      dispatch({ type: 'GATE_SET_ADC_VALUE', payload: { gateId: gate.id, value: Math.max(0, Math.min(255, parsed)) } });
+                    onClose();
+                  } else if (e.key === 'Escape') { onClose(); }
+                  e.stopPropagation();
+                }}
+                style={{ width:52, background:'#1e293b', border:'1px solid #334155', color:'#22c55e', borderRadius:4, padding:'2px 6px', fontSize:12, fontFamily:'monospace', textAlign:'center', letterSpacing:2 }}
+              />
+              <button
+                onClick={() => {
+                  const parsed = parseInt(adcVal, 16);
+                  if (!isNaN(parsed))
+                    dispatch({ type: 'GATE_SET_ADC_VALUE', payload: { gateId: gate.id, value: Math.max(0, Math.min(255, parsed)) } });
                   onClose();
                 }}
                 style={{ background:'#1d4ed8', border:'none', color:'#fff', borderRadius:4, padding:'2px 8px', cursor:'pointer', fontSize:11, fontFamily:'monospace' }}>

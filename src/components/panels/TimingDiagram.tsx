@@ -176,7 +176,7 @@ export function TimingDiagram({ history, onClose }: Props) {
         </div>
       ) : (
         /* ── SVG-Canvas ──────────────────────────────────────────────── */
-        <div ref={scrollRef} onScroll={handleScroll} style={{ overflow: 'auto', flex: 1 }}>
+        <div ref={scrollRef} onScroll={handleScroll} style={{ overflowX: 'scroll', overflowY: 'auto', flex: 1 }}>
           <svg width={Math.max(totalW, 400)} height={totalH} style={{ display: 'block' }}>
 
             {/* Vertikale Rasterlinien — an Sample-Positionen */}

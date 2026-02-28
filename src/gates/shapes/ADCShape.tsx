@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import type { GateShapeProps } from '../../core/types';
 import { GATE_STROKE, GATE_SELECTED_STROKE } from '../../utils/constants';
 import { PortDots } from './GateBase';
@@ -16,8 +16,6 @@ export function ADCShape({ gate, definition, isSelected, inputSignals, onPointer
   const stroke = isSelected ? GATE_SELECTED_STROKE : GATE_STROKE;
   const { dispatch } = useCircuitContext();
   const dragging = useRef(false);
-  const [editing, setEditing] = useState(false);
-  const [inputText, setInputText] = useState('');
 
   const value = Math.max(0, Math.min(255, (gate.customState?.value as number) ?? 128));
   const thumbX = TRACK_X + (value / 255) * TRACK_W;
@@ -49,28 +47,6 @@ export function ADCShape({ gate, definition, isSelected, inputSignals, onPointer
     (e.currentTarget as SVGElement).releasePointerCapture(e.pointerId);
   };
 
-  const startEditing = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const hex = value.toString(16).toUpperCase().padStart(2, '0');
-    setInputText(hex);
-    setEditing(true);
-  };
-
-  const commitEdit = () => {
-    const parsed = parseInt(inputText, 16);
-    if (!isNaN(parsed)) {
-      const clamped = Math.max(0, Math.min(255, parsed));
-      dispatch({ type: 'GATE_SET_ADC_VALUE', payload: { gateId: gate.id, value: clamped } });
-    }
-    setEditing(false);
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') { commitEdit(); }
-    else if (e.key === 'Escape') { setEditing(false); }
-    e.stopPropagation();
-  };
-
   const hex = value.toString(16).toUpperCase().padStart(2, '0');
 
   return (
@@ -82,54 +58,18 @@ export function ADCShape({ gate, definition, isSelected, inputSignals, onPointer
         ADC
       </text>
 
-      {/* Value display – Doppelklick zum Bearbeiten */}
-      <rect
-        x={W / 2 - 22} y={22} width={44} height={22} rx={4} fill="#060d1a"
-        style={{ cursor: 'text' }}
-        onDoubleClick={startEditing}
-      />
-      {editing ? (
-        <foreignObject x={W / 2 - 21} y={23} width={42} height={20}>
-          <input
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            xmlns={"http://www.w3.org/1999/xhtml" as any}
-            autoFocus
-            value={inputText}
-            maxLength={2}
-            onChange={(e) => setInputText(e.target.value.toUpperCase().replace(/[^0-9A-F]/g, ''))}
-            onKeyDown={handleInputKeyDown}
-            onBlur={commitEdit}
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            style={{
-              width: '100%',
-              height: '100%',
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              color: '#22c55e',
-              fontFamily: 'monospace',
-              fontSize: 12,
-              fontWeight: 700,
-              textAlign: 'center',
-              padding: 0,
-            }}
-          />
-        </foreignObject>
-      ) : (
-        <>
-          <text
-            x={W / 2} y={37} textAnchor="middle" fontSize={12} fill="#22c55e"
-            fontFamily="monospace" fontWeight={700} pointerEvents="none"
-          >
-            0x{hex}
-          </text>
-          {/* Hint-Text */}
-          <text x={W / 2} y={50} textAnchor="middle" fontSize={7} fill="#1e4d2b" fontFamily="monospace" pointerEvents="none">
-            Doppelklick zum Eingeben
-          </text>
-        </>
-      )}
+      {/* Value display */}
+      <rect x={W / 2 - 22} y={22} width={44} height={22} rx={4} fill="#060d1a" />
+      <text
+        x={W / 2} y={37} textAnchor="middle" fontSize={12} fill="#22c55e"
+        fontFamily="monospace" fontWeight={700} pointerEvents="none"
+      >
+        0x{hex}
+      </text>
+      {/* Hint-Text */}
+      <text x={W / 2} y={50} textAnchor="middle" fontSize={7} fill="#1e4d2b" fontFamily="monospace" pointerEvents="none">
+        Rechtsklick: Wert setzen
+      </text>
       <text x={W / 2} y={62} textAnchor="middle" fontSize={8} fill="#475569" fontFamily="monospace" pointerEvents="none">
         {value} / 255
       </text>
