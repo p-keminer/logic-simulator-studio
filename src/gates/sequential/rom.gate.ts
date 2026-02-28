@@ -85,9 +85,11 @@ gateRegistry.register({
     const oe_n = w[`${g.id}:oe`] ?? "'1'";
     const ds   = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(id => w[`${g.id}:${id}`] ?? `w_${sid}_${id}`);
     const addrCat  = [...addr].reverse().join(' & '); // a7 & ... & a0 (MSB first)
+    // Filter VHDL character literals ('0'/'1') — invalid in sensitivity lists.
     const connSigs = ['a0','a1','a2','a3','a4','a5','a6','a7','cs','oe']
-      .map(id => w[`${g.id}:${id}`]).filter(Boolean);
-    const sense = connSigs.length > 0 ? connSigs.join(', ') : 'cs, oe';
+      .map(id => w[`${g.id}:${id}`])
+      .filter((s): s is string => !!s && !s.startsWith("'"));
+    const sense = connSigs.length > 0 ? connSigs.join(', ') : `${cs_n}, ${oe_n}`;
     return [
       `-- ROM256 ${sid}`,
       `process(${sense})`,

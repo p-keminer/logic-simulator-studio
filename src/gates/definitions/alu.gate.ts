@@ -117,9 +117,13 @@ gateRegistry.register({
     const s2   = w[`${g.id}:s2`]  ?? `w_${sid}_s2`; const s3 = w[`${g.id}:s3`] ?? `w_${sid}_s3`;
     const cout = w[`${g.id}:cout`] ?? `w_${sid}_cout`;
     const zero = w[`${g.id}:zero`] ?? `w_${sid}_zero`;
+    // Filter VHDL character literals ('0'/'1') from sensitivity list — they are
+    // invalid in process sensitivity lists and arise from unconnected input ports.
+    const allSigs = [a0, a1, a2, a3, b0, b1, b2, b3, op0, op1, op2, cin];
+    const sens = [...new Set(allSigs.filter(s => !s.startsWith("'")))].join(', ') || 'a0';
     return [
       `-- ALU4 ${sid}`,
-      `process(${a0}, ${a1}, ${a2}, ${a3}, ${b0}, ${b1}, ${b2}, ${b3}, ${op0}, ${op1}, ${op2}, ${cin})`,
+      `process(${sens})`,
       `  variable va  : unsigned(3 downto 0);`,
       `  variable vb  : unsigned(3 downto 0);`,
       `  variable vop : integer range 0 to 7;`,

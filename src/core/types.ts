@@ -97,6 +97,13 @@ export interface GateDefinition {
    * Causes their output signals to be declared as `reg` instead of `wire`.
    */
   verilogAlwaysComb?: boolean;
+  /**
+   * Port IDs of outputs that are driven by continuous assignment ('assign') in Verilog,
+   * even when the gate also has isSynchronous=true or verilogAlwaysComb=true for other
+   * outputs. Those outputs must be declared as 'wire' (not 'reg').
+   * Example: D-FF drives q via always @(posedge) → reg, but q_n via assign → wire.
+   */
+  verilogWireOutputs?: string[];
 }
 
 export interface GateInstance {

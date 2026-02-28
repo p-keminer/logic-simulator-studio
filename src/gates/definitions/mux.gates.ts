@@ -94,9 +94,10 @@ gateRegistry.register({
     const s  = w[`${g.id}:s`]  ?? "'0'";
     const y0 = w[`${g.id}:y0`] ?? `w_${sid}_y0`;
     const y1 = w[`${g.id}:y1`] ?? `w_${sid}_y1`;
+    const sens2 = [d, s].filter(x => !x.startsWith("'")).join(', ') || 'd, s';
     return [
       `-- DEMUX2 ${sid}`,
-      `process(${d}, ${s})`,
+      `process(${sens2})`,
       `begin`,
       `  ${y0} <= '0'; ${y1} <= '0';`,
       `  if ${s} = '0' then ${y0} <= ${d};`,
@@ -168,9 +169,10 @@ gateRegistry.register({
     const y1 = w[`${g.id}:y1`] ?? `w_${sid}_y1`;
     const y2 = w[`${g.id}:y2`] ?? `w_${sid}_y2`;
     const y3 = w[`${g.id}:y3`] ?? `w_${sid}_y3`;
+    const sens4 = [d, s0, s1].filter(x => !x.startsWith("'")).join(', ') || 'd, s0, s1';
     return [
       `-- DEMUX4 ${sid}`,
-      `process(${d}, ${s0}, ${s1})`,
+      `process(${sens4})`,
       `begin`,
       `  ${y0} <= '0'; ${y1} <= '0'; ${y2} <= '0'; ${y3} <= '0';`,
       `  if    ${s1} = '0' and ${s0} = '0' then ${y0} <= ${d};`,

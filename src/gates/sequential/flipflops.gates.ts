@@ -118,6 +118,8 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ an',
   isSynchronous: true,
+  // q driven by always @(posedge) → reg; q_n driven by assign → wire
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── D Flip-Flop with async Reset ────────────────────────────────────────────
@@ -179,6 +181,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop mit asynchronem Reset',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── JK Flip-Flop ─────────────────────────────────────────────────────────────
@@ -247,6 +250,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'JK Flip-Flop: J=Set, K=Reset, J=K=1 togglet Q',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── T Flip-Flop ──────────────────────────────────────────────────────────────
@@ -301,6 +305,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'T Flip-Flop: toggelt Q bei CLK↑ wenn T=1',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── D Latch (level-sensitive) ────────────────────────────────────────────────
@@ -328,13 +333,14 @@ gateRegistry.register({
     const d  = w[`${g.id}:d`]  ?? "1'b0";
     const q  = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
+    // Blocking assignments (=) required in always @(*); <= would infer wrong behavior
     return [
-      `always @(*) begin`,
+      `always @(*) begin // D-Latch ${g.id} — intentional latch inference`,
       `  if (${en}) begin`,
-      `    ${q}  <= ${d};`,
-      `    ${qn} <= ~${d};`,
+      `    ${q}  = ${d};`,
+      `    ${qn} = ~${d};`,
       `  end`,
-      `end // D-Latch ${g.id}`,
+      `end`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
@@ -342,16 +348,19 @@ gateRegistry.register({
     const d  = w[`${g.id}:d`]  ?? "'0'";
     const q  = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
+    const sens = [en, d].filter(s => !s.startsWith("'")).join(', ') || 'en, d';
     return [
-      `process(${en}, ${d})`,
+      `process(${sens}) -- D-Latch ${g.id} — intentional latch inference`,
       `begin`,
       `  if ${en} = '1' then`,
       `    ${q}  <= ${d};`,
       `    ${qn} <= not ${d};`,
       `  end if;`,
-      `end process; -- D-Latch ${g.id}`,
+      `end process;`,
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,
   description: 'D-Latch (pegelgesteuert): transparent wenn EN=1',
+  // always @(*) with blocking '=' → outputs are reg (latch inference is intentional)
+  verilogAlwaysComb: true,
 });

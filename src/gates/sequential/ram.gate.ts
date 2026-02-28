@@ -127,8 +127,10 @@ gateRegistry.register({
     const writePorts = ['a0','a1','a2','a3','a4','a5','a6','a7',
                         'di0','di1','di2','di3','di4','di5','di6','di7','we','cs'];
     const readPorts  = ['a0','a1','a2','a3','a4','a5','a6','a7','oe','cs'];
-    const writeSense = writePorts.map(id => w[`${g.id}:${id}`]).filter(Boolean).join(', ') || 'cs, we';
-    const readConn   = readPorts.map(id => w[`${g.id}:${id}`]).filter(Boolean).join(', ');
+    // Filter VHDL character literals ('0'/'1') — invalid in sensitivity lists.
+    const isSignal = (s: string | undefined): s is string => !!s && !s.startsWith("'");
+    const writeSense = writePorts.map(id => w[`${g.id}:${id}`]).filter(isSignal).join(', ') || `${cs_n}, ${we_n}`;
+    const readConn   = readPorts.map(id => w[`${g.id}:${id}`]).filter(isSignal).join(', ');
     const readSense  = readConn ? `${readConn}, ${ramName}` : ramName;
     return [
       `-- RAM256 ${sid}`,

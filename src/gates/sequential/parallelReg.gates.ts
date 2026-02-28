@@ -88,6 +88,8 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell aus',
   isSynchronous: true,
+  // sr reg is driven by always @(posedge) → reg; q driven by assign q=sr[3] → wire
+  verilogWireOutputs: ['q'],
 });
 
 // ─── PIPO4 ───────────────────────────────────────────────────────────────────
