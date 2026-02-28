@@ -143,8 +143,8 @@ Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Code
 ## Schnellstart
 
 ```bash
-git clone https://github.com/<dein-benutzername>/logic-gate-simulator.git
-cd logic-gate-simulator
+git clone https://github.com/p-keminer/logic-simulator-studio.git
+cd logic-simulator-studio
 npm install
 npm run dev
 ```
@@ -332,8 +332,8 @@ Flags: **ZERO** = 1 when result S[3:0] = 0. Right-click any ALU4 instance → **
 ## Getting Started
 
 ```bash
-git clone https://github.com/<your-username>/logic-gate-simulator.git
-cd logic-gate-simulator
+git clone https://github.com/p-keminer/logic-simulator-studio.git
+cd logic-simulator-studio
 npm install
 npm run dev
 ```
