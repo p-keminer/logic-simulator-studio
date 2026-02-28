@@ -75,6 +75,18 @@ export interface GateDefinition {
   ) => Record<string, unknown>;
   toVerilog?: (gate: GateInstance, wireNames: Record<string, string>) => string;
   toVHDL?: (gate: GateInstance, wireNames: Record<string, string>) => string;
+  /**
+   * Optional: extra internal VHDL signals (e.g. shift registers) that must be
+   * declared in the architecture declarative region.
+   * Returns an array of signal names. Each is declared as STD_LOGIC_VECTOR(width-1 downto 0).
+   */
+  vhdlExtraSignals?: (gate: GateInstance) => { name: string; width: number }[];
+  /**
+   * Optional: extra internal Verilog regs (e.g. shift registers) that must be
+   * declared at module scope before the always block.
+   * Returns an array of {name, width} objects; each emits `reg [width-1:0] name;`.
+   */
+  verilogExtraRegs?: (gate: GateInstance) => { name: string; width: number }[];
   shapeComponent: React.ComponentType<GateShapeProps>;
   description?: string;
   isSynchronous?: boolean;

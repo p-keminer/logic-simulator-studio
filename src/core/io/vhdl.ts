@@ -81,6 +81,18 @@ export function generateVHDL(circuit: Circuit): string {
     }
   }
 
+  // ── Pass 1C: Zusätzliche interne Signale (z.B. Schieberegister in PISO4) ────────────────
+  const extraVHDLSignals: { name: string; width: number }[] = [];
+  for (const gate of Object.values(circuit.gates)) {
+    if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    if (def.vhdlExtraSignals) {
+      for (const sig of def.vhdlExtraSignals(gate)) {
+        extraVHDLSignals.push(sig);
+      }
+    }
+  }
+
   // ── Bug fix 1: undeclared signals used by logic gates (e.g. CLOCK → process)
   // must appear as entity input ports.
   for (const gate of Object.values(circuit.gates)) {
@@ -177,6 +189,9 @@ export function generateVHDL(circuit: Circuit): string {
     ...(signals.size > 0
       ? [...signals].map((s) => `  signal ${s} : STD_LOGIC := '0';`)
       : ['  -- no internal signals']),
+    ...extraVHDLSignals.map(({ name, width }) =>
+      `  signal ${name} : STD_LOGIC_VECTOR(${width - 1} downto 0) := (others => '0');`
+    ),
     `begin`,
     ``,
     ...(logic.length > 0 ? [...logic, ``] : []),

@@ -122,6 +122,18 @@ export function generateVerilog(circuit: Circuit): string {
   // Remove any duplicate declarations — the port list already covers these signals.
   for (const name of outputs) { regs.delete(name); wires.delete(name); }
 
+  // Collect extra internal regs (e.g. shift registers in PISO4) declared at module scope
+  const extraVerilogRegs: { name: string; width: number }[] = [];
+  for (const gate of Object.values(circuit.gates)) {
+    if (EXCLUDE_FROM_VERILOG.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    if (def.verilogExtraRegs) {
+      for (const reg of def.verilogExtraRegs(gate)) {
+        extraVerilogRegs.push(reg);
+      }
+    }
+  }
+
   // Build port declarations without trailing comma issues
   const portParts: string[] = [];
   for (const name of inputs)  portParts.push(`  input  wire ${name}`);
@@ -139,6 +151,8 @@ export function generateVerilog(circuit: Circuit): string {
     ``,
     ...(wires.size > 0 ? [`  wire ${[...wires].join(', ')};`, ``] : []),
     ...(regs.size  > 0 ? [`  reg  ${[...regs].join(', ')};`,  ``] : []),
+    ...extraVerilogRegs.map(({ name, width }) => `  reg [${width - 1}:0] ${name};`),
+    ...(extraVerilogRegs.length > 0 ? [``,] : []),
     ...(gateLines.length > 0 ? [...gateLines, ``] : []),
     ...(ffLines.length > 0 ? [
       `  // Sequential logic`,
