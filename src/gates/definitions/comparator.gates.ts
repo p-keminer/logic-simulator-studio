@@ -1,6 +1,8 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 // ─── 1-Bit Comparator ────────────────────────────────────────────────────────
 gateRegistry.register({
   typeId: 'CMP1',
@@ -21,6 +23,34 @@ gateRegistry.register({
     gt: (a  >  b ? 1 : 0) as 0 | 1,
     lt: (a  <  b ? 1 : 0) as 0 | 1,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const a  = w[`${g.id}:a`]  ?? "1'b0";
+    const b  = w[`${g.id}:b`]  ?? "1'b0";
+    const eq = w[`${g.id}:eq`] ?? `w_${sid}_eq`;
+    const gt = w[`${g.id}:gt`] ?? `w_${sid}_gt`;
+    const lt = w[`${g.id}:lt`] ?? `w_${sid}_lt`;
+    return [
+      `// CMP1 ${sid}`,
+      `assign ${eq} = ~(${a} ^ ${b});`,
+      `assign ${gt} = ${a} & ~${b};`,
+      `assign ${lt} = ~${a} & ${b};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const a  = w[`${g.id}:a`]  ?? "'0'";
+    const b  = w[`${g.id}:b`]  ?? "'0'";
+    const eq = w[`${g.id}:eq`] ?? `w_${sid}_eq`;
+    const gt = w[`${g.id}:gt`] ?? `w_${sid}_gt`;
+    const lt = w[`${g.id}:lt`] ?? `w_${sid}_lt`;
+    return [
+      `-- CMP1 ${sid}`,
+      `${eq} <= '1' when ${a} = ${b}              else '0';`,
+      `${gt} <= '1' when ${a} = '1' and ${b} = '0' else '0';`,
+      `${lt} <= '1' when ${a} = '0' and ${b} = '1' else '0';`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: '1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)',
 });
@@ -61,6 +91,58 @@ gateRegistry.register({
       gt: (gtin ?? 0) as 0 | 1,
     };
   },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const a0   = w[`${g.id}:a0`]   ?? "1'b0"; const a1 = w[`${g.id}:a1`] ?? "1'b0";
+    const a2   = w[`${g.id}:a2`]   ?? "1'b0"; const a3 = w[`${g.id}:a3`] ?? "1'b0";
+    const b0   = w[`${g.id}:b0`]   ?? "1'b0"; const b1 = w[`${g.id}:b1`] ?? "1'b0";
+    const b2   = w[`${g.id}:b2`]   ?? "1'b0"; const b3 = w[`${g.id}:b3`] ?? "1'b0";
+    const ltin = w[`${g.id}:ltin`] ?? "1'b0";
+    const eqin = w[`${g.id}:eqin`] ?? "1'b0";
+    const gtin = w[`${g.id}:gtin`] ?? "1'b0";
+    const lt   = w[`${g.id}:lt`]   ?? `w_${sid}_lt`;
+    const eq   = w[`${g.id}:eq`]   ?? `w_${sid}_eq`;
+    const gt   = w[`${g.id}:gt`]   ?? `w_${sid}_gt`;
+    return [
+      `// CMP4 ${sid}`,
+      `always @(*) begin : blk_${sid}`,
+      `  reg [3:0] va, vb;`,
+      `  va = {${a3}, ${a2}, ${a1}, ${a0}};`,
+      `  vb = {${b3}, ${b2}, ${b1}, ${b0}};`,
+      `  if      (va < vb) begin ${lt} = 1'b1; ${eq} = 1'b0; ${gt} = 1'b0; end`,
+      `  else if (va > vb) begin ${lt} = 1'b0; ${eq} = 1'b0; ${gt} = 1'b1; end`,
+      `  else              begin ${lt} = ${ltin}; ${eq} = ${eqin}; ${gt} = ${gtin}; end`,
+      `end // CMP4 ${sid}`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const a0   = w[`${g.id}:a0`]   ?? "'0'"; const a1 = w[`${g.id}:a1`] ?? "'0'";
+    const a2   = w[`${g.id}:a2`]   ?? "'0'"; const a3 = w[`${g.id}:a3`] ?? "'0'";
+    const b0   = w[`${g.id}:b0`]   ?? "'0'"; const b1 = w[`${g.id}:b1`] ?? "'0'";
+    const b2   = w[`${g.id}:b2`]   ?? "'0'"; const b3 = w[`${g.id}:b3`] ?? "'0'";
+    const ltin = w[`${g.id}:ltin`] ?? "'0'";
+    const eqin = w[`${g.id}:eqin`] ?? "'0'";
+    const gtin = w[`${g.id}:gtin`] ?? "'0'";
+    const lt   = w[`${g.id}:lt`]   ?? `w_${sid}_lt`;
+    const eq   = w[`${g.id}:eq`]   ?? `w_${sid}_eq`;
+    const gt   = w[`${g.id}:gt`]   ?? `w_${sid}_gt`;
+    return [
+      `-- CMP4 ${sid}`,
+      `process(${a0}, ${a1}, ${a2}, ${a3}, ${b0}, ${b1}, ${b2}, ${b3}, ${ltin}, ${eqin}, ${gtin})`,
+      `  variable va : unsigned(3 downto 0);`,
+      `  variable vb : unsigned(3 downto 0);`,
+      `begin`,
+      `  va := unsigned(${a3} & ${a2} & ${a1} & ${a0});`,
+      `  vb := unsigned(${b3} & ${b2} & ${b1} & ${b0});`,
+      `  if    va < vb then ${lt} <= '1'; ${eq} <= '0'; ${gt} <= '0';`,
+      `  elsif va > vb then ${lt} <= '0'; ${eq} <= '0'; ${gt} <= '1';`,
+      `  else               ${lt} <= ${ltin}; ${eq} <= ${eqin}; ${gt} <= ${gtin};`,
+      `  end if;`,
+      `end process; -- CMP4 ${sid}`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: '4-Bit Komparator (kaskadierfähig): Vergleicht A[3:0] mit B[3:0]',
+  verilogAlwaysComb: true,
 });

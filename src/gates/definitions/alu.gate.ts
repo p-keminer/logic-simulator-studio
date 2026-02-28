@@ -2,6 +2,8 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 import type { SignalValue } from '../../core/types';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 /**
  * 4-bit ALU – 8 operations selected by Op[2:0]:
  *   000 ADD   001 SUB   010 AND   011 OR
@@ -64,6 +66,88 @@ gateRegistry.register({
       zero: (result === 0 ? 1 : 0) as SignalValue,
     };
   },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const a0   = w[`${g.id}:a0`]  ?? "1'b0"; const a1 = w[`${g.id}:a1`] ?? "1'b0";
+    const a2   = w[`${g.id}:a2`]  ?? "1'b0"; const a3 = w[`${g.id}:a3`] ?? "1'b0";
+    const b0   = w[`${g.id}:b0`]  ?? "1'b0"; const b1 = w[`${g.id}:b1`] ?? "1'b0";
+    const b2   = w[`${g.id}:b2`]  ?? "1'b0"; const b3 = w[`${g.id}:b3`] ?? "1'b0";
+    const op0  = w[`${g.id}:op0`] ?? "1'b0"; const op1 = w[`${g.id}:op1`] ?? "1'b0";
+    const op2  = w[`${g.id}:op2`] ?? "1'b0";
+    const cin  = w[`${g.id}:cin`] ?? "1'b0";
+    const s0   = w[`${g.id}:s0`]  ?? `w_${sid}_s0`; const s1 = w[`${g.id}:s1`] ?? `w_${sid}_s1`;
+    const s2   = w[`${g.id}:s2`]  ?? `w_${sid}_s2`; const s3 = w[`${g.id}:s3`] ?? `w_${sid}_s3`;
+    const cout = w[`${g.id}:cout`] ?? `w_${sid}_cout`;
+    const zero = w[`${g.id}:zero`] ?? `w_${sid}_zero`;
+    return [
+      `// ALU4 ${sid}`,
+      `always @(*) begin : blk_${sid}`,
+      `  reg [3:0] va, vb, res;`,
+      `  reg [4:0] tmp;`,
+      `  va = {${a3}, ${a2}, ${a1}, ${a0}};`,
+      `  vb = {${b3}, ${b2}, ${b1}, ${b0}};`,
+      `  res = 4'b0; tmp = 5'b0;`,
+      `  case ({${op2}, ${op1}, ${op0}})`,
+      `    3'b000: tmp = {1'b0,va} + {1'b0,vb} + {4'b0,${cin}}; // ADD`,
+      `    3'b001: tmp = {1'b0,va} - {1'b0,vb} - {4'b0,${cin}}; // SUB`,
+      `    3'b010: res = va & vb;                                 // AND`,
+      `    3'b011: res = va | vb;                                 // OR`,
+      `    3'b100: res = va ^ vb;                                 // XOR`,
+      `    3'b101: res = ~va;                                     // NOT A`,
+      `    3'b110: begin tmp[4]=va[3]; tmp[3]=va[2]; tmp[2]=va[1]; tmp[1]=va[0]; tmp[0]=1'b0; end // SHL`,
+      `    3'b111: begin tmp[4]=va[0]; tmp[3]=1'b0;  tmp[2]=va[3]; tmp[1]=va[2]; tmp[0]=va[1]; end // SHR`,
+      `    default: res = 4'b0;`,
+      `  endcase`,
+      `  if (tmp != 5'b0) res = tmp[3:0];`,
+      `  {${s3}, ${s2}, ${s1}, ${s0}} = res;`,
+      `  ${cout} = tmp[4];`,
+      `  ${zero} = (res == 4'b0) ? 1'b1 : 1'b0;`,
+      `end // ALU4 ${sid}`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const a0   = w[`${g.id}:a0`]  ?? "'0'"; const a1 = w[`${g.id}:a1`] ?? "'0'";
+    const a2   = w[`${g.id}:a2`]  ?? "'0'"; const a3 = w[`${g.id}:a3`] ?? "'0'";
+    const b0   = w[`${g.id}:b0`]  ?? "'0'"; const b1 = w[`${g.id}:b1`] ?? "'0'";
+    const b2   = w[`${g.id}:b2`]  ?? "'0'"; const b3 = w[`${g.id}:b3`] ?? "'0'";
+    const op0  = w[`${g.id}:op0`] ?? "'0'"; const op1 = w[`${g.id}:op1`] ?? "'0'";
+    const op2  = w[`${g.id}:op2`] ?? "'0'";
+    const cin  = w[`${g.id}:cin`] ?? "'0'";
+    const s0   = w[`${g.id}:s0`]  ?? `w_${sid}_s0`; const s1 = w[`${g.id}:s1`] ?? `w_${sid}_s1`;
+    const s2   = w[`${g.id}:s2`]  ?? `w_${sid}_s2`; const s3 = w[`${g.id}:s3`] ?? `w_${sid}_s3`;
+    const cout = w[`${g.id}:cout`] ?? `w_${sid}_cout`;
+    const zero = w[`${g.id}:zero`] ?? `w_${sid}_zero`;
+    return [
+      `-- ALU4 ${sid}`,
+      `process(${a0}, ${a1}, ${a2}, ${a3}, ${b0}, ${b1}, ${b2}, ${b3}, ${op0}, ${op1}, ${op2}, ${cin})`,
+      `  variable va  : unsigned(3 downto 0);`,
+      `  variable vb  : unsigned(3 downto 0);`,
+      `  variable vop : integer range 0 to 7;`,
+      `  variable sum : unsigned(4 downto 0);`,
+      `begin`,
+      `  va  := unsigned(${a3} & ${a2} & ${a1} & ${a0});`,
+      `  vb  := unsigned(${b3} & ${b2} & ${b1} & ${b0});`,
+      `  vop := to_integer(unsigned(${op2} & ${op1} & ${op0}));`,
+      `  sum := (others => '0');`,
+      `  case vop is`,
+      `    when 0 => sum := resize(va,5) + resize(vb,5) + unsigned("0000" & ${cin}); -- ADD`,
+      `    when 1 => sum := resize(va,5) - resize(vb,5) - unsigned("0000" & ${cin}); -- SUB`,
+      `    when 2 => sum(3 downto 0) := va and vb;                                   -- AND`,
+      `    when 3 => sum(3 downto 0) := va or  vb;                                   -- OR`,
+      `    when 4 => sum(3 downto 0) := va xor vb;                                   -- XOR`,
+      `    when 5 => sum(3 downto 0) := not va;                                      -- NOT A`,
+      `    when 6 => sum(0):='0'; sum(1):=va(0); sum(2):=va(1); sum(3):=va(2); sum(4):=va(3); -- SHL`,
+      `    when 7 => sum(0):=va(1); sum(1):=va(2); sum(2):=va(3); sum(3):='0'; sum(4):=va(0); -- SHR`,
+      `    when others => null;`,
+      `  end case;`,
+      `  ${s0} <= sum(0); ${s1} <= sum(1); ${s2} <= sum(2); ${s3} <= sum(3);`,
+      `  ${cout} <= sum(4);`,
+      `  if sum(3 downto 0) = x"0" then ${zero} <= '1'; else ${zero} <= '0'; end if;`,
+      `end process; -- ALU4 ${sid}`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: '4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]',
+  verilogAlwaysComb: true,
 });

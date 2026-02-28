@@ -79,7 +79,7 @@ export function generateVerilog(circuit: Circuit): string {
         const k = `${gate.id}:${out.id}`;
         const wName = byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
         if (!inputs.includes(wName) && !outputs.includes(wName)) {
-          if (def.isSynchronous) regs.add(wName);
+          if (def.isSynchronous || def.verilogAlwaysComb) regs.add(wName);
           else wires.add(wName);
         }
       }

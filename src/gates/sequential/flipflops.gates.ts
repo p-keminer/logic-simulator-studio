@@ -91,17 +91,20 @@ gateRegistry.register({
   toVerilog: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const d   = w[`${g.id}:d`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `always @(posedge ${clk}) begin`,
       `  ${q} <= ${d};`,
       `end // D-FF ${g.id}`,
+      `assign ${qn} = ~${q};`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const d   = w[`${g.id}:d`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `process(${clk})`,
       `begin`,
@@ -109,6 +112,7 @@ gateRegistry.register({
       `    ${q} <= ${d};`,
       `  end if;`,
       `end process; -- D-FF ${g.id}`,
+      `${qn} <= not ${q};`,
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,
@@ -144,19 +148,22 @@ gateRegistry.register({
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const rst = w[`${g.id}:rst`] ?? "1'b0";
     const d   = w[`${g.id}:d`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `always @(posedge ${clk} or posedge ${rst}) begin`,
       `  if (${rst}) ${q} <= 1'b0;`,
       `  else        ${q} <= ${d};`,
       `end // D-FF/R ${g.id}`,
+      `assign ${qn} = ~${q};`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const rst = w[`${g.id}:rst`] ?? "'0'";
     const d   = w[`${g.id}:d`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `process(${clk}, ${rst})`,
       `begin`,
@@ -166,6 +173,7 @@ gateRegistry.register({
       `    ${q} <= ${d};`,
       `  end if;`,
       `end process; -- D-FF/R ${g.id}`,
+      `${qn} <= not ${q};`,
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,
@@ -206,20 +214,23 @@ gateRegistry.register({
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "1'b0";
     const k   = w[`${g.id}:k`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `always @(posedge ${clk}) begin`,
       `  if      (${j} && !${k}) ${q} <= 1'b1;`,
       `  else if (!${j} && ${k}) ${q} <= 1'b0;`,
       `  else if (${j} && ${k})  ${q} <= ~${q};`,
       `end // JK-FF ${g.id}`,
+      `assign ${qn} = ~${q};`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "'0'";
     const k   = w[`${g.id}:k`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `process(${clk})`,
       `begin`,
@@ -230,6 +241,7 @@ gateRegistry.register({
       `    end if;`,
       `  end if;`,
       `end process; -- JK-FF ${g.id}`,
+      `${qn} <= not ${q};`,
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,
@@ -262,17 +274,20 @@ gateRegistry.register({
   toVerilog: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "1'b0";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `always @(posedge ${clk}) begin`,
       `  if (${t}) ${q} <= ~${q};`,
       `end // T-FF ${g.id}`,
+      `assign ${qn} = ~${q};`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "'0'";
-    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}`;
+    const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `process(${clk})`,
       `begin`,
@@ -280,6 +295,7 @@ gateRegistry.register({
       `    if ${t} = '1' then ${q} <= not ${q}; end if;`,
       `  end if;`,
       `end process; -- T-FF ${g.id}`,
+      `${qn} <= not ${q};`,
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,

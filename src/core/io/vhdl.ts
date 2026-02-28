@@ -164,6 +164,7 @@ export function generateVHDL(circuit: Circuit): string {
     ``,
     `library IEEE;`,
     `use IEEE.STD_LOGIC_1164.ALL;`,
+    `use IEEE.NUMERIC_STD.ALL;`,
     ``,
     `entity ${entityName} is`,
     ...(portLines.length > 0

@@ -78,6 +78,11 @@ export interface GateDefinition {
   shapeComponent: React.ComponentType<GateShapeProps>;
   description?: string;
   isSynchronous?: boolean;
+  /**
+   * True for gates whose toVerilog uses always @(*) with blocking assignments.
+   * Causes their output signals to be declared as `reg` instead of `wire`.
+   */
+  verilogAlwaysComb?: boolean;
 }
 
 export interface GateInstance {
