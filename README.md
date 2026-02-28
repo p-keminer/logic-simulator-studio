@@ -2,8 +2,6 @@
 
 [🇩🇪 Deutsch](#deutsch) &nbsp;·&nbsp; [🇬🇧 English](#english)
 
-<img src="media/screen_mirror_small.gif" alt="LogicSim Demo" width="960" />
-
 </div>
 
 ---
@@ -18,6 +16,10 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 > 📖 **Vollständige Bedienungsanleitung:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
 
 ---
+
+<div align="center">
+<img src="media/screen_mirror_small.gif" alt="LogicSim Demo" width="960" />
+</div>
 
 ## Funktionen
 
