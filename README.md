@@ -97,9 +97,25 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ### Combinational
 - Multiplexer (2:1 / 4:1 / 8:1) and Demultiplexer
-- Comparator
-- ALU (Arithmetic Logic Unit)
+- Comparator (1-bit / 4-bit)
 - Bus Splitter / Bus Combiner
+
+#### ALU4 — 4-Bit Arithmetic Logic Unit
+
+8 operations selected via **Op[2:0]**:
+
+| Op2 | Op1 | Op0 | Operation | Result | COUT |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | **ADD** | A + B + CIN | Carry out bit 4 |
+| 0 | 0 | 1 | **SUB** | A − B − CIN | Borrow bit |
+| 0 | 1 | 0 | **AND** | A & B | 0 |
+| 0 | 1 | 1 | **OR** | A \| B | 0 |
+| 1 | 0 | 0 | **XOR** | A ^ B | 0 |
+| 1 | 0 | 1 | **NOT A** | ~A | 0 |
+| 1 | 1 | 0 | **SHL** | A << 1 | A[3] (shifted-out MSB) |
+| 1 | 1 | 1 | **SHR** | A >> 1 | A[0] (shifted-out LSB) |
+
+Flags: **ZERO** = 1 when result S[3:0] = 0. Right-click any ALU4 instance → **❓ Hilfe (Op-Codes)** for a quick in-simulator reference.
 
 ### Sequential
 - D, T, SR, JK Flip-Flops (synchronous & asynchronous clear / preset)
@@ -321,9 +337,25 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 
 ### Kombinatorisch
 - Multiplexer (2:1 / 4:1 / 8:1) und Demultiplexer
-- Komparator
-- ALU (Arithmetisch-Logische Einheit)
+- Komparator (1-Bit / 4-Bit)
 - Bus-Splitter / Bus-Kombinator
+
+#### ALU4 — 4-Bit Arithmetisch-Logische Einheit
+
+8 Operationen über **Op[2:0]**:
+
+| Op2 | Op1 | Op0 | Operation | Ergebnis | COUT |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | **ADD** | A + B + CIN | Übertrag Bit 4 |
+| 0 | 0 | 1 | **SUB** | A − B − CIN | Borge-Bit |
+| 0 | 1 | 0 | **AND** | A & B | 0 |
+| 0 | 1 | 1 | **OR** | A \| B | 0 |
+| 1 | 0 | 0 | **XOR** | A ^ B | 0 |
+| 1 | 0 | 1 | **NOT A** | ~A | 0 |
+| 1 | 1 | 0 | **SHL** | A << 1 (Links-Shift) | A[3] (herausgeschobenes MSB) |
+| 1 | 1 | 1 | **SHR** | A >> 1 (Rechts-Shift) | A[0] (herausgeschobenes LSB) |
+
+Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Codes)** für Kurzreferenz im Simulator.
 
 ### Sequenziell
 - D-, T-, SR-, JK-Flipflops (synchrones & asynchrones Löschen / Preset)

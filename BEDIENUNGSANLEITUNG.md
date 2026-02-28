@@ -26,6 +26,7 @@
 15. [Export (Verilog / VHDL / JSON)](#15-export-verilog--vhdl--json)
 16. [Tastenkürzel](#16-tastenkürzel)
 17. [Häufige Fehler & Lösungen](#17-häufige-fehler--lösungen)
+18. [Baustein-Referenz: ALU4](#18-baustein-referenz-alu4)
 
 ---
 
@@ -198,12 +199,16 @@ Der Canvas ist unbegrenzt – die Schaltung kann beliebig weit in alle Richtunge
 
 Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 
-| Option | Beschreibung |
-|---|---|
-| **Drehen** | Gatter um 90° drehen (Anschlüsse rotieren mit) |
-| **Beschriften** | Freitext-Beschriftung vergeben (erscheint im Gate-Header) |
-| **Farbe** | Gehäusefarbe des Gatters ändern |
-| **Löschen** | Gatter und alle angebundenen Kabel entfernen |
+| Option | Verfügbar bei | Beschreibung |
+|---|---|---|
+| **Umbenennen** | Alle Gatter | Freitext-Beschriftung vergeben (erscheint im Gate-Header und im HDL-Export) |
+| **Drehen (90°)** | Alle Gatter | Gatter um 90° drehen (Anschlüsse rotieren mit) |
+| **LED-Farbe** | OUTPUT_LED | Leuchtfarbe der Ausgangs-LED wählen |
+| **Frequenz** | CLOCK | Taktfrequenz in Hz einstellen (0,1–100 Hz) |
+| **Hex-Wert** | ADC8 | Analogen Eingabewert als Hex-Zahl (00–FF) setzen |
+| **ROM-Inhalt bearbeiten** | ROM256 | Hex-Editor für den ROM-Speicher öffnen |
+| **Hilfe (Op-Codes)** | ALU4 | Zeigt alle 8 Op-Code-Belegungen direkt im Menü an |
+| **Löschen** | Alle Gatter | Gatter und alle angebundenen Kabel entfernen |
 
 ---
 
@@ -471,6 +476,59 @@ Die Schaltung wird **automatisch** nach jeder Änderung im `localStorage` des Br
 ### Gespeicherte Schaltung lässt sich nicht laden
 **Ursache:** JSON-Datei gehört zu einer älteren / inkompatiblen Version des Simulators.
 **Lösung:** Schaltung manuell neu aufbauen oder JSON-Datei manuell auf das aktuelle Format anpassen (Gate-Typ-IDs prüfen).
+
+---
+
+---
+
+## 18. Baustein-Referenz: ALU4
+
+Die **4-Bit-ALU** (`ALU4`) ist das mächtigste kombinatorische Bauteil im Simulator. Sie führt eine von 8 Operationen aus, die über drei Steuerleitungen **Op[2:0]** ausgewählt werden.
+
+### Anschlüsse
+
+| Port | Richtung | Beschreibung |
+|---|---|---|
+| **A0–A3** | Eingang | 4-Bit Operand A (A0 = LSB, A3 = MSB) |
+| **B0–B3** | Eingang | 4-Bit Operand B (B0 = LSB, B3 = MSB) |
+| **Op0–Op2** | Eingang | Operation auswählen (Op0 = LSB, Op2 = MSB) |
+| **CIN** | Eingang | Carry-Eingang (für ADD/SUB-Kaskadierung) |
+| **S0–S3** | Ausgang | 4-Bit Ergebnis (S0 = LSB, S3 = MSB) |
+| **COUT** | Ausgang | Carry-Ausgang (Übertrag / Shift-Ausschuss) |
+| **ZERO** | Ausgang | 1, wenn Ergebnis = 0000 |
+
+### Op-Code-Tabelle
+
+| Op2 | Op1 | Op0 | Operation | Formel | COUT |
+|---|---|---|---|---|---|
+| 0 | 0 | 0 | **ADD** | S = A + B + CIN | Übertrag Bit 4 |
+| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borge-Bit |
+| 0 | 1 | 0 | **AND** | S = A & B | 0 |
+| 0 | 1 | 1 | **OR** | S = A \| B | 0 |
+| 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
+| 1 | 0 | 1 | **NOT A** | S = ~A | 0 |
+| 1 | 1 | 0 | **SHL** | S = A << 1 (Links-Shift) | A[3] (herausgeschobenes MSB) |
+| 1 | 1 | 1 | **SHR** | S = A >> 1 (Rechts-Shift) | A[0] (herausgeschobenes LSB) |
+
+> **Tipp:** Rechtsklick auf eine ALU4-Instanz → **❓ Hilfe (Op-Codes)** zeigt diese Tabelle direkt im Simulator als Kurzreferenz an.
+
+### Beispiele
+
+**Addition 5 + 3 (ohne Carry):**
+- A = 0101 (A0=1, A1=0, A2=1, A3=0), B = 0011, Op = 000, CIN = 0
+- Ergebnis: S = 1000 (= 8), COUT = 0, ZERO = 0
+
+**Linksshift von 6 (= 0110):**
+- A = 0110, Op = 110
+- Ergebnis: S = 1100 (= 12), COUT = 0 (MSB war 0), ZERO = 0
+
+**Linksshift von 9 (= 1001):**
+- A = 1001, Op = 110
+- Ergebnis: S = 0010 (= 2), COUT = 1 (MSB A[3]=1 wird herausgeschoben), ZERO = 0
+
+### Kaskadierung mehrerer ALUs
+
+Für eine 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU verbinden (Ripple-Carry).
 
 ---
 
