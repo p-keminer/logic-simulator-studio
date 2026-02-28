@@ -7,13 +7,16 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ---
 
-# Status: Still debugging VHDL/Verilog export and FSM Editor
-
----
-
 # Changelog
 
-## Recent Fixes
+## Recent Changes
+
+### UX Improvements
+- **Search bar** in the gate palette – filter by name, type ID or description
+- **Copy / Paste** (Ctrl+C / Ctrl+V) for gates and internal wires; right-click empty canvas to paste at cursor
+- **Default zoom** raised from 1.0 to 1.5 for better readability on first open
+- **Port labels** on flip-flops and registers are now inset further from the port circle (no overlap)
+- **REG4 / SHIFT4 bit-LEDs** – four coloured circles inside the gate body show the current Q0–Q3 state at a glance
 
 ### FSM Editor
 - Grid now correctly moves with pan/zoom (via `patternTransform`)
@@ -39,16 +42,19 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 - **T-FF**: toggle behavioral model added
 - **D-Latch**: level-sensitive latch model added
 
+---
+
 ## Features
 
 ### Circuit Editor
-- **Drag & drop** gate placement from a categorised palette
+- **Drag & drop** gate placement from a categorised, searchable palette
 - **Wire drawing** between output and input ports with multi-segment routing and manual waypoints
 - **Zoom** (mouse wheel) and **pan** (Alt + drag) on an infinite canvas
-- **Lasso selection**, arrow-key movement, multi-gate copy / delete
+- **Lasso selection**, arrow-key movement, multi-gate **copy / paste** (Ctrl+C / Ctrl+V)
 - **Grid snapping** for clean layouts
 - **Gate labels**, **text annotations** and **junction** dots
-- **Right-click context menus** per gate and wire (delete, rotate, set colour, …)
+- **Right-click context menus** per gate (copy, rotate, label, colour, delete, …) and wire (colour, delete)
+- **Canvas right-click** → paste at cursor when clipboard is non-empty
 - **Auto-save** to `localStorage` and **manual save / load** as JSON
 
 ### Simulation Engine
@@ -120,7 +126,9 @@ Flags: **ZERO** = 1 when result S[3:0] = 0. Right-click any ALU4 instance → **
 ### Sequential
 - D, T, SR, JK Flip-Flops (synchronous & asynchronous clear / preset)
 - Master-Slave Flip-Flop
-- Shift registers, parallel-load register
+- **4-bit Shift Register (SHIFT4)** – SIPO with 4 in-gate bit-LED indicators for Q0–Q3
+- **4-bit Parallel Register (REG4)** – with EN input and 4 in-gate bit-LED indicators
+- 8-bit Parallel Register (REG8)
 - Binary counter with integrated 7-segment display
 - RAM (synchronous read/write), ROM with built-in hex editor
 
@@ -195,7 +203,7 @@ src/
 │   ├── canvas/                # CircuitCanvas, CanvasGate, CanvasWire, …
 │   ├── fsm/                   # FSM editor (10 components)
 │   ├── panels/                # TruthTableModal, TimingDiagram, RomEditor, CustomIC
-│   ├── sidebar/               # GatePalette
+│   ├── sidebar/               # GatePalette (with search)
 │   └── toolbar/               # Toolbar, ExportModal, HelpModal
 ├── core/
 │   ├── simulation/
@@ -212,7 +220,7 @@ src/
 │   └── ic74xx/                # 74xx series
 ├── fsm/                       # FSM context, reducer, synthesis
 ├── hooks/                     # useDrag, useViewport, useWireDrawing
-└── store/                     # CircuitContext (RAF loop), circuitReducer, actions
+└── store/                     # CircuitContext (RAF loop), circuitReducer, actions, clipboard
 ```
 
 ---
@@ -222,15 +230,23 @@ src/
 | Key | Action |
 |---|---|
 | `Delete` / `Backspace` | Delete selected elements |
-| Arrow keys | Move selected gates (grid step) |
-| `Escape` | Cancel wire drawing / deselect all |
+| Arrow keys | Move selected gates (grid step; Shift: 5× step) |
+| `Ctrl+C` | Copy selected gates (and internal wires) |
+| `Ctrl+V` | Paste clipboard (+24 px offset) |
+| `Escape` | Cancel wire drawing / close menus |
+| `R` | Rotate selected gate(s) |
+| `W` | Toggle wire-draw mode |
+| `X` | Toggle snap-to-port mode (yellow outline) |
 | Mouse wheel | Zoom canvas |
 | `Alt` + drag | Pan viewport |
+| Middle-button drag | Pan viewport |
 | Left-click output port | Start wire |
 | Left-click input port | Finish wire |
 | Left-click canvas (while drawing) | Add waypoint |
-| Right-click gate | Context menu (rotate, label, colour, delete) |
-| Right-click wire | Context menu (colour, delete) |
+| Drag on empty canvas | Lasso selection |
+| Right-click gate | Context menu (copy, rotate, label, colour, delete, …) |
+| Right-click wire | Context menu (colour, junction, delete) |
+| Right-click empty canvas | Paste at cursor (if clipboard non-empty) |
 
 ---
 
@@ -282,13 +298,14 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 ## Funktionen
 
 ### Schaltkreis-Editor
-- **Drag & Drop** – Gatter aus einer kategorisierten Palette ziehen und platzieren
+- **Drag & Drop** – Gatter aus einer kategorisierten, durchsuchbaren Palette ziehen und platzieren
 - **Kabelzeichnen** – Zwischen Ausgangs- und Eingangsports mit mehrsegmentiger Führung und manuellen Wegpunkten
 - **Zoom** (Mausrad) und **Pan** (Alt + Ziehen) auf einem unendlichen Canvas
-- **Lasso-Selektion**, Pfeiltasten-Bewegung, Mehrfachauswahl kopieren / löschen
+- **Lasso-Selektion**, Pfeiltasten-Bewegung, Mehrfachauswahl **kopieren / einfügen** (Strg+C / Strg+V)
 - **Rasterausrichtung** für saubere Layouts
 - **Gate-Beschriftungen**, **Textannotationen** und **Verbindungspunkte**
-- **Rechtsklick-Kontextmenüs** für Gatter und Kabel (löschen, drehen, Farbe setzen, …)
+- **Rechtsklick-Kontextmenüs** für Gatter (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) und Kabel
+- **Rechtsklick auf leeren Canvas** → Einfügen an Mausposition (wenn Zwischenablage gefüllt)
 - **Automatisches Speichern** in `localStorage` und **manuelles Speichern / Laden** als JSON
 
 ### Simulations-Engine
@@ -360,7 +377,9 @@ Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Code
 ### Sequenziell
 - D-, T-, SR-, JK-Flipflops (synchrones & asynchrones Löschen / Preset)
 - Master-Slave-Flipflop
-- Schieberegister, Parallellade-Register
+- **4-Bit Schieberegister (SHIFT4)** – SIPO mit 4 Bit-LED-Anzeigen für Q0–Q3 im Gatter-Body
+- **4-Bit Parallelregister (REG4)** – mit EN-Eingang und 4 Bit-LED-Anzeigen
+- 8-Bit Parallelregister (REG8)
 - Binärzähler mit integrierter 7-Segment-Anzeige
 - RAM (synchrones Lesen/Schreiben), ROM mit eingebautem Hex-Editor
 
@@ -435,7 +454,7 @@ src/
 │   ├── canvas/                # CircuitCanvas, CanvasGate, CanvasWire, …
 │   ├── fsm/                   # FSM-Editor (10 Komponenten)
 │   ├── panels/                # TruthTableModal, TimingDiagram, RomEditor, CustomIC
-│   ├── sidebar/               # GatePalette
+│   ├── sidebar/               # GatePalette (mit Suchleiste)
 │   └── toolbar/               # Toolbar, ExportModal, HelpModal
 ├── core/
 │   ├── simulation/
@@ -452,7 +471,7 @@ src/
 │   └── ic74xx/                # 74xx-Serie
 ├── fsm/                       # FSM-Kontext, Reducer, Synthese
 ├── hooks/                     # useDrag, useViewport, useWireDrawing
-└── store/                     # CircuitContext (RAF-Schleife), circuitReducer, actions
+└── store/                     # CircuitContext (RAF-Schleife), circuitReducer, actions, clipboard
 ```
 
 ---
@@ -462,15 +481,23 @@ src/
 | Taste | Aktion |
 |---|---|
 | `Delete` / `Backspace` | Ausgewählte Elemente löschen |
-| Pfeiltasten | Ausgewählte Gatter verschieben (Rasterschritt) |
-| `Escape` | Kabelzeichnen abbrechen / Auswahl aufheben |
+| Pfeiltasten | Ausgewählte Gatter verschieben (Rasterschritt; Shift: 5× Schritt) |
+| `Strg+C` | Ausgewählte Gatter kopieren (inkl. interner Kabel) |
+| `Strg+V` | Zwischenablage einfügen (+24 px versetzt) |
+| `Escape` | Kabelzeichnen abbrechen / Menüs schließen |
+| `R` | Ausgewählte Gatter drehen |
+| `W` | Kabel-Modus ein/aus |
+| `X` | Snap-to-Port-Modus ein/aus (gelber Rahmen) |
 | Mausrad | Canvas zoomen |
 | `Alt` + Ziehen | Viewport verschieben (Pan) |
+| Mitteltaste + Ziehen | Viewport verschieben (Pan) |
 | Linksklick auf Ausgangsport | Kabel beginnen |
 | Linksklick auf Eingangsport | Kabel beenden |
 | Linksklick auf Canvas (beim Zeichnen) | Wegpunkt hinzufügen |
-| Rechtsklick auf Gatter | Kontextmenü (drehen, beschriften, Farbe, löschen) |
-| Rechtsklick auf Kabel | Kontextmenü (Farbe, löschen) |
+| Ziehen auf leerem Canvas | Lasso-Auswahl → Pfeiltasten zum Verschieben |
+| Rechtsklick auf Gatter | Kontextmenü (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) |
+| Rechtsklick auf Kabel | Kontextmenü (Farbe, Knotenpunkt, Löschen) |
+| Rechtsklick auf Canvas | Einfügen an Mausposition (wenn Zwischenablage gefüllt) |
 
 ---
 

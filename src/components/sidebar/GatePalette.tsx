@@ -132,6 +132,7 @@ export function GatePalette() {
         <p>• Doppelklick: Umschalten / Umbenennen</p>
         <p>• R: Gatter drehen</p>
         <p>• Strg+C/V: Kopieren / Einfügen</p>
+        <p>• Lasso → Pfeiltasten: Gatter verschieben</p>
         <p>• Klick auf Port: Draht</p>
         <p>• Klick auf Canvas: Wegpunkt</p>
         <p>• Rechtsklick Draht: Farbe</p>
