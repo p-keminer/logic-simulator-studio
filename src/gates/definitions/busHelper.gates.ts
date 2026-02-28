@@ -2,6 +2,8 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { BusSplitterShape } from '../shapes/BusSplitterShape';
 import type { SignalValue } from '../../core/types';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 // ─── 4-Bit Bus Splitter / Merger ─────────────────────────────────────────────
 gateRegistry.register({
   typeId: 'SPLIT4',
@@ -26,6 +28,34 @@ gateRegistry.register({
     y2: (a2 ?? 0) as SignalValue,
     y3: (a3 ?? 0) as SignalValue,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const a0 = w[`${g.id}:a0`] ?? "1'b0"; const a1 = w[`${g.id}:a1`] ?? "1'b0";
+    const a2 = w[`${g.id}:a2`] ?? "1'b0"; const a3 = w[`${g.id}:a3`] ?? "1'b0";
+    const y0 = w[`${g.id}:y0`] ?? `w_${sid}_y0`; const y1 = w[`${g.id}:y1`] ?? `w_${sid}_y1`;
+    const y2 = w[`${g.id}:y2`] ?? `w_${sid}_y2`; const y3 = w[`${g.id}:y3`] ?? `w_${sid}_y3`;
+    return [
+      `// SPLIT4 ${sid}`,
+      `assign ${y0} = ${a0};`,
+      `assign ${y1} = ${a1};`,
+      `assign ${y2} = ${a2};`,
+      `assign ${y3} = ${a3};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const a0 = w[`${g.id}:a0`] ?? "'0'"; const a1 = w[`${g.id}:a1`] ?? "'0'";
+    const a2 = w[`${g.id}:a2`] ?? "'0'"; const a3 = w[`${g.id}:a3`] ?? "'0'";
+    const y0 = w[`${g.id}:y0`] ?? `w_${sid}_y0`; const y1 = w[`${g.id}:y1`] ?? `w_${sid}_y1`;
+    const y2 = w[`${g.id}:y2`] ?? `w_${sid}_y2`; const y3 = w[`${g.id}:y3`] ?? `w_${sid}_y3`;
+    return [
+      `-- SPLIT4 ${sid}`,
+      `${y0} <= ${a0};`,
+      `${y1} <= ${a1};`,
+      `${y2} <= ${a2};`,
+      `${y3} <= ${a3};`,
+    ].join('\n');
+  },
   shapeComponent: BusSplitterShape,
   description: '4-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)',
 });
@@ -66,6 +96,18 @@ gateRegistry.register({
     y6: (a6 ?? 0) as SignalValue,
     y7: (a7 ?? 0) as SignalValue,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const ins  = ['a0','a1','a2','a3','a4','a5','a6','a7'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const outs = ['y0','y1','y2','y3','y4','y5','y6','y7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`// SPLIT8 ${sid}`, ...outs.map((y, i) => `assign ${y} = ${ins[i]};`)].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const ins  = ['a0','a1','a2','a3','a4','a5','a6','a7'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const outs = ['y0','y1','y2','y3','y4','y5','y6','y7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`-- SPLIT8 ${sid}`, ...outs.map((y, i) => `${y} <= ${ins[i]};`)].join('\n');
+  },
   shapeComponent: BusSplitterShape,
   description: '8-Bit Bus-Splitter/Merger: Pass-Through',
 });

@@ -60,7 +60,7 @@ export function FlipFlopShape({ gate, definition, isSelected, inputSignals, onPo
         {definition.label}
       </text>
 
-      <PortDots gate={gate} definition={definition} inputSignals={inputSignals} onPortClick={onPortClick} />
+      <PortDots gate={gate} definition={definition} inputSignals={inputSignals} onPortClick={onPortClick} showLabels={false} />
     </g>
   );
 }

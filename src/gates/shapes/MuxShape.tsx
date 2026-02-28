@@ -57,7 +57,7 @@ export function MuxShape({ gate, definition, isSelected, inputSignals, onPointer
         {definition.label}
       </text>
 
-      <PortDots gate={gate} definition={definition} inputSignals={inputSignals} onPortClick={onPortClick} />
+      <PortDots gate={gate} definition={definition} inputSignals={inputSignals} onPortClick={onPortClick} showLabels={false} />
     </g>
   );
 }
