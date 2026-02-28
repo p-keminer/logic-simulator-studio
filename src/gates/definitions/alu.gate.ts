@@ -98,7 +98,7 @@ gateRegistry.register({
       `    3'b111: sum = {va[0], 1'b0, va[3:1]};                   // SHR (LSB→COUT)`,
       `    default: sum = 5'b0;`,
       `  endcase`,
-      `  {${s3}, ${s2}, ${s1}, ${s0}} = sum[3:0];`,
+      `  ${s0} = sum[0]; ${s1} = sum[1]; ${s2} = sum[2]; ${s3} = sum[3];`,
       `  ${cout} = sum[4];`,
       `  ${zero} = (sum[3:0] == 4'b0) ? 1'b1 : 1'b0;`,
       `end // ALU4 ${sid}`,

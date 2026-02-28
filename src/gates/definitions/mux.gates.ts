@@ -21,6 +21,22 @@ gateRegistry.register({
   evaluate: ({ d0, d1, s }) => ({
     y: (s === 0 ? d0 : d1) as SignalValue,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const d0 = w[`${g.id}:d0`] ?? "1'b0";
+    const d1 = w[`${g.id}:d1`] ?? "1'b0";
+    const s  = w[`${g.id}:s`]  ?? "1'b0";
+    const y  = w[`${g.id}:y`]  ?? `w_${sid}_y`;
+    return `assign ${y} = ${s} ? ${d1} : ${d0}; // MUX2 ${sid}`;
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const d0 = w[`${g.id}:d0`] ?? "'0'";
+    const d1 = w[`${g.id}:d1`] ?? "'0'";
+    const s  = w[`${g.id}:s`]  ?? "'0'";
+    const y  = w[`${g.id}:y`]  ?? `w_${sid}_y`;
+    return `${y} <= ${d1} when ${s} = '1' else ${d0}; -- MUX2 ${sid}`;
+  },
   shapeComponent: MuxShape,
   description: '2:1 Multiplexer – S=0→Y=D0, S=1→Y=D1',
   propagationDelay: 2,
