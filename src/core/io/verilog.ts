@@ -14,8 +14,34 @@ function sanitize(id: string) {
 const EXCLUDE_FROM_VERILOG = new Set([
   'CLOCK', 'PUSH_BTN', 'JUNCTION', 'TEXT_NOTE',
   'OUTPUT_LED_7SEG', 'DOT_MATRIX', 'STEPPER_MOTOR', 'ADC8',
-  'ROM256', 'RAM256', 'CUSTOM_IC',
+  'CUSTOM_IC',
 ]);
+
+/** Renders extra reg declarations, supporting 1-D regs and 2-D memory arrays. */
+function renderVerilogExtraRegs(
+  regs: { name: string; width: number; depth?: number; initData?: number[] }[]
+): string[] {
+  const lines: string[] = [];
+  for (const { name, width, depth, initData } of regs) {
+    if (depth !== undefined) {
+      const nibbles = Math.ceil(width / 4);
+      lines.push(`  reg [${width - 1}:0] ${name} [0:${depth - 1}];`);
+      if (initData && initData.some(v => v !== 0)) {
+        lines.push(`  initial begin`);
+        for (let i = 0; i < depth; i++) {
+          const v = initData[i] ?? 0;
+          if (v !== 0) {
+            lines.push(`    ${name}[${i}] = ${width}'h${v.toString(16).toUpperCase().padStart(nibbles, '0')};`);
+          }
+        }
+        lines.push(`  end`);
+      }
+    } else {
+      lines.push(`  reg [${width - 1}:0] ${name};`);
+    }
+  }
+  return lines;
+}
 
 function buildWireMap(circuit: Circuit): WireMap {
   const byPort: Record<string, string> = {};
@@ -122,8 +148,8 @@ export function generateVerilog(circuit: Circuit): string {
   // Remove any duplicate declarations — the port list already covers these signals.
   for (const name of outputs) { regs.delete(name); wires.delete(name); }
 
-  // Collect extra internal regs (e.g. shift registers in PISO4) declared at module scope
-  const extraVerilogRegs: { name: string; width: number }[] = [];
+  // Collect extra internal regs (e.g. shift registers in PISO4, ROM/RAM arrays) declared at module scope
+  const extraVerilogRegs: { name: string; width: number; depth?: number; initData?: number[] }[] = [];
   for (const gate of Object.values(circuit.gates)) {
     if (EXCLUDE_FROM_VERILOG.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
     const def = gateRegistry.get(gate.typeId);
@@ -151,7 +177,7 @@ export function generateVerilog(circuit: Circuit): string {
     ``,
     ...(wires.size > 0 ? [`  wire ${[...wires].join(', ')};`, ``] : []),
     ...(regs.size  > 0 ? [`  reg  ${[...regs].join(', ')};`,  ``] : []),
-    ...extraVerilogRegs.map(({ name, width }) => `  reg [${width - 1}:0] ${name};`),
+    ...renderVerilogExtraRegs(extraVerilogRegs),
     ...(extraVerilogRegs.length > 0 ? [``,] : []),
     ...(gateLines.length > 0 ? [...gateLines, ``] : []),
     ...(ffLines.length > 0 ? [

@@ -125,6 +125,16 @@ export function syncBuffer(
       } else {
         customStates[gate.id] = { ...customStates[gate.id], frequency: freq };
       }
+      continue;
+    }
+
+    // ROM256: Inhalt wird vom Benutzer per Editor gesetzt (nicht simulation-gesteuert).
+    // customState.data muss aus React-State synchronisiert werden, sonst würde der
+    // nächste Tick das per GATE_ROM_LOAD geladene ROM-Daten mit dem alten SimBuffer-
+    // Zustand (leeres Array) überschreiben, da stateUpdate nicht das React-State kennt.
+    if (gate.typeId === 'ROM256') {
+      customStates[gate.id] = { ...customStates[gate.id], ...(gate.customState ?? {}) };
+      continue;
     }
     // Alle anderen Gatter (Logik, Flip-Flops): Zustand vollständig vom Tick-Engine verwaltet
   }

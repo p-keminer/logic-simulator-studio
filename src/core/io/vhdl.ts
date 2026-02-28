@@ -9,8 +9,42 @@ function sanitize(id: string) {
 const EXCLUDE_FROM_VHDL = new Set([
   'CLOCK', 'PUSH_BTN', 'JUNCTION', 'TEXT_NOTE',
   'OUTPUT_LED_7SEG', 'DOT_MATRIX', 'STEPPER_MOTOR', 'ADC8',
-  'ROM256', 'RAM256', 'CUSTOM_IC',
+  'CUSTOM_IC',
 ]);
+
+/** Renders extra VHDL signal/constant declarations, supporting arrays (ROM constants, RAM signals). */
+function renderVHDLExtraSignals(
+  sigs: { name: string; width: number; depth?: number; initData?: number[] }[]
+): string[] {
+  const lines: string[] = [];
+  for (const { name, width, depth, initData } of sigs) {
+    if (depth !== undefined) {
+      const nibbles = Math.ceil(width / 4);
+      const typeName = `t_${name}`;
+      lines.push(`  type ${typeName} is array (0 to ${depth - 1}) of STD_LOGIC_VECTOR(${width - 1} downto 0);`);
+      if (initData) {
+        // ROM: declare as constant with actual data (only non-zero entries + others)
+        const nonZero = Array.from({ length: depth }, (_, i) => [i, initData[i] ?? 0] as const)
+          .filter(([, v]) => v !== 0);
+        const entries = [
+          ...nonZero.map(([i, v]) =>
+            `    ${i} => x"${v.toString(16).toUpperCase().padStart(nibbles, '0')}"`
+          ),
+          `    others => x"${'0'.repeat(nibbles)}"`,
+        ];
+        lines.push(`  constant ${name} : ${typeName} := (`);
+        lines.push(entries.join(',\n'));
+        lines.push(`  );`);
+      } else {
+        // RAM: declare as signal, initialized to all zeros
+        lines.push(`  signal ${name} : ${typeName} := (others => (others => '0'));`);
+      }
+    } else {
+      lines.push(`  signal ${name} : STD_LOGIC_VECTOR(${width - 1} downto 0) := (others => '0');`);
+    }
+  }
+  return lines;
+}
 
 function buildPortMap(circuit: Circuit) {
   const byPort: Record<string, string> = {};
@@ -82,7 +116,7 @@ export function generateVHDL(circuit: Circuit): string {
   }
 
   // ── Pass 1C: Zusätzliche interne Signale (z.B. Schieberegister in PISO4) ────────────────
-  const extraVHDLSignals: { name: string; width: number }[] = [];
+  const extraVHDLSignals: { name: string; width: number; depth?: number; initData?: number[] }[] = [];
   for (const gate of Object.values(circuit.gates)) {
     if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
     const def = gateRegistry.get(gate.typeId);
@@ -189,9 +223,7 @@ export function generateVHDL(circuit: Circuit): string {
     ...(signals.size > 0
       ? [...signals].map((s) => `  signal ${s} : STD_LOGIC := '0';`)
       : ['  -- no internal signals']),
-    ...extraVHDLSignals.map(({ name, width }) =>
-      `  signal ${name} : STD_LOGIC_VECTOR(${width - 1} downto 0) := (others => '0');`
-    ),
+    ...renderVHDLExtraSignals(extraVHDLSignals),
     `begin`,
     ``,
     ...(logic.length > 0 ? [...logic, ``] : []),

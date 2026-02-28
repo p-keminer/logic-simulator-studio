@@ -2,6 +2,8 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 import type { SignalValue } from '../../core/types';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 gateRegistry.register({
   typeId: 'ROM256',
   label: 'ROM',
@@ -52,6 +54,58 @@ gateRegistry.register({
   stateUpdate: (_inputs, _outputs, state) => ({
     data: (state?.data as number[] | undefined) ?? new Array(256).fill(0),
   }),
+  verilogAlwaysComb: true,
+  toVerilog: (g, w) => {
+    const sid      = sanitize(g.id);
+    const addr     = ['a0','a1','a2','a3','a4','a5','a6','a7'].map(id => w[`${g.id}:${id}`] ?? "1'b0");
+    const cs_n     = w[`${g.id}:cs`] ?? "1'b1";
+    const oe_n     = w[`${g.id}:oe`] ?? "1'b1";
+    const ds       = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(id => w[`${g.id}:${id}`] ?? `w_${sid}_${id}`);
+    const addrCat  = `{${[...addr].reverse().join(', ')}}`; // {a7,...,a0}
+    const dataCat  = `{${[...ds].reverse().join(', ')}}`; // {d7,...,d0}
+    return [
+      `// ROM256 ${sid}`,
+      `always @(*) begin`,
+      `  if (${cs_n} == 1'b0 && ${oe_n} == 1'b0)`,
+      `    ${dataCat} = rom_${sid}[${addrCat}];`,
+      `  else`,
+      `    ${dataCat} = 8'h00;`,
+      `end // ROM256 ${sid}`,
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => {
+    const sid  = sanitize(g.id);
+    const data = (g.customState?.data as number[] | undefined) ?? new Array(256).fill(0);
+    return [{ name: `rom_${sid}`, width: 8, depth: 256, initData: data }];
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const addr = ['a0','a1','a2','a3','a4','a5','a6','a7'].map(id => w[`${g.id}:${id}`] ?? "'0'");
+    const cs_n = w[`${g.id}:cs`] ?? "'1'";
+    const oe_n = w[`${g.id}:oe`] ?? "'1'";
+    const ds   = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(id => w[`${g.id}:${id}`] ?? `w_${sid}_${id}`);
+    const addrCat  = [...addr].reverse().join(' & '); // a7 & ... & a0 (MSB first)
+    const connSigs = ['a0','a1','a2','a3','a4','a5','a6','a7','cs','oe']
+      .map(id => w[`${g.id}:${id}`]).filter(Boolean);
+    const sense = connSigs.length > 0 ? connSigs.join(', ') : 'cs, oe';
+    return [
+      `-- ROM256 ${sid}`,
+      `process(${sense})`,
+      `  variable addr_v : integer range 0 to 255;`,
+      `begin`,
+      `  ${ds.map(d => `${d} <= '0'`).join('; ')};`,
+      `  if ${cs_n} = '0' and ${oe_n} = '0' then`,
+      `    addr_v := to_integer(unsigned(${addrCat}));`,
+      ...ds.map((d, i) => `    ${d} <= rom_${sid}(addr_v)(${i});`),
+      `  end if;`,
+      `end process; -- ROM256 ${sid}`,
+    ].join('\n');
+  },
+  vhdlExtraSignals: (g) => {
+    const sid  = sanitize(g.id);
+    const data = (g.customState?.data as number[] | undefined) ?? new Array(256).fill(0);
+    return [{ name: `rom_${sid}`, width: 8, depth: 256, initData: data }];
+  },
   shapeComponent: FlipFlopShape,
   description: 'ROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.',
 });

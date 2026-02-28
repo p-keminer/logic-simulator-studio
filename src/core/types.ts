@@ -76,17 +76,19 @@ export interface GateDefinition {
   toVerilog?: (gate: GateInstance, wireNames: Record<string, string>) => string;
   toVHDL?: (gate: GateInstance, wireNames: Record<string, string>) => string;
   /**
-   * Optional: extra internal VHDL signals (e.g. shift registers) that must be
-   * declared in the architecture declarative region.
-   * Returns an array of signal names. Each is declared as STD_LOGIC_VECTOR(width-1 downto 0).
+   * Optional: extra internal VHDL signals/constants that must be declared in the
+   * architecture declarative region.
+   * - Without depth: `signal name : STD_LOGIC_VECTOR(width-1 downto 0)`
+   * - With depth + initData: `constant name` (ROM array with actual data)
+   * - With depth, no initData: `signal name` (RAM array, zeroed)
    */
-  vhdlExtraSignals?: (gate: GateInstance) => { name: string; width: number }[];
+  vhdlExtraSignals?: (gate: GateInstance) => { name: string; width: number; depth?: number; initData?: number[] }[];
   /**
-   * Optional: extra internal Verilog regs (e.g. shift registers) that must be
-   * declared at module scope before the always block.
-   * Returns an array of {name, width} objects; each emits `reg [width-1:0] name;`.
+   * Optional: extra internal Verilog regs that must be declared at module scope.
+   * - Without depth: `reg [width-1:0] name;`
+   * - With depth: `reg [width-1:0] name [0:depth-1];` + optional `initial begin` block
    */
-  verilogExtraRegs?: (gate: GateInstance) => { name: string; width: number }[];
+  verilogExtraRegs?: (gate: GateInstance) => { name: string; width: number; depth?: number; initData?: number[] }[];
   shapeComponent: React.ComponentType<GateShapeProps>;
   description?: string;
   isSynchronous?: boolean;

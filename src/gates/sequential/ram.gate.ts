@@ -2,6 +2,8 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 import type { SignalValue } from '../../core/types';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 gateRegistry.register({
   typeId: 'RAM256',
   label: 'RAM',
@@ -80,6 +82,74 @@ gateRegistry.register({
       return { data: newData };
     }
     return { data: curData };
+  },
+  verilogAlwaysComb: true,
+  toVerilog: (g, w) => {
+    const sid     = sanitize(g.id);
+    const addr    = ['a0','a1','a2','a3','a4','a5','a6','a7'].map(id => w[`${g.id}:${id}`] ?? "1'b0");
+    const di      = ['di0','di1','di2','di3','di4','di5','di6','di7'].map(id => w[`${g.id}:${id}`] ?? "1'b0");
+    const we_n    = w[`${g.id}:we`] ?? "1'b1";
+    const cs_n    = w[`${g.id}:cs`] ?? "1'b1";
+    const oe_n    = w[`${g.id}:oe`] ?? "1'b1";
+    const dos     = ['do0','do1','do2','do3','do4','do5','do6','do7'].map(id => w[`${g.id}:${id}`] ?? `w_${sid}_${id}`);
+    const addrCat = `{${[...addr].reverse().join(', ')}}`; // {a7,...,a0}
+    const diCat   = `{${[...di].reverse().join(', ')}}`; // {di7,...,di0}
+    const doCat   = `{${[...dos].reverse().join(', ')}}`; // {do7,...,do0}
+    return [
+      `// RAM256 ${sid}`,
+      `always @(*) begin // async write (transparent latch)`,
+      `  if (${cs_n} == 1'b0 && ${we_n} == 1'b0)`,
+      `    ram_${sid}[${addrCat}] = ${diCat};`,
+      `end`,
+      `always @(*) begin // read`,
+      `  if (${cs_n} == 1'b0 && ${oe_n} == 1'b0)`,
+      `    ${doCat} = ram_${sid}[${addrCat}];`,
+      `  else`,
+      `    ${doCat} = 8'h00;`,
+      `end // RAM256 ${sid}`,
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => {
+    const sid = sanitize(g.id);
+    return [{ name: `ram_${sid}`, width: 8, depth: 256 }]; // no initData → zeroed
+  },
+  toVHDL: (g, w) => {
+    const sid     = sanitize(g.id);
+    const addr    = ['a0','a1','a2','a3','a4','a5','a6','a7'].map(id => w[`${g.id}:${id}`] ?? "'0'");
+    const di      = ['di0','di1','di2','di3','di4','di5','di6','di7'].map(id => w[`${g.id}:${id}`] ?? "'0'");
+    const we_n    = w[`${g.id}:we`] ?? "'1'";
+    const cs_n    = w[`${g.id}:cs`] ?? "'1'";
+    const oe_n    = w[`${g.id}:oe`] ?? "'1'";
+    const dos     = ['do0','do1','do2','do3','do4','do5','do6','do7'].map(id => w[`${g.id}:${id}`] ?? `w_${sid}_${id}`);
+    const addrCat = [...addr].reverse().join(' & '); // a7 & ... & a0 (MSB first)
+    const diCat   = [...di].reverse().join(' & ');   // di7 & ... & di0 (MSB first)
+    const ramName = `ram_${sid}`;
+    const writePorts = ['a0','a1','a2','a3','a4','a5','a6','a7',
+                        'di0','di1','di2','di3','di4','di5','di6','di7','we','cs'];
+    const readPorts  = ['a0','a1','a2','a3','a4','a5','a6','a7','oe','cs'];
+    const writeSense = writePorts.map(id => w[`${g.id}:${id}`]).filter(Boolean).join(', ') || 'cs, we';
+    const readConn   = readPorts.map(id => w[`${g.id}:${id}`]).filter(Boolean).join(', ');
+    const readSense  = readConn ? `${readConn}, ${ramName}` : ramName;
+    return [
+      `-- RAM256 ${sid}`,
+      `process(${writeSense}) -- async write (transparent latch)`,
+      `begin`,
+      `  if ${cs_n} = '0' and ${we_n} = '0' then`,
+      `    ${ramName}(to_integer(unsigned(${addrCat}))) <= ${diCat};`,
+      `  end if;`,
+      `end process;`,
+      `process(${readSense}) -- read`,
+      `begin`,
+      `  ${dos.map(d => `${d} <= '0'`).join('; ')};`,
+      `  if ${cs_n} = '0' and ${oe_n} = '0' then`,
+      ...dos.map((d, i) => `    ${d} <= ${ramName}(to_integer(unsigned(${addrCat})))(${i});`),
+      `  end if;`,
+      `end process; -- RAM256 ${sid}`,
+    ].join('\n');
+  },
+  vhdlExtraSignals: (g) => {
+    const sid = sanitize(g.id);
+    return [{ name: `ram_${sid}`, width: 8, depth: 256 }]; // no initData → signal
   },
   shapeComponent: FlipFlopShape,
   description: 'RAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → Lesen',
