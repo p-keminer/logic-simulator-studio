@@ -2,6 +2,8 @@
 
 [🇩🇪 Deutsch](#deutsch) &nbsp;·&nbsp; [🇬🇧 English](#english)
 
+<img src="media/screen_mirror_small.gif" alt="LogicSim Demo" width="960" />
+
 </div>
 
 ---
@@ -31,6 +33,10 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 - **Automatisches Speichern** in `localStorage` und **manuelles Speichern / Laden** als JSON
 
 ### Simulations-Engine
+
+Zwei umschaltbare Modi (Toolbar-Button **⚡ ZD** / **⏱ GD**):
+
+#### ZERO_DELAY (Vorgabe)
 - **Tick-basierte Discrete-Event-Simulation** mit Double-Buffering (Lese-Buffer → Logik → Schreib-Buffer)
 - **500 Ticks / Sekunde** – Signale bleiben visuell verfolgbar
 - **Vollständige Rückkopplungsunterstützung**: SR-Latches, Ringoszillatoren und alle anderen zyklischen Topologien funktionieren korrekt – keine Sonderfälle erforderlich
@@ -39,6 +45,12 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 - **Manuelles Takt-Stepping** (Pause / Einzelschritt-Modus)
 - **Stabilisierungsphase** nach Strukturänderungen mit eingefrorenen Takten
 
+#### GATE_DELAY
+- **Discrete-Event-Scheduler**: Gatterausgaben werden erst nach `propagationDelay`-Ticks eingetragen – Glitches und Races werden sichtbar
+- **Race-Condition-Erkennung**: Konkurrenzschreiben auf dasselbe Netz zur gleichen Zeit werden automatisch protokolliert; betroffene Leitungen rot hervorgehoben
+- **Race-Panel** (⚠ N-Button in der Toolbar): Liste aller erkannten Races mit Klick-to-Focus auf den Canvas
+- **Kritischer-Pfad-Anzeige** in der Toolbar: maximale `propagationDelay` aller platzierten Gatter in ns
+
 ### Analyse-Werkzeuge
 
 | Werkzeug | Kombinatorisch | Sequenziell / Rückkopplung |
@@ -46,13 +58,20 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 | **Wahrheitstabelle** | ✅ Alle Eingangskombinationen, Zwischenwerte | – |
 | **Zustandsübergangstabelle** | – | ✅ Automatische Zyklus-Erkennung, Einzel-Tick Q(t) → Q(t+1) |
 | **Timing-Diagramm** | ✅ | ✅ |
+| **Race-Condition-Panel** | – | ✅ Nur im GATE_DELAY-Modus; Klick-to-Focus auf betroffene Netze |
 
 ### Export
 | Format | Hinweise |
 |---|---|
 | **JSON** | Vollständiger Schaltkreis (Speichern / Laden) |
-| **Verilog** | Synthesefähiges HDL |
-| **VHDL** | Synthesefähiges HDL |
+| **Verilog** | Synthesefähiges HDL – IEEE 1364-2001-konform |
+| **VHDL** | Synthesefähiges HDL – IEEE 1076-2002-konform |
+
+**HDL-Export (industrietauglich):**
+- **Zentrales Identifier-Sanitizing**: Alle Gate-Namen werden IEEE-konform bereinigt (Sonderzeichen, Keyword-Kollisionen, führende Ziffern)
+- **Nicht verbundene Pins** werden zu expliziten Modulports mit `nc_`-Präfix statt zu Silent-Konstanten – Kollisionsschutz bei mehreren offenen Pins gleichen Namens (`nc_LD`, `nc_LD_2`, …)
+- **3-Pass-Architektur** (Verilog): korrekte `output reg` / `output wire`-Typisierung für alle Gates
+- **Vollständige toVerilog/toVHDL-Emitter** für: MUX2, MUX4, Schmitt-Trigger, ALU4 (explizites Bit-Mapping), CMP1, CMP4 (mit Cascade-Eingängen im `else`-Zweig)
 
 ### Endlicher Automat (FSM) Editor
 - Grafischer FSM-Editor mit Drag-and-Drop-Zuständen und Übergängen
@@ -72,7 +91,7 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 
 ### Kombinatorisch
 - Multiplexer (2:1 / 4:1 / 8:1) und Demultiplexer
-- Komparator (1-Bit / 4-Bit)
+- **Komparator (1-Bit / 4-Bit)** – CMP4 mit Cascade-Eingängen (LTin / EQin / GTin): Mehrere CMP4 lassen sich zur Wortbreitenvergrößerung verketten; bei A=B werden die Cascade-Eingänge direkt auf die Ausgänge durchgeleitet
 - Bus-Splitter / Bus-Kombinator
 
 #### ALU4 — 4-Bit Arithmetisch-Logische Einheit
@@ -114,7 +133,7 @@ Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Code
 | Textnotiz | Canvas-Annotation |
 
 ### Integrierte Schaltkreise
-- 74xx-Serien-ICs
+- 74xx-Serien-ICs (u. a. 74HC595 mit funktionalem /OE-Pin)
 - **Custom IC** – Beliebige Teilschaltung als wiederverwendbare, palettierbare Komponente kapseln
 
 ---
@@ -203,6 +222,10 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 - **Auto-save** to `localStorage` and **manual save / load** as JSON
 
 ### Simulation Engine
+
+Two switchable modes (toolbar button **⚡ ZD** / **⏱ GD**):
+
+#### ZERO_DELAY (default)
 - **Tick-based discrete-event simulation** with double-buffering (Read-Buffer → Logic → Write-Buffer)
 - **500 ticks / second** – signals remain visually trackable
 - **Full feedback-loop support**: SR latches, ring oscillators, and every other cyclic topology work correctly
@@ -211,6 +234,12 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 - **Manual clock stepping** (pause / single-step mode)
 - **Settle phase** after structural changes with clocks frozen
 
+#### GATE_DELAY
+- **Discrete-event scheduler**: gate outputs are committed after `propagationDelay` ticks — glitches and races become visible
+- **Race condition detection**: concurrent writes to the same net at the same time are automatically logged; affected wires highlighted in red
+- **Race panel** (⚠ N button in toolbar): list of all detected races with click-to-focus on the canvas
+- **Critical path indicator** in toolbar: maximum `propagationDelay` across all placed gates in ns
+
 ### Analysis Tools
 
 | Tool | Combinatorial | Sequential / Feedback |
@@ -218,13 +247,20 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 | **Truth Table** | ✅ All input combinations, intermediate values | – |
 | **State Transition Table** | – | ✅ Automatic cycle detection, single-tick Q(t) → Q(t+1) |
 | **Timing Diagram** | ✅ | ✅ |
+| **Race Condition Panel** | – | ✅ GATE_DELAY mode only; click-to-focus on affected nets |
 
 ### Export
 | Format | Notes |
 |---|---|
 | **JSON** | Full circuit round-trip (save / load) |
-| **Verilog** | Synthesisable HDL |
-| **VHDL** | Synthesisable HDL |
+| **Verilog** | Synthesisable HDL – IEEE 1364-2001 compliant |
+| **VHDL** | Synthesisable HDL – IEEE 1076-2002 compliant |
+
+**HDL Export (industrial-grade):**
+- **Central identifier sanitizing**: all gate names are made IEEE-compliant (special characters, keyword collisions, leading digits)
+- **Unconnected pins** become explicit module ports with `nc_` prefix instead of silent constants — collision protection for multiple open pins with the same label (`nc_LD`, `nc_LD_2`, …)
+- **3-pass architecture** (Verilog): correct `output reg` / `output wire` typing for all gates
+- **Full toVerilog/toVHDL emitters** for: MUX2, MUX4, Schmitt Trigger, ALU4 (explicit bit mapping), CMP1, CMP4 (cascade inputs propagated in the `else` branch)
 
 ### Finite State Machine Editor
 - Graphical FSM editor with drag-and-drop states and transitions
@@ -244,7 +280,7 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ### Combinational
 - Multiplexer (2:1 / 4:1 / 8:1) and Demultiplexer
-- Comparator (1-bit / 4-bit)
+- **Comparator (1-bit / 4-bit)** – CMP4 with cascade inputs (LTin / EQin / GTin): multiple CMP4s can be chained for wider word comparisons; when A=B the cascade inputs are passed straight through to the outputs
 - Bus Splitter / Bus Combiner
 
 #### ALU4 — 4-Bit Arithmetic Logic Unit
@@ -286,7 +322,7 @@ Flags: **ZERO** = 1 when result S[3:0] = 0. Right-click any ALU4 instance → **
 | Text Note | Canvas annotation |
 
 ### Integrated Circuits
-- 74xx series ICs
+- 74xx series ICs (including 74HC595 with functional /OE pin)
 - **Custom IC** – encapsulate any sub-circuit as a reusable, paletteable component
 
 ---
@@ -361,6 +397,24 @@ The double-buffer model separates **read** (current tick) from **write** (next t
 2. For every combination of (external inputs × current state Q_t), a fresh `SimBuffer` is seeded
 3. **Exactly one `runOneTick`** – the mathematical definition of Q(t+1) in the double-buffer model
 4. Stable rows (Q_t = Q_t+1) are highlighted
+
+### GATE_DELAY Simulation (`EventScheduler`)
+- `committedOutputs` holds the last stable value for every gate output
+- A priority queue stores `(time, netId, value, sourceGateId)` events sorted by time
+- Each `advance()` call processes all events with `time ≤ targetTime`, re-evaluates downstream gates, and enqueues new events at `triggerTime + gate.propagationDelay`
+- **Race detection**: same `(time, netId)` with conflicting values from different source gates → race logged, wire highlighted red
+- **Memory safety**: events are only generated when the computed value differs from the committed value; settled circuits produce zero new events
+
+### HDL Identifier Sanitizing (`identSanitize.ts`)
+Single source of truth for all identifier sanitizing. Rules (applied in order):
+1. Replace chars outside `[A-Za-z0-9_]` with `_`
+2. Strip leading underscores
+3. Empty result → fallback `x`
+4. Leading digit → prefix `m_` (modules) or `n_` (signals/ports)
+5. Reserved keyword collision → prefix `n_`
+
+### HDL Fallback Declaration Opt-out
+Gates that implement their own `toVerilog`/`toVHDL` and handle all output signals internally can set `verilogSkipUnconnectedOutputs: true` / `vhdlSkipUnconnectedOutputs: true` in their `GateDefinition`. This suppresses the automatic fallback `wire`/`signal` declaration for unconnected outputs. Without the flag, the fallback is always emitted — ensuring gates like `SR_LATCH`, `D_FF`, `REG8`, and `ALU4` never produce undeclared-wire compile errors under `` `default_nettype none ``. Currently opt-in: MUX2, MUX4, SCHMITT.
 
 ---
 
