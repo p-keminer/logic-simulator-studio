@@ -104,6 +104,19 @@ export interface GateDefinition {
    * Example: D-FF drives q via always @(posedge) → reg, but q_n via assign → wire.
    */
   verilogWireOutputs?: string[];
+  /**
+   * When true, Pass 2 of the Verilog generator does NOT emit a fallback wire
+   * declaration for unconnected outputs. Set only for gates whose toVerilog()
+   * handles missing outputs gracefully (returns a comment, not a reference).
+   * Gates without this flag always get a fallback `w_<id>_<port>` declaration
+   * so their internal emitter references are never left undeclared.
+   */
+  verilogSkipUnconnectedOutputs?: true;
+  /**
+   * Same for VHDL: Pass 1B skips signal declaration for unconnected outputs.
+   * Set only for gates whose toVHDL() handles missing outputs gracefully.
+   */
+  vhdlSkipUnconnectedOutputs?: true;
 }
 
 export interface GateInstance {

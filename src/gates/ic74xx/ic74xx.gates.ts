@@ -248,9 +248,9 @@ gateRegistry.register({
     { id: 'q6', label: 'Q6', relativeX: 1, relativeY: 0.86 },
     { id: 'q7', label: 'Q7', relativeX: 1, relativeY: 0.99 },
   ],
-  evaluate: (_i, state) => {
+  evaluate: (inputs, state) => {
     const latch = (state?.latch as number) ?? 0;
-    const oe = 0; // assume OE = 0 (active)
+    const oe = (inputs as any).oe ?? 0;
     if (oe !== 0) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((latch >> i) & 1) as 0|1;

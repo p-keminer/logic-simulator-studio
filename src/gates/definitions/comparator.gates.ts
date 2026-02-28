@@ -79,22 +79,30 @@ gateRegistry.register({
     { id: 'eq', label: '=',  relativeX: 1, relativeY: 0.5  },
     { id: 'gt', label: '>',  relativeX: 1, relativeY: 0.67 },
   ],
-  evaluate: ({ a0, a1, a2, a3, b0, b1, b2, b3 }) => {
+  evaluate: ({ a0, a1, a2, a3, b0, b1, b2, b3, ltin, eqin, gtin }) => {
     const a = ((a0 ?? 0) as number) | (((a1 ?? 0) as number) << 1) | (((a2 ?? 0) as number) << 2) | (((a3 ?? 0) as number) << 3);
     const b = ((b0 ?? 0) as number) | (((b1 ?? 0) as number) << 1) | (((b2 ?? 0) as number) << 2) | (((b3 ?? 0) as number) << 3);
     if (a < b) return { lt: 1, eq: 0, gt: 0 };
     if (a > b) return { lt: 0, eq: 0, gt: 1 };
-    return { lt: 0, eq: 1, gt: 0 }; // A == B
+    // A == B: cascade inputs propagate through
+    return {
+      lt: ((ltin ?? 0) as number) as 0|1,
+      eq: ((eqin ?? 0) as number) as 0|1,
+      gt: ((gtin ?? 0) as number) as 0|1,
+    };
   },
   toVerilog: (g, w) => {
-    const sid = sanitize(g.id);
-    const a0  = w[`${g.id}:a0`] ?? "1'b0"; const a1 = w[`${g.id}:a1`] ?? "1'b0";
-    const a2  = w[`${g.id}:a2`] ?? "1'b0"; const a3 = w[`${g.id}:a3`] ?? "1'b0";
-    const b0  = w[`${g.id}:b0`] ?? "1'b0"; const b1 = w[`${g.id}:b1`] ?? "1'b0";
-    const b2  = w[`${g.id}:b2`] ?? "1'b0"; const b3 = w[`${g.id}:b3`] ?? "1'b0";
-    const lt  = w[`${g.id}:lt`] ?? `w_${sid}_lt`;
-    const eq  = w[`${g.id}:eq`] ?? `w_${sid}_eq`;
-    const gt  = w[`${g.id}:gt`] ?? `w_${sid}_gt`;
+    const sid  = sanitize(g.id);
+    const a0   = w[`${g.id}:a0`]   ?? "1'b0"; const a1   = w[`${g.id}:a1`]   ?? "1'b0";
+    const a2   = w[`${g.id}:a2`]   ?? "1'b0"; const a3   = w[`${g.id}:a3`]   ?? "1'b0";
+    const b0   = w[`${g.id}:b0`]   ?? "1'b0"; const b1   = w[`${g.id}:b1`]   ?? "1'b0";
+    const b2   = w[`${g.id}:b2`]   ?? "1'b0"; const b3   = w[`${g.id}:b3`]   ?? "1'b0";
+    const ltin = w[`${g.id}:ltin`] ?? "1'b0";
+    const eqin = w[`${g.id}:eqin`] ?? "1'b0";
+    const gtin = w[`${g.id}:gtin`] ?? "1'b0";
+    const lt   = w[`${g.id}:lt`]   ?? `w_${sid}_lt`;
+    const eq   = w[`${g.id}:eq`]   ?? `w_${sid}_eq`;
+    const gt   = w[`${g.id}:gt`]   ?? `w_${sid}_gt`;
     return [
       `// CMP4 ${sid}`,
       `always @(*) begin : blk_${sid}`,
@@ -103,21 +111,24 @@ gateRegistry.register({
       `  vb = {${b3}, ${b2}, ${b1}, ${b0}};`,
       `  if      (va < vb) begin ${lt} = 1'b1; ${eq} = 1'b0; ${gt} = 1'b0; end`,
       `  else if (va > vb) begin ${lt} = 1'b0; ${eq} = 1'b0; ${gt} = 1'b1; end`,
-      `  else              begin ${lt} = 1'b0; ${eq} = 1'b1; ${gt} = 1'b0; end`,
+      `  else              begin ${lt} = ${ltin}; ${eq} = ${eqin}; ${gt} = ${gtin}; end`,
       `end // CMP4 ${sid}`,
     ].join('\n');
   },
   toVHDL: (g, w) => {
-    const sid = sanitize(g.id);
-    const a0  = w[`${g.id}:a0`] ?? "'0'"; const a1 = w[`${g.id}:a1`] ?? "'0'";
-    const a2  = w[`${g.id}:a2`] ?? "'0'"; const a3 = w[`${g.id}:a3`] ?? "'0'";
-    const b0  = w[`${g.id}:b0`] ?? "'0'"; const b1 = w[`${g.id}:b1`] ?? "'0'";
-    const b2  = w[`${g.id}:b2`] ?? "'0'"; const b3 = w[`${g.id}:b3`] ?? "'0'";
-    const lt  = w[`${g.id}:lt`] ?? `w_${sid}_lt`;
-    const eq  = w[`${g.id}:eq`] ?? `w_${sid}_eq`;
-    const gt  = w[`${g.id}:gt`] ?? `w_${sid}_gt`;
+    const sid  = sanitize(g.id);
+    const a0   = w[`${g.id}:a0`]   ?? "'0'"; const a1   = w[`${g.id}:a1`]   ?? "'0'";
+    const a2   = w[`${g.id}:a2`]   ?? "'0'"; const a3   = w[`${g.id}:a3`]   ?? "'0'";
+    const b0   = w[`${g.id}:b0`]   ?? "'0'"; const b1   = w[`${g.id}:b1`]   ?? "'0'";
+    const b2   = w[`${g.id}:b2`]   ?? "'0'"; const b3   = w[`${g.id}:b3`]   ?? "'0'";
+    const ltin = w[`${g.id}:ltin`] ?? "'0'";
+    const eqin = w[`${g.id}:eqin`] ?? "'0'";
+    const gtin = w[`${g.id}:gtin`] ?? "'0'";
+    const lt   = w[`${g.id}:lt`]   ?? `w_${sid}_lt`;
+    const eq   = w[`${g.id}:eq`]   ?? `w_${sid}_eq`;
+    const gt   = w[`${g.id}:gt`]   ?? `w_${sid}_gt`;
     // Sensitivity list: only real signal names (no literals like '0')
-    const sens = [...new Set([a0, a1, a2, a3, b0, b1, b2, b3]
+    const sens = [...new Set([a0, a1, a2, a3, b0, b1, b2, b3, ltin, eqin, gtin]
       .filter(s => !s.startsWith("'")))].join(', ') || 'a0';
     return [
       `-- CMP4 ${sid}`,
@@ -129,7 +140,7 @@ gateRegistry.register({
       `  vb := unsigned(${b3} & ${b2} & ${b1} & ${b0});`,
       `  if    va < vb then ${lt} <= '1'; ${eq} <= '0'; ${gt} <= '0';`,
       `  elsif va > vb then ${lt} <= '0'; ${eq} <= '0'; ${gt} <= '1';`,
-      `  else               ${lt} <= '0'; ${eq} <= '1'; ${gt} <= '0';`,
+      `  else               ${lt} <= ${ltin}; ${eq} <= ${eqin}; ${gt} <= ${gtin};`,
       `  end if;`,
       `end process; -- CMP4 ${sid}`,
     ].join('\n');

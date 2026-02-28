@@ -44,6 +44,8 @@ gateRegistry.register({
   shapeComponent: MuxShape,
   description: '2:1 Multiplexer – S=0→Y=D0, S=1→Y=D1',
   propagationDelay: 2,
+  verilogSkipUnconnectedOutputs: true,
+  vhdlSkipUnconnectedOutputs: true,
 });
 
 // ─── 4:1 Multiplexer ──────────────────────────────────────────────────────────
@@ -68,9 +70,55 @@ gateRegistry.register({
     const vals = [d0, d1, d2, d3];
     return { y: (vals[sel] ?? 0) as SignalValue };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    // Phase 0 guarantees d0/d1/d2/d3/s0/s1 are pre-populated (nc_* if unconnected).
+    const d0 = w[`${g.id}:d0`]; const d1 = w[`${g.id}:d1`];
+    const d2 = w[`${g.id}:d2`]; const d3 = w[`${g.id}:d3`];
+    const s0 = w[`${g.id}:s0`]; const s1 = w[`${g.id}:s1`];
+    const y  = w[`${g.id}:y`];
+    if (!y) return `// MUX4 ${sid}: output Y unconnected — skipped`;
+    return [
+      `// MUX4 ${sid}`,
+      `always @(*) begin`,
+      `  case ({${s1}, ${s0}})`,
+      `    2'b00: ${y} = ${d0};`,
+      `    2'b01: ${y} = ${d1};`,
+      `    2'b10: ${y} = ${d2};`,
+      `    2'b11: ${y} = ${d3};`,
+      `    default: ${y} = 1'b0;`,
+      `  endcase`,
+      `end // MUX4 ${sid}`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    // Phase 0 guarantees d0/d1/d2/d3/s0/s1 are pre-populated (nc_* if unconnected).
+    const d0 = w[`${g.id}:d0`]; const d1 = w[`${g.id}:d1`];
+    const d2 = w[`${g.id}:d2`]; const d3 = w[`${g.id}:d3`];
+    const s0 = w[`${g.id}:s0`]; const s1 = w[`${g.id}:s1`];
+    const y  = w[`${g.id}:y`];
+    if (!y) return `-- MUX4 ${sid}: output Y unconnected — skipped`;
+    const allSigs = [d0, d1, d2, d3, s0, s1].filter((x): x is string => !!x && !x.startsWith("'"));
+    const sens = [...new Set(allSigs)].join(', ') || 'd0';
+    return [
+      `-- MUX4 ${sid}`,
+      `process(${sens})`,
+      `begin`,
+      `  if    ${s1} = '0' and ${s0} = '0' then ${y} <= ${d0};`,
+      `  elsif ${s1} = '0' and ${s0} = '1' then ${y} <= ${d1};`,
+      `  elsif ${s1} = '1' and ${s0} = '0' then ${y} <= ${d2};`,
+      `  else                                    ${y} <= ${d3};`,
+      `  end if;`,
+      `end process; -- MUX4 ${sid}`,
+    ].join('\n');
+  },
   shapeComponent: MuxShape,
   description: '4:1 Multiplexer – S1:S0 wählt D0–D3',
   propagationDelay: 3,
+  verilogAlwaysComb: true,
+  verilogSkipUnconnectedOutputs: true,
+  vhdlSkipUnconnectedOutputs: true,
 });
 
 // ─── 1:2 Demultiplexer ────────────────────────────────────────────────────────

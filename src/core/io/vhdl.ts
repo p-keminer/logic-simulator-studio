@@ -147,12 +147,14 @@ export function generateVHDL(circuit: Circuit): string {
     const def = gateRegistry.get(gate.typeId);
     for (const out of def.outputs) {
       const k = `${gate.id}:${out.id}`;
-      // Same rationale as verilog.ts Pass 2: gates with custom toVHDL handle
-      // unconnected outputs themselves; skip signal declaration to avoid orphan signals.
-      const s = def.toVHDL
+      // Gates flagged with vhdlSkipUnconnectedOutputs handle missing outputs in
+      // their own toVHDL() (return a comment). All other gates — including
+      // custom-toVHDL gates that still use `?? w_${sid}_out` fallbacks — always
+      // get a fallback signal declaration so internal references are never undeclared.
+      const s = (def.toVHDL && def.vhdlSkipUnconnectedOutputs)
         ? byPort[k]
         : byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
-      if (!s) continue; // custom gate with unconnected output — nothing to declare
+      if (!s) continue; // flagged gate with unconnected output — nothing to declare
       if (!inputs.includes(s) && !outputs.includes(s)) signals.add(s);
     }
   }
