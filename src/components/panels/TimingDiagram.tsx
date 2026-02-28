@@ -41,11 +41,24 @@ export function TimingDiagram({ history, onClose }: Props) {
   const { circuit }                     = useCircuitContext();
   const scrollRef                       = useRef<HTMLDivElement>(null);
   const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(new Set());
+  // true = Nutzer hat zurückgescrollt → Auto-Scroll pausieren
+  const userScrolledBackRef             = useRef(false);
 
-  // Auto-scroll ans Ende bei neuen Snapshots
+  // Auto-scroll ans Ende nur wenn der Nutzer nicht manuell zurückgescrollt hat
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    const el = scrollRef.current;
+    if (!el || userScrolledBackRef.current) return;
+    el.scrollLeft = el.scrollWidth;
   }, [history.length]);
+
+  // Scroll-Event: prüfen ob Nutzer am Ende ist oder zurückgescrollt hat
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // "Am Ende" = weniger als 20px vom rechten Rand entfernt
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 20;
+    userScrolledBackRef.current = !atEnd;
+  }, []);
 
   // Kanal ein-/ausblenden
   const toggleHidden = useCallback((key: string) => {
@@ -163,7 +176,7 @@ export function TimingDiagram({ history, onClose }: Props) {
         </div>
       ) : (
         /* ── SVG-Canvas ──────────────────────────────────────────────── */
-        <div ref={scrollRef} style={{ overflow: 'auto', flex: 1 }}>
+        <div ref={scrollRef} onScroll={handleScroll} style={{ overflow: 'auto', flex: 1 }}>
           <svg width={Math.max(totalW, 400)} height={totalH} style={{ display: 'block' }}>
 
             {/* Vertikale Rasterlinien — an Sample-Positionen */}

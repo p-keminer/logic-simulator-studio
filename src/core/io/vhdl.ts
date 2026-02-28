@@ -52,18 +52,31 @@ export function generateVHDL(circuit: Circuit): string {
   const logic: string[]   = [];
   const ffLogic: string[] = [];
 
-  // ── Pass 1: collect entity ports and internal signals ─────────────────────
+  // ── Pass 1A: Entity-Ports sammeln (muss vollständig sein, bevor Signale bestimmt werden) ──
+  // Object.values() hat keine garantierte Reihenfolge. Würde man Ports und Signale in einer
+  // einzigen Schleife sammeln, könnte ein internes Gate (z. B. FF) vor dem OUTPUT_LED
+  // verarbeitet werden: outputs[] ist dann noch leer, der Guard !outputs.includes(s) greift
+  // nicht, und das spätere Out-Port-Signal landet doppelt — als `signal` UND als `out STD_LOGIC`.
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'INPUT_SWITCH') {
       inputs.push(byPort[`${gate.id}:out`] ?? `sw_${gate.id}`);
     } else if (gate.typeId === 'OUTPUT_LED') {
       outputs.push(byPort[`${gate.id}:in`] ?? `led_${gate.id}`);
-    } else if (!EXCLUDE_FROM_VHDL.has(gate.typeId) && gateRegistry.has(gate.typeId)) {
-      const def = gateRegistry.get(gate.typeId);
-      for (const out of def.outputs) {
-        const s = byPort[`${gate.id}:${out.id}`];
-        if (s && !inputs.includes(s) && !outputs.includes(s)) signals.add(s);
-      }
+    }
+  }
+
+  // ── Pass 1B: Interne Signale sammeln (inputs[] und outputs[] jetzt vollständig) ──────────
+  for (const gate of Object.values(circuit.gates)) {
+    if (
+      gate.typeId === 'INPUT_SWITCH' ||
+      gate.typeId === 'OUTPUT_LED'   ||
+      EXCLUDE_FROM_VHDL.has(gate.typeId) ||
+      !gateRegistry.has(gate.typeId)
+    ) continue;
+    const def = gateRegistry.get(gate.typeId);
+    for (const out of def.outputs) {
+      const s = byPort[`${gate.id}:${out.id}`];
+      if (s && !inputs.includes(s) && !outputs.includes(s)) signals.add(s);
     }
   }
 
