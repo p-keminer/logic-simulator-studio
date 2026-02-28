@@ -23,18 +23,22 @@ gateRegistry.register({
   }),
   toVerilog: (g, w) => {
     const sid = sanitize(g.id);
-    const d0 = w[`${g.id}:d0`] ?? "1'b0";
-    const d1 = w[`${g.id}:d1`] ?? "1'b0";
-    const s  = w[`${g.id}:s`]  ?? "1'b0";
-    const y  = w[`${g.id}:y`]  ?? `w_${sid}_y`;
+    // Phase 0 guarantees d0/d1/s are pre-populated (nc_* if unconnected).
+    const d0 = w[`${g.id}:d0`];
+    const d1 = w[`${g.id}:d1`];
+    const s  = w[`${g.id}:s`];
+    const y  = w[`${g.id}:y`];
+    if (!y) return `// MUX2 ${sid}: output Y unconnected — skipped`;
     return `assign ${y} = ${s} ? ${d1} : ${d0}; // MUX2 ${sid}`;
   },
   toVHDL: (g, w) => {
     const sid = sanitize(g.id);
-    const d0 = w[`${g.id}:d0`] ?? "'0'";
-    const d1 = w[`${g.id}:d1`] ?? "'0'";
-    const s  = w[`${g.id}:s`]  ?? "'0'";
-    const y  = w[`${g.id}:y`]  ?? `w_${sid}_y`;
+    // Phase 0 guarantees d0/d1/s are pre-populated (nc_* if unconnected).
+    const d0 = w[`${g.id}:d0`];
+    const d1 = w[`${g.id}:d1`];
+    const s  = w[`${g.id}:s`];
+    const y  = w[`${g.id}:y`];
+    if (!y) return `-- MUX2 ${sid}: output Y unconnected — skipped`;
     return `${y} <= ${d1} when ${s} = '1' else ${d0}; -- MUX2 ${sid}`;
   },
   shapeComponent: MuxShape,

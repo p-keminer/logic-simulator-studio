@@ -147,7 +147,12 @@ export function generateVHDL(circuit: Circuit): string {
     const def = gateRegistry.get(gate.typeId);
     for (const out of def.outputs) {
       const k = `${gate.id}:${out.id}`;
-      const s = byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
+      // Same rationale as verilog.ts Pass 2: gates with custom toVHDL handle
+      // unconnected outputs themselves; skip signal declaration to avoid orphan signals.
+      const s = def.toVHDL
+        ? byPort[k]
+        : byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
+      if (!s) continue; // custom gate with unconnected output — nothing to declare
       if (!inputs.includes(s) && !outputs.includes(s)) signals.add(s);
     }
   }

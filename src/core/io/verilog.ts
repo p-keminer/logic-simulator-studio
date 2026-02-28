@@ -165,7 +165,14 @@ export function generateVerilog(circuit: Circuit): string {
 
     for (const out of def.outputs) {
       const k = `${gate.id}:${out.id}`;
-      const wName = byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
+      // Gates with a custom toVerilog handle unconnected outputs themselves (return
+      // a comment). Use undefined here so no spurious wire declaration is emitted.
+      // Gates using defaultGateVerilog keep the fallback to stay consistent with the
+      // primitive instantiation that also references it.
+      const wName = def.toVerilog
+        ? byPort[k]
+        : byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
+      if (!wName) continue; // custom gate with unconnected output — nothing to declare
       const isProc = (def.isSynchronous || def.verilogAlwaysComb) && !wireOutputIds.has(out.id);
 
       // Track driver type for ALL signals — including those that are port names.
