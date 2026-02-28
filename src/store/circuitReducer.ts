@@ -19,7 +19,7 @@ export function createEmptyCircuit(): Circuit {
     version: '1.0.0',
     gates: {},
     wires: {},
-    viewport: { panX: 0, panY: 0, zoom: 1 },
+    viewport: { panX: 0, panY: 0, zoom: 1.5 },
     metadata: {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -509,6 +509,28 @@ export function circuitReducer(state: Circuit, action: CircuitAction): Circuit {
         }
       }
       return { ...state, gates: updatedGates };
+    }
+
+    case 'GATES_PASTE': {
+      const { gates: pastedGates, wires: pastedWires } = action.payload;
+      // Deselect all existing
+      const clearedGates = Object.fromEntries(
+        Object.entries(state.gates).map(([id, g]) => [id, { ...g, isSelected: false }])
+      );
+      const clearedWires = Object.fromEntries(
+        Object.entries(state.wires).map(([id, w]) => [id, { ...w, isSelected: false }])
+      );
+      // Insert pasted gates (already selected)
+      const newGates = { ...clearedGates };
+      for (const g of pastedGates) {
+        newGates[g.id] = g;
+      }
+      // Insert pasted wires
+      const newWires = { ...clearedWires };
+      for (const w of pastedWires) {
+        newWires[w.id] = w;
+      }
+      return { ...state, gates: newGates, wires: newWires };
     }
 
     default:

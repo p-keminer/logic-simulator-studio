@@ -1,4 +1,4 @@
-import type { Circuit, GateTypeId, SimulationResult, WireEndpoint } from '../core/types';
+import type { Circuit, GateInstance, GateTypeId, SimulationResult, Wire, WireEndpoint } from '../core/types';
 
 export type CircuitAction =
   | { type: 'GATE_ADD'; payload: { typeId: GateTypeId; x: number; y: number } }
@@ -34,4 +34,5 @@ export type CircuitAction =
   | { type: 'SELECTION_CLEAR' }
   | { type: 'DELETE_SELECTED' }
   | { type: 'GATE_SET_ADC_VALUE'; payload: { gateId: string; value: number } }
-  | { type: 'GATES_MOVE_STEP'; payload: { dx: number; dy: number } };
+  | { type: 'GATES_MOVE_STEP'; payload: { dx: number; dy: number } }
+  | { type: 'GATES_PASTE'; payload: { gates: GateInstance[]; wires: Wire[] } };

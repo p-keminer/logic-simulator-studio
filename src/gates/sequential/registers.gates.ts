@@ -3,6 +3,7 @@
  */
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
+import { ShiftRegShape } from '../shapes/ShiftRegShape';
 
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
 
@@ -91,7 +92,7 @@ gateRegistry.register({
       `end process; -- REG4 ${sid}`,
     ].join('\n');
   },
-  shapeComponent: FlipFlopShape,
+  shapeComponent: ShiftRegShape,
   description: '4-Bit D-Register mit EN (steigende CLK-Flanke, async RST)',
   isSynchronous: true,
 });
@@ -236,7 +237,7 @@ gateRegistry.register({
       `end process; -- SHIFT4 ${sid}`,
     ].join('\n');
   },
-  shapeComponent: FlipFlopShape,
+  shapeComponent: ShiftRegShape,
   description: '4-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)',
   isSynchronous: true,
 });

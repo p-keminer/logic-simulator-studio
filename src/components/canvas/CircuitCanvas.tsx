@@ -12,10 +12,13 @@ import { screenToSVG } from '../../hooks/useViewport';
 import type { GateTypeId } from '../../core/types';
 import { findPortAt } from '../../utils/geometry';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRID_SIZE } from '../../utils/constants';
+import { setClipboard, getClipboard } from '../../store/clipboard';
+import { generateId } from '../../utils/idGenerator';
 
 const WIRE_COLORS = ['','#22c55e','#ef4444','#f59e0b','#3b82f6','#a855f7','#ec4899','#ffffff','#f97316'];
 interface WireCtxMenu { wireId: string; screenX: number; screenY: number; svgX: number; svgY: number; }
 interface GateCtxMenu { gateId: string; screenX: number; screenY: number; }
+interface CanvasCtxMenu { screenX: number; screenY: number; svgX: number; svgY: number; }
 
 export function CircuitCanvas() {
   const { circuit, dispatch } = useCircuitContext();
@@ -23,6 +26,7 @@ export function CircuitCanvas() {
   const { viewport } = useViewport(svgRef);
   const [wireCtxMenu, setWireCtxMenu] = useState<WireCtxMenu | null>(null);
   const [gateCtxMenu, setGateCtxMenu] = useState<GateCtxMenu | null>(null);
+  const [canvasCtxMenu, setCanvasCtxMenu] = useState<CanvasCtxMenu | null>(null);
   const [wireMode, setWireMode] = useState(false);
   const [snapMode, setSnapMode] = useState(false);
   const snapTargetRef = useRef<{ gateId: string; portId: string } | null>(null);
@@ -44,15 +48,58 @@ export function CircuitCanvas() {
     [dispatch]
   );
 
+  const copySelected = useCallback(() => {
+    const gates = Object.values(circuit.gates).filter((g) => g.isSelected);
+    if (gates.length === 0) return;
+    const selectedIds = new Set(gates.map((g) => g.id));
+    const wires = Object.values(circuit.wires).filter(
+      (w) => selectedIds.has(w.from.gateId) && selectedIds.has(w.to.gateId)
+    );
+    setClipboard({ gates, wires });
+  }, [circuit.gates, circuit.wires]);
+
+  const pasteClipboard = useCallback((svgX?: number, svgY?: number) => {
+    const cb = getClipboard();
+    if (!cb || cb.gates.length === 0) return;
+    const minX = Math.min(...cb.gates.map((g) => g.x));
+    const minY = Math.min(...cb.gates.map((g) => g.y));
+    const idMap = new Map<string, string>();
+    for (const g of cb.gates) idMap.set(g.id, generateId());
+    const offsetX = svgX !== undefined ? svgX - minX : 24;
+    const offsetY = svgY !== undefined ? svgY - minY : 24;
+    const newGates = cb.gates.map((g) => ({
+      ...g,
+      id: idMap.get(g.id)!,
+      x: g.x + offsetX,
+      y: g.y + offsetY,
+      isSelected: true,
+      outputSignals: Object.fromEntries(Object.keys(g.outputSignals).map((k) => [k, { value: 0 as 0|1, version: 0, lastChangedAt: 0 }])),
+    }));
+    const newWires = cb.wires.map((w) => ({
+      ...w,
+      id: generateId(),
+      from: { ...w.from, gateId: idMap.get(w.from.gateId) ?? w.from.gateId },
+      to:   { ...w.to,   gateId: idMap.get(w.to.gateId)   ?? w.to.gateId },
+      isSelected: false,
+    }));
+    dispatch({ type: 'GATES_PASTE', payload: { gates: newGates, wires: newWires } });
+  }, [dispatch]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') { cancelWire(); setWireCtxMenu(null); setGateCtxMenu(null); setWireMode(false); }
+      if (e.key === 'Escape') { cancelWire(); setWireCtxMenu(null); setGateCtxMenu(null); setCanvasCtxMenu(null); setWireMode(false); }
       if (e.key === 'w' || e.key === 'W') setWireMode((m) => !m);
       if (e.key === 'x' || e.key === 'X') setSnapMode((m) => !m);
       if (e.key === 'Delete' || e.key === 'Backspace') dispatch({ type: 'DELETE_SELECTED' });
       if (e.key === 'r' || e.key === 'R') {
         const selected = Object.values(circuit.gates).filter((g) => g.isSelected);
         for (const gate of selected) dispatch({ type: 'GATE_ROTATE', payload: { gateId: gate.id } });
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+        copySelected();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'v' || e.key === 'V')) {
+        pasteClipboard();
       }
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
         const hasSelection = Object.values(circuit.gates).some((g) => g.isSelected);
@@ -65,7 +112,7 @@ export function CircuitCanvas() {
         }
       }
     },
-    [cancelWire, dispatch, circuit.gates]
+    [cancelWire, dispatch, circuit.gates, copySelected, pasteClipboard]
   );
 
   const handlePointerMove = useCallback(
@@ -89,6 +136,7 @@ export function CircuitCanvas() {
     (e: React.MouseEvent<SVGSVGElement>) => {
       if (wireCtxMenu) { setWireCtxMenu(null); return; }
       if (gateCtxMenu) { setGateCtxMenu(null); return; }
+      if (canvasCtxMenu) { setCanvasCtxMenu(null); return; }
       if (wireDrawing.phase === 'drawing') {
         if (snapMode && snapTargetRef.current) {
           onCanvasClickWaypoint(e, snapTargetRef.current);
@@ -97,7 +145,7 @@ export function CircuitCanvas() {
         }
       }
     },
-    [wireDrawing.phase, onCanvasClickWaypoint, wireCtxMenu, gateCtxMenu, snapMode]
+    [wireDrawing.phase, onCanvasClickWaypoint, wireCtxMenu, gateCtxMenu, canvasCtxMenu, snapMode]
   );
 
   const handleWireContextMenu = useCallback(
@@ -136,7 +184,14 @@ export function CircuitCanvas() {
         onDragOver={(e) => e.preventDefault()}
         onKeyDown={handleKeyDown}
         onClick={handleCanvasClick}
-        onContextMenu={(e) => e.preventDefault()}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          if (getClipboard() !== null && svgRef.current) {
+            const svgPos = screenToSVG(svgRef.current, e.clientX, e.clientY);
+            setWireCtxMenu(null); setGateCtxMenu(null);
+            setCanvasCtxMenu({ screenX: e.clientX, screenY: e.clientY, svgX: svgPos.x, svgY: svgPos.y });
+          }
+        }}
         style={{
           outline: snapMode ? '2px solid #facc15' : (wireMode && !isDrawingWire) ? '2px solid #3b82f6' : 'none',
           outlineOffset: '-2px',
@@ -222,6 +277,20 @@ export function CircuitCanvas() {
           screenY={gateCtxMenu.screenY}
           onClose={() => setGateCtxMenu(null)}
         />
+      )}
+
+      {canvasCtxMenu && (
+        <div style={{ position:'fixed', top:canvasCtxMenu.screenY, left:canvasCtxMenu.screenX, background:'#0f172a', border:'1px solid #334155', borderRadius:8, padding:'4px 0', zIndex:2000, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', minWidth:160 }}>
+          <div style={{ position:'fixed', inset:0, zIndex:-1 }} onMouseDown={() => setCanvasCtxMenu(null)} />
+          <button
+            style={{ display:'block', width:'100%', background:'none', border:'none', color:'#cbd5e1', fontSize:12, fontFamily:'monospace', textAlign:'left', padding:'5px 12px', cursor:'pointer', borderRadius:4, whiteSpace:'nowrap' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#1e293b'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+            onClick={() => { pasteClipboard(canvasCtxMenu.svgX, canvasCtxMenu.svgY); setCanvasCtxMenu(null); }}
+          >
+            📋 Einfügen (Strg+V)
+          </button>
+        </div>
       )}
     </>
   );

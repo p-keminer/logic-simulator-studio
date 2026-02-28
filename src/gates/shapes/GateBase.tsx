@@ -29,7 +29,7 @@ export function PortDots({ gate, definition, inputSignals, onPortClick, showLabe
         const isHigh = sig?.value === 1;
         const color = isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR;
         const isLeft = p.relativeX <= 0.5;
-        const labelX = isLeft ? x + PORT_RADIUS + 4 : x - PORT_RADIUS - 4;
+        const labelX = isLeft ? x + PORT_RADIUS + 8 : x - PORT_RADIUS - 8;
         const anchor: 'start' | 'end' = isLeft ? 'start' : 'end';
         return (
           <React.Fragment key={p.id}>
@@ -62,7 +62,7 @@ export function PortDots({ gate, definition, inputSignals, onPortClick, showLabe
         const isHigh = sig?.value === 1;
         const color = isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR;
         const isRight = p.relativeX >= 0.5;
-        const labelX = isRight ? x - PORT_RADIUS - 4 : x + PORT_RADIUS + 4;
+        const labelX = isRight ? x - PORT_RADIUS - 8 : x + PORT_RADIUS + 8;
         const anchor: 'start' | 'end' = isRight ? 'end' : 'start';
         return (
           <React.Fragment key={p.id}>
