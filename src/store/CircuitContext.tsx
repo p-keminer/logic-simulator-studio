@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState, useCallback } from 'react';
-import type { Circuit, SignalValue, TimingSnapshot, RaceInfo } from '../core/types';
+import type { Circuit, SignalValue, TimingSnapshot, RaceInfo, RaceSeverity } from '../core/types';
 import type { CircuitAction } from './actions';
 import { circuitReducer, createEmptyCircuit } from './circuitReducer';
 import {
@@ -50,10 +50,11 @@ interface CircuitContextValue {
   /** Race conditions detected in the last GATE_DELAY advance. */
   races: RaceInfo[];
   /**
-   * Set of netIds ('gateId:portId') currently involved in a race.
-   * Used by CanvasWire to highlight affected wires.
+   * Map of netId → worst RaceSeverity for wires currently involved in a race.
+   * Used by CanvasWire to highlight affected wires with severity-based colours.
+   * Map.has() works identically to the former ReadonlySet.has() call.
    */
-  raceNetIds: ReadonlySet<string>;
+  raceNetIds: Map<string, RaceSeverity>;
 }
 
 const CircuitContext = createContext<CircuitContextValue | null>(null);
@@ -72,7 +73,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   const [isClockPaused, setIsClockPaused] = useState(false);
   const [simulationMode, setSimulationMode] = useState<SimulationMode>(SimulationMode.ZERO_DELAY);
   const [races, setRaces] = useState<RaceInfo[]>([]);
-  const [raceNetIds, setRaceNetIds] = useState<ReadonlySet<string>>(new Set());
+  const [raceNetIds, setRaceNetIds] = useState<Map<string, RaceSeverity>>(new Map());
 
   // ── Immer-aktuelle Refs (kein stale-closure-Problem im RAF-Handler) ────────
   const circuitRef       = useRef<Circuit>(circuit);
@@ -336,10 +337,19 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
               ? combined.slice(combined.length - MAX_RACES)
               : combined;
           });
-          // Build netId set for wire highlighting.
+          // Build netId → worst-severity map for wire highlighting.
+          // Higher index = more severe: loop(1) < warning(2) < glitch(3) < timing(4) < critical(5).
+          const SEVERITY_ORDER: Record<RaceSeverity, number> = {
+            loop: 1, warning: 2, glitch: 3, timing: 4, critical: 5,
+          };
           setRaceNetIds(prev => {
-            const next = new Set(prev);
-            for (const r of detectedRaces) next.add(r.netId);
+            const next = new Map(prev);
+            for (const r of detectedRaces) {
+              const existing = next.get(r.netId);
+              if (!existing || SEVERITY_ORDER[r.severity] > SEVERITY_ORDER[existing]) {
+                next.set(r.netId, r.severity);
+              }
+            }
             return next;
           });
         }
@@ -379,7 +389,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   useEffect(() => {
     if (simulationMode === SimulationMode.ZERO_DELAY) {
       setRaces([]);
-      setRaceNetIds(new Set());
+      setRaceNetIds(new Map());
       schedulerRef.current = null;
     }
   }, [simulationMode]);

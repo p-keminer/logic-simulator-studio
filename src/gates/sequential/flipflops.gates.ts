@@ -118,6 +118,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ an',
   isSynchronous: true,
+  clockInputId: 'clk',
   // q driven by always @(posedge) → reg; q_n driven by assign → wire
   verilogWireOutputs: ['q_n'],
 });
@@ -181,6 +182,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop mit asynchronem Reset',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });
 
@@ -250,6 +252,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'JK Flip-Flop: J=Set, K=Reset, J=K=1 togglet Q',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });
 
@@ -305,6 +308,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'T Flip-Flop: toggelt Q bei CLK↑ wenn T=1',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });
 

@@ -420,6 +420,9 @@ gateRegistry.register({
     ].join('\n');
   },
   verilogWireOutputs: ['qn1', 'qn2'],
+  // Dual FF: each FF has its own clock (clk1 / clk2).  clockInputId is not set
+  // because a single port ID cannot represent both clocks; setup/hold detection
+  // would produce false positives when the two clocks are independent.
   shapeComponent: FlipFlopShape, description: 'Dual D-Flip-Flop mit Preset/Clear',
 });
 
@@ -519,6 +522,7 @@ gateRegistry.register({
     { name: `latch_${sanitize(g.id)}`, width: 8 },
   ],
   verilogWireOutputs: ['q0','q1','q2','q3','q4','q5','q6','q7'],
+  clockInputId: 'shcp',
   shapeComponent: FlipFlopShape, description: '8-Bit Schieberegister mit Ausgangs-Latch',
 });
 
@@ -625,6 +629,7 @@ gateRegistry.register({
   verilogExtraRegs: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   verilogWireOutputs: ['q0','q1','q2','q3','rco'],
+  clockInputId: 'clk',
   shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit Load/Clear',
 });
 
@@ -867,6 +872,7 @@ gateRegistry.register({
   verilogExtraRegs: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 4 }],
   vhdlExtraSignals: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 4 }],
   verilogWireOutputs: ['q0','q1','q2','q3'],
+  clockInputId: 'clk',
   shapeComponent: FlipFlopShape, description: '4-Bit Universal-Schieberegister (Links/Rechts/Laden)',
 });
 
@@ -1028,6 +1034,7 @@ gateRegistry.register({
   verilogExtraRegs: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 8 }],
   vhdlExtraSignals: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 8 }],
   verilogWireOutputs: ['q0','q1','q2','q3','q4','q5','q6','q7'],
+  clockInputId: 'clk',
   shapeComponent: FlipFlopShape, description: '8-Bit D-Flip-Flop Register mit Output-Enable',
 });
 
@@ -1228,5 +1235,6 @@ gateRegistry.register({
   verilogExtraRegs: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   verilogWireOutputs: ['q0','q1','q2','q3','rco'],
+  clockInputId: 'clk',
   shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit asynchronem Clear',
 });

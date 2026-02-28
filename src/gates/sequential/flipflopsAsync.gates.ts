@@ -85,6 +85,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop mit asynchronem Set (S) und Reset (R)',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });
 
@@ -168,6 +169,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'JK Flip-Flop mit asynchronem Set (S) und Reset (R)',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });
 
@@ -237,5 +239,6 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'T Flip-Flop mit asynchronem Set (S) und Reset (R)',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });

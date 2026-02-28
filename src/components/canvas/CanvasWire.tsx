@@ -22,12 +22,22 @@ export function CanvasWire({ wire, onContextMenu }: Props) {
   const pathData = computeWirePath(wire, fromGate, toGate);
   const isHigh   = wire.signal.value === 1;
 
-  // Race condition: override wire color with red if this wire's source net is affected.
-  const netId   = `${wire.from.gateId}:${wire.from.portId}`;
-  const isRace  = raceNetIds.has(netId);
-  const RACE_COLOR = '#ef4444';
+  // Race condition: override wire color based on severity of the worst race on this net.
+  const netId = `${wire.from.gateId}:${wire.from.portId}`;
+  const raceSeverity = raceNetIds.get(netId);
+  const isRace = raceSeverity !== undefined;
 
-  const strokeColor = isRace ? RACE_COLOR : (wire.color || (isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR));
+  // Severity → wire colour mapping (matches RacePanel badge colours).
+  const RACE_COLORS: Record<string, string> = {
+    critical: '#ef4444', // red
+    warning:  '#f59e0b', // amber
+    glitch:   '#f97316', // orange
+    timing:   '#a855f7', // purple
+    loop:     '#ec4899', // pink
+  };
+  const raceColor = raceSeverity ? (RACE_COLORS[raceSeverity] ?? '#ef4444') : '#ef4444';
+
+  const strokeColor = isRace ? raceColor : (wire.color || (isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR));
   const pulseKey    = `${wire.id}-${wire.signal.version}`;
 
   const handleClick = (e: React.MouseEvent) => {

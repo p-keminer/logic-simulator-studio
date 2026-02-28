@@ -26,7 +26,7 @@
  *   - Oscillating circuits (ring oscillators, clocks) generate a constant-rate stream.
  */
 
-import type { Circuit, SignalValue, RaceInfo } from '../types';
+import type { Circuit, SignalValue, RaceInfo, RaceSeverity, RaceType } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
 import type { SimBuffer, WireMap } from './tickEngine';
 
@@ -117,7 +117,14 @@ export class EventScheduler {
    * Advance the simulation from currentTime to targetTime.
    * Processes all matured events and triggers downstream re-evaluations.
    *
-   * @returns Detected race conditions in this time window.
+   * Hardened detection (beyond the original multi-driver race):
+   *   TASK 1 — Severity classification: critical / warning / glitch / timing / loop.
+   *   TASK 2 — Reconvergent-glitch detection: nets that change polarity >1× per advance().
+   *   TASK 3 — Setup / hold risk: FF clock rising-edge and data input change in same batch.
+   *   TASK 4 — Latch race-through: covered by TASK 2 (latch outputs flagged as 'glitch').
+   *   TASK 5 — Loop overflow guard: MAX_EVENTS_PER_ADVANCE cap prevents RAF stalls.
+   *
+   * @returns Detected race conditions and hazards in this time window.
    */
   advance(
     targetTime: number,
@@ -127,6 +134,36 @@ export class EventScheduler {
     isClockPaused: boolean,
   ): RaceInfo[] {
     const races: RaceInfo[] = [];
+
+    // ── TASK 5: Loop overflow guard ───────────────────────────────────────
+    // Limits total events processed per advance() call.  Circuits with
+    // combinational oscillation loops generate unbounded events; without this
+    // guard the RAF callback blocks the UI until the queue drains.
+    const MAX_EVENTS_PER_ADVANCE = 10_000;
+    let eventsProcessed = 0;
+
+    // ── TASK 2: Per-advance toggle counter per net ────────────────────────
+    // Count how many times each net commits a polarity change.
+    // >1 on a combinatorial or latch output → reconvergent glitch / race-through.
+    const netToggleCount = new Map<string, number>();
+
+    // ── TASK 3: Pre-compute per-gate metadata (one pass, O(G)) ───────────
+    // gateClockInputId — gates that have a clock pin (for setup/hold check).
+    // syncGateIds      — gates whose outputs can legitimately multi-toggle
+    //                    (FFs + autonomous sources); excluded from glitch check.
+    const gateClockInputId = new Map<string, string>();
+    const syncGateIds      = new Set<string>();
+    for (const gate of Object.values(circuit.gates)) {
+      if (AUTONOMOUS_TYPES.has(gate.typeId)) {
+        syncGateIds.add(gate.id);
+        continue;
+      }
+      try {
+        const def = gateRegistry.get(gate.typeId);
+        if (def.clockInputId) gateClockInputId.set(gate.id, def.clockInputId);
+        if (def.isSynchronous) syncGateIds.add(gate.id);
+      } catch { /* gate type not in registry */ }
+    }
 
     // ── Step 1: Per-tick autonomous gate evaluation ───────────────────────
     // Autonomous gates (CLOCK etc.) must be evaluated every tick because they
@@ -147,12 +184,29 @@ export class EventScheduler {
 
     // ── Step 2: Process all events up to targetTime ───────────────────────
     while (this.queue.length > 0 && this.queue[0].time <= targetTime) {
+
+      // TASK 5: Overflow check before extracting each batch.
+      if (eventsProcessed >= MAX_EVENTS_PER_ADVANCE) {
+        const overflowEv = this.queue[0];
+        races.push({
+          raceId:   `loop:${overflowEv.time}:${overflowEv.netId}`,
+          time:     overflowEv.time,
+          netId:    overflowEv.netId,
+          gateIds:  [overflowEv.sourceGateId],
+          values:   [overflowEv.value],
+          severity: 'loop',
+          type:     'loop_overflow',
+        });
+        break;
+      }
+
       // Collect entire batch at the earliest time for race detection.
       const batchTime = this.queue[0].time;
       const batch: SimEvent[] = [];
       while (this.queue.length > 0 && this.queue[0].time === batchTime) {
         batch.push(this.queue.shift()!);
       }
+      eventsProcessed += batch.length;
 
       // Remove batch entries from the shadow set.
       for (const ev of batch) {
@@ -169,21 +223,31 @@ export class EventScheduler {
 
       const changedGateIds = new Set<string>();
 
+      // TASK 3: Per-batch setup/hold tracking.
+      // ffClockChanges: gateId → { oldVal, newVal } of its clock input in this batch.
+      // ffDataChanged:  set of gateIds whose non-clock inputs also changed this batch.
+      const ffClockChanges = new Map<string, { oldVal: SignalValue; newVal: SignalValue }>();
+      const ffDataChanged  = new Set<string>();
+
       for (const [netId, evts] of byNet) {
-        // ── Race detection ──────────────────────────────────────────────
+        // ── Race detection with severity (TASK 1) ──────────────────────
         const uniqueSources = new Set(evts.map(e => e.sourceGateId));
         const uniqueValues  = new Set(evts.map(e => e.value));
         if (uniqueSources.size > 1 || uniqueValues.size > 1) {
+          const severity: RaceSeverity = uniqueValues.size > 1 ? 'critical' : 'warning';
+          const type: RaceType = uniqueValues.size > 1 ? 'value_conflict' : 'multi_source';
           races.push({
             raceId:   `${batchTime}:${netId}`,
             time:     batchTime,
             netId,
             gateIds:  [...uniqueSources],
             values:   [...uniqueValues] as SignalValue[],
+            severity,
+            type,
           });
         }
 
-        // Race resolution: last event in stable case; 0 (unknown) in conflicting case.
+        // Race resolution: 0 (unknown) on conflict; otherwise the scheduled value.
         const finalValue: SignalValue = uniqueValues.size > 1 ? 0 : evts[0].value;
 
         // Commit the value.
@@ -196,11 +260,55 @@ export class EventScheduler {
 
         if (oldValue !== finalValue) {
           this.committedOutputs[gateId][portId] = finalValue;
-          // Mark all gates downstream of this net for re-evaluation.
-          for (const { toGateId } of fanoutMap.get(netId) ?? []) {
+
+          // TASK 2: Count polarity changes per net.
+          netToggleCount.set(netId, (netToggleCount.get(netId) ?? 0) + 1);
+
+          // Mark downstream gates for re-evaluation and collect setup/hold info.
+          for (const { toGateId, toPortId } of fanoutMap.get(netId) ?? []) {
             changedGateIds.add(toGateId);
+
+            // TASK 3: Separate clock transitions from data transitions per FF gate.
+            const clkId = gateClockInputId.get(toGateId);
+            if (clkId !== undefined) {
+              if (toPortId === clkId) {
+                // Record the committed clock transition for this FF.
+                ffClockChanges.set(toGateId, {
+                  oldVal: (oldValue ?? 0) as SignalValue,
+                  newVal: finalValue,
+                });
+              } else {
+                // A non-clock input of this FF changed in the same batch.
+                ffDataChanged.add(toGateId);
+              }
+            }
           }
         }
+      }
+
+      // TASK 3: Emit setup/hold timing risk races.
+      // Fired when a FF sees a rising clock edge AND a data input change in the
+      // same simulation batch — the hardware equivalent of a setup-time violation.
+      for (const [gateId, clkTrans] of ffClockChanges) {
+        if (clkTrans.oldVal !== 0 || clkTrans.newVal !== 1) continue; // Rising edge only
+        if (!ffDataChanged.has(gateId)) continue;                      // No simultaneous data change
+
+        // Report on the net that drives the clock input.
+        const clkInputId = gateClockInputId.get(gateId)!;
+        const upstream   = wireMap.get(`${gateId}:${clkInputId}`);
+        const clkNetId   = upstream
+          ? `${upstream.fromGateId}:${upstream.fromPortId}`
+          : `${gateId}:${clkInputId}`;
+
+        races.push({
+          raceId:   `timing:${batchTime}:${gateId}`,
+          time:     batchTime,
+          netId:    clkNetId,
+          gateIds:  [gateId],
+          values:   [1],
+          severity: 'timing',
+          type:     'setup_hold_risk',
+        });
       }
 
       // ── Step 3: Re-evaluate downstream gates ─────────────────────────
@@ -210,6 +318,38 @@ export class EventScheduler {
       }
 
       this.currentTime = batchTime;
+    }
+
+    // ── TASK 2 (post-loop): Emit glitch races for multi-toggle nets ───────
+    // A combinatorial or latch net that committed more than one polarity
+    // reversal within this advance() call is a reconvergent glitch or
+    // latch race-through.  Synchronous / autonomous gate outputs are excluded
+    // because they legitimately change multiple times per advance() (e.g. a
+    // T-FF divider or a fast clock signal).
+    const criticalNets = new Set(
+      races.filter(r => r.severity === 'critical').map(r => r.netId),
+    );
+    const LATCH_TYPES = new Set(['SR_LATCH', 'D_LATCH', '74HC373']);
+
+    for (const [netId, count] of netToggleCount) {
+      if (count <= 1) continue;
+      const gateId = netId.slice(0, netId.indexOf(':'));
+      if (syncGateIds.has(gateId)) continue;      // FF / clock outputs — legitimate multi-toggle
+      if (criticalNets.has(netId)) continue;       // Already flagged critical — don't double-report
+
+      const portId  = netId.slice(netId.indexOf(':') + 1);
+      const gate    = circuit.gates[gateId];
+      const isLatch = gate ? LATCH_TYPES.has(gate.typeId) : false;
+
+      races.push({
+        raceId:   `glitch:${this.currentTime}:${netId}`,
+        time:     this.currentTime,
+        netId,
+        gateIds:  [gateId],
+        values:   [this.committedOutputs[gateId]?.[portId] ?? 0],
+        severity: 'glitch',
+        type:     isLatch ? 'latch_race_through' : 'reconvergent_glitch',
+      });
     }
 
     // Advance clock even if no events fired (queue may be empty / past targetTime).

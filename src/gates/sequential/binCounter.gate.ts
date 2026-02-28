@@ -103,6 +103,7 @@ const binCounterDef: GateDefinition = {
     ].join('\n');
   },
   verilogWireOutputs: ['q0', 'q1', 'q2', 'q3', 'rco'],
+  clockInputId: 'clk',
   shapeComponent: BinCounter7SegShape,
   description: 'Binärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.',
 };
@@ -226,6 +227,7 @@ const binCounter99Def: GateDefinition = {
     ].join('\n');
   },
   verilogWireOutputs: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'rco'],
+  clockInputId: 'clk',
   shapeComponent: BinCounter7Seg2Shape,
   description: 'Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.',
 };

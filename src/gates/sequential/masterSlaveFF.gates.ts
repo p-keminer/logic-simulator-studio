@@ -90,6 +90,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'Master-Slave JK FF: Q ändert sich nur auf fallender CLK-Flanke',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });
 
@@ -162,5 +163,6 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'Flanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑',
   isSynchronous: true,
+  clockInputId: 'clk',
   verilogWireOutputs: ['q_n'],
 });

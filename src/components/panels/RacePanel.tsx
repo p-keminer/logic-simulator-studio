@@ -5,8 +5,33 @@
  * Clicking an entry focuses the affected area on the canvas via viewport dispatch.
  */
 import React from 'react';
-import type { RaceInfo } from '../../core/types';
+import type { RaceInfo, RaceSeverity } from '../../core/types';
 import { useCircuitContext } from '../../store/CircuitContext';
+
+const SEVERITY_LABEL: Record<RaceSeverity, string> = {
+  critical: 'KRITISCH',
+  warning:  'WARNUNG',
+  glitch:   'GLITCH',
+  timing:   'TIMING',
+  loop:     'LOOP',
+};
+
+const SEVERITY_COLOR: Record<RaceSeverity, string> = {
+  critical: '#ef4444',
+  warning:  '#f59e0b',
+  glitch:   '#f97316',
+  timing:   '#a855f7',
+  loop:     '#ec4899',
+};
+
+const TYPE_DESC: Record<string, string> = {
+  value_conflict:      'Konfliktierende Werte auf demselben Netz',
+  multi_source:        'Mehrere Treiber, gleicher Wert',
+  reconvergent_glitch: 'Rekonvergentes Fächerglitch (mehrf. Pegelwechsel)',
+  latch_race_through:  'Latch-Race-Through (Ausgang oszilliert bei EN=1)',
+  setup_hold_risk:     'Setup/Hold-Risiko: CLK-Flanke und Daten im selben Takt',
+  loop_overflow:       'Ereignisbudget überschritten — mögliche kombinatorische Schleife',
+};
 
 interface Props {
   onClose: () => void;
@@ -64,7 +89,7 @@ export function RacePanel({ onClose }: Props) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444' }}>
-            ⚠ Race Conditions — GATE_DELAY Modus
+            Race / Hazard Monitor — GATE_DELAY Modus
           </span>
           <button
             onClick={onClose}
@@ -84,9 +109,8 @@ export function RacePanel({ onClose }: Props) {
 
         {/* Explanation */}
         <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-          Eine Race Condition tritt auf, wenn mehrere Ereignisse dasselbe Netz zur gleichen
-          Simulationszeit mit konkurrierenden Werten beeinflussen.
-          Betroffene Leitungen werden im Canvas rot hervorgehoben.
+          Erkannte Hazards im GATE_DELAY-Modus. Betroffene Leitungen werden farblich
+          hervorgehoben: rot=Konflikt, lila=Timing, orange=Glitch, gelb=Warnung, pink=Schleife.
         </p>
 
         {/* Race list */}
@@ -96,44 +120,66 @@ export function RacePanel({ onClose }: Props) {
               Keine Races erkannt.
             </span>
           ) : (
-            [...races].reverse().map(race => (
-              <button
-                key={race.raceId}
-                onClick={() => handleFocus(race)}
-                title="Klick: Im Canvas fokussieren"
-                style={{
-                  background: '#1e293b',
-                  border: '1px solid #ef444440',
-                  borderLeft: '3px solid #ef4444',
-                  borderRadius: 4,
-                  padding: '8px 10px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 3,
-                  color: '#e2e8f0',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-                  <span style={{ color: '#f59e0b', fontWeight: 600 }}>
-                    t = {race.time}
-                  </span>
-                  <span style={{ color: '#64748b' }}>
-                    {race.netId}
-                  </span>
-                </div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                  Treiber: {race.gateIds.map(id => {
-                    const g = circuit.gates[id];
-                    return g?.label ? `${g.label} (${id.slice(0, 8)})` : id.slice(0, 12);
-                  }).join(', ')}
-                </div>
-                <div style={{ fontSize: 11, color: '#ef4444' }}>
-                  Werte: {race.values.map(v => `'${v}'`).join(' vs ')}
-                </div>
-              </button>
-            ))
+            [...races].reverse().map(race => {
+              const sev   = race.severity ?? 'critical';
+              const color = SEVERITY_COLOR[sev] ?? '#ef4444';
+              return (
+                <button
+                  key={race.raceId}
+                  onClick={() => handleFocus(race)}
+                  title="Klick: Im Canvas fokussieren"
+                  style={{
+                    background: '#1e293b',
+                    border: `1px solid ${color}40`,
+                    borderLeft: `3px solid ${color}`,
+                    borderRadius: 4,
+                    padding: '8px 10px',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
+                    color: '#e2e8f0',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11 }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <span
+                        style={{
+                          background: color,
+                          color: '#0f172a',
+                          fontWeight: 700,
+                          fontSize: 9,
+                          padding: '1px 5px',
+                          borderRadius: 3,
+                          letterSpacing: '0.05em',
+                        }}
+                      >
+                        {SEVERITY_LABEL[sev]}
+                      </span>
+                      <span style={{ color: '#f59e0b', fontWeight: 600 }}>t = {race.time}</span>
+                    </div>
+                    <span style={{ color: '#64748b' }}>{race.netId}</span>
+                  </div>
+                  {race.type && (
+                    <div style={{ fontSize: 10, color: '#64748b', fontStyle: 'italic' }}>
+                      {TYPE_DESC[race.type] ?? race.type}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                    Gate: {race.gateIds.map(id => {
+                      const g = circuit.gates[id];
+                      return g?.label ? `${g.label} (${id.slice(0, 8)})` : id.slice(0, 12);
+                    }).join(', ')}
+                  </div>
+                  {race.values.length > 0 && (
+                    <div style={{ fontSize: 11, color }}>
+                      Werte: {race.values.map(v => `'${v}'`).join(' vs ')}
+                    </div>
+                  )}
+                </button>
+              );
+            })
           )}
         </div>
 

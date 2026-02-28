@@ -117,6 +117,14 @@ export interface GateDefinition {
    * Set only for gates whose toVHDL() handles missing outputs gracefully.
    */
   vhdlSkipUnconnectedOutputs?: true;
+  /**
+   * Input port ID of the clock pin, used by the race-mode scheduler for
+   * setup / hold risk detection (TASK 3). When the clock input transitions
+   * 0→1 in the same simulation batch as any other data input, a 'timing'
+   * severity race is emitted.
+   * Not applicable to latches (level-sensitive) or async gates.
+   */
+  clockInputId?: string;
 }
 
 export interface GateInstance {
@@ -192,6 +200,27 @@ export interface SimulationResult {
 // ─── Race Condition ────────────────────────────────────────────────────────────
 
 /**
+ * Severity of a detected race or hazard:
+ *  critical — conflicting values on the same net at the same time (bus fight / logic error)
+ *  warning  — same value from multiple drivers simultaneously (harmless but suspicious)
+ *  glitch   — net changed polarity >1 time in one advance() step (reconvergent fan-out hazard
+ *             or latch race-through)
+ *  timing   — clock edge and data input changed in the same simulation tick for a FF
+ *             (setup / hold window violation risk)
+ *  loop     — event budget exhausted; circuit has a likely combinational oscillation loop
+ */
+export type RaceSeverity = 'critical' | 'warning' | 'glitch' | 'loop' | 'timing';
+
+/** Machine-readable sub-classification of a race / hazard event. */
+export type RaceType =
+  | 'value_conflict'      // critical: two drivers, different values
+  | 'multi_source'        // warning:  two drivers, same value
+  | 'reconvergent_glitch' // glitch:   combinatorial net toggled >1×
+  | 'latch_race_through'  // glitch:   latch output oscillated while transparent
+  | 'setup_hold_risk'     // timing:   CLK edge + data change in same tick
+  | 'loop_overflow';      // loop:     event counter exceeded MAX_EVENTS_PER_ADVANCE
+
+/**
  * Describes a detected race condition in GATE_DELAY simulation mode.
  * A race occurs when two or more events target the same netId at the same time
  * but originate from different source gates or carry conflicting values.
@@ -207,6 +236,10 @@ export interface RaceInfo {
   gateIds: string[];
   /** Signal values attempted by the competing drivers */
   values: SignalValue[];
+  /** How severe this race is — drives display priority and wire colour. */
+  severity: RaceSeverity;
+  /** Fine-grained classification used for filtering and tooltips. */
+  type?: RaceType;
 }
 
 // ─── Timing Diagram ───────────────────────────────────────────────────────────
