@@ -72,11 +72,13 @@ export function generateVerilog(circuit: Circuit): string {
     } else if (!EXCLUDE_FROM_VERILOG.has(gate.typeId) && gateRegistry.has(gate.typeId)) {
       const def = gateRegistry.get(gate.typeId);
 
-      // Collect internal signal declarations, split wire vs reg
+      // Collect internal signal declarations, split wire vs reg.
+      // Use byPort value if port is connected; otherwise compute standard fallback so
+      // that toVerilog() fallback names are always declared (e.g. SR-Latch q_n).
       for (const out of def.outputs) {
         const k = `${gate.id}:${out.id}`;
-        const wName = byPort[k];
-        if (wName && !inputs.includes(wName) && !outputs.includes(wName)) {
+        const wName = byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
+        if (!inputs.includes(wName) && !outputs.includes(wName)) {
           if (def.isSynchronous) regs.add(wName);
           else wires.add(wName);
         }

@@ -75,8 +75,9 @@ export function generateVHDL(circuit: Circuit): string {
     ) continue;
     const def = gateRegistry.get(gate.typeId);
     for (const out of def.outputs) {
-      const s = byPort[`${gate.id}:${out.id}`];
-      if (s && !inputs.includes(s) && !outputs.includes(s)) signals.add(s);
+      const k = `${gate.id}:${out.id}`;
+      const s = byPort[k] ?? `w_${sanitize(gate.id)}_${out.id}`;
+      if (!inputs.includes(s) && !outputs.includes(s)) signals.add(s);
     }
   }
 
@@ -102,7 +103,6 @@ export function generateVHDL(circuit: Circuit): string {
   for (const gate of Object.values(circuit.gates)) {
     if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
     const def = gateRegistry.get(gate.typeId);
-    if (!def.isSynchronous) continue;
 
     for (const out of def.outputs) {
       const s = byPort[`${gate.id}:${out.id}`];

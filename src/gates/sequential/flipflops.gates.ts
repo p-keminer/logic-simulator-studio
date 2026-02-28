@@ -42,7 +42,7 @@ gateRegistry.register({
     const s  = w[`${g.id}:s`]   ?? "1'b0";
     const r  = w[`${g.id}:r`]   ?? "1'b0";
     const q  = w[`${g.id}:q`]   ?? `w_${sid}_q`;
-    const qn = w[`${g.id}:q_n`] ?? `w_${sid}_qn`;
+    const qn = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
     return [
       `// SR-Latch ${sid} (cross-coupled NOR)`,
       `nor g_${sid}_q (${q},  ${r}, ${qn});`,
@@ -54,7 +54,7 @@ gateRegistry.register({
     const s  = w[`${g.id}:s`]   ?? "'0'";
     const r  = w[`${g.id}:r`]   ?? "'0'";
     const q  = w[`${g.id}:q`]   ?? `w_${sid}_q`;
-    const qn = w[`${g.id}:q_n`] ?? `w_${sid}_qn`;
+    const qn = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
     return [
       `-- SR-Latch ${sid} (cross-coupled NOR)`,
       `${q}  <= ${qn} nor ${r};`,
@@ -310,7 +310,7 @@ gateRegistry.register({
   toVerilog: (g, w) => {
     const en = w[`${g.id}:en`] ?? "1'b0";
     const d  = w[`${g.id}:d`]  ?? "1'b0";
-    const q  = w[`${g.id}:q`]  ?? `w_${g.id}`;
+    const q  = w[`${g.id}:q`]  ?? `w_${sanitize(g.id)}_q`;
     return [
       `always @(*) begin`,
       `  if (${en}) ${q} <= ${d};`,
@@ -320,7 +320,7 @@ gateRegistry.register({
   toVHDL: (g, w) => {
     const en = w[`${g.id}:en`] ?? "'0'";
     const d  = w[`${g.id}:d`]  ?? "'0'";
-    const q  = w[`${g.id}:q`]  ?? `w_${g.id}`;
+    const q  = w[`${g.id}:q`]  ?? `w_${sanitize(g.id)}_q`;
     return [
       `process(${en}, ${d})`,
       `begin`,

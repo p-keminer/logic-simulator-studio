@@ -82,11 +82,15 @@ export function TruthTableModal({ onClose }: Props) {
     const { order: evalOrder, cycles } = topologicalSort(circuit);
     const hasCycles = cycles.length > 0;
 
-    // Erkennung sequenzieller Gatter (Flip-Flops, Register) auch ohne Draht-Zyklen.
-    // isSynchronous-Gatter führen intern Zustand (customState.q, prevClk) → Mode 2 nötig.
+    // Erkennung sequenzieller Gatter (Flip-Flops, Latches) auch ohne Draht-Zyklen.
+    // isSynchronous-Gatter (D-FF, JK-FF …) und Gatter mit stateUpdate (SR-Latch, D-Latch)
+    // führen intern Zustand → Mode 2 (Zustandsübergangstabelle) nötig.
     const hasSynchronous = allGates.some(g => {
       if (!connectedIds.has(g.id)) return false;
-      try { return !!gateRegistry.get(g.typeId).isSynchronous; } catch { return false; }
+      try {
+        const def = gateRegistry.get(g.typeId);
+        return !!def.isSynchronous || typeof def.stateUpdate === 'function';
+      } catch { return false; }
     });
 
     // ════════════════════════════════════════════════════════════════════════
