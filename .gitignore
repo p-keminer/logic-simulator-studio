@@ -26,6 +26,9 @@ dist-ssr
 # Claude Code tool directory
 .claude/
 
+# Claude Code project memory (intern, nicht für das Repo)
+memory/
+
 # Dev scaffolding / build helper scripts (not part of the project source)
 write-p*.js
 _b64helper.js
