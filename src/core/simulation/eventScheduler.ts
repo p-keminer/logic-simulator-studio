@@ -360,9 +360,13 @@ export class EventScheduler {
 
   /** Build a SimBuffer snapshot from the current committed state. */
   buildBuffer(): SimBuffer {
+    // Deep-copy so that simBufferRef.current never aliases the scheduler's internal
+    // mutable objects.  Without copies, isStable(oldBuf, newBuf) would compare an
+    // object to itself after the first GATE_DELAY frame and always return true,
+    // preventing SIMULATION_APPLY from firing (→ LED/wire display frozen).
     return {
-      outputs:      this.committedOutputs,
-      customStates: this.committedCustomStates,
+      outputs:      this._deepCopyOutputs(this.committedOutputs),
+      customStates: this._deepCopyCustomStates(this.committedCustomStates),
       tick:         this.currentTime,
     };
   }
