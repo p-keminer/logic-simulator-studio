@@ -4,6 +4,8 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 const qqnOutputs = [
   { id: 'q',   label: 'Q',  relativeX: 1, relativeY: 0.35 },
   { id: 'q_n', label: 'Q̅', relativeX: 1, relativeY: 0.65 },
@@ -47,9 +49,48 @@ gateRegistry.register({
 
     return { qM: newQM, qS: newQS, prevClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const j   = w[`${g.id}:j`]   ?? "1'b0";
+    const k   = w[`${g.id}:k`]   ?? "1'b0";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `// MS-JK FF ${sid}: Q captures on falling CLK edge`,
+      `always @(negedge ${clk}) begin`,
+      `  if      (${j} && !${k})  ${q} <= 1'b1;`,
+      `  else if (!${j} && ${k})  ${q} <= 1'b0;`,
+      `  else if (${j} && ${k})   ${q} <= ~${q};`,
+      `end // MS-JK ${sid}`,
+      `assign ${qn} = ~${q};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const j   = w[`${g.id}:j`]   ?? "'0'";
+    const k   = w[`${g.id}:k`]   ?? "'0'";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `-- MS-JK FF ${sid}: Q captures on falling CLK edge`,
+      `process(${clk})`,
+      `begin`,
+      `  if falling_edge(${clk}) then`,
+      `    if    ${j} = '1' and ${k} = '0' then ${q} <= '1';`,
+      `    elsif ${j} = '0' and ${k} = '1' then ${q} <= '0';`,
+      `    elsif ${j} = '1' and ${k} = '1' then ${q} <= not ${q};`,
+      `    end if;`,
+      `  end if;`,
+      `end process; -- MS-JK ${sid}`,
+      `${qn} <= not ${q};`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: 'Master-Slave JK FF: Q ändert sich nur auf fallender CLK-Flanke',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── Edge-triggered SR Flip-Flop ─────────────────────────────────────────────
@@ -82,7 +123,44 @@ gateRegistry.register({
     }
     return { q: newQ, prevClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const s   = w[`${g.id}:s`]   ?? "1'b0";
+    const r   = w[`${g.id}:r`]   ?? "1'b0";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `always @(posedge ${clk}) begin`,
+      `  if      (${s} && !${r})  ${q} <= 1'b1;`,
+      `  else if (!${s} && ${r})  ${q} <= 1'b0;`,
+      `  else if (${s} && ${r})   ${q} <= 1'b0; // forbidden → 0`,
+      `end // SR-FF-Edge ${sid}`,
+      `assign ${qn} = ~${q};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const s   = w[`${g.id}:s`]   ?? "'0'";
+    const r   = w[`${g.id}:r`]   ?? "'0'";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `process(${clk})`,
+      `begin`,
+      `  if rising_edge(${clk}) then`,
+      `    if    ${s} = '1' and ${r} = '0' then ${q} <= '1';`,
+      `    elsif ${s} = '0' and ${r} = '1' then ${q} <= '0';`,
+      `    elsif ${s} = '1' and ${r} = '1' then ${q} <= '0'; -- forbidden`,
+      `    end if;`,
+      `  end if;`,
+      `end process; -- SR-FF-Edge ${sid}`,
+      `${qn} <= not ${q};`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: 'Flanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });

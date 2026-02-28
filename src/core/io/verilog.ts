@@ -287,5 +287,5 @@ function defaultGateVerilog(gate: GateInstance, byPort: Record<string, string>):
     return `${prim} g_${sanitize(gate.id)}(${[...outs, ...ins].join(', ')});`;
   }
 
-  return `// ${gate.typeId} (${gate.id}): manual Verilog implementation required`;
+  return `// ERROR: HDL export not implemented for ${gate.typeId} (${gate.id}) — add toVerilog() to gate definition`;
 }

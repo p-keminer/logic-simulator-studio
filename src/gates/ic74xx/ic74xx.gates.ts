@@ -1,6 +1,8 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 // 74HC00 – Quad NAND 2-input
 gateRegistry.register({
   typeId: '74HC00', label: '74HC00', category: 'ic74', width: 100, height: 120,
@@ -27,6 +29,18 @@ gateRegistry.register({
     y3: ((a3 & b3) ^ 1) as 0|1,
     y4: ((a4 & b4) ^ 1) as 0|1,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`// 74HC00 ${sid}`, `assign ${y1} = ~(${a1} & ${b1});`, `assign ${y2} = ~(${a2} & ${b2});`, `assign ${y3} = ~(${a3} & ${b3});`, `assign ${y4} = ~(${a4} & ${b4});`].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`-- 74HC00 ${sid}`, `${y1} <= not (${a1} and ${b1});`, `${y2} <= not (${a2} and ${b2});`, `${y3} <= not (${a3} and ${b3});`, `${y4} <= not (${a4} and ${b4});`].join('\n');
+  },
   shapeComponent: FlipFlopShape, description: 'Quad 2-Eingang NAND (4x NAND)',
 });
 
@@ -54,6 +68,18 @@ gateRegistry.register({
     y1: (a1 ^ 1) as 0|1, y2: (a2 ^ 1) as 0|1, y3: (a3 ^ 1) as 0|1,
     y4: (a4 ^ 1) as 0|1, y5: (a5 ^ 1) as 0|1, y6: (a6 ^ 1) as 0|1,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const as = ['a1','a2','a3','a4','a5','a6'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const ys = ['y1','y2','y3','y4','y5','y6'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`// 74HC04 ${sid}`, ...ys.map((y,i) => `assign ${y} = ~${as[i]};`)].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const as = ['a1','a2','a3','a4','a5','a6'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const ys = ['y1','y2','y3','y4','y5','y6'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`-- 74HC04 ${sid}`, ...ys.map((y,i) => `${y} <= not ${as[i]};`)].join('\n');
+  },
   shapeComponent: FlipFlopShape, description: 'Hex-Inverter (6x NOT)',
 });
 
@@ -74,6 +100,18 @@ gateRegistry.register({
   evaluate: ({ a1, b1, a2, b2, a3, b3, a4, b4 }) => ({
     y1: (a1 & b1) as 0|1, y2: (a2 & b2) as 0|1, y3: (a3 & b3) as 0|1, y4: (a4 & b4) as 0|1,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`// 74HC08 ${sid}`, `assign ${y1} = ${a1} & ${b1};`, `assign ${y2} = ${a2} & ${b2};`, `assign ${y3} = ${a3} & ${b3};`, `assign ${y4} = ${a4} & ${b4};`].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`-- 74HC08 ${sid}`, `${y1} <= ${a1} and ${b1};`, `${y2} <= ${a2} and ${b2};`, `${y3} <= ${a3} and ${b3};`, `${y4} <= ${a4} and ${b4};`].join('\n');
+  },
   shapeComponent: FlipFlopShape, description: 'Quad 2-Eingang AND',
 });
 
@@ -94,6 +132,18 @@ gateRegistry.register({
   evaluate: ({ a1, b1, a2, b2, a3, b3, a4, b4 }) => ({
     y1: (a1 | b1) as 0|1, y2: (a2 | b2) as 0|1, y3: (a3 | b3) as 0|1, y4: (a4 | b4) as 0|1,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`// 74HC32 ${sid}`, `assign ${y1} = ${a1} | ${b1};`, `assign ${y2} = ${a2} | ${b2};`, `assign ${y3} = ${a3} | ${b3};`, `assign ${y4} = ${a4} | ${b4};`].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`-- 74HC32 ${sid}`, `${y1} <= ${a1} or ${b1};`, `${y2} <= ${a2} or ${b2};`, `${y3} <= ${a3} or ${b3};`, `${y4} <= ${a4} or ${b4};`].join('\n');
+  },
   shapeComponent: FlipFlopShape, description: 'Quad 2-Eingang OR',
 });
 
@@ -114,6 +164,18 @@ gateRegistry.register({
   evaluate: ({ a1, b1, a2, b2, a3, b3, a4, b4 }) => ({
     y1: (a1 ^ b1) as 0|1, y2: (a2 ^ b2) as 0|1, y3: (a3 ^ b3) as 0|1, y4: (a4 ^ b4) as 0|1,
   }),
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`// 74HC86 ${sid}`, `assign ${y1} = ${a1} ^ ${b1};`, `assign ${y2} = ${a2} ^ ${b2};`, `assign ${y3} = ${a3} ^ ${b3};`, `assign ${y4} = ${a4} ^ ${b4};`].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4] = ['a1','b1','a2','b2','a3','b3','a4','b4'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const [y1,y2,y3,y4] = ['y1','y2','y3','y4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [`-- 74HC86 ${sid}`, `${y1} <= ${a1} xor ${b1};`, `${y2} <= ${a2} xor ${b2};`, `${y3} <= ${a3} xor ${b3};`, `${y4} <= ${a4} xor ${b4};`].join('\n');
+  },
   shapeComponent: FlipFlopShape, description: 'Quad 2-Eingang XOR',
 });
 
@@ -145,6 +207,41 @@ gateRegistry.register({
     const out: Record<string, 0|1> = {};
     for (let i = 0; i < 8; i++) out['y' + i] = (enabled && addr === i ? 0 : 1) as 0|1;
     return out;
+  },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const a    = w[`${g.id}:a`]   ?? "1'b0";
+    const b    = w[`${g.id}:b`]   ?? "1'b0";
+    const c    = w[`${g.id}:c`]   ?? "1'b0";
+    const g1   = w[`${g.id}:g1`]  ?? "1'b0";
+    const g2a  = w[`${g.id}:g2a`] ?? "1'b1";
+    const g2b  = w[`${g.id}:g2b`] ?? "1'b1";
+    const ys   = Array.from({length:8},(_,i) => w[`${g.id}:y${i}`] ?? `w_${sid}_y${i}`);
+    const en   = `(${g1} & ~${g2a} & ~${g2b})`;
+    const addr = `{${c}, ${b}, ${a}}`;
+    return [
+      `// 74HC138 ${sid}`,
+      ...ys.map((y,i) => `assign ${y} = ~(${en} & (${addr} == 3'd${i}));`),
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const a    = w[`${g.id}:a`]   ?? "'0'";
+    const b    = w[`${g.id}:b`]   ?? "'0'";
+    const c    = w[`${g.id}:c`]   ?? "'0'";
+    const g1   = w[`${g.id}:g1`]  ?? "'0'";
+    const g2a  = w[`${g.id}:g2a`] ?? "'1'";
+    const g2b  = w[`${g.id}:g2b`] ?? "'1'";
+    const ys   = Array.from({length:8},(_,i) => w[`${g.id}:y${i}`] ?? `w_${sid}_y${i}`);
+    const addr = `(${c} & ${b} & ${a})`; // 3-bit concat in VHDL via &
+    const en   = `(${g1} = '1' and ${g2a} = '0' and ${g2b} = '0')`;
+    const lines = [`-- 74HC138 ${sid}`];
+    for (let i = 0; i < 8; i++) {
+      const bits = i.toString(2).padStart(3,'0');
+      const cmp  = `"${bits}"`; // c&b&a comparison
+      lines.push(`${ys[i]} <= '0' when ${en} and ${addr} = ${cmp} else '1';`);
+    }
+    return lines.join('\n');
   },
   shapeComponent: FlipFlopShape, description: '3-zu-8 Dekoder (active-low Ausgänge)',
 });
@@ -183,6 +280,40 @@ gateRegistry.register({
       c4: ((sum >> 4) & 1) as 0|1,
     };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const ps  = ['a1','b1','a2','b2','a3','b3','a4','b4','c0'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const [a1,b1,a2,b2,a3,b3,a4,b4,c0] = ps;
+    const [s1,s2,s3,s4,c4] = ['s1','s2','s3','s4','c4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `// 74HC283 ${sid}`,
+      `wire [4:0] sum_${sid} = {1'b0,${a4},${a3},${a2},${a1}} + {1'b0,${b4},${b3},${b2},${b1}} + {4'b0,${c0}};`,
+      `assign ${s1} = sum_${sid}[0];`,
+      `assign ${s2} = sum_${sid}[1];`,
+      `assign ${s3} = sum_${sid}[2];`,
+      `assign ${s4} = sum_${sid}[3];`,
+      `assign ${c4} = sum_${sid}[4];`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const [a1,b1,a2,b2,a3,b3,a4,b4,c0] = ['a1','b1','a2','b2','a3','b3','a4','b4','c0'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const [s1,s2,s3,s4,c4] = ['s1','s2','s3','s4','c4'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `-- 74HC283 ${sid}`,
+      `process(${a1},${b1},${a2},${b2},${a3},${b3},${a4},${b4},${c0})`,
+      `  variable sum_v : unsigned(4 downto 0);`,
+      `begin`,
+      `  sum_v := unsigned('0' & ${a4} & ${a3} & ${a2} & ${a1}) + unsigned('0' & ${b4} & ${b3} & ${b2} & ${b1}) + unsigned("0000" & ${c0});`,
+      `  ${s1} <= std_logic(sum_v(0));`,
+      `  ${s2} <= std_logic(sum_v(1));`,
+      `  ${s3} <= std_logic(sum_v(2));`,
+      `  ${s4} <= std_logic(sum_v(3));`,
+      `  ${c4} <= std_logic(sum_v(4));`,
+      `end process; -- 74HC283 ${sid}`,
+    ].join('\n');
+  },
+  verilogAlwaysComb: false,
   shapeComponent: FlipFlopShape, description: '4-Bit Volladdierer mit Carry',
 });
 
@@ -224,6 +355,71 @@ gateRegistry.register({
     else if (clk2 === 1 && pc2 === 0) q2 = d2 as 0|1;
     return { q1, q2, pc1: clk1, pc2: clk2 };
   },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const pre1 = w[`${g.id}:pre1`] ?? "1'b1";
+    const clr1 = w[`${g.id}:clr1`] ?? "1'b1";
+    const d1   = w[`${g.id}:d1`]   ?? "1'b0";
+    const clk1 = w[`${g.id}:clk1`] ?? 'clk';
+    const pre2 = w[`${g.id}:pre2`] ?? "1'b1";
+    const clr2 = w[`${g.id}:clr2`] ?? "1'b1";
+    const d2   = w[`${g.id}:d2`]   ?? "1'b0";
+    const clk2 = w[`${g.id}:clk2`] ?? 'clk';
+    const q1   = w[`${g.id}:q1`]   ?? `w_${sid}_q1`;
+    const qn1  = w[`${g.id}:qn1`]  ?? `w_${sid}_qn1`;
+    const q2   = w[`${g.id}:q2`]   ?? `w_${sid}_q2`;
+    const qn2  = w[`${g.id}:qn2`]  ?? `w_${sid}_qn2`;
+    return [
+      `// 74HC74 ${sid}`,
+      `always @(posedge ${clk1} or negedge ${pre1} or negedge ${clr1}) begin`,
+      `  if      (!${pre1}) ${q1} <= 1'b1;`,
+      `  else if (!${clr1}) ${q1} <= 1'b0;`,
+      `  else               ${q1} <= ${d1};`,
+      `end`,
+      `always @(posedge ${clk2} or negedge ${pre2} or negedge ${clr2}) begin`,
+      `  if      (!${pre2}) ${q2} <= 1'b1;`,
+      `  else if (!${clr2}) ${q2} <= 1'b0;`,
+      `  else               ${q2} <= ${d2};`,
+      `end // 74HC74 ${sid}`,
+      `assign ${qn1} = ~${q1};`,
+      `assign ${qn2} = ~${q2};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const pre1 = w[`${g.id}:pre1`] ?? "'1'";
+    const clr1 = w[`${g.id}:clr1`] ?? "'1'";
+    const d1   = w[`${g.id}:d1`]   ?? "'0'";
+    const clk1 = w[`${g.id}:clk1`] ?? 'clk';
+    const pre2 = w[`${g.id}:pre2`] ?? "'1'";
+    const clr2 = w[`${g.id}:clr2`] ?? "'1'";
+    const d2   = w[`${g.id}:d2`]   ?? "'0'";
+    const clk2 = w[`${g.id}:clk2`] ?? 'clk';
+    const q1   = w[`${g.id}:q1`]   ?? `w_${sid}_q1`;
+    const qn1  = w[`${g.id}:qn1`]  ?? `w_${sid}_qn1`;
+    const q2   = w[`${g.id}:q2`]   ?? `w_${sid}_q2`;
+    const qn2  = w[`${g.id}:qn2`]  ?? `w_${sid}_qn2`;
+    return [
+      `-- 74HC74 ${sid}`,
+      `process(${clk1}, ${pre1}, ${clr1})`,
+      `begin`,
+      `  if    ${pre1} = '0' then ${q1} <= '1';`,
+      `  elsif ${clr1} = '0' then ${q1} <= '0';`,
+      `  elsif rising_edge(${clk1}) then ${q1} <= ${d1};`,
+      `  end if;`,
+      `end process;`,
+      `process(${clk2}, ${pre2}, ${clr2})`,
+      `begin`,
+      `  if    ${pre2} = '0' then ${q2} <= '1';`,
+      `  elsif ${clr2} = '0' then ${q2} <= '0';`,
+      `  elsif rising_edge(${clk2}) then ${q2} <= ${d2};`,
+      `  end if;`,
+      `end process; -- 74HC74 ${sid}`,
+      `${qn1} <= not ${q1};`,
+      `${qn2} <= not ${q2};`,
+    ].join('\n');
+  },
+  verilogWireOutputs: ['qn1', 'qn2'],
   shapeComponent: FlipFlopShape, description: 'Dual D-Flip-Flop mit Preset/Clear',
 });
 
@@ -266,6 +462,63 @@ gateRegistry.register({
     if (stcp === 1 && pStcp === 0) latch = shift;
     return { shift, latch, pShcp: shcp, pStcp: stcp };
   },
+  toVerilog: (g, w) => {
+    const sid   = sanitize(g.id);
+    const shift = `shift_${sid}`;
+    const latch = `latch_${sid}`;
+    const ds    = w[`${g.id}:ds`]   ?? "1'b0";
+    const shcp  = w[`${g.id}:shcp`] ?? 'clk';
+    const stcp  = w[`${g.id}:stcp`] ?? 'clk';
+    const mr    = w[`${g.id}:mr`]   ?? "1'b1";
+    const oe    = w[`${g.id}:oe`]   ?? "1'b0";
+    const qs    = Array.from({length:8},(_,i) => w[`${g.id}:q${i}`] ?? `w_${sid}_q${i}`);
+    return [
+      `// 74HC595 ${sid}`,
+      `always @(posedge ${shcp} or negedge ${mr}) begin`,
+      `  if (!${mr}) ${shift} <= 8'b0;`,
+      `  else        ${shift} <= {${shift}[6:0], ${ds}};`,
+      `end`,
+      `always @(posedge ${stcp}) begin`,
+      `  ${latch} <= ${shift};`,
+      `end // 74HC595 ${sid}`,
+      ...qs.map((q,i) => `assign ${q} = ${oe} ? 1'b0 : ${latch}[${i}];`),
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid   = sanitize(g.id);
+    const shift = `shift_${sid}`;
+    const latch = `latch_${sid}`;
+    const ds    = w[`${g.id}:ds`]   ?? "'0'";
+    const shcp  = w[`${g.id}:shcp`] ?? 'clk';
+    const stcp  = w[`${g.id}:stcp`] ?? 'clk';
+    const mr    = w[`${g.id}:mr`]   ?? "'1'";
+    const oe    = w[`${g.id}:oe`]   ?? "'0'";
+    const qs    = Array.from({length:8},(_,i) => w[`${g.id}:q${i}`] ?? `w_${sid}_q${i}`);
+    return [
+      `-- 74HC595 ${sid}`,
+      `process(${shcp}, ${mr})`,
+      `begin`,
+      `  if ${mr} = '0' then ${shift} <= (others => '0');`,
+      `  elsif rising_edge(${shcp}) then ${shift} <= ${shift}(6 downto 0) & ${ds};`,
+      `  end if;`,
+      `end process;`,
+      `process(${stcp})`,
+      `begin`,
+      `  if rising_edge(${stcp}) then ${latch} <= ${shift};`,
+      `  end if;`,
+      `end process; -- 74HC595 ${sid}`,
+      ...qs.map((q,i) => `${q} <= '0' when ${oe} = '1' else ${latch}(${i});`),
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => [
+    { name: `shift_${sanitize(g.id)}`, width: 8 },
+    { name: `latch_${sanitize(g.id)}`, width: 8 },
+  ],
+  vhdlExtraSignals: (g) => [
+    { name: `shift_${sanitize(g.id)}`, width: 8 },
+    { name: `latch_${sanitize(g.id)}`, width: 8 },
+  ],
+  verilogWireOutputs: ['q0','q1','q2','q3','q4','q5','q6','q7'],
   shapeComponent: FlipFlopShape, description: '8-Bit Schieberegister mit Ausgangs-Latch',
 });
 
@@ -315,6 +568,63 @@ gateRegistry.register({
     }
     return { cnt, pClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const cnt  = `cnt_${sid}`;
+    const clk  = w[`${g.id}:clk`]  ?? 'clk';
+    const clrn = w[`${g.id}:clrn`] ?? "1'b1";
+    const ldn  = w[`${g.id}:ldn`]  ?? "1'b1";
+    const enp  = w[`${g.id}:enp`]  ?? "1'b0";
+    const ent  = w[`${g.id}:ent`]  ?? "1'b0";
+    const d    = ['d0','d1','d2','d3'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const q    = ['q0','q1','q2','q3'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
+    return [
+      `// 74HC161 ${sid}`,
+      `always @(posedge ${clk}) begin`,
+      `  if      (!${clrn})               ${cnt} <= 4'd0;`,
+      `  else if (!${ldn})                ${cnt} <= {${d[3]},${d[2]},${d[1]},${d[0]}};`,
+      `  else if (${enp} && ${ent})       ${cnt} <= ${cnt} + 1'b1;`,
+      `end // 74HC161 ${sid}`,
+      `assign ${q[0]} = ${cnt}[0];`,
+      `assign ${q[1]} = ${cnt}[1];`,
+      `assign ${q[2]} = ${cnt}[2];`,
+      `assign ${q[3]} = ${cnt}[3];`,
+      `assign ${rco}  = ${ent} & (${cnt} == 4'd15);`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const cnt  = `cnt_${sid}`;
+    const clk  = w[`${g.id}:clk`]  ?? 'clk';
+    const clrn = w[`${g.id}:clrn`] ?? "'1'";
+    const ldn  = w[`${g.id}:ldn`]  ?? "'1'";
+    const enp  = w[`${g.id}:enp`]  ?? "'0'";
+    const ent  = w[`${g.id}:ent`]  ?? "'0'";
+    const d    = ['d0','d1','d2','d3'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const q    = ['q0','q1','q2','q3'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
+    return [
+      `-- 74HC161 ${sid}`,
+      `process(${clk})`,
+      `begin`,
+      `  if rising_edge(${clk}) then`,
+      `    if    ${clrn} = '0'                       then ${cnt} <= (others => '0');`,
+      `    elsif ${ldn}  = '0'                       then ${cnt} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `    elsif ${enp}  = '1' and ${ent} = '1'      then ${cnt} <= std_logic_vector(unsigned(${cnt}) + 1);`,
+      `    end if;`,
+      `  end if;`,
+      `end process; -- 74HC161 ${sid}`,
+      `${q[0]} <= ${cnt}(0);`,
+      `${q[1]} <= ${cnt}(1);`,
+      `${q[2]} <= ${cnt}(2);`,
+      `${q[3]} <= ${cnt}(3);`,
+      `${rco}  <= ${ent} when unsigned(${cnt}) = 15 else '0';`,
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
+  vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
+  verilogWireOutputs: ['q0','q1','q2','q3','rco'],
   shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit Load/Clear',
 });
 
@@ -346,6 +656,36 @@ gateRegistry.register({
     const inputs = [d0, d1, d2, d3, d4, d5, d6, d7];
     const y = (inputs[sel] ?? 0) as 0|1;
     return { y, yn: (y ^ 1) as 0|1 };
+  },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const s   = ['s0','s1','s2'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const en  = w[`${g.id}:en`] ?? "1'b0";
+    const d   = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const y   = w[`${g.id}:y`]  ?? `w_${sid}_y`;
+    const yn  = w[`${g.id}:yn`] ?? `w_${sid}_yn`;
+    const chain = d.map((di,i) => `{${s[2]},${s[1]},${s[0]}}==3'd${i} ? ${di} : `).join('') + "1'b0";
+    return [
+      `// 74HC151 ${sid}`,
+      `assign ${y}  = ${en} ? 1'b0 : (${chain});`,
+      `assign ${yn} = ~${y};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const s   = ['s0','s1','s2'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const en  = w[`${g.id}:en`] ?? "'0'";
+    const d   = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const y   = w[`${g.id}:y`]  ?? `w_${sid}_y`;
+    const yn  = w[`${g.id}:yn`] ?? `w_${sid}_yn`;
+    const bits = (i: number) => i.toString(2).padStart(3,'0');
+    return [
+      `-- 74HC151 ${sid}`,
+      `${y} <= '0' when ${en} = '1' else`,
+      ...d.slice(0,-1).map((di,i) => `       ${di} when ${s[2]} & ${s[1]} & ${s[0]} = "${bits(i)}" else`),
+      `       ${d[7]};`,
+      `${yn} <= not ${y};`,
+    ].join('\n');
   },
   shapeComponent: FlipFlopShape, description: '8-zu-1 Multiplexer mit Enable',
 });
@@ -379,6 +719,43 @@ gateRegistry.register({
     const y1 = (e1n ?? 0) === 1 ? 0 : ((g1[sel] ?? 0) as 0|1);
     const y2 = (e2n ?? 0) === 1 ? 0 : ((g2[sel] ?? 0) as 0|1);
     return { y1, y2 };
+  },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const s   = ['s0','s1'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const e1n = w[`${g.id}:e1n`] ?? "1'b0";
+    const e2n = w[`${g.id}:e2n`] ?? "1'b0";
+    const i1  = ['i10','i11','i12','i13'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const i2  = ['i20','i21','i22','i23'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const y1  = w[`${g.id}:y1`] ?? `w_${sid}_y1`;
+    const y2  = w[`${g.id}:y2`] ?? `w_${sid}_y2`;
+    const ch1 = i1.map((x,i) => `{${s[1]},${s[0]}}==2'd${i} ? ${x} : `).join('') + "1'b0";
+    const ch2 = i2.map((x,i) => `{${s[1]},${s[0]}}==2'd${i} ? ${x} : `).join('') + "1'b0";
+    return [
+      `// 74HC153 ${sid}`,
+      `assign ${y1} = ${e1n} ? 1'b0 : (${ch1});`,
+      `assign ${y2} = ${e2n} ? 1'b0 : (${ch2});`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const s   = ['s0','s1'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const e1n = w[`${g.id}:e1n`] ?? "'0'";
+    const e2n = w[`${g.id}:e2n`] ?? "'0'";
+    const i1  = ['i10','i11','i12','i13'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const i2  = ['i20','i21','i22','i23'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const y1  = w[`${g.id}:y1`] ?? `w_${sid}_y1`;
+    const y2  = w[`${g.id}:y2`] ?? `w_${sid}_y2`;
+    const bits = (i: number) => i.toString(2).padStart(2,'0');
+    return [
+      `-- 74HC153 ${sid}`,
+      `${y1} <= '0' when ${e1n} = '1' else`,
+      ...i1.slice(0,-1).map((x,i) => `       ${x} when ${s[1]} & ${s[0]} = "${bits(i)}" else`),
+      `       ${i1[3]};`,
+      `${y2} <= '0' when ${e2n} = '1' else`,
+      ...i2.slice(0,-1).map((x,i) => `       ${x} when ${s[1]} & ${s[0]} = "${bits(i)}" else`),
+      `       ${i2[3]};`,
+    ].join('\n');
   },
   shapeComponent: FlipFlopShape, description: 'Dual 4-zu-1 Multiplexer',
 });
@@ -428,6 +805,68 @@ gateRegistry.register({
     }
     return { reg, pClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const reg  = `reg_${sid}`;
+    const clk  = w[`${g.id}:clk`]  ?? 'clk';
+    const clrn = w[`${g.id}:clrn`] ?? "1'b1";
+    const s0   = w[`${g.id}:s0`]   ?? "1'b0";
+    const s1   = w[`${g.id}:s1`]   ?? "1'b0";
+    const sr   = w[`${g.id}:sr`]   ?? "1'b0";
+    const sl   = w[`${g.id}:sl`]   ?? "1'b0";
+    const d    = ['d0','d1','d2','d3'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const q    = ['q0','q1','q2','q3'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `// 74HC194 ${sid}`,
+      `always @(posedge ${clk} or negedge ${clrn}) begin`,
+      `  if (!${clrn}) ${reg} <= 4'b0;`,
+      `  else case ({${s1}, ${s0}})`,
+      `    2'b01: ${reg} <= {${sr}, ${reg}[3:1]};`,
+      `    2'b10: ${reg} <= {${reg}[2:0], ${sl}};`,
+      `    2'b11: ${reg} <= {${d[3]},${d[2]},${d[1]},${d[0]}};`,
+      `    default: ;`,
+      `  endcase`,
+      `end // 74HC194 ${sid}`,
+      `assign ${q[0]} = ${reg}[0];`,
+      `assign ${q[1]} = ${reg}[1];`,
+      `assign ${q[2]} = ${reg}[2];`,
+      `assign ${q[3]} = ${reg}[3];`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const reg  = `reg_${sid}`;
+    const clk  = w[`${g.id}:clk`]  ?? 'clk';
+    const clrn = w[`${g.id}:clrn`] ?? "'1'";
+    const s0   = w[`${g.id}:s0`]   ?? "'0'";
+    const s1   = w[`${g.id}:s1`]   ?? "'0'";
+    const sr   = w[`${g.id}:sr`]   ?? "'0'";
+    const sl   = w[`${g.id}:sl`]   ?? "'0'";
+    const d    = ['d0','d1','d2','d3'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const q    = ['q0','q1','q2','q3'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `-- 74HC194 ${sid}`,
+      `process(${clk}, ${clrn})`,
+      `begin`,
+      `  if ${clrn} = '0' then ${reg} <= (others => '0');`,
+      `  elsif rising_edge(${clk}) then`,
+      `    case ${s1} & ${s0} is`,
+      `      when "01" => ${reg} <= ${sr} & ${reg}(3 downto 1);`,
+      `      when "10" => ${reg} <= ${reg}(2 downto 0) & ${sl};`,
+      `      when "11" => ${reg} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `      when others => null;`,
+      `    end case;`,
+      `  end if;`,
+      `end process; -- 74HC194 ${sid}`,
+      `${q[0]} <= ${reg}(0);`,
+      `${q[1]} <= ${reg}(1);`,
+      `${q[2]} <= ${reg}(2);`,
+      `${q[3]} <= ${reg}(3);`,
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 4 }],
+  vhdlExtraSignals: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 4 }],
+  verilogWireOutputs: ['q0','q1','q2','q3'],
   shapeComponent: FlipFlopShape, description: '4-Bit Universal-Schieberegister (Links/Rechts/Laden)',
 });
 
@@ -472,6 +911,42 @@ gateRegistry.register({
     }
     return { latch };
   },
+  toVerilog: (g, w) => {
+    const sid   = sanitize(g.id);
+    const latch = `latch_${sid}`;
+    const oe    = w[`${g.id}:oe`] ?? "1'b0";
+    const le    = w[`${g.id}:le`] ?? "1'b0";
+    const d     = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const q     = ['q0','q1','q2','q3','q4','q5','q6','q7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `// 74HC373 ${sid}`,
+      `always @(*) begin`,
+      `  if (${le}) ${latch} = {${d[7]},${d[6]},${d[5]},${d[4]},${d[3]},${d[2]},${d[1]},${d[0]}};`,
+      `end // 74HC373 ${sid}`,
+      ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'b0 : ${latch}[${i}];`),
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid   = sanitize(g.id);
+    const latch = `latch_${sid}`;
+    const oe    = w[`${g.id}:oe`] ?? "'0'";
+    const le    = w[`${g.id}:le`] ?? "'0'";
+    const d     = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const q     = ['q0','q1','q2','q3','q4','q5','q6','q7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `-- 74HC373 ${sid}`,
+      `process(${le}, ${d.join(', ')})`,
+      `begin`,
+      `  if ${le} = '1' then`,
+      `    ${latch} <= ${d[7]} & ${d[6]} & ${d[5]} & ${d[4]} & ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `  end if;`,
+      `end process; -- 74HC373 ${sid}`,
+      ...q.map((qi,i) => `${qi} <= '0' when ${oe} = '1' else ${latch}(${i});`),
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => [{ name: `latch_${sanitize(g.id)}`, width: 8 }],
+  vhdlExtraSignals: (g) => [{ name: `latch_${sanitize(g.id)}`, width: 8 }],
+  verilogWireOutputs: ['q0','q1','q2','q3','q4','q5','q6','q7'],
   shapeComponent: FlipFlopShape, description: '8-Bit transparentes D-Latch mit Output-Enable',
 });
 
@@ -517,6 +992,42 @@ gateRegistry.register({
     }
     return { reg, pClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const reg = `reg_${sid}`;
+    const oe  = w[`${g.id}:oe`]  ?? "1'b0";
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const d   = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const q   = ['q0','q1','q2','q3','q4','q5','q6','q7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `// 74HC374 ${sid}`,
+      `always @(posedge ${clk}) begin`,
+      `  ${reg} <= {${d[7]},${d[6]},${d[5]},${d[4]},${d[3]},${d[2]},${d[1]},${d[0]}};`,
+      `end // 74HC374 ${sid}`,
+      ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'b0 : ${reg}[${i}];`),
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const reg = `reg_${sid}`;
+    const oe  = w[`${g.id}:oe`]  ?? "'0'";
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const d   = ['d0','d1','d2','d3','d4','d5','d6','d7'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const q   = ['q0','q1','q2','q3','q4','q5','q6','q7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    return [
+      `-- 74HC374 ${sid}`,
+      `process(${clk})`,
+      `begin`,
+      `  if rising_edge(${clk}) then`,
+      `    ${reg} <= ${d[7]} & ${d[6]} & ${d[5]} & ${d[4]} & ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `  end if;`,
+      `end process; -- 74HC374 ${sid}`,
+      ...q.map((qi,i) => `${qi} <= '0' when ${oe} = '1' else ${reg}(${i});`),
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 8 }],
+  vhdlExtraSignals: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 8 }],
+  verilogWireOutputs: ['q0','q1','q2','q3','q4','q5','q6','q7'],
   shapeComponent: FlipFlopShape, description: '8-Bit D-Flip-Flop Register mit Output-Enable',
 });
 
@@ -558,6 +1069,57 @@ gateRegistry.register({
       a2: ((a >> 2) & 1) as 0|1,
       gs: 0, eo: 1,
     };
+  },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const ein = w[`${g.id}:ein`] ?? "1'b1";
+    const ins = ['i0','i1','i2','i3','i4','i5','i6','i7'].map(p => w[`${g.id}:${p}`] ?? "1'b1");
+    const [i0,i1,i2,i3,i4,i5,i6,i7] = ins;
+    const a0  = w[`${g.id}:a0`] ?? `w_${sid}_a0`;
+    const a1  = w[`${g.id}:a1`] ?? `w_${sid}_a1`;
+    const a2  = w[`${g.id}:a2`] ?? `w_${sid}_a2`;
+    const gs  = w[`${g.id}:gs`] ?? `w_${sid}_gs`;
+    const eo  = w[`${g.id}:eo`] ?? `w_${sid}_eo`;
+    return [
+      `// 74HC148 ${sid}`,
+      `wire       act_${sid} = ~${i7}|~${i6}|~${i5}|~${i4}|~${i3}|~${i2}|~${i1}|~${i0};`,
+      `wire [2:0] pri_${sid} = ~${i7} ? 3'b000 : ~${i6} ? 3'b001 : ~${i5} ? 3'b010 : ~${i4} ? 3'b011 :`,
+      `                        ~${i3} ? 3'b100 : ~${i2} ? 3'b101 : ~${i1} ? 3'b110 : 3'b111;`,
+      `assign ${a0} = ${ein} ? 1'b1 : (act_${sid} ? pri_${sid}[0] : 1'b1);`,
+      `assign ${a1} = ${ein} ? 1'b1 : (act_${sid} ? pri_${sid}[1] : 1'b1);`,
+      `assign ${a2} = ${ein} ? 1'b1 : (act_${sid} ? pri_${sid}[2] : 1'b1);`,
+      `assign ${gs} = ${ein} | ~act_${sid};`,
+      `assign ${eo} = ${ein} | act_${sid};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const ein = w[`${g.id}:ein`] ?? "'1'";
+    const ins = ['i0','i1','i2','i3','i4','i5','i6','i7'].map(p => w[`${g.id}:${p}`] ?? "'1'");
+    const [i0,i1,i2,i3,i4,i5,i6,i7] = ins;
+    const a0  = w[`${g.id}:a0`] ?? `w_${sid}_a0`;
+    const a1  = w[`${g.id}:a1`] ?? `w_${sid}_a1`;
+    const a2  = w[`${g.id}:a2`] ?? `w_${sid}_a2`;
+    const gs  = w[`${g.id}:gs`] ?? `w_${sid}_gs`;
+    const eo  = w[`${g.id}:eo`] ?? `w_${sid}_eo`;
+    // priority i7>i6>...>i0; active-low inputs & outputs; encoded: i7→000, i6→001, ..., i0→111
+    return [
+      `-- 74HC148 ${sid}`,
+      `process(${ein},${ins.join(',')})`,
+      `begin`,
+      `  if    ${ein} = '1' then ${a2}<='1'; ${a1}<='1'; ${a0}<='1'; ${gs}<='1'; ${eo}<='1';`,
+      `  elsif ${i7}  = '0' then ${a2}<='0'; ${a1}<='0'; ${a0}<='0'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i6}  = '0' then ${a2}<='0'; ${a1}<='0'; ${a0}<='1'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i5}  = '0' then ${a2}<='0'; ${a1}<='1'; ${a0}<='0'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i4}  = '0' then ${a2}<='0'; ${a1}<='1'; ${a0}<='1'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i3}  = '0' then ${a2}<='1'; ${a1}<='0'; ${a0}<='0'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i2}  = '0' then ${a2}<='1'; ${a1}<='0'; ${a0}<='1'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i1}  = '0' then ${a2}<='1'; ${a1}<='1'; ${a0}<='0'; ${gs}<='0'; ${eo}<='1';`,
+      `  elsif ${i0}  = '0' then ${a2}<='1'; ${a1}<='1'; ${a0}<='1'; ${gs}<='0'; ${eo}<='1';`,
+      `  else                    ${a2}<='1'; ${a1}<='1'; ${a0}<='1'; ${gs}<='1'; ${eo}<='0';`,
+      `  end if;`,
+      `end process; -- 74HC148 ${sid}`,
+    ].join('\n');
   },
   shapeComponent: FlipFlopShape, description: '8-zu-3 Prioritätsencoder (active-low)',
 });
@@ -609,5 +1171,62 @@ gateRegistry.register({
     }
     return { cnt, pClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid  = sanitize(g.id);
+    const cnt  = `cnt_${sid}`;
+    const clk  = w[`${g.id}:clk`]  ?? 'clk';
+    const clrn = w[`${g.id}:clrn`] ?? "1'b1";
+    const ldn  = w[`${g.id}:ldn`]  ?? "1'b1";
+    const enp  = w[`${g.id}:enp`]  ?? "1'b0";
+    const ent  = w[`${g.id}:ent`]  ?? "1'b0";
+    const d    = ['d0','d1','d2','d3'].map(p => w[`${g.id}:${p}`] ?? "1'b0");
+    const q    = ['q0','q1','q2','q3'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
+    return [
+      `// 74HC163 ${sid}`,
+      `always @(posedge ${clk} or negedge ${clrn}) begin`,
+      `  if      (!${clrn})               ${cnt} <= 4'd0;`,
+      `  else if (!${ldn})                ${cnt} <= {${d[3]},${d[2]},${d[1]},${d[0]}};`,
+      `  else if (${enp} && ${ent})       ${cnt} <= ${cnt} + 1'b1;`,
+      `end // 74HC163 ${sid}`,
+      `assign ${q[0]} = ${cnt}[0];`,
+      `assign ${q[1]} = ${cnt}[1];`,
+      `assign ${q[2]} = ${cnt}[2];`,
+      `assign ${q[3]} = ${cnt}[3];`,
+      `assign ${rco}  = ${ent} & (${cnt} == 4'd15);`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid  = sanitize(g.id);
+    const cnt  = `cnt_${sid}`;
+    const clk  = w[`${g.id}:clk`]  ?? 'clk';
+    const clrn = w[`${g.id}:clrn`] ?? "'1'";
+    const ldn  = w[`${g.id}:ldn`]  ?? "'1'";
+    const enp  = w[`${g.id}:enp`]  ?? "'0'";
+    const ent  = w[`${g.id}:ent`]  ?? "'0'";
+    const d    = ['d0','d1','d2','d3'].map(p => w[`${g.id}:${p}`] ?? "'0'");
+    const q    = ['q0','q1','q2','q3'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
+    const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
+    return [
+      `-- 74HC163 ${sid}`,
+      `process(${clk}, ${clrn})`,
+      `begin`,
+      `  if    ${clrn} = '0'             then ${cnt} <= (others => '0');`,
+      `  elsif rising_edge(${clk}) then`,
+      `    if    ${ldn}  = '0'                       then ${cnt} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `    elsif ${enp}  = '1' and ${ent} = '1'      then ${cnt} <= std_logic_vector(unsigned(${cnt}) + 1);`,
+      `    end if;`,
+      `  end if;`,
+      `end process; -- 74HC163 ${sid}`,
+      `${q[0]} <= ${cnt}(0);`,
+      `${q[1]} <= ${cnt}(1);`,
+      `${q[2]} <= ${cnt}(2);`,
+      `${q[3]} <= ${cnt}(3);`,
+      `${rco}  <= ${ent} when unsigned(${cnt}) = 15 else '0';`,
+    ].join('\n');
+  },
+  verilogExtraRegs: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
+  vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
+  verilogWireOutputs: ['q0','q1','q2','q3','rco'],
   shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit asynchronem Clear',
 });

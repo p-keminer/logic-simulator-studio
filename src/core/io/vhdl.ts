@@ -290,7 +290,7 @@ function defaultGateVHDL(gate: GateInstance, byPort: Record<string, string>): st
   const ins  = def.inputs.map((p)  => byPort[`${gate.id}:${p.id}`] ?? `'0'`);
 
   if (!prim) {
-    return `-- ${gate.typeId} (${gate.id}): manual VHDL implementation required`;
+    return `-- ERROR: HDL export not implemented for ${gate.typeId} (${gate.id}) — add toVHDL() to gate definition`;
   }
 
   if (gate.typeId === 'NOT') {

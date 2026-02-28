@@ -6,6 +6,8 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+
 const qqnOutputs = [
   { id: 'q',   label: 'Q',  relativeX: 1, relativeY: 0.35 },
   { id: 'q_n', label: 'Q̄', relativeX: 1, relativeY: 0.65 },
@@ -44,9 +46,46 @@ gateRegistry.register({
     const newQ = (clk === 1 && prevClk === 0) ? d as 0 | 1 : q;
     return { q: newQ, prevClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const d   = w[`${g.id}:d`]   ?? "1'b0";
+    const s   = w[`${g.id}:s`]   ?? "1'b0";
+    const r   = w[`${g.id}:r`]   ?? "1'b0";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `always @(posedge ${clk} or posedge ${r} or posedge ${s}) begin`,
+      `  if      (${r})  ${q} <= 1'b0;`,
+      `  else if (${s})  ${q} <= 1'b1;`,
+      `  else            ${q} <= ${d};`,
+      `end // D-FF/ASSR ${sid}`,
+      `assign ${qn} = ~${q};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const d   = w[`${g.id}:d`]   ?? "'0'";
+    const s   = w[`${g.id}:s`]   ?? "'0'";
+    const r   = w[`${g.id}:r`]   ?? "'0'";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `process(${clk}, ${r}, ${s})`,
+      `begin`,
+      `  if    ${r} = '1'           then ${q} <= '0';`,
+      `  elsif ${s} = '1'           then ${q} <= '1';`,
+      `  elsif rising_edge(${clk})  then ${q} <= ${d};`,
+      `  end if;`,
+      `end process; -- D-FF/ASSR ${sid}`,
+      `${qn} <= not ${q};`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop mit asynchronem Set (S) und Reset (R)',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── JK Flip-Flop with async Set + Reset ─────────────────────────────────────
@@ -80,9 +119,56 @@ gateRegistry.register({
     }
     return { q: newQ, prevClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const j   = w[`${g.id}:j`]   ?? "1'b0";
+    const k   = w[`${g.id}:k`]   ?? "1'b0";
+    const s   = w[`${g.id}:s`]   ?? "1'b0";
+    const r   = w[`${g.id}:r`]   ?? "1'b0";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `always @(posedge ${clk} or posedge ${r} or posedge ${s}) begin`,
+      `  if      (${r})  ${q} <= 1'b0;`,
+      `  else if (${s})  ${q} <= 1'b1;`,
+      `  else begin`,
+      `    if      (${j} && !${k})  ${q} <= 1'b1;`,
+      `    else if (!${j} && ${k})  ${q} <= 1'b0;`,
+      `    else if (${j} && ${k})   ${q} <= ~${q};`,
+      `  end`,
+      `end // JK-FF/ASSR ${sid}`,
+      `assign ${qn} = ~${q};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const j   = w[`${g.id}:j`]   ?? "'0'";
+    const k   = w[`${g.id}:k`]   ?? "'0'";
+    const s   = w[`${g.id}:s`]   ?? "'0'";
+    const r   = w[`${g.id}:r`]   ?? "'0'";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `process(${clk}, ${r}, ${s})`,
+      `begin`,
+      `  if    ${r} = '1'           then ${q} <= '0';`,
+      `  elsif ${s} = '1'           then ${q} <= '1';`,
+      `  elsif rising_edge(${clk}) then`,
+      `    if    ${j} = '1' and ${k} = '0' then ${q} <= '1';`,
+      `    elsif ${j} = '0' and ${k} = '1' then ${q} <= '0';`,
+      `    elsif ${j} = '1' and ${k} = '1' then ${q} <= not ${q};`,
+      `    end if;`,
+      `  end if;`,
+      `end process; -- JK-FF/ASSR ${sid}`,
+      `${qn} <= not ${q};`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: 'JK Flip-Flop mit asynchronem Set (S) und Reset (R)',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
 
 // ─── T Flip-Flop with async Set + Reset ──────────────────────────────────────
@@ -110,7 +196,46 @@ gateRegistry.register({
     const newQ = (clk === 1 && prevClk === 0 && t === 1) ? (q ^ 1) as 0 | 1 : q;
     return { q: newQ, prevClk: clk };
   },
+  toVerilog: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const t   = w[`${g.id}:t`]   ?? "1'b0";
+    const s   = w[`${g.id}:s`]   ?? "1'b0";
+    const r   = w[`${g.id}:r`]   ?? "1'b0";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `always @(posedge ${clk} or posedge ${r} or posedge ${s}) begin`,
+      `  if      (${r})  ${q} <= 1'b0;`,
+      `  else if (${s})  ${q} <= 1'b1;`,
+      `  else if (${t})  ${q} <= ~${q};`,
+      `end // T-FF/ASSR ${sid}`,
+      `assign ${qn} = ~${q};`,
+    ].join('\n');
+  },
+  toVHDL: (g, w) => {
+    const sid = sanitize(g.id);
+    const clk = w[`${g.id}:clk`] ?? 'clk';
+    const t   = w[`${g.id}:t`]   ?? "'0'";
+    const s   = w[`${g.id}:s`]   ?? "'0'";
+    const r   = w[`${g.id}:r`]   ?? "'0'";
+    const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
+    const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    return [
+      `process(${clk}, ${r}, ${s})`,
+      `begin`,
+      `  if    ${r} = '1'           then ${q} <= '0';`,
+      `  elsif ${s} = '1'           then ${q} <= '1';`,
+      `  elsif rising_edge(${clk}) then`,
+      `    if ${t} = '1' then ${q} <= not ${q};`,
+      `    end if;`,
+      `  end if;`,
+      `end process; -- T-FF/ASSR ${sid}`,
+      `${qn} <= not ${q};`,
+    ].join('\n');
+  },
   shapeComponent: FlipFlopShape,
   description: 'T Flip-Flop mit asynchronem Set (S) und Reset (R)',
   isSynchronous: true,
+  verilogWireOutputs: ['q_n'],
 });
