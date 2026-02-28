@@ -153,8 +153,10 @@ export interface SimulationResult {
 // ─── Timing Diagram ───────────────────────────────────────────────────────────
 
 export interface TimingSnapshot {
-  /** Monotonic step counter */
+  /** Monotonic step counter (snapshot index) */
   step: number;
+  /** Absolute simulation tick when this snapshot was taken */
+  tick: number;
   /** Signal value per wire id */
   wireValues: Record<string, SignalValue>;
   /** Signal value per gate output (gateId:portId) */

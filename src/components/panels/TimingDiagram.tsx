@@ -10,8 +10,14 @@ interface Props { history: TimingSnapshot[]; onClose: () => void; }
 const CH_H    = 32;   // Zeilenhöhe (sichtbar)
 const CH_MINI = 10;   // Zeilenhöhe (ausgeblendet / eingeklappt)
 const LBL_W   = 148;
-const STEP_W  = 16;
-const MAX_ST  = 100;
+const MAX_ST  = 100;  // Maximale Snapshots im sichtbaren Bereich
+
+// Tick-basierte X-Achse: jeder Simulations-Tick = fester Pixel-Abstand.
+// Mit SAMPLE_EVERY=5 (aus CircuitContext) und PX_PER_TICK=2:
+//   → 1 Snapshot = 5 Ticks = 10px Abstand   → 100 Snapshots = 500 Ticks = 1000px
+// Bei SIM_TICKS_PER_SEC=500 und 1-Hz-Clock (togglet alle 250 Ticks):
+//   → 250 Ticks × 2px = 500px pro Halbperiode — gut lesbar.
+const PX_PER_TICK = 2;
 
 // ── Gattertyp-Kategorien ─────────────────────────────────────────────────────
 
@@ -95,7 +101,18 @@ export function TimingDiagram({ history, onClose }: Props) {
   }
 
   const displayHistory = history.slice(-MAX_ST);
-  const totalW = LBL_W + Math.max(displayHistory.length, 1) * STEP_W;
+
+  // X-Position eines Snapshots = (tick - firstTick) * PX_PER_TICK
+  // Dadurch ist jeder Tick exakt PX_PER_TICK Pixel breit — keine Framerate-Abhängigkeit.
+  const firstTick = displayHistory.length > 0 ? displayHistory[0].tick : 0;
+  const lastTick  = displayHistory.length > 0 ? displayHistory[displayHistory.length - 1].tick : 0;
+  const tickSpan  = Math.max(lastTick - firstTick, MAX_ST * 5); // Mindestbreite
+
+  function snapX(snap: TimingSnapshot): number {
+    return LBL_W + (snap.tick - firstTick) * PX_PER_TICK;
+  }
+
+  const totalW = LBL_W + tickSpan * PX_PER_TICK + 20;
 
   // Gesamthöhe: sichtbare Kanäle CH_H, versteckte CH_MINI
   let totalH = 20;
@@ -153,11 +170,11 @@ export function TimingDiagram({ history, onClose }: Props) {
         <div ref={scrollRef} style={{ overflow: 'auto', flex: 1 }}>
           <svg width={Math.max(totalW, 400)} height={totalH} style={{ display: 'block' }}>
 
-            {/* Vertikale Rasterlinien */}
-            {displayHistory.map((_, si) => (
-              <line key={'vl' + si}
-                x1={LBL_W + si * STEP_W} y1={0}
-                x2={LBL_W + si * STEP_W} y2={totalH}
+            {/* Vertikale Rasterlinien — an echten Tick-Positionen */}
+            {displayHistory.map((snap) => (
+              <line key={'vl' + snap.tick}
+                x1={snapX(snap)} y1={0}
+                x2={snapX(snap)} y2={totalH}
                 stroke="#1e293b" strokeWidth={1} />
             ))}
 
@@ -196,7 +213,7 @@ export function TimingDiagram({ history, onClose }: Props) {
 
                   displayHistory.forEach((snap, si) => {
                     const val = getVal(snap, ch.key);
-                    const x   = LBL_W + si * STEP_W;
+                    const x   = snapX(snap);
                     const y   = val === 1 ? yH : yL;
                     if (si === 0) {
                       segs.push('M ' + x + ' ' + y);
@@ -208,8 +225,11 @@ export function TimingDiagram({ history, onClose }: Props) {
                     }
                     prev = val;
                   });
-                  if (displayHistory.length > 0)
-                    segs.push('L ' + (LBL_W + displayHistory.length * STEP_W) + ' ' + (prev === 1 ? yH : yL));
+                  // Linie bis zum rechten Rand ziehen (letzter bekannter Wert)
+                  if (displayHistory.length > 0) {
+                    const endX = snapX(displayHistory[displayHistory.length - 1]) + 20;
+                    segs.push('L ' + endX + ' ' + (prev === 1 ? yH : yL));
+                  }
 
                   rows.push(
                     <g key={ch.key}>

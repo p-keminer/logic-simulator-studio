@@ -178,11 +178,15 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         if (!isStable(buf, next)) anyChanged = true;
         buf = next;
 
-        // Jeden SAMPLE_EVERY-ten Tick einen Snapshot aufnehmen
+        // Jeden SAMPLE_EVERY-ten Tick einen Snapshot aufnehmen.
+        // Snapshots werden IMMER aufgenommen – unabhängig davon, ob sich Ausgaben
+        // geändert haben. Nur so sind zwischen Taktflanken (wenn Ausgaben stabil
+        // bleiben) korrekte Zeitabstände im Diagramm sichtbar.
         sampleCounterRef.current++;
         if (sampleCounterRef.current >= SAMPLE_EVERY) {
           sampleCounterRef.current = 0;
           const step = ++stepRef.current;
+          const tick = buf.tick; // Absoluter Tick-Zähler für tick-genaue X-Achse
           const wireValues: Record<string, SignalValue> = {};
           for (const wire of Object.values(c.wires)) {
             wireValues[wire.id] = (buf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
@@ -193,31 +197,31 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
               gateValues[`${gId}:${pId}`] = val;
             }
           }
-          newSnaps.push({ step, wireValues, gateValues });
+          newSnaps.push({ step, tick, wireValues, gateValues });
         }
       }
 
       // ── Geradzahliger Oszillator-Fix ──────────────────────────────────────
-      // Problem: Bei Rückkopplungsschleifen mit geradzahliger Periode (z.B. NOT-NOT-Ring,
-      // NOR-SR-Latch im metastabilen Zustand) landen genau ticksToRun ≈ 8 Ticks den Buffer
-      // immer wieder am Ausgangspunkt → anyChanged=true, aber dispatched State ist identisch
-      // → UI zeigt keine Änderung.
-      // Fix: Einen Extra-Tick ausführen, wenn sich etwas verändert hat, der Endzustand
-      // aber dem Zustand vor dem normalen Tick-Block gleicht.
+      // Für Rückkopplungsschleifen mit geradzahliger Periode (NOT-NOT-Ring,
+      // SR-Latch metastabil): Nach exakt ticksToRun Ticks landen wir am gleichen
+      // Ausgangszustand. Ein Extra-Tick bricht die Symmetrie.
+      // Nur ausführen wenn anyChanged (Ausgaben schwingen) UND wir zurück am Start sind.
       if (anyChanged && isStable(preTickBuf, buf)) {
         buf = runOneTick(c, buf, wireMapRef.current, isClockPausedRef.current);
       }
 
       simBufferRef.current = buf;
 
-      // ── React-State nur updaten wenn sich tatsächlich etwas geändert hat ──
+      // ── React-State nur updaten wenn sich Ausgaben tatsächlich geändert haben
       if (anyChanged) {
         const result = buildSimResult(buf, c);
         dispatch({ type: 'SIMULATION_APPLY', payload: result });
       }
 
-      // ── Timing-Snapshots batch-pushen (nur wenn sich etwas verändert hat) ──
-      if (anyChanged && newSnaps.length > 0) {
+      // ── Timing-Snapshots IMMER pushen (nicht nur bei anyChanged) ──────────
+      // Zwischen Taktflanken sind Ausgaben stabil → anyChanged=false, aber der
+      // Zeitverlauf muss trotzdem im Diagramm sichtbar sein (horizontale Linie).
+      if (newSnaps.length > 0) {
         setTimingHistory(prev => {
           const next = [...prev, ...newSnaps];
           return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
