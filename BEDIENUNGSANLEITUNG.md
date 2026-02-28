@@ -59,10 +59,10 @@ npm --version    # z. B. 10.2.4
 
 ```bash
 # 1. Repository klonen
-git clone https://github.com/<dein-benutzername>/logic-gate-simulator.git
+git clone https://github.com/p-keminer/logic-gate-simulator.git
 
 # 2. In den Projektordner wechseln
-cd logic-gate-simulator
+cd logic-simulator-studio
 
 # 3. Abhängigkeiten installieren (einmalig)
 npm install
@@ -516,10 +516,10 @@ npm --version    # e.g. 10.2.4
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/<your-username>/logic-gate-simulator.git
+git clone https://github.com/p-keminer/logic-gate-simulator.git
 
 # 2. Enter the project folder
-cd logic-gate-simulator
+cd logic-simulator-studio
 
 # 3. Install dependencies (once)
 npm install
