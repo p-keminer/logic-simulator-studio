@@ -79,9 +79,32 @@ function buildWireMap(circuit: Circuit): WireMap {
   return { byPort };
 }
 
+/** Convert a port label to a safe Verilog identifier (strips leading /, sanitizes). */
+function portIdent(label: string | undefined, fallback: string): string {
+  const raw = (label ?? fallback).replace(/^\/+/, 'n'); // /OE → nOE, /CS → nCS
+  return sanitize(raw).replace(/^_+/, '') || sanitize(fallback);
+}
+
 export function generateVerilog(circuit: Circuit): string {
   const moduleName = sanitize(circuit.name) || 'circuit';
   const { byPort } = buildWireMap(circuit);
+
+  // Phase 0: Pre-populate byPort for unconnected gate input pins.
+  // Without this, toVerilog() falls back to literal constants (e.g. "1'b0"), which
+  // silently produce dead conditions like `if (1'b0 == 1'b1)` in the RTL.
+  // Naming them here causes Bug-fix-1 to promote them to module input ports instead,
+  // which is the correct industrial behaviour for truly unconnected pins.
+  for (const gate of Object.values(circuit.gates)) {
+    if (gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'OUTPUT_LED') continue;
+    if (EXCLUDE_FROM_VERILOG.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    for (const inp of def.inputs) {
+      const key = `${gate.id}:${inp.id}`;
+      if (byPort[key] === undefined) {
+        byPort[key] = `nc_${portIdent(inp.label, inp.id)}`;
+      }
+    }
+  }
 
   const inputs:   string[] = [];
   const outputs:  string[] = [];

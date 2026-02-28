@@ -46,6 +46,12 @@ function renderVHDLExtraSignals(
   return lines;
 }
 
+/** Convert a port label to a safe VHDL identifier (strips leading /, sanitizes). */
+function portIdent(label: string | undefined, fallback: string): string {
+  const raw = (label ?? fallback).replace(/^\/+/, 'n'); // /OE → nOE
+  return sanitize(raw).replace(/^_+/, '') || sanitize(fallback);
+}
+
 function buildPortMap(circuit: Circuit) {
   const byPort: Record<string, string> = {};
   let swIdx = 0, wIdx = 0, ledIdx = 0;
@@ -79,6 +85,22 @@ const VHDL_PRIM: Record<string, string> = {
 export function generateVHDL(circuit: Circuit): string {
   const entityName = sanitize(circuit.name) || 'circuit';
   const byPort = buildPortMap(circuit);
+
+  // Phase 0: Pre-populate byPort for unconnected gate input pins.
+  // Same rationale as in verilog.ts: prevents VHDL literal constants ('0') from
+  // appearing in sensitivity lists and process conditions.
+  // Unconnected pins become entity input ports via Bug-fix-1 below.
+  for (const gate of Object.values(circuit.gates)) {
+    if (gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'OUTPUT_LED') continue;
+    if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
+    const def = gateRegistry.get(gate.typeId);
+    for (const inp of def.inputs) {
+      const key = `${gate.id}:${inp.id}`;
+      if (byPort[key] === undefined) {
+        byPort[key] = `nc_${portIdent(inp.label, inp.id)}`;
+      }
+    }
+  }
 
   const inputs: string[]  = [];
   const outputs: string[] = [];
