@@ -133,14 +133,26 @@ export class EventScheduler {
     fanoutMap: FanoutMap,
     isClockPaused: boolean,
     /**
-     * Optional callback invoked after every event-batch commits.
-     * Called with the batch's simulation time.  Used by CircuitContext to
-     * capture per-event-batch timing-diagram snapshots so individual gate
-     * propagation delays become visible in the diagram.
-     * The glitch-detection window (netToggleCount) is NOT affected — it
-     * still spans the full advance() call from currentTime → targetTime.
+     * Optional callback invoked synchronously after every event-batch commits.
+     * committedOutputs/customStates already reflect the new state when this runs.
+     *
+     * @param batchTime          Simulation tick at which this batch fired.
+     * @param batchRaces         Races emitted during this batch (critical/warning/timing).
+     *                           Glitch races are emitted post-loop, not here.
+     * @param batchChangedNetIds NetIds whose committed value actually changed this batch.
+     *
+     * Used by CircuitContext for two purposes:
+     *   1. Per-batch timing-diagram snapshots (propagation-delay staircase).
+     *   2. TTL wire-marking: accumulate maxSeverity per netId across an entire
+     *      advance() window so transient glitches stay visible in CanvasWire.
+     * The glitch-detection window (netToggleCount) is NOT affected — it still
+     * spans the full advance() call from currentTime → targetTime.
      */
-    onTickCommit?: (batchTime: number) => void,
+    onBatchCommit?: (
+      batchTime:          number,
+      batchRaces:         RaceInfo[],
+      batchChangedNetIds: ReadonlySet<string>,
+    ) => void,
   ): RaceInfo[] {
     const races: RaceInfo[] = [];
 
@@ -230,7 +242,9 @@ export class EventScheduler {
         else byNet.set(ev.netId, [ev]);
       }
 
-      const changedGateIds = new Set<string>();
+      const changedGateIds     = new Set<string>();
+      const batchChangedNetIds = new Set<string>(); // netIds that actually committed a change
+      const batchRaceStart     = races.length;       // index into races[] before this batch
 
       // TASK 3: Per-batch setup/hold tracking.
       // ffClockChanges: gateId → { oldVal, newVal } of its clock input in this batch.
@@ -269,6 +283,7 @@ export class EventScheduler {
 
         if (oldValue !== finalValue) {
           this.committedOutputs[gateId][portId] = finalValue;
+          batchChangedNetIds.add(netId);
 
           // TASK 2: Count polarity changes per net.
           netToggleCount.set(netId, (netToggleCount.get(netId) ?? 0) + 1);
@@ -327,11 +342,11 @@ export class EventScheduler {
       }
 
       this.currentTime = batchTime;
-      // Notify caller that this batch has been committed — used for per-batch
-      // timing-diagram snapshots.  Called synchronously inside the while loop
-      // so scheduler.buildBuffer() inside the callback reflects this batch's
-      // committed state exactly.
-      onTickCommit?.(batchTime);
+
+      // Notify caller after the full batch commit (incl. setup/hold races).
+      // committedOutputs already contains the new state.  batchRaces covers
+      // only races emitted during this batch (not the post-loop glitch pass).
+      onBatchCommit?.(batchTime, races.slice(batchRaceStart), batchChangedNetIds);
     }
 
     // ── TASK 2 (post-loop): Emit glitch races for multi-toggle nets ───────
