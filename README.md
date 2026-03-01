@@ -21,6 +21,12 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 <img src="media/screen_mirror_small.gif" alt="LogicSim Demo" width="960" />
 </div>
 
+---
+### Status: Stabil (März 2026)
+**Gate-Delay-Modus** vollständig implementiert und gehärtet: zuverlässige Race-Condition-Erkennung mit 5 Schweregradklassen, TTL-Leitungsmarkierung, Timing-Diagramm-Integration und INPUT_SWITCH-Fix.
+
+---
+
 ## Funktionen
 
 ### Schaltkreis-Editor
@@ -36,7 +42,7 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 
 ### Simulations-Engine
 
-Zwei umschaltbare Modi (Toolbar-Button **⚡ ZD** / **⏱ GD**):
+Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### ZERO_DELAY (Vorgabe)
 - **Tick-basierte Discrete-Event-Simulation** mit Double-Buffering (Lese-Buffer → Logik → Schreib-Buffer)
@@ -47,11 +53,18 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ ZD** / **⏱ GD**):
 - **Manuelles Takt-Stepping** (Pause / Einzelschritt-Modus)
 - **Stabilisierungsphase** nach Strukturänderungen mit eingefrorenen Takten
 
-#### GATE_DELAY
-- **Discrete-Event-Scheduler**: Gatterausgaben werden erst nach `propagationDelay`-Ticks eingetragen – Glitches und Races werden sichtbar
-- **Race-Condition-Erkennung**: Konkurrenzschreiben auf dasselbe Netz zur gleichen Zeit werden automatisch protokolliert; betroffene Leitungen rot hervorgehoben
-- **Race-Panel** (⚠ N-Button in der Toolbar): Liste aller erkannten Races mit Klick-to-Focus auf den Canvas
-- **Kritischer-Pfad-Anzeige** in der Toolbar: maximale `propagationDelay` aller platzierten Gatter in ns
+#### Gate-Delay-Modus
+- **Discrete-Event-Scheduler**: Gatterausgaben werden erst nach `propagationDelay`-Ticks eingetragen —
+  Glitches und Race Conditions werden zeitlich korrekt sichtbar
+- **Race-Condition-Erkennung** mit 5 Schweregradklassen: erkannte Hazards werden protokolliert;
+  betroffene Leitungen farblich markiert (rot = Wertekonflikt, orange = Glitch,
+  lila = Setup/Hold-Risiko, gelb = Mehrtreiber, pink = kombinatorische Schleife)
+- **TTL-Leitungsmarkierung**: Farben bleiben 400 ms sichtbar, damit kurzlebige Glitches erfasst werden
+- **Race-Panel** (⚠-Button in der Toolbar, erscheint bei erkannten Races):
+  Liste aller Hazards mit Klick-to-Focus auf den Canvas
+- **Timingdiagramm**: ein Snapshot pro Ereignis-Batch → Propagationsverzögerungs-Treppe sichtbar
+  (z. B. 20 NOT-Gatter in Reihe = 20 Stufen)
+- **Maximale Propagationsverzögerung** aller platzierten Gatter in der Toolbar (ns)
 
 ### Analyse-Werkzeuge
 
@@ -60,7 +73,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ ZD** / **⏱ GD**):
 | **Wahrheitstabelle** | ✅ Alle Eingangskombinationen, Zwischenwerte | – |
 | **Zustandsübergangstabelle** | – | ✅ Automatische Zyklus-Erkennung, Einzel-Tick Q(t) → Q(t+1) |
 | **Timing-Diagramm** | ✅ | ✅ |
-| **Race-Condition-Panel** | – | ✅ Nur im GATE_DELAY-Modus; Klick-to-Focus auf betroffene Netze |
+| **Race-Condition-Panel** | – | ✅ Nur im Gate-Delay-Modus; Klick-to-Focus auf betroffene Netze |
 
 ### Export
 | Format | Hinweise |
@@ -225,7 +238,7 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ### Simulation Engine
 
-Two switchable modes (toolbar button **⚡ ZD** / **⏱ GD**):
+Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### ZERO_DELAY (default)
 - **Tick-based discrete-event simulation** with double-buffering (Read-Buffer → Logic → Write-Buffer)
@@ -236,11 +249,18 @@ Two switchable modes (toolbar button **⚡ ZD** / **⏱ GD**):
 - **Manual clock stepping** (pause / single-step mode)
 - **Settle phase** after structural changes with clocks frozen
 
-#### GATE_DELAY
-- **Discrete-event scheduler**: gate outputs are committed after `propagationDelay` ticks — glitches and races become visible
-- **Race condition detection**: concurrent writes to the same net at the same time are automatically logged; affected wires highlighted in red
-- **Race panel** (⚠ N button in toolbar): list of all detected races with click-to-focus on the canvas
-- **Critical path indicator** in toolbar: maximum `propagationDelay` across all placed gates in ns
+#### Gate-Delay Mode
+- **Discrete-event scheduler**: gate outputs are committed after `propagationDelay` ticks —
+  glitches and race conditions become visible with correct timing
+- **Race condition detection** with 5 severity classes: detected hazards are logged;
+  affected wires colour-coded (red = value conflict, orange = glitch,
+  purple = setup/hold risk, yellow = multi-driver, pink = combinational loop)
+- **TTL wire marking**: colours remain visible for 400 ms so short-lived glitches are captured
+- **Race panel** (⚠ button in toolbar, appears when races are detected):
+  list of all hazards with click-to-focus on the canvas
+- **Timing diagram**: one snapshot per event batch → propagation-delay staircase visible
+  (e.g. 20 NOT gates in series = 20 steps)
+- **Maximum propagation delay** across all placed gates shown in the toolbar (ns)
 
 ### Analysis Tools
 
@@ -249,7 +269,7 @@ Two switchable modes (toolbar button **⚡ ZD** / **⏱ GD**):
 | **Truth Table** | ✅ All input combinations, intermediate values | – |
 | **State Transition Table** | – | ✅ Automatic cycle detection, single-tick Q(t) → Q(t+1) |
 | **Timing Diagram** | ✅ | ✅ |
-| **Race Condition Panel** | – | ✅ GATE_DELAY mode only; click-to-focus on affected nets |
+| **Race Condition Panel** | – | ✅ Gate-Delay mode only; click-to-focus on affected nets |
 
 ### Export
 | Format | Notes |
@@ -404,7 +424,10 @@ The double-buffer model separates **read** (current tick) from **write** (next t
 - `committedOutputs` holds the last stable value for every gate output
 - A priority queue stores `(time, netId, value, sourceGateId)` events sorted by time
 - Each `advance()` call processes all events with `time ≤ targetTime`, re-evaluates downstream gates, and enqueues new events at `triggerTime + gate.propagationDelay`
-- **Race detection**: same `(time, netId)` with conflicting values from different source gates → race logged, wire highlighted red
+- **Race detection with 5 severity classes**: `critical` (value_conflict) > `timing` (setup_hold_risk) > `glitch` (reconvergent_glitch) > `warning` (multi_source) > `loop` (loop_overflow)
+- **TTL wire-marking**: `raceMarkRef` map keeps severity colours visible for 400 ms per net — short-lived glitches remain readable
+- **Per-batch timing snapshots**: `onBatchCommit` callback fires once per `advance()` batch, producing one timing-diagram step per gate-delay level (e.g. 20 NOT gates in series = 20 staircase steps)
+- **INPUT_SWITCH fix**: `seed()` accepts `liveCustomStateFor` — overrides `committedCustomStates` for switch gates before the eval pass so toggling a switch generates a properly timed event instead of a silent no-op
 - **Memory safety**: events are only generated when the computed value differs from the committed value; settled circuits produce zero new events
 
 ### HDL Identifier Sanitizing (`identSanitize.ts`)

@@ -121,9 +121,9 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
         </button>
         <button
           onClick={() => setSimulationMode(isGateDelay ? SimulationMode.ZERO_DELAY : SimulationMode.GATE_DELAY)}
-          title={isGateDelay ? 'Gate-Delay aktiv: Klick → Zero-Delay' : 'Zero-Delay aktiv: Klick → Gate-Delay'}
+          title={isGateDelay ? 'Gate-Delay-Modus aktiv — Klick: zu Zero-Delay wechseln' : 'Zero-Delay-Modus aktiv — Klick: zu Gate-Delay wechseln'}
           className={"px-2.5 py-1 text-xs font-medium border rounded transition-colors font-mono " + (isGateDelay ? "text-orange-300 bg-orange-900/40 border-orange-700" : "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600")}>
-          {isGateDelay ? '⏱ GD' : '⚡ ZD'}
+          {isGateDelay ? '⏱ Gate-Delay' : '⚡ Zero-Delay'}
         </button>
         {isGateDelay && races.length > 0 && (
           <button

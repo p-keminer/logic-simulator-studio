@@ -10,7 +10,7 @@
 
 # LogicSim – Bedienungsanleitung
 
-> **Version:** aktueller Stand (Feb 2026)
+> **Version:** aktueller Stand (März 2026)
 > **Sprache:** Deutsch
 > Englische Version → [jump to English](#english)
 
@@ -59,7 +59,7 @@ npm --version    # z. B. 10.2.4
 
 ```bash
 # 1. Repository klonen
-git clone https://github.com/p-keminer/logic-gate-simulator.git
+git clone https://github.com/p-keminer/logic-simulator-studio.git
 
 # 2. In den Projektordner wechseln
 cd logic-simulator-studio
@@ -253,7 +253,7 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 
 ## 9. Wahrheitstabelle & Zustandsübergangstabelle
 
-Öffnen über **Toolbar → „Analyse"**.
+Öffnen über **Toolbar → „W-Tabelle"**.
 
 ### Automatische Moduswahl
 
@@ -299,7 +299,43 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 | **Signal ausblenden** | Auge-Icon (👁) klicken |
 | **Verlauf löschen** | Toolbar-Button „Verlauf löschen" |
 
-Maximal **200 Snapshots** im Speicher (ältere werden verworfen).
+Maximal **1000 Snapshots** im Speicher (ältere werden verworfen).
+
+### Gate-Delay-Modus
+
+Im Gate-Delay-Modus werden Gatterausgaben erst nach der konfigurierten
+Propagationsverzögerung (`propagationDelay`) wirksam — im Gegensatz zum
+Zero-Delay-Modus, in dem alle Änderungen sofort propagieren.
+
+**Modus wechseln:** Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay** klicken.
+
+Das Timingdiagramm im Gate-Delay-Modus nimmt pro Ereignis-Batch einen Snapshot auf.
+Eine Kette aus 20 NOT-Gattern erzeugt damit eine 20-stufige Verzögerungstreppe —
+jede Stufe entspricht einer Gate-Ebene.
+
+### Race-Condition-Panel
+
+Im Gate-Delay-Modus erkennt der Simulator automatisch Hazards und Race Conditions.
+Wenn Races erkannt wurden, erscheint ein **⚠-Button** in der Toolbar.
+Klick darauf öffnet das Race-Panel.
+
+**Schweregradklassen:**
+
+| Farbe | Schweregrad | Bedeutung |
+|---|---|---|
+| Rot | KRITISCH | Wertekonflikt: zwei Treiber liefern verschiedene Werte |
+| Orange | GLITCH | Rekonvergenter Glitch (mehrfacher Pegelwechsel) |
+| Lila | TIMING | Setup/Hold-Risiko an Flipflop-Eingängen |
+| Gelb | WARNUNG | Mehrtreiber mit gleichem Wert |
+| Pink | SCHLEIFE | Kombinatorische Schleife (Ereignis-Budget überschritten) |
+
+**TTL-Markierung:** Kabel bleiben 400 ms farblich hervorgehoben,
+damit kurzlebige Glitches lesbar bleiben.
+
+**Bekannte Grenzen des Race-Detektors:**
+- Tri-State-Busse werden nicht erkannt
+- Taktdomänenwechsel (CDC) werden nicht modelliert
+- Nur einstufige Latch-Erkennung (keine Kaskadierung)
 
 ---
 
@@ -467,7 +503,7 @@ Für 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU 
 
 # LogicSim – User Manual
 
-> **Version:** current state (Feb 2026)
+> **Version:** current state (March 2026)
 > **Language:** English
 > Deutsche Version → [zurück zu Deutsch](#deutsch)
 
@@ -516,7 +552,7 @@ npm --version    # e.g. 10.2.4
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/p-keminer/logic-gate-simulator.git
+git clone https://github.com/p-keminer/logic-simulator-studio.git
 
 # 2. Enter the project folder
 cd logic-simulator-studio
@@ -710,7 +746,7 @@ Right-click on a gate to open the context menu:
 
 ## 9. Truth Table & State Transition Table
 
-Open via **Toolbar → "Analysis"**.
+Open via **Toolbar → "W-Table"**.
 
 ### Automatic mode selection
 
@@ -756,7 +792,42 @@ Open via **Toolbar → "Analysis"**.
 | **Hide signal** | Click the eye icon (👁) in the signal row |
 | **Clear history** | Toolbar button "Clear history" |
 
-Maximum **200 snapshots** kept in memory (older ones are discarded).
+Maximum **1000 snapshots** kept in memory (older ones are discarded).
+
+### Gate-Delay Mode
+
+In Gate-Delay mode, gate outputs are committed only after the configured propagation delay
+(`propagationDelay`) — unlike Zero-Delay mode where all changes propagate instantly.
+
+**Switching modes:** Click the **⚡ Zero-Delay** / **⏱ Gate-Delay** toolbar button.
+
+The timing diagram in Gate-Delay mode records one snapshot per event batch.
+A chain of 20 NOT gates produces a 20-step delay staircase —
+each step corresponds to one gate level.
+
+### Race Condition Panel
+
+In Gate-Delay mode the simulator automatically detects hazards and race conditions.
+When races are detected, a **⚠ button** appears in the toolbar.
+Clicking it opens the Race Panel.
+
+**Severity classes:**
+
+| Colour | Severity | Meaning |
+|---|---|---|
+| Red | CRITICAL | Value conflict: two drivers supply different values |
+| Orange | GLITCH | Reconvergent glitch (multiple level changes) |
+| Purple | TIMING | Setup/hold risk at flip-flop inputs |
+| Yellow | WARNING | Multiple drivers with the same value |
+| Pink | LOOP | Combinational loop (event budget exceeded) |
+
+**TTL marking:** wires remain colour-highlighted for 400 ms
+so short-lived glitches remain readable.
+
+**Known limitations of the race detector:**
+- Tri-state buses are not detected
+- Clock domain crossings (CDC) are not modelled
+- Only single-level latch detection (no cascading)
 
 ---
 

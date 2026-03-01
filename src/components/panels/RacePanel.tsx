@@ -27,10 +27,10 @@ const SEVERITY_COLOR: Record<RaceSeverity, string> = {
 const TYPE_DESC: Record<string, string> = {
   value_conflict:      'Konfliktierende Werte auf demselben Netz',
   multi_source:        'Mehrere Treiber, gleicher Wert',
-  reconvergent_glitch: 'Rekonvergentes Fächerglitch (mehrf. Pegelwechsel)',
-  latch_race_through:  'Latch-Race-Through (Ausgang oszilliert bei EN=1)',
-  setup_hold_risk:     'Setup/Hold-Risiko: CLK-Flanke und Daten im selben Takt',
-  loop_overflow:       'Ereignisbudget überschritten — mögliche kombinatorische Schleife',
+  reconvergent_glitch: 'Rekonvergenter Glitch (mehrfacher Pegelwechsel im selben Batch)',
+  latch_race_through:  'Latch Race-Through: Ausgang oszilliert bei aktivem Enable',
+  setup_hold_risk:     'Setup/Hold-Risiko: Taktflanke und Datenänderung im selben Batch',
+  loop_overflow:       'Ereignis-Budget überschritten — mögliche kombinatorische Schleife',
 };
 
 interface Props {
@@ -89,7 +89,7 @@ export function RacePanel({ onClose }: Props) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444' }}>
-            Race / Hazard Monitor — GATE_DELAY Modus
+            Race / Hazard Monitor — Gate-Delay-Modus
           </span>
           <button
             onClick={onClose}
@@ -109,8 +109,8 @@ export function RacePanel({ onClose }: Props) {
 
         {/* Explanation */}
         <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-          Erkannte Hazards im GATE_DELAY-Modus. Betroffene Leitungen werden farblich
-          hervorgehoben: rot=Konflikt, lila=Timing, orange=Glitch, gelb=Warnung, pink=Schleife.
+          Erkannte Hazards im Gate-Delay-Modus. Betroffene Leitungen werden farblich markiert:
+          rot = Wertekonflikt, lila = Setup/Hold-Risiko, orange = Glitch, gelb = Mehrtreiber, pink = Schleife.
         </p>
 
         {/* Race list */}
