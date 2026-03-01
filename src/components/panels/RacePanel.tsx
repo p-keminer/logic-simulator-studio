@@ -4,7 +4,6 @@
  * Displays detected race conditions from GATE_DELAY simulation mode.
  * Clicking an entry focuses the affected area on the canvas via viewport dispatch.
  */
-import React from 'react';
 import type { RaceInfo, RaceSeverity } from '../../core/types';
 import { useCircuitContext } from '../../store/CircuitContext';
 

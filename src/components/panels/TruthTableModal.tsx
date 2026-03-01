@@ -85,8 +85,16 @@ export function TruthTableModal({ onClose }: Props) {
     // Erkennung sequenzieller Gatter (Flip-Flops, Latches) auch ohne Draht-Zyklen.
     // isSynchronous-Gatter (D-FF, JK-FF …) und Gatter mit stateUpdate (SR-Latch, D-Latch)
     // führen intern Zustand → Mode 2 (Zustandsübergangstabelle) nötig.
+    //
+    // Autonome Quellen (CLOCK, INPUT_SWITCH, PUSH_BTN, CONST, ADC) und reine
+    // Ausgabe-Gatter (OUTPUT_LED) werden explizit ausgeschlossen: Sie haben
+    // zwar stateUpdate (z. B. CLOCK-Tick-Zähler) oder isSynchronous (STEPPER),
+    // sind aber keine Zustands-Elemente der kombinatorischen Logik.
     const hasSynchronous = allGates.some(g => {
       if (!connectedIds.has(g.id)) return false;
+      if (INPUT_TYPES.has(g.typeId))  return false; // CLOCK, INPUT_SWITCH, PUSH_BTN
+      if (OUTPUT_TYPES.has(g.typeId)) return false; // OUTPUT_LED
+      if (SKIP_TYPES.has(g.typeId))   return false; // CONST_HIGH/LOW, ADC8, ...
       try {
         const def = gateRegistry.get(g.typeId);
         return !!def.isSynchronous || typeof def.stateUpdate === 'function';

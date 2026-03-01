@@ -39,16 +39,21 @@ export interface GateDefinition {
   typeId: GateTypeId;
   label: string;
   category:
-    | 'logic'
-    | 'logic_mi'
-    | 'logic_comp'
-    | 'sequential'
+    | 'logic_basic'
+    | 'logic_multi'
+    | 'logic_special'
+    | 'logic_comp_out'
+    | 'mux'
+    | 'bus'
+    | 'arith'
+    | 'flipflop'
     | 'register'
-    | 'io'
+    | 'memory'
+    | 'input'
+    | 'output'
     | 'annotation'
     | 'ic74'
     | 'custom'
-    | 'memory'
     | 'internal';
   inputs: Omit<PortDefinition, 'direction'>[];
   outputs: Omit<PortDefinition, 'direction'>[];

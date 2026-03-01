@@ -444,7 +444,7 @@ export class EventScheduler {
   /** Evaluate a gate with an explicit custom state (used for CLOCK pause injection). */
   private _evaluateGateWithCs(
     gate: { id: string; typeId: string; customState?: Record<string, unknown> },
-    circuit: Circuit,
+    _circuit: Circuit,
     wireMap: WireMap,
     triggerTime: number,
     cs: Record<string, unknown>,

@@ -17,7 +17,7 @@ const SHORTCUTS: Array<{ key: string; action: string }> = [
   { key: '↑ ↓ ← →',               action: 'Ausgewählte Gatter bewegen (Shift: 5× Schritt)' },
   { key: 'X',                     action: 'Kabel-Einrasten ein/aus (Snap-to-Port, gelber Rahmen)' },
   { key: 'Entf / Backspace',      action: 'Auswahl löschen' },
-  { key: 'Escape',                action: 'Aktion abbrechen / Auswahl aufheben' },
+  { key: 'Escape',                action: 'Kabelzeichnen abbrechen / Menüs schließen' },
   { key: 'Shift+Klick',           action: 'Mehrfach-Selektion' },
   { key: 'Rechteck ziehen',       action: 'Lasso-Auswahl → Pfeiltasten zum Verschieben' },
   { key: 'Alt+Ziehen',            action: 'Canvas verschieben (Pan)' },

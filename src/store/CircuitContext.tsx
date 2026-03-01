@@ -155,9 +155,9 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   const raceMarkDirtyRef = useRef(false);
   // Ref to last known mode so we can detect mode switches and re-seed.
   const prevModeRef      = useRef<SimulationMode>(SimulationMode.ZERO_DELAY);
-  /** Tracks last-seen gate / wire key strings to distinguish structural vs switch-only settles. */
-  const prevGateKeysRef  = useRef('');
-  const prevWireKeysRef  = useRef('');
+  /** Tracks last-seen gate / wire ID sets to distinguish structural vs switch-only settles. */
+  const prevGateKeysRef  = useRef<Set<string>>(new Set());
+  const prevWireKeysRef  = useRef<Set<string>>(new Set());
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
 
@@ -264,13 +264,24 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         // Determine whether this settle was triggered by a structural change
         // (gate / wire added or removed) or by a user switch-only toggle.
         // Only switch-only settles in GATE_DELAY mode use a special re-seed path.
-        const currentGateKeys = Object.keys(c.gates).sort().join(',');
-        const currentWireKeys = Object.keys(c.wires).sort().join(',');
-        const isStructuralChange =
-          currentGateKeys !== prevGateKeysRef.current ||
-          currentWireKeys !== prevWireKeysRef.current;
-        prevGateKeysRef.current = currentGateKeys;
-        prevWireKeysRef.current = currentWireKeys;
+        // Set-based O(n) comparison — avoids sort() + string allocation per settle.
+        const gateIds = Object.keys(c.gates);
+        const wireIds = Object.keys(c.wires);
+        let isStructuralChange =
+          gateIds.length !== prevGateKeysRef.current.size ||
+          wireIds.length !== prevWireKeysRef.current.size;
+        if (!isStructuralChange) {
+          for (const id of gateIds) {
+            if (!prevGateKeysRef.current.has(id)) { isStructuralChange = true; break; }
+          }
+        }
+        if (!isStructuralChange) {
+          for (const id of wireIds) {
+            if (!prevWireKeysRef.current.has(id)) { isStructuralChange = true; break; }
+          }
+        }
+        prevGateKeysRef.current = new Set(gateIds);
+        prevWireKeysRef.current = new Set(wireIds);
 
         // For switch-only changes in GATE_DELAY mode: capture the scheduler's
         // current committed state BEFORE runUntilStable propagates the change
@@ -324,6 +335,23 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
 
       // ── Pause-Guard ───────────────────────────────────────────────────────
       if (isClockPausedRef.current) {
+        // TTL wire-markings must expire even while the clock is paused.
+        // Without this, a 400 ms glitch marking would hang indefinitely in pause.
+        if (mode === SimulationMode.GATE_DELAY) {
+          const nowMs = Date.now();
+          for (const [netId, mark] of raceMarkRef.current) {
+            if (nowMs - mark.lastSeenMs > RACE_TTL_MS) {
+              raceMarkRef.current.delete(netId);
+              raceMarkDirtyRef.current = true;
+            }
+          }
+          if (raceMarkDirtyRef.current) {
+            raceMarkDirtyRef.current = false;
+            const next = new Map<string, RaceSeverity>();
+            for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
+            setRaceNetIds(next);
+          }
+        }
         simBufferRef.current = buf;
         if (anyChanged) {
           const result = buildSimResult(buf, c);
@@ -552,6 +580,17 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       schedulerRef.current = null;
     }
   }, [simulationMode]);
+
+  // ── Circuit-ID change: clear race state on CIRCUIT_LOAD / CIRCUIT_RESET ──
+  // circuit.id changes whenever a new circuit is loaded or the canvas is reset.
+  // Stale race entries from the previous circuit must not leak into the new one.
+  useEffect(() => {
+    setRaces([]);
+    setRaceNetIds(new Map());
+    raceMarkRef.current.clear();
+    raceMarkDirtyRef.current = false;
+    // The scheduler will be re-seeded automatically on the next settle.
+  }, [circuit.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <CircuitContext.Provider value={{
