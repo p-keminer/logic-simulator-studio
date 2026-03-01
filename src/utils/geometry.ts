@@ -84,25 +84,32 @@ export function computeInProgressWirePath(
   return `M ${from.x} ${from.y} C ${from.x + controlOffset} ${from.y}, ${toX - controlOffset} ${toY}, ${toX} ${toY}`;
 }
 
-/** Resolve input signals for a gate by tracing back through connected wires */
+/** Resolve input signals for a gate by tracing back through connected wires.
+ *  Pass `portToWireIdMap` (from CircuitContext) for O(1) lookup; omit for
+ *  the O(Ports×Wires) fallback (used outside of React render paths). */
 export function resolveInputSignals(
   gateId: string,
-  circuit: Circuit
+  circuit: Circuit,
+  portToWireIdMap?: ReadonlyMap<string, string>
 ): Record<string, SignalState> {
   const gate = circuit.gates[gateId];
   if (!gate) return {};
 
   const def = gateRegistry.get(gate.typeId);
   const result: Record<string, SignalState> = {};
+  const defaultSignal: SignalState = { value: 0, version: 0, lastChangedAt: 0 };
 
   for (const inputPort of def.inputs) {
-    const wire = Object.values(circuit.wires).find(
-      (w) => w.to.gateId === gateId && w.to.portId === inputPort.id
-    );
-    if (wire) {
-      result[inputPort.id] = wire.signal;
+    if (portToWireIdMap) {
+      const wireId = portToWireIdMap.get(`${gateId}:${inputPort.id}`);
+      result[inputPort.id] = wireId
+        ? (circuit.wires[wireId]?.signal ?? defaultSignal)
+        : defaultSignal;
     } else {
-      result[inputPort.id] = { value: 0, version: 0, lastChangedAt: 0 };
+      const wire = Object.values(circuit.wires).find(
+        (w) => w.to.gateId === gateId && w.to.portId === inputPort.id
+      );
+      result[inputPort.id] = wire ? wire.signal : defaultSignal;
     }
   }
 

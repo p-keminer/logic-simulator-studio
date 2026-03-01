@@ -479,7 +479,7 @@ export class EventScheduler {
     }
 
     // Schedule events for outputs that differ from the currently committed value.
-    const delay = Math.max(1, def.propagationDelay ?? 1);
+    const delay = Math.max(0, def.propagationDelay ?? 1);
     const eventTime = triggerTime + delay;
 
     for (const [portId, rawVal] of Object.entries(outputValues)) {

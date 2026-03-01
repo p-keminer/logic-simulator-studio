@@ -95,6 +95,11 @@ export function CustomICModal({ onClose }: Props) {
       alert('Die aktuelle Schaltung braucht mind. einen Schalter und eine LED.');
       return;
     }
+    const hasCICGates = Object.values(circuit.gates).some(g => g.typeId.startsWith('CIC_'));
+    if (hasCICGates) {
+      alert('Die Schaltung enthält ein Custom IC. Verschachtelte Custom ICs werden nicht unterstützt (Rekursionsgefahr).');
+      return;
+    }
     // Pre-fill port names from existing labels
     const initialNames = [
       ...inputs.map((g, i) => g.label || 'I' + i),

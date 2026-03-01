@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import type { Circuit, SignalValue, TimingSnapshot, RaceInfo, RaceSeverity } from '../core/types';
 import type { CircuitAction } from './actions';
 import { circuitReducer, createEmptyCircuit } from './circuitReducer';
@@ -102,6 +102,12 @@ interface CircuitContextValue {
    * Map.has() works identically to the former ReadonlySet.has() call.
    */
   raceNetIds: Map<string, RaceSeverity>;
+  /**
+   * Lookup map: portKey (`${toGateId}:${toPortId}`) → wireId.
+   * Rebuilt only when the set of wires changes (not on signal updates).
+   * Allows O(1) input-signal resolution in resolveInputSignals / CanvasGate.
+   */
+  portToWireIdMap: ReadonlyMap<string, string>;
 }
 
 const CircuitContext = createContext<CircuitContextValue | null>(null);
@@ -161,27 +167,49 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
 
-  // ── Auto-Save ─────────────────────────────────────────────────────────────
+  // ── Auto-Save (debounced 500 ms) ──────────────────────────────────────────
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
-    try { sessionStorage.setItem(AUTOSAVE_KEY, JSON.stringify(circuit)); } catch { /* quota */ }
+    if (autosaveTimerRef.current !== null) clearTimeout(autosaveTimerRef.current);
+    autosaveTimerRef.current = setTimeout(() => {
+      autosaveTimerRef.current = null;
+      try { sessionStorage.setItem(AUTOSAVE_KEY, JSON.stringify(circuit)); } catch { /* quota */ }
+    }, 500);
+    return () => { if (autosaveTimerRef.current !== null) clearTimeout(autosaveTimerRef.current); };
   }, [circuit]);
 
   // ── beforeunload-Warnung wenn Canvas nicht leer ───────────────────────────
+  // gateCountRef allows the listener to be registered only once (stable dep [])
+  // while still reading the current gate count on every beforeunload event.
+  const gateCountRef = useRef(Object.keys(circuit.gates).length);
+  const gateCount = Object.keys(circuit.gates).length;
+  useEffect(() => { gateCountRef.current = gateCount; }, [gateCount]);
+
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (Object.keys(circuit.gates).length > 0) {
-        e.preventDefault();
-      }
+      if (gateCountRef.current > 0) e.preventDefault();
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [circuit.gates]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Strukturelle Änderungen → Settle anfordern ────────────────────────────
   // (Gate hinzugefügt/entfernt, Draht gezogen/getrennt, Input-Schalter umgelegt)
   const gateKeys = Object.keys(circuit.gates).sort().join(',');
   const wireKeys = Object.keys(circuit.wires).sort().join(',');
+
+  // ── O(1) Input-Port Lookup Map ────────────────────────────────────────────
+  // Rebuilt only when the wire set changes (not on signal updates).
+  // portKey = `${toGateId}:${toPortId}` → wireId
+  const portToWireIdMap = useMemo<ReadonlyMap<string, string>>(() => {
+    const m = new Map<string, string>();
+    for (const wire of Object.values(circuit.wires)) {
+      m.set(`${wire.to.gateId}:${wire.to.portId}`, wire.id);
+    }
+    return m;
+  }, [wireKeys]); // eslint-disable-line react-hooks/exhaustive-deps
   const switchStates = Object.values(circuit.gates)
     .filter(g =>
       g.typeId === 'INPUT_SWITCH' ||
@@ -601,6 +629,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       simulationMode, setSimulationMode,
       races,
       raceNetIds,
+      portToWireIdMap,
     }}>
       {children}
     </CircuitContext.Provider>

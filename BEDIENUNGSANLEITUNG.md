@@ -92,7 +92,7 @@ Die `dist/`-Ausgabe kann auf jedem statischen Webserver gehostet werden – kein
 
 Den Browser-Tab schließen oder `Ctrl + C` im Terminal.
 
-> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `sessionStorage` gespeichert und beim erneuten Laden innerhalb derselben Browser-Sitzung wiederhergestellt. Für dauerhafte Sicherung → manuell als JSON speichern.
+> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `sessionStorage` gespeichert (mit bis zu 500 ms Verzögerung) und beim erneuten Laden innerhalb derselben Browser-Sitzung wiederhergestellt. Für dauerhafte Sicherung → manuell als JSON speichern.
 
 ---
 
@@ -142,9 +142,10 @@ Im **Suchfeld** oben in der Palette nach Name, Typ-ID oder Beschreibung filtern.
 |---|---|
 | **Basis** | AND, OR, NOT, NAND, NOR, XOR, XNOR, Buffer, Schmitt-Trigger, Tri-State |
 | **Kombinatorisch** | MUX, DEMUX, Komparator, ALU, Bus-Splitter/-Kombinator |
-| **Sequenziell** | D/T/SR/JK-Flipflops, Master-Slave-FF, Schieberegister, Zähler, RAM, ROM |
+| **Sequenziell** | D/T/SR/JK-Flip-Flops, Master-Slave-FF, Schieberegister, Zähler, RAM, ROM |
 | **Ein-/Ausgabe** | Schalter, Taster, Taktgenerator, Konstant HIGH/LOW, LED, 7-Segment, ADC, Schrittmotor |
-| **ICs** | 74xx-Serie, Custom IC |
+| **74xx ICs** | 74xx-Serie (74HC00, 74HC04, 74HC595 u. a.) |
+| **Benutzerdefiniert** | Gespeicherte Custom ICs |
 
 ### Eingänge einstellen
 Einige Gatter (AND, OR, NAND, NOR, XOR, XNOR) sind in Varianten mit 2–8 Eingängen verfügbar.
@@ -259,8 +260,8 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 
 | Schaltungstyp | Modus |
 |---|---|
-| Keine Zyklen (rein kombinatorisch) | **Wahrheitstabelle** |
-| Mindestens ein Zyklus (sequenziell) | **Zustandsübergangstabelle** |
+| Keine Rückkopplungen und keine sequenziellen Zustandsbausteine | **Wahrheitstabelle** |
+| Rückkopplungen oder sequenzielle Zustandsbausteine (Flip-Flops, Latches) | **Zustandsübergangstabelle** |
 
 ### Wahrheitstabelle (kombinatorisch)
 - Listet alle **2ⁿ** Eingangskombinationen.
@@ -296,8 +297,8 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 | Aktion | Beschreibung |
 |---|---|
 | **Panelgröße ändern** | Obere Kante des Panels ziehen |
-| **Signal ausblenden** | Auge-Icon (👁) klicken |
-| **Verlauf löschen** | Toolbar-Button „Verlauf löschen" |
+| **Signal ausblenden** | Signal-Label anklicken |
+| **Verlauf löschen** | Timing-Panel schließen (×) |
 
 Maximal **1000 Snapshots** im Speicher (ältere werden verworfen).
 
@@ -309,7 +310,7 @@ Zero-Delay-Modus, in dem alle Änderungen sofort propagieren.
 
 **Modus wechseln:** Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay** klicken.
 
-Das Timingdiagramm im Gate-Delay-Modus nimmt pro Ereignis-Batch einen Snapshot auf.
+Das Timing-Diagramm im Gate-Delay-Modus nimmt pro Ereignis-Batch einen Snapshot auf.
 Eine Kette aus 20 NOT-Gattern erzeugt damit eine 20-stufige Verzögerungstreppe —
 jede Stufe entspricht einer Gate-Ebene.
 
@@ -317,7 +318,7 @@ jede Stufe entspricht einer Gate-Ebene.
 
 Im Gate-Delay-Modus erkennt der Simulator automatisch Hazards und Race Conditions.
 Wenn Races erkannt wurden, erscheint ein **⚠-Button** in der Toolbar.
-Klick darauf öffnet das Race-Panel.
+Klick darauf öffnet das Race-Panel mit der Race-Historie (bis zu 50 Einträge).
 
 **Schweregradklassen:**
 
@@ -325,8 +326,8 @@ Klick darauf öffnet das Race-Panel.
 |---|---|---|
 | Rot | KRITISCH | Wertekonflikt: zwei Treiber liefern verschiedene Werte |
 | Orange | GLITCH | Rekonvergenter Glitch (mehrfacher Pegelwechsel) |
-| Lila | TIMING | Setup/Hold-Risiko an Flipflop-Eingängen |
-| Gelb | WARNUNG | Mehrtreiber mit gleichem Wert |
+| Lila | TIMING | Setup/Hold-Risiko an Flip-Flop-Eingängen |
+| Gelb | WARNUNG | Mehrtreiber mit gleichem Wert (Spezialfall) |
 | Pink | SCHLEIFE | Kombinatorische Schleife (Ereignis-Budget überschritten) |
 
 **TTL-Markierung:** Kabel bleiben 400 ms farblich hervorgehoben,
@@ -343,8 +344,8 @@ damit kurzlebige Glitches lesbar bleiben.
 
 ### Zustand erstellen
 1. FSM-Editor über die Toolbar öffnen.
-2. **Doppelklick** auf freie FSM-Fläche → neuer Zustand.
-3. Doppelklick zum Umbenennen / als Startzustand markieren.
+2. **„+ Zustand"-Button** in der Toolbar klicken → neuer Zustand wird hinzugefügt.
+3. Doppelklick auf einen Zustand → Zustand-Editor öffnet sich zum Umbenennen oder zum Festlegen des Anfangszustands.
 
 ### Übergang zeichnen
 1. Linksklick auf **Quell-Zustand** → Linksklick auf **Ziel-Zustand**.
@@ -362,15 +363,15 @@ damit kurzlebige Glitches lesbar bleiben.
 
 > **Einschränkung:** Custom ICs werden bei jedem Simulations-Tick neu evaluiert,
 > ohne internen Zustand zu persistieren. Nur **kombinatorische** Teilschaltungen
-> (keine Flipflops, Latches oder Rückkopplungsschleifen) werden korrekt simuliert.
+> (keine Flip-Flops, Latches oder Rückkopplungsschleifen) werden korrekt simuliert.
 
 ### Custom IC erstellen
-1. Kombinatorische Teilschaltung mit Eingabe-Schaltern und Ausgangs-LEDs aufbauen.
-2. Alle Gatter selektieren (Lasso).
-3. Toolbar → **„Custom IC erstellen"** → Name vergeben.
+1. Kombinatorische Teilschaltung auf dem Canvas aufbauen. Eingabe-Schalter werden zu Eingangsports, Ausgangs-LEDs zu Ausgangsports des IC.
+2. Toolbar → **„Custom IC erstellen"** → IC-Name eingeben → **„Weiter →"** → Port-Namen anpassen → **„IC erstellen"**.
+3. Das neue Bauteil erscheint in der Palette unter **„Benutzerdefiniert"**.
 
 ### Custom IC verwenden
-- Drag & Drop aus der Palette; nur definierte Ports sichtbar.
+- Drag & Drop aus der Palette (Kategorie **„Benutzerdefiniert"**); nur definierte Ports sind von außen sichtbar.
 
 ---
 
@@ -385,7 +386,7 @@ damit kurzlebige Glitches lesbar bleiben.
 ## 14. Speichern & Laden
 
 ### Auto-Save
-Automatisch nach jeder Änderung im `sessionStorage` gespeichert. Wird beim erneuten Laden der Seite in derselben Browser-Sitzung wiederhergestellt — **nicht** nach einem Browser-Neustart. Für dauerhafte Speicherung → JSON-Datei manuell speichern.
+Automatisch nach Änderungen im `sessionStorage` gespeichert (mit bis zu 500 ms Verzögerung). Wird beim erneuten Laden der Seite in derselben Browser-Sitzung wiederhergestellt — **nicht** nach einem Browser-Neustart. Für dauerhafte Speicherung → JSON-Datei manuell speichern.
 
 ### Manuelles Speichern
 Toolbar → **„Speichern"** (💾) → `.json`-Datei wird heruntergeladen.
@@ -482,7 +483,7 @@ Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
 | Op2 | Op1 | Op0 | Operation | Formel | COUT |
 |---|---|---|---|---|---|
 | 0 | 0 | 0 | **ADD** | S = A + B + CIN | Übertrag Bit 4 |
-| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borge-Ausgang |
+| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borrow-Ausgang |
 | 0 | 1 | 0 | **AND** | S = A & B | 0 |
 | 0 | 1 | 1 | **OR** | S = A \| B | 0 |
 | 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
@@ -589,7 +590,7 @@ The `dist/` output can be hosted on any static web server (GitHub Pages, Netlify
 
 Close the browser tab or press `Ctrl + C` in the terminal.
 
-> **Auto-Save:** The current circuit is automatically saved to `sessionStorage` and restored when the page is reloaded within the same browser session. For persistent storage, use **manual save** as JSON.
+> **Auto-Save:** The current circuit is automatically saved to `sessionStorage` (with up to 500 ms delay) and restored when the page is reloaded within the same browser session. For persistent storage, use **manual save** as JSON.
 
 ---
 
@@ -641,7 +642,8 @@ Type in the **search box** at the top of the palette to filter gates by name, ty
 | **Combinational** | MUX, DEMUX, Comparator, ALU, Bus Splitter / Combiner |
 | **Sequential** | D/T/SR/JK flip-flops, Master-Slave FF, shift register, counter, RAM, ROM |
 | **I/O** | Switch, Push button, Clock, Constant HIGH/LOW, LED, 7-segment, ADC, Stepper |
-| **ICs** | 74xx series, Custom IC |
+| **74xx ICs** | 74xx series (74HC00, 74HC04, 74HC595, etc.) |
+| **Custom** | Saved Custom ICs |
 
 ### Number of inputs
 Some gates (AND, OR, NAND, NOR, XOR, XNOR) are available in variants with 2–8 inputs.
@@ -756,8 +758,8 @@ Open via **Toolbar → "W-Table"**.
 
 | Circuit type | Mode shown |
 |---|---|
-| No cycles (purely combinational) | **Truth Table** |
-| At least one cycle (sequential) | **State Transition Table** |
+| No feedback loops and no sequential state elements | **Truth Table** |
+| Feedback loops or sequential state elements (flip-flops, latches) | **State Transition Table** |
 
 ### Truth Table (combinational)
 - Lists all **2ⁿ** input combinations (n = number of input switches).
@@ -793,8 +795,8 @@ Open via **Toolbar → "W-Table"**.
 | Action | Description |
 |---|---|
 | **Resize panel** | Drag the top edge of the panel |
-| **Hide signal** | Click the eye icon (👁) in the signal row |
-| **Clear history** | Toolbar button "Clear history" |
+| **Hide signal** | Click the signal label |
+| **Clear history** | Close the Timing panel (×) |
 
 Maximum **1000 snapshots** kept in memory (older ones are discarded).
 
@@ -813,7 +815,7 @@ each step corresponds to one gate level.
 
 In Gate-Delay mode the simulator automatically detects hazards and race conditions.
 When races are detected, a **⚠ button** appears in the toolbar.
-Clicking it opens the Race Panel.
+Clicking it opens the Race Panel with the race history (up to 50 entries).
 
 **Severity classes:**
 
@@ -822,7 +824,7 @@ Clicking it opens the Race Panel.
 | Red | CRITICAL | Value conflict: two drivers supply different values |
 | Orange | GLITCH | Reconvergent glitch (multiple level changes) |
 | Purple | TIMING | Setup/hold risk at flip-flop inputs |
-| Yellow | WARNING | Multiple drivers with the same value |
+| Yellow | WARNING | Multiple drivers with the same value (special case) |
 | Pink | LOOP | Combinational loop (event budget exceeded) |
 
 **TTL marking:** wires remain colour-highlighted for 400 ms
@@ -839,8 +841,8 @@ so short-lived glitches remain readable.
 
 ### Creating a state
 1. Open the FSM editor via the toolbar.
-2. **Double-click** on empty FSM area → new state created.
-3. Double-click the state to rename it / mark as initial / final state.
+2. Click the **"+ State"** button in the toolbar → a new state is added.
+3. Double-click a state → the state editor opens for renaming or marking it as the initial state.
 
 ### Drawing a transition
 1. Left-click the **source state** → left-click the **target state**.
@@ -861,10 +863,9 @@ so short-lived glitches remain readable.
 > (no flip-flops, latches, or feedback loops) are simulated correctly.
 
 ### Creating a Custom IC
-1. Build a combinational sub-circuit with input switches and output LEDs as I/O pins.
-2. Select all gates (lasso).
-3. Toolbar → **"Create Custom IC"** → assign a name.
-4. The new gate appears in the palette under **"ICs"**.
+1. Build a combinational sub-circuit on the canvas. Input switches become input ports, output LEDs become output ports of the IC.
+2. Toolbar → **"Create Custom IC"** → enter a name → **"Next →"** → adjust port names → **"Create IC"**.
+3. The new component appears in the palette under **"Custom"**.
 
 ### Using a Custom IC
 - Drag & drop from palette; only defined ports are visible from outside.
@@ -882,7 +883,7 @@ so short-lived glitches remain readable.
 ## 14. Save & Load
 
 ### Auto-save
-Automatically saved to `sessionStorage` after every change. Restored when the page is reloaded in the same browser session — **not** after a browser restart. For persistent storage, manually save as JSON.
+Automatically saved to `sessionStorage` after changes (with up to 500 ms delay). Restored when the page is reloaded in the same browser session — **not** after a browser restart. For persistent storage, manually save as JSON.
 
 ### Manual save
 Toolbar → **"Save"** (💾) → downloads a `.json` file.

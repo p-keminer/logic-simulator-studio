@@ -12,10 +12,9 @@ interface Props {
 }
 
 export function CanvasGate({ gate, onGatePointerDown, onPortClick, onGateContextMenu }: Props) {
-  const { dispatch } = useCircuitContext();
-  const { circuit } = useCircuitContext();
+  const { dispatch, circuit, portToWireIdMap } = useCircuitContext();
   const definition = gateRegistry.get(gate.typeId);
-  const inputSignals = resolveInputSignals(gate.id, circuit);
+  const inputSignals = resolveInputSignals(gate.id, circuit, portToWireIdMap);
   const ShapeComponent = definition.shapeComponent;
 
   const handleDoubleClick = (e: React.MouseEvent) => {

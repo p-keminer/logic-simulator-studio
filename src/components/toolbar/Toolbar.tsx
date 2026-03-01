@@ -128,7 +128,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
         {isGateDelay && races.length > 0 && (
           <button
             onClick={() => setShowRacePanel(true)}
-            title={`${races.length} Race(s) erkannt — Klick für Details`}
+            title={`Race-Historie: ${races.length} Einträge — Klick für Details`}
             className="px-2.5 py-1 text-xs font-medium text-red-300 bg-red-900/40 border border-red-700 rounded transition-colors font-mono animate-pulse"
           >
             ⚠ {races.length}

@@ -61,8 +61,8 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
   lila = Setup/Hold-Risiko, gelb = Mehrtreiber, pink = kombinatorische Schleife)
 - **TTL-Leitungsmarkierung**: Farben bleiben 400 ms sichtbar, damit kurzlebige Glitches erfasst werden
 - **Race-Panel** (⚠-Button in der Toolbar, erscheint bei erkannten Races):
-  Liste aller Hazards mit Klick-to-Focus auf den Canvas
-- **Timingdiagramm**: ein Snapshot pro Ereignis-Batch → Propagationsverzögerungs-Treppe sichtbar
+  Race-Historie — bis zu 50 Einträge, mit Klick-to-Focus auf betroffene Netze
+- **Timing-Diagramm**: ein Snapshot pro Ereignis-Batch → Propagationsverzögerungs-Treppe sichtbar
   (z. B. 20 NOT-Gatter in Reihe = 20 Stufen)
 - **Maximale Propagationsverzögerung** aller platzierten Gatter in der Toolbar (ns)
 
@@ -71,7 +71,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | Werkzeug | Kombinatorisch | Sequenziell / Rückkopplung |
 |---|---|---|
 | **Wahrheitstabelle** | ✅ Alle Eingangskombinationen, Zwischenwerte | – |
-| **Zustandsübergangstabelle** | – | ✅ Automatische Zyklus-Erkennung, Einzel-Tick Q(t) → Q(t+1) |
+| **Zustandsübergangstabelle** | – | ✅ Bei Rückkopplungen oder sequenziellen Zustandsbausteinen; Einzel-Tick Q(t) → Q(t+1) |
 | **Timing-Diagramm** | ✅ | ✅ |
 | **Race-Condition-Panel** | – | ✅ Nur im Gate-Delay-Modus; Klick-to-Focus auf betroffene Netze |
 
@@ -91,7 +91,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 ### Endlicher Automat (FSM) Editor
 - Grafischer FSM-Editor mit Drag-and-Drop-Zuständen und Übergängen
 - Bedingungsausdruck-Parser für Übergangsbeschriftungen
-- **Direkte Synthese** vom FSM-Graphen zur Logikschaltung auf dem Canvas
+- **Synthese** vom FSM-Graphen zur Logikschaltung auf dem Canvas
 
 ---
 
@@ -114,7 +114,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | Op2 | Op1 | Op0 | Operation | Ergebnis | COUT |
 |---|---|---|---|---|---|
 | 0 | 0 | 0 | **ADD** | A + B + CIN | Übertrag Bit 4 |
-| 0 | 0 | 1 | **SUB** | A − B − CIN | Borge-Ausgang |
+| 0 | 0 | 1 | **SUB** | A − B − CIN | Borrow-Ausgang |
 | 0 | 1 | 0 | **AND** | A & B | 0 |
 | 0 | 1 | 1 | **OR** | A \| B | 0 |
 | 1 | 0 | 0 | **XOR** | A ^ B | 0 |
@@ -125,8 +125,8 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Codes)** für Kurzreferenz.
 
 ### Sequenziell
-- D-, T-, SR-, JK-Flipflops (synchrones & asynchrones Löschen / Preset)
-- Master-Slave-Flipflop
+- D-, T-, SR-, JK-Flip-Flops (synchrones & asynchrones Löschen / Preset)
+- Master-Slave-Flip-Flop
 - **4-Bit Schieberegister (SHIFT4)** – SIPO mit 4 Bit-LED-Anzeigen für Q0–Q3 im Gatter-Body
 - **4-Bit Parallelregister (REG4)** – mit EN-Eingang und 4 Bit-LED-Anzeigen
 - 8-Bit Parallelregister (REG8)
@@ -149,7 +149,7 @@ Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Code
 
 ### Integrierte Schaltkreise
 - 74xx-Serien-ICs (u. a. 74HC595 mit funktionalem /OE-Pin)
-- **Custom IC** – Kombinatorische Teilschaltung als wiederverwendbare, palettierbare Komponente kapseln (Flipflops / Latches im IC-Innern werden nicht korrekt simuliert)
+- **Custom IC** – Kombinatorische Teilschaltung als in der Palette verfügbare, wiederverwendbare Komponente kapseln (Flip-Flops / Latches im IC-Innern werden nicht korrekt simuliert)
 
 ---
 
@@ -257,7 +257,7 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
   purple = setup/hold risk, yellow = multi-driver, pink = combinational loop)
 - **TTL wire marking**: colours remain visible for 400 ms so short-lived glitches are captured
 - **Race panel** (⚠ button in toolbar, appears when races are detected):
-  list of all hazards with click-to-focus on the canvas
+  race history — up to 50 entries, with click-to-focus on affected nets
 - **Timing diagram**: one snapshot per event batch → propagation-delay staircase visible
   (e.g. 20 NOT gates in series = 20 steps)
 - **Maximum propagation delay** across all placed gates shown in the toolbar (ns)
@@ -267,7 +267,7 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | Tool | Combinatorial | Sequential / Feedback |
 |---|---|---|
 | **Truth Table** | ✅ All input combinations, intermediate values | – |
-| **State Transition Table** | – | ✅ Automatic cycle detection, single-tick Q(t) → Q(t+1) |
+| **State Transition Table** | – | ✅ With feedback loops or sequential state elements; single-tick Q(t) → Q(t+1) |
 | **Timing Diagram** | ✅ | ✅ |
 | **Race Condition Panel** | – | ✅ Gate-Delay mode only; click-to-focus on affected nets |
 
@@ -287,7 +287,7 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 ### Finite State Machine Editor
 - Graphical FSM editor with drag-and-drop states and transitions
 - Condition expression parser for transition labels
-- **One-click synthesis** from FSM graph to logic circuit on the canvas
+- **Synthesis** from FSM graph to logic circuit on the canvas
 
 ---
 
@@ -345,7 +345,7 @@ Flags: **ZERO** = 1 when result S[3:0] = 0. Right-click any ALU4 instance → **
 
 ### Integrated Circuits
 - 74xx series ICs (including 74HC595 with functional /OE pin)
-- **Custom IC** – encapsulate a combinational sub-circuit as a reusable, paletteable component (flip-flops / latches inside a Custom IC are not correctly simulated)
+- **Custom IC** – encapsulate a combinational sub-circuit as a reusable palette component (flip-flops / latches inside a Custom IC are not correctly simulated)
 
 ---
 
