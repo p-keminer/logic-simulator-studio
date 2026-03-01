@@ -65,7 +65,21 @@ interface RaceMark {
 export function loadSavedCircuit(): Circuit | null {
   try {
     const s = sessionStorage.getItem(AUTOSAVE_KEY);
-    return s ? (JSON.parse(s) as Circuit) : null;
+    if (!s) return null;
+    const raw = JSON.parse(s) as Circuit;
+    // Apply field migration (same as deserializeCircuit) without gate-type
+    // validation — Custom ICs may not be registered yet at call time.
+    const defaultSignal = { value: 0 as const, version: 0, lastChangedAt: 0 };
+    for (const gate of Object.values(raw.gates ?? {})) {
+      gate.isSelected = false;
+      gate.outputSignals ??= {};
+    }
+    for (const wire of Object.values(raw.wires ?? {})) {
+      wire.isSelected = false;
+      wire.signal ??= { ...defaultSignal };
+    }
+    raw.viewport ??= { panX: 0, panY: 0, zoom: 1 };
+    return raw;
   } catch { return null; }
 }
 

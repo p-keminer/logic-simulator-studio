@@ -92,7 +92,7 @@ Die `dist/`-Ausgabe kann auf jedem statischen Webserver gehostet werden – kein
 
 Den Browser-Tab schließen oder `Ctrl + C` im Terminal.
 
-> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `localStorage` gespeichert und beim nächsten Öffnen wiederhergestellt.
+> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `sessionStorage` gespeichert und beim erneuten Laden innerhalb derselben Browser-Sitzung wiederhergestellt. Für dauerhafte Sicherung → manuell als JSON speichern.
 
 ---
 
@@ -360,8 +360,12 @@ damit kurzlebige Glitches lesbar bleiben.
 
 ## 12. Custom IC
 
+> **Einschränkung:** Custom ICs werden bei jedem Simulations-Tick neu evaluiert,
+> ohne internen Zustand zu persistieren. Nur **kombinatorische** Teilschaltungen
+> (keine Flipflops, Latches oder Rückkopplungsschleifen) werden korrekt simuliert.
+
 ### Custom IC erstellen
-1. Teilschaltung mit Eingabe-Schaltern und Ausgangs-LEDs aufbauen.
+1. Kombinatorische Teilschaltung mit Eingabe-Schaltern und Ausgangs-LEDs aufbauen.
 2. Alle Gatter selektieren (Lasso).
 3. Toolbar → **„Custom IC erstellen"** → Name vergeben.
 
@@ -381,7 +385,7 @@ damit kurzlebige Glitches lesbar bleiben.
 ## 14. Speichern & Laden
 
 ### Auto-Save
-Automatisch nach jeder Änderung im `localStorage`. Beim nächsten Öffnen wiederhergestellt.
+Automatisch nach jeder Änderung im `sessionStorage` gespeichert. Wird beim erneuten Laden der Seite in derselben Browser-Sitzung wiederhergestellt — **nicht** nach einem Browser-Neustart. Für dauerhafte Speicherung → JSON-Datei manuell speichern.
 
 ### Manuelles Speichern
 Toolbar → **„Speichern"** (💾) → `.json`-Datei wird heruntergeladen.
@@ -585,7 +589,7 @@ The `dist/` output can be hosted on any static web server (GitHub Pages, Netlify
 
 Close the browser tab or press `Ctrl + C` in the terminal.
 
-> **Auto-Save:** The current circuit is automatically saved to the browser's `localStorage` and restored on the next visit.
+> **Auto-Save:** The current circuit is automatically saved to `sessionStorage` and restored when the page is reloaded within the same browser session. For persistent storage, use **manual save** as JSON.
 
 ---
 
@@ -852,8 +856,12 @@ so short-lived glitches remain readable.
 
 ## 12. Custom IC
 
+> **Limitation:** Custom ICs are re-evaluated from scratch on every simulation tick
+> without persisting internal state. Only **combinational** sub-circuits
+> (no flip-flops, latches, or feedback loops) are simulated correctly.
+
 ### Creating a Custom IC
-1. Build the sub-circuit with input switches and output LEDs as I/O pins.
+1. Build a combinational sub-circuit with input switches and output LEDs as I/O pins.
 2. Select all gates (lasso).
 3. Toolbar → **"Create Custom IC"** → assign a name.
 4. The new gate appears in the palette under **"ICs"**.
@@ -874,7 +882,7 @@ so short-lived glitches remain readable.
 ## 14. Save & Load
 
 ### Auto-save
-Automatically saved to `localStorage` after every change. Restored on next page open.
+Automatically saved to `sessionStorage` after every change. Restored when the page is reloaded in the same browser session — **not** after a browser restart. For persistent storage, manually save as JSON.
 
 ### Manual save
 Toolbar → **"Save"** (💾) → downloads a `.json` file.

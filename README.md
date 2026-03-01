@@ -38,7 +38,7 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 - **Gate-Beschriftungen**, **Textannotationen** und **Verbindungspunkte**
 - **Rechtsklick-Kontextmenüs** für Gatter (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) und Kabel
 - **Rechtsklick auf leeren Canvas** → Einfügen an Mausposition (wenn Zwischenablage gefüllt)
-- **Automatisches Speichern** in `localStorage` und **manuelles Speichern / Laden** als JSON
+- **Automatisches Speichern** in `sessionStorage` (aktuelle Browser-Sitzung) und **manuelles Speichern / Laden** als JSON
 
 ### Simulations-Engine
 
@@ -149,7 +149,7 @@ Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Code
 
 ### Integrierte Schaltkreise
 - 74xx-Serien-ICs (u. a. 74HC595 mit funktionalem /OE-Pin)
-- **Custom IC** – Beliebige Teilschaltung als wiederverwendbare, palettierbare Komponente kapseln
+- **Custom IC** – Kombinatorische Teilschaltung als wiederverwendbare, palettierbare Komponente kapseln (Flipflops / Latches im IC-Innern werden nicht korrekt simuliert)
 
 ---
 
@@ -234,7 +234,7 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 - **Gate labels**, **text annotations** and **junction** dots
 - **Right-click context menus** per gate (copy, rotate, label, colour, delete, …) and wire
 - **Canvas right-click** → paste at cursor when clipboard is non-empty
-- **Auto-save** to `localStorage` and **manual save / load** as JSON
+- **Auto-save** to `sessionStorage` (current browser session) and **manual save / load** as JSON
 
 ### Simulation Engine
 
@@ -345,7 +345,7 @@ Flags: **ZERO** = 1 when result S[3:0] = 0. Right-click any ALU4 instance → **
 
 ### Integrated Circuits
 - 74xx series ICs (including 74HC595 with functional /OE pin)
-- **Custom IC** – encapsulate any sub-circuit as a reusable, paletteable component
+- **Custom IC** – encapsulate a combinational sub-circuit as a reusable, paletteable component (flip-flops / latches inside a Custom IC are not correctly simulated)
 
 ---
 
