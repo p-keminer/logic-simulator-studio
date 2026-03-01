@@ -418,9 +418,9 @@ Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
 | `Shift` + Pfeiltasten | Verschieben mit 5× Schritt |
 | `Strg+C` | Ausgewählte Gatter kopieren (inkl. interner Kabel) |
 | `Strg+V` | Zwischenablage einfügen (+24 px versetzt) |
-| `Escape` | Kabelzeichnen abbrechen · Auswahl aufheben · Menüs schließen |
+| `Escape` | Kabelzeichnen abbrechen · Menüs schließen |
 | `R` | Ausgewählte Gatter um 90° drehen |
-| `W` | Kabel-Modus ein/aus (Crosshair-Cursor) |
+| `W` | Verdrahtungsmodus ein/aus (Fadenkreuz-Cursor) |
 | `X` | Snap-to-Port-Modus ein/aus (gelber Rahmen) |
 | `Mausrad` | Canvas zoomen |
 | `Alt` + Linksklick-Ziehen | Canvas verschieben (Pan) |
@@ -442,7 +442,7 @@ Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
 **Lösung:** Kabel anklicken – ist es selektierbar, ist es korrekt verbunden. Andernfalls neu ziehen.
 
 ### Rückkopplungsschaltung zeigt keine Schwingung
-**Ursache:** Geradzahlige Schleifen werden durch den Even-Period-Fix stabilisiert.
+**Ursache:** Geradzahlige Rückkopplungsschleifen werden durch Phasenkompensation stabilisiert; die Ausgänge wechseln intern, sind aber im Canvas bei 500 Ticks/s nicht immer sichtbar.
 **Lösung:** Timing-Diagramm öffnen – die Schwingung ist dort als alternierende 0/1-Werte sichtbar.
 
 ### Zustandsübergangstabelle zeigt Q(t+1) = Q(t) für alle Zeilen
@@ -482,7 +482,7 @@ Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
 | Op2 | Op1 | Op0 | Operation | Formel | COUT |
 |---|---|---|---|---|---|
 | 0 | 0 | 0 | **ADD** | S = A + B + CIN | Übertrag Bit 4 |
-| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borge-Bit |
+| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borge-Ausgang |
 | 0 | 1 | 0 | **AND** | S = A & B | 0 |
 | 0 | 1 | 1 | **OR** | S = A \| B | 0 |
 | 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
@@ -915,7 +915,7 @@ Open via **Toolbar → "Export"**.
 | `Shift` + arrow keys | Move selected gates by 5× grid step |
 | `Ctrl+C` | Copy selected gates (and internal wires) |
 | `Ctrl+V` | Paste clipboard (+24 px offset) |
-| `Escape` | Cancel wire drawing · clear selection · close menus |
+| `Escape` | Cancel wire drawing · close menus |
 | `R` | Rotate selected gate(s) by 90° |
 | `W` | Toggle wire-draw mode (crosshair cursor) |
 | `X` | Toggle snap-to-port mode (yellow outline) |

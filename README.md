@@ -44,12 +44,12 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 
 Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
-#### ZERO_DELAY (Vorgabe)
+#### Zero-Delay-Modus (Vorgabe)
 - **Tick-basierte Discrete-Event-Simulation** mit Double-Buffering (Lese-Buffer → Logik → Schreib-Buffer)
 - **500 Ticks / Sekunde** – Signale bleiben visuell verfolgbar
 - **Vollständige Rückkopplungsunterstützung**: SR-Latches, Ringoszillatoren und alle anderen zyklischen Topologien funktionieren korrekt – keine Sonderfälle erforderlich
-- Geradzahliger Oszillator-Ausgleich: jeder Frame sendet einen phasenverschobenen Zustand, damit Ringoszillatoren sichtbar bleiben
-- **Taktgatter** durch deterministische Tick-Zähler gesteuert (kein `setInterval`-Drift)
+- Phasenkompensation bei geradzahligen Ringoszillatoren: jeder Frame sendet einen phasenverschobenen Zustand, damit Oszillatoren nicht einfrieren
+- **Taktgeneratoren** durch deterministische Tick-Zähler gesteuert (kein `setInterval`-Drift)
 - **Manuelles Takt-Stepping** (Pause / Einzelschritt-Modus)
 - **Stabilisierungsphase** nach Strukturänderungen mit eingefrorenen Takten
 
@@ -91,7 +91,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 ### Endlicher Automat (FSM) Editor
 - Grafischer FSM-Editor mit Drag-and-Drop-Zuständen und Übergängen
 - Bedingungsausdruck-Parser für Übergangsbeschriftungen
-- **Ein-Klick-Synthese** vom FSM-Graphen zur Logikschaltung auf dem Canvas
+- **Direkte Synthese** vom FSM-Graphen zur Logikschaltung auf dem Canvas
 
 ---
 
@@ -114,7 +114,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | Op2 | Op1 | Op0 | Operation | Ergebnis | COUT |
 |---|---|---|---|---|---|
 | 0 | 0 | 0 | **ADD** | A + B + CIN | Übertrag Bit 4 |
-| 0 | 0 | 1 | **SUB** | A − B − CIN | Borge-Bit |
+| 0 | 0 | 1 | **SUB** | A − B − CIN | Borge-Ausgang |
 | 0 | 1 | 0 | **AND** | A & B | 0 |
 | 0 | 1 | 1 | **OR** | A \| B | 0 |
 | 1 | 0 | 0 | **XOR** | A ^ B | 0 |
@@ -176,7 +176,7 @@ npm run dev
 | Styling | Tailwind CSS 4 |
 | Linting | ESLint 9 + typescript-eslint |
 | Zustandsverwaltung | React Context + useReducer |
-| Persistenz | localStorage (Auto-Save) + JSON-Export |
+| Persistenz | sessionStorage (Auto-Save, sitzungsgebunden) + JSON-Export |
 
 Kein Backend, keine externen Dienste – alles läuft clientseitig.
 
@@ -192,7 +192,7 @@ Kein Backend, keine externen Dienste – alles läuft clientseitig.
 | `Strg+V` | Zwischenablage einfügen (+24 px versetzt) |
 | `Escape` | Kabelzeichnen abbrechen / Menüs schließen |
 | `R` | Ausgewählte Gatter drehen |
-| `W` | Kabel-Modus ein/aus |
+| `W` | Verdrahtungsmodus ein/aus |
 | `X` | Snap-to-Port-Modus ein/aus (gelber Rahmen) |
 | Mausrad | Canvas zoomen |
 | `Alt` + Ziehen | Viewport verschieben (Pan) |
@@ -240,12 +240,12 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
-#### ZERO_DELAY (default)
+#### Zero-Delay Mode (default)
 - **Tick-based discrete-event simulation** with double-buffering (Read-Buffer → Logic → Write-Buffer)
 - **500 ticks / second** – signals remain visually trackable
 - **Full feedback-loop support**: SR latches, ring oscillators, and every other cyclic topology work correctly
-- Even-period oscillator compensation keeps ring oscillators visible
-- **Clock gates** driven by deterministic tick counters (no `setInterval` drift)
+- Phase compensation for even-period ring oscillators keeps oscillators from freezing
+- **Clock generators** driven by deterministic tick counters (no `setInterval` drift)
 - **Manual clock stepping** (pause / single-step mode)
 - **Settle phase** after structural changes with clocks frozen
 
@@ -372,7 +372,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | Styling | Tailwind CSS 4 |
 | Linting | ESLint 9 + typescript-eslint |
 | State management | React Context + useReducer |
-| Persistence | localStorage (auto-save) + JSON export |
+| Persistence | sessionStorage (auto-save, session-scoped) + JSON export |
 
 No backend, no external services – everything runs client-side.
 
