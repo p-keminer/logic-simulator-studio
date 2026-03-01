@@ -141,6 +141,9 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   const raceMarkDirtyRef = useRef(false);
   // Ref to last known mode so we can detect mode switches and re-seed.
   const prevModeRef      = useRef<SimulationMode>(SimulationMode.ZERO_DELAY);
+  /** Tracks last-seen gate / wire key strings to distinguish structural vs switch-only settles. */
+  const prevGateKeysRef  = useRef('');
+  const prevWireKeysRef  = useRef('');
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
 
@@ -243,14 +246,53 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       // Im GATE_DELAY-Modus dient dies als Ausgangs-Seed für den Scheduler.
       if (needsSettleRef.current) {
         needsSettleRef.current = false;
+
+        // Determine whether this settle was triggered by a structural change
+        // (gate / wire added or removed) or by a user switch-only toggle.
+        // Only switch-only settles in GATE_DELAY mode use a special re-seed path.
+        const currentGateKeys = Object.keys(c.gates).sort().join(',');
+        const currentWireKeys = Object.keys(c.wires).sort().join(',');
+        const isStructuralChange =
+          currentGateKeys !== prevGateKeysRef.current ||
+          currentWireKeys !== prevWireKeysRef.current;
+        prevGateKeysRef.current = currentGateKeys;
+        prevWireKeysRef.current = currentWireKeys;
+
+        // For switch-only changes in GATE_DELAY mode: capture the scheduler's
+        // current committed state BEFORE runUntilStable propagates the change
+        // instantly.  After settle we re-seed from this snapshot while injecting
+        // the new switch customStates, so seed() detects the output transition
+        // and schedules a proper timed propagation event.
+        let preSettleBuf: SimBuffer | null = null;
+        let switchGateIds: ReadonlySet<string> | undefined;
+        if (
+          !isStructuralChange &&
+          schedulerRef.current !== null &&
+          simulationModeRef.current === SimulationMode.GATE_DELAY
+        ) {
+          preSettleBuf = schedulerRef.current.buildBuffer();
+          switchGateIds = new Set(
+            Object.values(c.gates)
+              .filter(g => g.typeId === 'INPUT_SWITCH' || g.typeId === 'PUSH_BTN')
+              .map(g => g.id),
+          );
+        }
+
         const result = runUntilStable(c, buf, wireMapRef.current);
         if (result.changed) anyChanged = true;
         buf = result.buffer;
 
-        // Re-seed the GATE_DELAY scheduler after every settle so it starts from a
-        // consistent state (settled combinatorial outputs, fresh customStates).
+        // Re-seed the GATE_DELAY scheduler.
         if (schedulerRef.current) {
-          schedulerRef.current.seed(buf, c, wireMapRef.current);
+          if (preSettleBuf && switchGateIds) {
+            // Switch-only: seed from pre-settle snapshot + live switch customStates.
+            // seed() detects that the switch output changed (old committed vs new cs)
+            // and enqueues a timed event → downstream chain propagates with delays.
+            schedulerRef.current.seed(preSettleBuf, c, wireMapRef.current, switchGateIds);
+          } else {
+            // Structural change or first settle: seed from fully-settled buffer.
+            schedulerRef.current.seed(buf, c, wireMapRef.current);
+          }
         }
       }
 
@@ -356,9 +398,9 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         //    so a 20-NOT chain shows a 20-step staircase.
         const newSnaps: TimingSnapshot[] = [];
         const onBatchCommit = (
-          batchTime:         number,
-          batchRaces:        RaceInfo[],
-          _batchChangedNets: ReadonlySet<string>,
+          batchTime:        number,
+          batchRaces:       RaceInfo[],
+          batchChangedNets: ReadonlySet<string>,
         ) => {
           // A) TTL marking for per-batch races (critical / warning / timing).
           if (batchRaces.length > 0) {
@@ -374,6 +416,14 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           }
 
           // B) Timing-diagram snapshot.
+          // Skip batches where nothing actually committed a new value.  This
+          // prevents spurious flat steps caused by the redundant Step-1
+          // re-evaluations of INPUT_SWITCH / PUSH_BTN gates that the scheduler
+          // generates after a switch-only seed: those events arrive after the
+          // first real transition has already committed the new output, so their
+          // committed value equals the final value → no downstream change.
+          if (batchChangedNets.size === 0) return;
+
           sampleCounterRef.current++;
           if (sampleCounterRef.current < GATE_DELAY_SAMPLE_EVERY) return;
           sampleCounterRef.current = 0;

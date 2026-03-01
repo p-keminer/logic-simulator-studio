@@ -99,10 +99,35 @@ export class EventScheduler {
    * Seed the scheduler from a settled SimBuffer.
    * Clears the queue and schedules initial evaluations for all gates at currentTime.
    */
-  seed(buffer: SimBuffer, circuit: Circuit, wireMap: WireMap): void {
+  seed(
+    buffer: SimBuffer,
+    circuit: Circuit,
+    wireMap: WireMap,
+    /**
+     * Optional set of gate IDs whose live `gate.customState` should override the
+     * buffer's committed custom states before the initial gate evaluation pass.
+     *
+     * Used for switch-only settles in GATE_DELAY mode: the caller passes the
+     * pre-settle scheduler snapshot (with old committed outputs) and specifies
+     * which INPUT_SWITCH / PUSH_BTN gates changed.  _evaluateGate() then detects
+     * that the switch output differs from the committed output and schedules a
+     * timed propagation event — producing the correct timing-diagram staircase
+     * instead of an instant jump.
+     */
+    liveCustomStateFor?: ReadonlySet<string>,
+  ): void {
     this.currentTime = buffer.tick;
     this.committedOutputs = this._deepCopyOutputs(buffer.outputs);
     this.committedCustomStates = this._deepCopyCustomStates(buffer.customStates);
+
+    if (liveCustomStateFor) {
+      for (const gate of Object.values(circuit.gates)) {
+        if (liveCustomStateFor.has(gate.id) && gate.customState) {
+          this.committedCustomStates[gate.id] = { ...gate.customState };
+        }
+      }
+    }
+
     this.queue = [];
     this.scheduled.clear();
 
