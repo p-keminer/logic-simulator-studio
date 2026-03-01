@@ -132,6 +132,15 @@ export class EventScheduler {
     wireMap: WireMap,
     fanoutMap: FanoutMap,
     isClockPaused: boolean,
+    /**
+     * Optional callback invoked after every event-batch commits.
+     * Called with the batch's simulation time.  Used by CircuitContext to
+     * capture per-event-batch timing-diagram snapshots so individual gate
+     * propagation delays become visible in the diagram.
+     * The glitch-detection window (netToggleCount) is NOT affected — it
+     * still spans the full advance() call from currentTime → targetTime.
+     */
+    onTickCommit?: (batchTime: number) => void,
   ): RaceInfo[] {
     const races: RaceInfo[] = [];
 
@@ -318,6 +327,11 @@ export class EventScheduler {
       }
 
       this.currentTime = batchTime;
+      // Notify caller that this batch has been committed — used for per-batch
+      // timing-diagram snapshots.  Called synchronously inside the while loop
+      // so scheduler.buildBuffer() inside the callback reflects this batch's
+      // committed state exactly.
+      onTickCommit?.(batchTime);
     }
 
     // ── TASK 2 (post-loop): Emit glitch races for multi-toggle nets ───────

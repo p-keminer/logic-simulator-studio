@@ -28,6 +28,19 @@ const AUTOSAVE_KEY = 'lgsim_autosave';
  *   → Bei STEP_W=3px: 30px/Halbwelle, 60px/Periode → ~11 Zyklen auf 700px ✓
  */
 const SAMPLE_EVERY = 25;
+/**
+ * In GATE_DELAY mode, take one timing-diagram snapshot per N event-batches
+ * committed by advance().  Value 1 = maximum resolution: every event-batch
+ * (i.e. every distinct simulation-time at which at least one net changes)
+ * produces one diagram step.  This makes single-gate propagation delays
+ * visible — a 20-NOT chain shows a 20-step staircase instead of a single
+ * synchronous edge.
+ *
+ * Unlike SAMPLE_EVERY (which counts ticks), GATE_DELAY_SAMPLE_EVERY counts
+ * event-batch commits.  Glitch detection is unaffected: netToggleCount still
+ * accumulates over the full advance() window (currentTime → targetTime).
+ */
+const GATE_DELAY_SAMPLE_EVERY = 1;
 
 export function loadSavedCircuit(): Circuit | null {
   try {
@@ -302,12 +315,43 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         const scheduler = schedulerRef.current;
         const targetTime = scheduler.time + ticksToRun;
 
+        // ── Per-event-batch timing snapshots ──────────────────────────────
+        // The callback fires synchronously after each event-batch commits inside
+        // advance().  scheduler.buildBuffer() at that point is a snapshot of the
+        // circuit state at that exact batch time — one step per gate-level change.
+        // This makes propagation delays visible: a 20-NOT chain shows 20 distinct
+        // diagram steps instead of a single synchronous edge.
+        //
+        // Glitch detection (netToggleCount) is unaffected — it still accumulates
+        // across the full advance() window (currentTime → targetTime).
+        const newSnaps: TimingSnapshot[] = [];
+        const captureSnap = (batchTime: number) => {
+          sampleCounterRef.current++;
+          if (sampleCounterRef.current < GATE_DELAY_SAMPLE_EVERY) return;
+          sampleCounterRef.current = 0;
+          // Deep-copy is inside buildBuffer() — safe to call from this callback.
+          const s = scheduler.buildBuffer();
+          const step = ++stepRef.current;
+          const wireValues: Record<string, SignalValue> = {};
+          for (const wire of Object.values(c.wires)) {
+            wireValues[wire.id] = (s.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
+          }
+          const gateValues: Record<string, SignalValue> = {};
+          for (const [gId, ports] of Object.entries(s.outputs)) {
+            for (const [pId, val] of Object.entries(ports)) {
+              gateValues[`${gId}:${pId}`] = val;
+            }
+          }
+          newSnaps.push({ step, tick: batchTime, wireValues, gateValues });
+        };
+
         const detectedRaces = scheduler.advance(
           targetTime,
           c,
           wireMapRef.current,
           fanoutMapRef.current,
           isClockPausedRef.current,
+          captureSnap,
         );
 
         const newBuf = scheduler.buildBuffer();
@@ -354,24 +398,11 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           });
         }
 
-        // Sample timing snapshots (GATE_DELAY: one snapshot per ticksToRun batch)
-        sampleCounterRef.current += ticksToRun;
-        if (sampleCounterRef.current >= SAMPLE_EVERY) {
-          sampleCounterRef.current = 0;
-          const step = ++stepRef.current;
-          const tick = newBuf.tick;
-          const wireValues: Record<string, SignalValue> = {};
-          for (const wire of Object.values(c.wires)) {
-            wireValues[wire.id] = (newBuf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
-          }
-          const gateValues: Record<string, SignalValue> = {};
-          for (const [gId, ports] of Object.entries(newBuf.outputs)) {
-            for (const [pId, val] of Object.entries(ports)) {
-              gateValues[`${gId}:${pId}`] = val;
-            }
-          }
+        // ── Timing history ───────────────────────────────────────────────
+        // Snapshots were collected per-event-batch via captureSnap above.
+        if (newSnaps.length > 0) {
           setTimingHistory(prev => {
-            const next = [...prev, { step, tick, wireValues, gateValues }];
+            const next = [...prev, ...newSnaps];
             return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
           });
         }
