@@ -41,7 +41,6 @@ Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
 - **Race-Condition-Erkennung** 
 - **TTL-Leitungsmarkierung**
 - **Race-Panel**
-- **Timing-Diagramm**
 
 ### Analyse-Werkzeuge
 
@@ -213,7 +212,6 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 - **Race condition detection** 
 - **TTL wire marking**
 - **Race panel** 
-- **Timing diagram**
 
 ### Analysis Tools
 
