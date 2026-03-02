@@ -33,9 +33,7 @@ Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### Zero-Delay-Modus (Vorgabe)
 - **Tick-basierte Discrete-Event-Simulation**
-- **500 Ticks / Sekunde**
 - **Vollständige Rückkopplungsunterstützung**
-- **Taktgeneratoren** 
 - **Manuelles Takt-Stepping**
 
 #### Gate-Delay-Modus
@@ -44,7 +42,6 @@ Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
 - **TTL-Leitungsmarkierung**
 - **Race-Panel**
 - **Timing-Diagramm**
-- **Maximale Propagationsverzögerung**
 
 ### Analyse-Werkzeuge
 
@@ -208,10 +205,8 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### Zero-Delay Mode (default)
 - **Tick-based discrete-event simulation** 
-- **Full feedback-loop support**
-- **Clock generators** 
+- **Full feedback-loop support** 
 - **Manual clock stepping** 
-- **Settle phase** 
 
 #### Gate-Delay Mode
 - **Discrete-event scheduler**
@@ -219,7 +214,6 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 - **TTL wire marking**
 - **Race panel** 
 - **Timing diagram**
-- **Maximum propagation delay**
 
 ### Analysis Tools
 
