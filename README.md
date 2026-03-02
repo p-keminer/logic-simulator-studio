@@ -11,7 +11,6 @@
 # LogicSim – Browser-basierter Logikgatter-Simulator
 
 Ein vollständiger, interaktiver Logikschaltkreis-Simulator, gebaut mit React, TypeScript und Vite.
-Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheitstabellen und Zustandsübergangstabellen und exportiere nach Verilog / VHDL – alles im Browser, ohne Installation.
 
 > 📖 **Vollständige Bedienungsanleitung:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
 
@@ -23,48 +22,28 @@ Entwirf Schaltungen, simuliere Rückkopplungsschleifen, analysiere mit Wahrheits
 
 ---
 ### Status: Stabil (März 2026)
-**Gate-Delay-Modus** vollständig implementiert und gehärtet: zuverlässige Race-Condition-Erkennung mit 5 Schweregradklassen, TTL-Leitungsmarkierung, Timing-Diagramm-Integration und INPUT_SWITCH-Fix.
+**Gate-Delay-Modus** vollständig implementiert und gehärtet: zuverlässige Race-Condition-Erkennung mit 5 Schweregradklassen, TTL-Leitungsmarkierung und Timing-Diagramm-Integration.
 
 ---
 
 ## Funktionen
 
-### Schaltkreis-Editor
-- **Drag & Drop** – Gatter aus einer kategorisierten, durchsuchbaren Palette ziehen und platzieren
-- **Kabelzeichnen** – Zwischen Ausgangs- und Eingangsports mit mehrsegmentiger Führung und manuellen Wegpunkten
-- **Zoom** (Mausrad) und **Pan** (Alt + Ziehen) auf einem unendlichen Canvas
-- **Lasso-Selektion**, Pfeiltasten-Bewegung, Mehrfachauswahl **kopieren / einfügen** (Strg+C / Strg+V)
-- **Rasterausrichtung** für saubere Layouts
-- **Gate-Beschriftungen**, **Textannotationen** und **Verbindungspunkte**
-- **Rechtsklick-Kontextmenüs** für Gatter (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) und Kabel
-- **Rechtsklick auf leeren Canvas** → Einfügen an Mausposition (wenn Zwischenablage gefüllt)
-- **Automatisches Speichern** in `sessionStorage` (aktuelle Browser-Sitzung) und **manuelles Speichern / Laden** als JSON
-
-### Simulations-Engine
-
-Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
+ **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### Zero-Delay-Modus (Vorgabe)
-- **Tick-basierte Discrete-Event-Simulation** mit Double-Buffering (Lese-Buffer → Logik → Schreib-Buffer)
-- **500 Ticks / Sekunde** – Signale bleiben visuell verfolgbar
-- **Vollständige Rückkopplungsunterstützung**: SR-Latches, Ringoszillatoren und alle anderen zyklischen Topologien funktionieren korrekt – keine Sonderfälle erforderlich
-- Phasenkompensation bei geradzahligen Ringoszillatoren: jeder Frame sendet einen phasenverschobenen Zustand, damit Oszillatoren nicht einfrieren
-- **Taktgeneratoren** durch deterministische Tick-Zähler gesteuert (kein `setInterval`-Drift)
-- **Manuelles Takt-Stepping** (Pause / Einzelschritt-Modus)
-- **Stabilisierungsphase** nach Strukturänderungen mit eingefrorenen Takten
+- **Tick-basierte Discrete-Event-Simulation**
+- **500 Ticks / Sekunde**
+- **Vollständige Rückkopplungsunterstützung**
+- **Taktgeneratoren** 
+- **Manuelles Takt-Stepping**
 
 #### Gate-Delay-Modus
-- **Discrete-Event-Scheduler**: Gatterausgaben werden erst nach `propagationDelay`-Ticks eingetragen —
-  Glitches und Race Conditions werden zeitlich korrekt sichtbar
-- **Race-Condition-Erkennung** mit 5 Schweregradklassen: erkannte Hazards werden protokolliert;
-  betroffene Leitungen farblich markiert (rot = Wertekonflikt, orange = Glitch,
-  lila = Setup/Hold-Risiko, gelb = Mehrtreiber, pink = kombinatorische Schleife)
-- **TTL-Leitungsmarkierung**: Farben bleiben 400 ms sichtbar, damit kurzlebige Glitches erfasst werden
-- **Race-Panel** (⚠-Button in der Toolbar, erscheint bei erkannten Races):
-  Race-Historie — bis zu 50 Einträge, mit Klick-to-Focus auf betroffene Netze
-- **Timing-Diagramm**: ein Snapshot pro Ereignis-Batch → Propagationsverzögerungs-Treppe sichtbar
-  (z. B. 20 NOT-Gatter in Reihe = 20 Stufen)
-- **Maximale Propagationsverzögerung** aller platzierten Gatter in der Toolbar (ns)
+- **Discrete-Event-Scheduler**
+- **Race-Condition-Erkennung** 
+- **TTL-Leitungsmarkierung**
+- **Race-Panel**
+- **Timing-Diagramm**
+- **Maximale Propagationsverzögerung**
 
 ### Analyse-Werkzeuge
 
@@ -84,7 +63,7 @@ Zwei umschaltbare Modi (Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 **HDL-Export (industrietauglich):**
 - **Zentrales Identifier-Sanitizing**: Alle Gate-Namen werden IEEE-konform bereinigt (Sonderzeichen, Keyword-Kollisionen, führende Ziffern)
-- **Nicht verbundene Pins** werden zu expliziten Modulports mit `nc_`-Präfix statt zu Silent-Konstanten – Kollisionsschutz bei mehreren offenen Pins gleichen Namens (`nc_LD`, `nc_LD_2`, …)
+- **Nicht verbundene Pins** werden zu expliziten Modulports mit `nc_`-Präfix 
 - **3-Pass-Architektur** (Verilog): korrekte `output reg` / `output wire`-Typisierung für alle Gates
 - **Vollständige toVerilog/toVHDL-Emitter** für: MUX2, MUX4, Schmitt-Trigger, ALU4 (explizites Bit-Mapping), CMP1, CMP4 (mit Cascade-Eingängen im `else`-Zweig)
 
@@ -149,7 +128,7 @@ Flag **ZERO** = 1 wenn S[3:0] = 0. Rechtsklick auf ALU4 → **❓ Hilfe (Op-Code
 
 ### Integrierte Schaltkreise
 - 74xx-Serien-ICs (u. a. 74HC595 mit funktionalem /OE-Pin)
-- **Custom IC** – Kombinatorische Teilschaltung als in der Palette verfügbare, wiederverwendbare Komponente kapseln (Flip-Flops / Latches im IC-Innern werden nicht korrekt simuliert)
+- **Custom IC** – Kombinatorische Teilschaltung als in der Palette verfügbare, wiederverwendbare Komponente kapseln
 
 ---
 
@@ -217,7 +196,6 @@ Kein Backend, keine externen Dienste – alles läuft clientseitig.
 # LogicSim – Browser-based Logic Gate Simulator
 
 A fully featured, interactive logic circuit simulator built with React, TypeScript and Vite.
-Design circuits, simulate feedback loops, analyse with truth tables and state-transition tables, and export to Verilog / VHDL – all in the browser, no installation required.
 
 > 📖 **Full user manual:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
 
@@ -225,42 +203,22 @@ Design circuits, simulate feedback loops, analyse with truth tables and state-tr
 
 ## Features
 
-### Circuit Editor
-- **Drag & drop** gate placement from a categorised, searchable palette
-- **Wire drawing** between output and input ports with multi-segment routing and manual waypoints
-- **Zoom** (mouse wheel) and **pan** (Alt + drag) on an infinite canvas
-- **Lasso selection**, arrow-key movement, multi-gate **copy / paste** (Ctrl+C / Ctrl+V)
-- **Grid snapping** for clean layouts
-- **Gate labels**, **text annotations** and **junction** dots
-- **Right-click context menus** per gate (copy, rotate, label, colour, delete, …) and wire
-- **Canvas right-click** → paste at cursor when clipboard is non-empty
-- **Auto-save** to `sessionStorage` (current browser session) and **manual save / load** as JSON
-
-### Simulation Engine
-
 Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### Zero-Delay Mode (default)
-- **Tick-based discrete-event simulation** with double-buffering (Read-Buffer → Logic → Write-Buffer)
-- **500 ticks / second** – signals remain visually trackable
-- **Full feedback-loop support**: SR latches, ring oscillators, and every other cyclic topology work correctly
-- Phase compensation for even-period ring oscillators keeps oscillators from freezing
-- **Clock generators** driven by deterministic tick counters (no `setInterval` drift)
-- **Manual clock stepping** (pause / single-step mode)
-- **Settle phase** after structural changes with clocks frozen
+- **Tick-based discrete-event simulation** 
+- **Full feedback-loop support**
+- **Clock generators** 
+- **Manual clock stepping** 
+- **Settle phase** 
 
 #### Gate-Delay Mode
-- **Discrete-event scheduler**: gate outputs are committed after `propagationDelay` ticks —
-  glitches and race conditions become visible with correct timing
-- **Race condition detection** with 5 severity classes: detected hazards are logged;
-  affected wires colour-coded (red = value conflict, orange = glitch,
-  purple = setup/hold risk, yellow = multi-driver, pink = combinational loop)
-- **TTL wire marking**: colours remain visible for 400 ms so short-lived glitches are captured
-- **Race panel** (⚠ button in toolbar, appears when races are detected):
-  race history — up to 50 entries, with click-to-focus on affected nets
-- **Timing diagram**: one snapshot per event batch → propagation-delay staircase visible
-  (e.g. 20 NOT gates in series = 20 steps)
-- **Maximum propagation delay** across all placed gates shown in the toolbar (ns)
+- **Discrete-event scheduler**
+- **Race condition detection** 
+- **TTL wire marking**
+- **Race panel** 
+- **Timing diagram**
+- **Maximum propagation delay**
 
 ### Analysis Tools
 
@@ -280,12 +238,11 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 **HDL Export (industrial-grade):**
 - **Central identifier sanitizing**: all gate names are made IEEE-compliant (special characters, keyword collisions, leading digits)
-- **Unconnected pins** become explicit module ports with `nc_` prefix instead of silent constants — collision protection for multiple open pins with the same label (`nc_LD`, `nc_LD_2`, …)
+- **Unconnected pins** become explicit module ports with `nc_` prefi
 - **3-pass architecture** (Verilog): correct `output reg` / `output wire` typing for all gates
 - **Full toVerilog/toVHDL emitters** for: MUX2, MUX4, Schmitt Trigger, ALU4 (explicit bit mapping), CMP1, CMP4 (cascade inputs propagated in the `else` branch)
 
 ### Finite State Machine Editor
-- Graphical FSM editor with drag-and-drop states and transitions
 - Condition expression parser for transition labels
 - **Synthesis** from FSM graph to logic circuit on the canvas
 
