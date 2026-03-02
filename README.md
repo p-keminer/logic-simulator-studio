@@ -28,7 +28,8 @@ Ein vollständiger, interaktiver Logikschaltkreis-Simulator, gebaut mit React, T
 
 ## Funktionen
 
- **⚡ Zero-Delay** / **⏱ Gate-Delay**):
+
+Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
 
 #### Zero-Delay-Modus (Vorgabe)
 - **Tick-basierte Discrete-Event-Simulation**
