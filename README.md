@@ -55,10 +55,10 @@ Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | Format | Hinweise |
 |---|---|
 | **JSON** | Vollständiger Schaltkreis (Speichern / Laden) |
-| **Verilog** | Synthesefähiges HDL – IEEE 1364-2001-konform |
-| **VHDL** | Synthesefähiges HDL – IEEE 1076-2002-konform |
+| **Verilog** | Synthesefähiges HDL |
+| **VHDL** | Synthesefähiges HDL |
 
-**HDL-Export (industrietauglich):**
+**HDL-Export:**
 - **Zentrales Identifier-Sanitizing**: Alle Gate-Namen werden IEEE-konform bereinigt (Sonderzeichen, Keyword-Kollisionen, führende Ziffern)
 - **Nicht verbundene Pins** werden zu expliziten Modulports mit `nc_`-Präfix 
 - **3-Pass-Architektur** (Verilog): korrekte `output reg` / `output wire`-Typisierung für alle Gates
@@ -226,10 +226,10 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | Format | Notes |
 |---|---|
 | **JSON** | Full circuit round-trip (save / load) |
-| **Verilog** | Synthesisable HDL – IEEE 1364-2001 compliant |
-| **VHDL** | Synthesisable HDL – IEEE 1076-2002 compliant |
+| **Verilog** | Synthesisable HDL |
+| **VHDL** | Synthesisable HDL |
 
-**HDL Export (industrial-grade):**
+**HDL Export:**
 - **Central identifier sanitizing**: all gate names are made IEEE-compliant (special characters, keyword collisions, leading digits)
 - **Unconnected pins** become explicit module ports with `nc_` prefi
 - **3-pass architecture** (Verilog): correct `output reg` / `output wire` typing for all gates
