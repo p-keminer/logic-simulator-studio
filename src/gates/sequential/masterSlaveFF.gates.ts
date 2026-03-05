@@ -35,11 +35,12 @@ gateRegistry.register({
     const qS      = (state?.qS as 0 | 1) ?? 0;
 
     // Master tracks when CLK=1 (level-sensitive)
+    // Toggle must use qS (stable slave output), not qM — feedback comes from Q!
     let newQM = qM;
     if (clk === 1) {
       if      (j === 0 && k === 1) newQM = 0;
       else if (j === 1 && k === 0) newQM = 1;
-      else if (j === 1 && k === 1) newQM = (qM ^ 1) as 0 | 1;
+      else if (j === 1 && k === 1) newQM = (qS ^ 1) as 0 | 1;
       // j=0, k=0 → hold
     }
 
