@@ -461,21 +461,27 @@ export class EventScheduler {
         : 0;
     }
 
-    // Evaluate outputs.
-    const outputValues = def.evaluate(inputValues, cs);
+    // Evaluate outputs with OLD state (for combinational gates).
+    const outputValuesOld = def.evaluate(inputValues, cs);
 
     // Update custom state immediately (state transitions have no propagation delay).
+    let outputValues: Record<string, SignalValue>;
     if (def.stateUpdate) {
-      this.committedCustomStates[gate.id] = def.stateUpdate(
+      const newCs = def.stateUpdate(
         inputValues,
-        outputValues as Record<string, SignalValue>,
+        outputValuesOld as Record<string, SignalValue>,
         cs,
       );
+      this.committedCustomStates[gate.id] = newCs;
+      // For stateful elements, re-evaluate outputs with NEW state.
+      // This ensures FF outputs reflect state changes (e.g., Q changes on clock edge).
+      outputValues = def.evaluate(inputValues, newCs);
     } else {
       // Preserve existing custom state for non-stateful gates.
       if (!this.committedCustomStates[gate.id]) {
         this.committedCustomStates[gate.id] = { ...cs };
       }
+      outputValues = outputValuesOld;
     }
 
     // Schedule events for outputs that differ from the currently committed value.
