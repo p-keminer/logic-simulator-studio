@@ -52,10 +52,19 @@ export function FsmStateTable() {
     [overlapWarnings],
   );
 
+  // Pre-parse all transition conditions once per FSM change (V3-L5)
+  const parsedConditions = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof parseCondition>>();
+    for (const t of transitions) {
+      map.set(t.id, parseCondition(t.conditionText));
+    }
+    return map;
+  }, [transitions]);
+
   const findNext = (stateId: string, vals: Record<string, boolean>) => {
     for (const t of transitions.filter(t => t.fromId === stateId)) {
-      const { ast, error } = parseCondition(t.conditionText);
-      if (!error && ast && evalCondition(ast, vals))
+      const cached = parsedConditions.get(t.id);
+      if (cached && !cached.error && cached.ast && evalCondition(cached.ast, vals))
         return { ns: states[t.toId] ?? null, mealyOut: t.mealyOutput };
     }
     return { ns: null, mealyOut: null };

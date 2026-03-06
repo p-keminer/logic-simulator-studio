@@ -290,15 +290,23 @@ function defaultGateVHDL(gate: GateInstance, byPort: Record<string, string>): st
   const outs = def.outputs.map((p) => byPort[`${gate.id}:${p.id}`] ?? `w_${sanitize(gate.id)}_${p.id}`);
   const ins  = def.inputs.map((p)  => byPort[`${gate.id}:${p.id}`] ?? `'0'`);
 
-  if (!prim) {
-    return `-- ERROR: HDL export not implemented for ${gate.typeId} (${gate.id}) — add toVHDL() to gate definition`;
-  }
-
   if (gate.typeId === 'NOT') {
     return `${outs[0]} <= not ${ins[0]}; -- ${gate.id}`;
   }
   if (gate.typeId === 'BUFFER') {
     return `${outs[0]} <= ${ins[0]}; -- BUFFER ${gate.id}`;
+  }
+
+  if (!prim) {
+    return `-- ERROR: HDL export not implemented for ${gate.typeId} (${gate.id}) — add toVHDL() to gate definition`;
+  }
+
+  // NAND/NOR cannot be chained in IEEE 1076; decompose into not(and/or ...).
+  if (gate.typeId === 'NAND3' || gate.typeId === 'NAND4') {
+    return `${outs[0]} <= not (${ins.join(' and ')}); -- ${gate.id}`;
+  }
+  if (gate.typeId === 'NOR3' || gate.typeId === 'NOR4') {
+    return `${outs[0]} <= not (${ins.join(' or ')}); -- ${gate.id}`;
   }
 
   return `${outs[0]} <= ${ins.join(` ${prim} `)}; -- ${gate.id}`;

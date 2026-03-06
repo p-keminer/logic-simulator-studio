@@ -303,11 +303,20 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
       const lw = worldP.x - ia.originX;
       const lh = worldP.y - ia.originY;
       if (Math.abs(lw) > 5 || Math.abs(lh) > 5) {
-        const newSel = new Set<string>();
+        const lassoIds = new Set<string>();
         Object.values(fsmRef.current.states).forEach(s => {
-          if (lassoHits(ia.originX, ia.originY, lw, lh, s.x, s.y)) newSel.add(s.id);
+          if (lassoHits(ia.originX, ia.originY, lw, lh, s.x, s.y)) lassoIds.add(s.id);
         });
-        if (newSel.size > 0) setSelectedIds(newSel);
+        if (lassoIds.size > 0) {
+          // V3-L6: Shift+lasso extends existing selection instead of replacing
+          if (e.shiftKey) {
+            const merged = new Set(selectedIdsRef.current);
+            lassoIds.forEach(id => merged.add(id));
+            setSelectedIds(merged);
+          } else {
+            setSelectedIds(lassoIds);
+          }
+        }
       }
       setLasso(null);
     }
@@ -316,6 +325,7 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
   // ── Doppelklick: Zustand bearbeiten ──────────────────────────────────────────
   const handleDoubleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
+    if (modeRef.current === 'connect') return;  // V3-M6: no modal in connect mode
     const svgP   = clientToSvg(svgRef.current, e.clientX, e.clientY);
     const worldP = svgToWorld(svgP.x, svgP.y, zoomRef.current, panRef.current.x, panRef.current.y);
     const hitId  = hitState(worldP.x, worldP.y, fsmRef.current.states);

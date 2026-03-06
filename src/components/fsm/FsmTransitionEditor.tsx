@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFsm } from '../../fsm/FsmContext';
 import { parseCondition, validateVars, evalCondition } from '../../fsm/conditionParser';
 import type { FsmTransition } from '../../fsm/types';
@@ -11,6 +11,12 @@ const BTN = { padding:'4px 12px',borderRadius:4,cursor:'pointer',fontSize:12,fon
 
 export function FsmTransitionEditor(props: Props) {
   const { fsm, dispatch } = useFsm();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') props.onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [props.onClose]);
   const initial = props.mode === 'edit' ? props.transition : null;
 
   const [cond,   setCond]    = useState(initial?.conditionText ?? '1');

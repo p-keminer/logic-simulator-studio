@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFsm } from '../../fsm/FsmContext';
 import type { FsmStateNode } from '../../fsm/types';
 
@@ -8,6 +8,12 @@ const BTN = { padding:'4px 12px', borderRadius:4, cursor:'pointer', fontSize:12,
 
 export function FsmStateEditor({ state, onClose }: Props) {
   const { fsm, dispatch } = useFsm();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
   const [label,  setLabel]  = useState(state.label);
   const [output, setOutput] = useState(state.output);
   const [initial, setInitial] = useState(state.isInitial);

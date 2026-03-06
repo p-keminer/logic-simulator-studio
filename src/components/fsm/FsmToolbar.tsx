@@ -52,6 +52,38 @@ export function FsmToolbar({ mode, onModeChange, onBack }: Props) {
         const loaded = JSON.parse(ev.target?.result as string) as FsmMachine;
         if (!loaded.id || !loaded.states || !Array.isArray(loaded.transitions))
           throw new Error('Ungültiges FSM-Format');
+
+        // ── Structural validation (V3-M4) ────────────────────────────────
+        if (loaded.archType !== 'moore' && loaded.archType !== 'mealy')
+          throw new Error(`Ungültiger archType: "${loaded.archType}" (erlaubt: moore, mealy)`);
+
+        if (!Number.isInteger(loaded.inputCount) || loaded.inputCount < 1)
+          throw new Error(`inputCount muss eine positive Ganzzahl sein (erhalten: ${loaded.inputCount})`);
+
+        if (!Number.isInteger(loaded.outputCount) || loaded.outputCount < 1)
+          throw new Error(`outputCount muss eine positive Ganzzahl sein (erhalten: ${loaded.outputCount})`);
+
+        if (!Array.isArray(loaded.inputNames) || loaded.inputNames.length !== loaded.inputCount)
+          throw new Error(`inputNames muss ein Array der Länge ${loaded.inputCount} sein`);
+
+        if (!Array.isArray(loaded.outputNames) || loaded.outputNames.length !== loaded.outputCount)
+          throw new Error(`outputNames muss ein Array der Länge ${loaded.outputCount} sein`);
+
+        const stateIds = new Set(Object.keys(loaded.states));
+        const maxOutput = (1 << loaded.outputCount) - 1;
+
+        for (const s of Object.values(loaded.states)) {
+          if (s.output < 0 || s.output > maxOutput)
+            throw new Error(`Zustand "${s.label}": Output ${s.output} außerhalb des Bereichs 0–${maxOutput}`);
+        }
+
+        for (const t of loaded.transitions) {
+          if (!stateIds.has(t.fromId))
+            throw new Error(`Übergang "${t.conditionText}": fromId "${t.fromId}" referenziert keinen existierenden Zustand`);
+          if (!stateIds.has(t.toId))
+            throw new Error(`Übergang "${t.conditionText}": toId "${t.toId}" referenziert keinen existierenden Zustand`);
+        }
+
         dispatch({ type: 'LOAD_FSM', payload: loaded });
       } catch (err) {
         alert('Fehler beim Laden: ' + (err as Error).message);

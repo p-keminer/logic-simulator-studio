@@ -9,6 +9,7 @@ gateRegistry.register({
   label: 'ROM',
   category: 'memory',
   width: 100, height: 240,
+  defaultInputValues: { cs: 1, oe: 1 },
   inputs: [
     { id: 'a0', label: 'A0', relativeX: 0, relativeY: 0.05 },
     { id: 'a1', label: 'A1', relativeX: 0, relativeY: 0.12 },

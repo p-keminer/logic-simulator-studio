@@ -137,13 +137,18 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
       const mask  = (1<<count)-1;
       const ns: Record<string,FsmStateNode> = {};
       for (const [id,s] of Object.entries(state.states)) ns[id] = { ...s, output: s.output & mask };
-      return { ...state, outputCount: count, outputNames: names, states: ns };
+      const nt = state.transitions.map(t => ({ ...t, mealyOutput: t.mealyOutput & mask }));
+      return { ...state, outputCount: count, outputNames: names, states: ns, transitions: nt };
     }
 
     case 'SET_INPUT_NAME': {
       const names = [...state.inputNames];
-      if (action.payload.index >= 0 && action.payload.index < names.length)
-        names[action.payload.index] = action.payload.name.toUpperCase().slice(0,4);
+      if (action.payload.index >= 0 && action.payload.index < names.length) {
+        const candidate = action.payload.name.toUpperCase().slice(0,4);
+        // Reject names starting with a digit (V3-M5) – they are unusable in conditions
+        if (/^[0-9]/.test(candidate)) return state;
+        names[action.payload.index] = candidate;
+      }
       return { ...state, inputNames: names };
     }
 

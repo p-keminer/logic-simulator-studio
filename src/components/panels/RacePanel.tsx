@@ -4,6 +4,7 @@
  * Displays detected race conditions from GATE_DELAY simulation mode.
  * Clicking an entry focuses the affected area on the canvas via viewport dispatch.
  */
+import { useEffect } from 'react';
 import type { RaceInfo, RaceSeverity } from '../../core/types';
 import { useCircuitContext } from '../../store/CircuitContext';
 
@@ -38,6 +39,12 @@ interface Props {
 
 export function RacePanel({ onClose }: Props) {
   const { races, circuit, dispatch } = useCircuitContext();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const handleFocus = (race: RaceInfo) => {
     // Find the position of any involved gate and zoom to it.

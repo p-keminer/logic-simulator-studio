@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 
 interface Props {
@@ -8,6 +8,12 @@ interface Props {
 
 export function RomEditorModal({ gateId, onClose }: Props) {
   const { circuit, dispatch } = useCircuitContext();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
   const gate = circuit.gates[gateId];
   const currentData = (gate?.customState?.data as number[] | undefined) ?? new Array(256).fill(0);
 

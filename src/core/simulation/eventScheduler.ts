@@ -563,7 +563,7 @@ export class EventScheduler {
   ): Record<string, Record<string, unknown>> {
     const dst: Record<string, Record<string, unknown>> = {};
     for (const [gid, state] of Object.entries(src)) {
-      dst[gid] = { ...state };
+      dst[gid] = structuredClone(state);
     }
     return dst;
   }

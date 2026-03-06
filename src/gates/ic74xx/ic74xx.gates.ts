@@ -183,6 +183,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC138', label: '74HC138', category: 'ic74', width: 110, height: 160,
   propagationDelay: 14,
+  defaultInputValues: { g2a: 1, g2b: 1 },
   inputs: [
     { id: 'a',   label: 'A',    relativeX: 0, relativeY: 0.08 },
     { id: 'b',   label: 'B',    relativeX: 0, relativeY: 0.18 },

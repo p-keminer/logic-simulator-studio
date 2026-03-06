@@ -347,7 +347,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           preSettleBuf = schedulerRef.current.buildBuffer();
           switchGateIds = new Set(
             Object.values(c.gates)
-              .filter(g => g.typeId === 'INPUT_SWITCH' || g.typeId === 'PUSH_BTN' || g.typeId === 'ADC8')
+              .filter(g => g.typeId === 'INPUT_SWITCH' || g.typeId === 'PUSH_BTN' || g.typeId === 'ADC8' || g.typeId === 'CLOCK')
               .map(g => g.id),
           );
         }
@@ -379,6 +379,9 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         // leaking into the new mode's snapshot cadence.
         sampleCounterRef.current = 0;
         stepRef.current = 0;
+        // Clear stale timing history from the previous mode so the diagram
+        // starts fresh after switching.
+        setTimingHistory([]);
         if (mode === SimulationMode.GATE_DELAY) {
           // Create or re-create the scheduler and seed from current settled state.
           schedulerRef.current = new EventScheduler();
@@ -409,6 +412,13 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         if (anyChanged) {
           const result = buildSimResult(buf, c);
           dispatch({ type: 'SIMULATION_APPLY', payload: result });
+        }
+        if (anyChanged && mode === SimulationMode.GATE_DELAY) {
+          const snap = buildTimingSnapshot(buf.outputs, c, buf.tick);
+          setTimingHistory(prev => {
+            const next = [...prev, snap];
+            return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
+          });
         }
         rafRef.current = requestAnimationFrame(frame);
         return;

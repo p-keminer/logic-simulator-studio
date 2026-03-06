@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../../gates/shapes/FlipFlopShape';
@@ -9,13 +9,13 @@ interface Props { onClose: () => void; }
 
 const STORAGE_KEY = 'lgsim_custom_ics';
 
-function loadCustomICs(): Array<{ name: string; circuit: Circuit }> {
+function loadCustomICs(): Array<{ name: string; circuit: Circuit; portNames?: string[] }> {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   } catch { return []; }
 }
 
-function saveCustomICs(ics: Array<{ name: string; circuit: Circuit }>) {
+function saveCustomICs(ics: Array<{ name: string; circuit: Circuit; portNames?: string[] }>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ics));
 }
 
@@ -107,12 +107,18 @@ export function registerCustomIC(name: string, subcircuit: Circuit, portNames?: 
 /** Call on app start to reload all saved custom ICs */
 export function reloadAllCustomICs() {
   for (const ic of loadCustomICs()) {
-    registerCustomIC(ic.name, ic.circuit);
+    registerCustomIC(ic.name, ic.circuit, ic.portNames);
   }
 }
 
 export function CustomICModal({ onClose }: Props) {
   const { circuit, dispatch } = useCircuitContext();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
   const [savedICs, setSavedICs] = useState(() => loadCustomICs());
   const [newName, setNewName] = useState('');
   const [step, setStep] = useState<1 | 2>(1);
@@ -150,7 +156,7 @@ export function CustomICModal({ onClose }: Props) {
     const typeId = 'CIC_' + name.toUpperCase().replace(/[^A-Z0-9]/g, '_');
     if (gateRegistry.has(typeId)) gateRegistry.unregister(typeId);
 
-    const updated = [...savedICs.filter((ic) => ic.name !== name), { name, circuit }];
+    const updated = [...savedICs.filter((ic) => ic.name !== name), { name, circuit, portNames }];
     saveCustomICs(updated);
     setSavedICs(updated);
     registerCustomIC(name, circuit, portNames);

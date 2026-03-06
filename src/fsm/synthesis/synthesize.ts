@@ -97,6 +97,12 @@ export function synthesizeFsm(
   const add  = (g: GateInstance) => { gates[g.id] = g; return g; };
   const conn = (a: Sig, b: Sig)  => { const w = mkWire(a.gateId, a.portId, b.gateId, b.portId); wires[w.id] = w; };
 
+  // ── Pre-validate all transition conditions (V3-M7) ─────────────────────────
+  for (const t of fsm.transitions) {
+    const { error } = parseCondition(t.conditionText);
+    if (error) throw new Error(`Transition "${t.conditionText}": ${error}`);
+  }
+
   const { inputCount: M, outputCount: K, inputNames, outputNames, archType, states } = fsm;
   const encMap = getEncoding(fsm);
   const N = Math.ceil(Math.log2(Math.max(2, Object.keys(states).length)));
@@ -177,7 +183,7 @@ export function synthesizeFsm(
       }
 
       // D_i: bit i of next-state encoding
-      const nsEnc = nextState ? (encMap.get(nextState.id) ?? 0) : 0;
+      const nsEnc = nextState ? (encMap.get(nextState.id) ?? 0) : encInt;
       for (let i = 0; i < N; i++) {
         if (((nsEnc >> i) & 1) === 1) mintSets[i].add(mintIdx);
       }
@@ -185,7 +191,7 @@ export function synthesizeFsm(
       // Output: for Mealy, use per-row output
       if (archType === 'mealy') {
         for (let k = 0; k < K; k++) {
-          if (((mealyOut >> k) & 1) === 1) mintSets[N + k].add(mintIdx);
+          if (((mealyOut >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(mintIdx);
         }
       }
     }
@@ -193,7 +199,7 @@ export function synthesizeFsm(
     // Moore output: depends only on current state (N variables only)
     if (archType === 'moore') {
       for (let k = 0; k < K; k++) {
-        if (((state.output >> k) & 1) === 1) mintSets[N + k].add(encInt);
+        if (((state.output >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(encInt);
       }
     }
   }

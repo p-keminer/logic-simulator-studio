@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { SimulationMode } from '../../store/simulationMode';
@@ -78,46 +78,53 @@ export function TimingDiagram({ history, onClose }: Props) {
   }, []);
 
   // ── Verbundene Gatter-IDs ermitteln ──────────────────────────────────────
-  const connectedIds = new Set<string>();
-  for (const w of Object.values(circuit.wires)) {
-    connectedIds.add(w.from.gateId);
-    connectedIds.add(w.to.gateId);
-  }
+  const connectedIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const w of Object.values(circuit.wires)) {
+      ids.add(w.from.gateId);
+      ids.add(w.to.gateId);
+    }
+    return ids;
+  }, [circuit]);
 
   // ── Kanäle aufbauen ──────────────────────────────────────────────────────
   // Nur verbundene Gatter; Priorität: Eingänge → Logik → Ausgänge
-  const channels: Array<{ key: string; label: string; color: string }> = [];
+  const channels = useMemo(() => {
+    const chs: Array<{ key: string; label: string; color: string }> = [];
 
-  const sortedGates = Object.values(circuit.gates)
-    .filter(g => !SKIP_TYPES.has(g.typeId) && connectedIds.has(g.id))
-    .sort((a, b) => {
-      const pa = INPUT_TYPES.has(a.typeId) ? 0 : OUTPUT_TYPES.has(a.typeId) ? 2 : 1;
-      const pb = INPUT_TYPES.has(b.typeId) ? 0 : OUTPUT_TYPES.has(b.typeId) ? 2 : 1;
-      return pa !== pb ? pa - pb : a.id.localeCompare(b.id);
-    });
+    const sortedGates = Object.values(circuit.gates)
+      .filter(g => !SKIP_TYPES.has(g.typeId) && connectedIds.has(g.id))
+      .sort((a, b) => {
+        const pa = INPUT_TYPES.has(a.typeId) ? 0 : OUTPUT_TYPES.has(a.typeId) ? 2 : 1;
+        const pb = INPUT_TYPES.has(b.typeId) ? 0 : OUTPUT_TYPES.has(b.typeId) ? 2 : 1;
+        return pa !== pb ? pa - pb : a.id.localeCompare(b.id);
+      });
 
-  for (const gate of sortedGates) {
-    try {
-      const def    = gateRegistry.get(gate.typeId);
-      const sName  = gate.typeId.toLowerCase().replace(/_/g, '').slice(0, 7);
-      const gLabel = gate.label || (sName + '_' + gate.id.slice(0, 4));
-      const color  = INPUT_TYPES.has(gate.typeId)  ? '#60a5fa'
-                   : OUTPUT_TYPES.has(gate.typeId) ? '#22c55e'
-                   : '#f59e0b';
+    for (const gate of sortedGates) {
+      try {
+        const def    = gateRegistry.get(gate.typeId);
+        const sName  = gate.typeId.toLowerCase().replace(/_/g, '').slice(0, 7);
+        const gLabel = gate.label || (sName + '_' + gate.id.slice(0, 4));
+        const color  = INPUT_TYPES.has(gate.typeId)  ? '#60a5fa'
+                     : OUTPUT_TYPES.has(gate.typeId) ? '#22c55e'
+                     : '#f59e0b';
 
-      if (OUTPUT_TYPES.has(gate.typeId)) {
-        // LED/7-Seg liefern {_display: inputValue} aus evaluate()
-        channels.push({ key: gate.id + ':_display', label: gLabel, color });
-      } else {
-        for (const port of def.outputs) {
-          const lbl = def.outputs.length === 1
-            ? gLabel
-            : `${gLabel}.${port.label ?? port.id}`;
-          channels.push({ key: gate.id + ':' + port.id, label: lbl, color });
+        if (OUTPUT_TYPES.has(gate.typeId)) {
+          // LED/7-Seg liefern {_display: inputValue} aus evaluate()
+          chs.push({ key: gate.id + ':_display', label: gLabel, color });
+        } else {
+          for (const port of def.outputs) {
+            const lbl = def.outputs.length === 1
+              ? gLabel
+              : `${gLabel}.${port.label ?? port.id}`;
+            chs.push({ key: gate.id + ':' + port.id, label: lbl, color });
+          }
         }
-      }
-    } catch { /* unbekannter Typ – überspringen */ }
-  }
+      } catch { /* unbekannter Typ – überspringen */ }
+    }
+
+    return chs;
+  }, [circuit, connectedIds]);
 
   // ── Geometrie ─────────────────────────────────────────────────────────────
   function getVal(snap: TimingSnapshot, key: string): number {
@@ -204,7 +211,7 @@ export function TimingDiagram({ history, onClose }: Props) {
 
             {/* Vertikale Rasterlinien — an Sample-Positionen */}
             {displayHistory.map((snap, si) => (
-              <line key={'vl' + snap.tick}
+              <line key={'vl' + si}
                 x1={xOf(si)} y1={0}
                 x2={xOf(si)} y2={totalH}
                 stroke="#1e293b" strokeWidth={1} />
