@@ -105,7 +105,7 @@ gateRegistry.register({
       `  if (${cs_n} == 1'b0 && ${oe_n} == 1'b0)`,
       `    ${doCat} = ram_${sid}[${addrCat}];`,
       `  else`,
-      `    ${doCat} = 8'h00;`,
+      `    ${doCat} = 8'hzz;`,
       `end // RAM256 ${sid}`,
     ].join('\n');
   },
@@ -142,7 +142,7 @@ gateRegistry.register({
       `end process;`,
       `process(${readSense}) -- read`,
       `begin`,
-      `  ${dos.map(d => `${d} <= '0'`).join('; ')};`,
+      `  ${dos.map(d => `${d} <= 'Z'`).join('; ')};`,
       `  if ${cs_n} = '0' and ${oe_n} = '0' then`,
       ...dos.map((d, i) => `    ${d} <= ${ramName}(to_integer(unsigned(${addrCat})))(${i});`),
       `  end if;`,

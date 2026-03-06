@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
+import { SimulationMode } from '../../store/simulationMode';
 import type { TimingSnapshot } from '../../core/types';
 
 interface Props { history: TimingSnapshot[]; onClose: () => void; }
@@ -12,7 +13,7 @@ const CH_MINI = 10;   // Zeilenhöhe (ausgeblendet / eingeklappt)
 const LBL_W   = 148;
 const MAX_ST  = 200;  // Sichtbare Snapshots (letzte N)
 
-// Index-basierte X-Achse: Snapshot-Index × STEP_W Pixel.
+// Index-basierte X-Achse (Zero-Delay): Snapshot-Index × STEP_W Pixel.
 // Da Snapshots alle SAMPLE_EVERY=25 Ticks aufgenommen werden (CircuitContext),
 // sind aufeinanderfolgende Samples immer exakt SAMPLE_EVERY Ticks apart →
 // konstanter Pixelabstand, kein Jitter, keine Framerate-Abhängigkeit.
@@ -21,6 +22,13 @@ const MAX_ST  = 200;  // Sichtbare Snapshots (letzte N)
 //   Halbperiode = 250 Ticks / 25 = 10 Samples × 3px = 30px
 //   Vollperiode = 60px → auf 700px Breite ≈ 11 vollständige Zyklen sichtbar ✓
 const STEP_W = 3;
+
+// Tick-basierte X-Achse (Gate-Delay): Jeder Tick bekommt TICK_PX Pixel.
+// Da im Gate-Delay-Modus pro CLK↑ mehrere Event-Batches gefeuert werden
+// (Kaskade CLK→FF1→FF2→...), aber pro CLK↓ nur 1 Batch, wuerde eine index-basierte
+// Darstellung den CLK HIGH-Bereich viel breiter zeigen als LOW.
+// Tick-basiert: X = (snap.tick - firstTick) * TICK_PX → symmetrischer Takt.
+const TICK_PX = 0.12;
 
 // ── Gattertyp-Kategorien ─────────────────────────────────────────────────────
 
@@ -38,7 +46,7 @@ const SKIP_TYPES   = new Set(['TEXT_NOTE', 'JUNCTION', 'ADC8']);
 // ── Hauptkomponente ──────────────────────────────────────────────────────────
 
 export function TimingDiagram({ history, onClose }: Props) {
-  const { circuit }                     = useCircuitContext();
+  const { circuit, simulationMode }   = useCircuitContext();
   const scrollRef                       = useRef<HTMLDivElement>(null);
   const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(new Set());
   // true = Nutzer hat zurückgescrollt → Auto-Scroll pausieren
@@ -118,10 +126,25 @@ export function TimingDiagram({ history, onClose }: Props) {
 
   const displayHistory = history.slice(-MAX_ST);
 
-  // X-Position = Snapshot-Index × STEP_W (index-basiert, nicht tick-basiert).
-  // Da Snapshots alle SAMPLE_EVERY Ticks aufgenommen werden, ist der zeitliche
-  // Abstand zwischen je zwei Snapshots konstant → keine Jitter-Korrektur nötig.
-  const totalW = LBL_W + Math.max(displayHistory.length, 10) * STEP_W + 20;
+  // ── X-Positionsberechnung ──────────────────────────────────────────────
+  // Zero-Delay: index-basiert (STEP_W pro Snapshot, gleichmaessig).
+  // Gate-Delay: tick-basiert (TICK_PX pro Tick, proportional zur Simulationszeit).
+  //   → sorgt fuer symmetrischen Takt, da CLK HIGH und LOW gleich viele Ticks dauern,
+  //     auch wenn unterschiedlich viele Event-Batches (Snapshots) pro Halbperiode anfallen.
+  const isGateDelay = simulationMode === SimulationMode.GATE_DELAY;
+  const firstTick = displayHistory.length > 0 ? displayHistory[0].tick : 0;
+
+  function xOf(si: number): number {
+    if (isGateDelay && displayHistory.length > 0) {
+      return LBL_W + (displayHistory[si].tick - firstTick) * TICK_PX;
+    }
+    return LBL_W + si * STEP_W;
+  }
+
+  const lastX = displayHistory.length > 0
+    ? xOf(displayHistory.length - 1)
+    : LBL_W + 10 * STEP_W;
+  const totalW = lastX + 20;
 
   // Gesamthöhe: sichtbare Kanäle CH_H, versteckte CH_MINI
   let totalH = 20;
@@ -182,8 +205,8 @@ export function TimingDiagram({ history, onClose }: Props) {
             {/* Vertikale Rasterlinien — an Sample-Positionen */}
             {displayHistory.map((snap, si) => (
               <line key={'vl' + snap.tick}
-                x1={LBL_W + si * STEP_W} y1={0}
-                x2={LBL_W + si * STEP_W} y2={totalH}
+                x1={xOf(si)} y1={0}
+                x2={xOf(si)} y2={totalH}
                 stroke="#1e293b" strokeWidth={1} />
             ))}
 
@@ -222,7 +245,7 @@ export function TimingDiagram({ history, onClose }: Props) {
 
                   displayHistory.forEach((snap, si) => {
                     const val = getVal(snap, ch.key);
-                    const x   = LBL_W + si * STEP_W;
+                    const x   = xOf(si);
                     const y   = val === 1 ? yH : yL;
                     if (si === 0) {
                       segs.push('M ' + x + ' ' + y);
@@ -236,7 +259,7 @@ export function TimingDiagram({ history, onClose }: Props) {
                   });
                   // Linie bis zum rechten Rand ziehen (letzter bekannter Wert)
                   if (displayHistory.length > 0) {
-                    const endX = LBL_W + displayHistory.length * STEP_W + 20;
+                    const endX = lastX + 20;
                     segs.push('L ' + endX + ' ' + (prev === 1 ? yH : yL));
                   }
 

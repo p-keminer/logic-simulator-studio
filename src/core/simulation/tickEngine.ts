@@ -273,12 +273,12 @@ export function runUntilStable(
 // ── SimulationResult aufbauen ─────────────────────────────────────────────────
 
 /** Inline-Version von makeSignal, damit tickEngine.ts in sich geschlossen bleibt */
-function makeSignal(value: SignalValue, prev?: SignalState): SignalState {
+function makeSignal(value: SignalValue, prev: SignalState | undefined, nowMs: number): SignalState {
   const changed = !prev || prev.value !== value;
   return {
     value,
     version:       prev ? (changed ? prev.version + 1 : prev.version) : 0,
-    lastChangedAt: changed ? Date.now() : (prev?.lastChangedAt ?? Date.now()),
+    lastChangedAt: changed ? nowMs : (prev?.lastChangedAt ?? nowMs),
   };
 }
 
@@ -288,20 +288,21 @@ function makeSignal(value: SignalValue, prev?: SignalState): SignalState {
  * bei, um unnötige Re-Renders zu vermeiden.
  */
 export function buildSimResult(buffer: SimBuffer, circuit: Circuit): SimulationResult {
+  const now = Date.now();
   const gateSignals: Record<string, Record<string, SignalState>> = {};
   for (const [gateId, ports] of Object.entries(buffer.outputs)) {
     const gate = circuit.gates[gateId];
     if (!gate) continue;
     gateSignals[gateId] = {};
     for (const [portId, val] of Object.entries(ports)) {
-      gateSignals[gateId][portId] = makeSignal(val, gate.outputSignals[portId]);
+      gateSignals[gateId][portId] = makeSignal(val, gate.outputSignals[portId], now);
     }
   }
 
   const wireSignals: Record<string, SignalState> = {};
   for (const wire of Object.values(circuit.wires)) {
     const val = (buffer.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
-    wireSignals[wire.id] = makeSignal(val, wire.signal);
+    wireSignals[wire.id] = makeSignal(val, wire.signal, now);
   }
 
   return {

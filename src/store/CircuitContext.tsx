@@ -257,6 +257,26 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Shared snapshot builder (deduplicates 3 identical blocks) ─────────────
+  function buildTimingSnapshot(
+    outputs: Record<string, Record<string, SignalValue>>,
+    circuit: Circuit,
+    tick: number,
+  ): TimingSnapshot {
+    const step = ++stepRef.current;
+    const wireValues: Record<string, SignalValue> = {};
+    for (const wire of Object.values(circuit.wires)) {
+      wireValues[wire.id] = (outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
+    }
+    const gateValues: Record<string, SignalValue> = {};
+    for (const [gId, ports] of Object.entries(outputs)) {
+      for (const [pId, val] of Object.entries(ports)) {
+        gateValues[`${gId}:${pId}`] = val;
+      }
+    }
+    return { step, tick, wireValues, gateValues };
+  }
+
   // ── RAF-Simulations-Schleife ──────────────────────────────────────────────
   useEffect(() => {
     const frame = (timestamp: number) => {
@@ -411,19 +431,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           sampleCounterRef.current++;
           if (sampleCounterRef.current >= SAMPLE_EVERY) {
             sampleCounterRef.current = 0;
-            const step = ++stepRef.current;
-            const tick = buf.tick;
-            const wireValues: Record<string, SignalValue> = {};
-            for (const wire of Object.values(c.wires)) {
-              wireValues[wire.id] = (buf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
-            }
-            const gateValues: Record<string, SignalValue> = {};
-            for (const [gId, ports] of Object.entries(buf.outputs)) {
-              for (const [pId, val] of Object.entries(ports)) {
-                gateValues[`${gId}:${pId}`] = val;
-              }
-            }
-            newSnaps.push({ step, tick, wireValues, gateValues });
+            newSnaps.push(buildTimingSnapshot(buf.outputs, c, buf.tick));
           }
         }
 
@@ -508,18 +516,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           sampleCounterRef.current = 0;
           // buildBuffer() deep-copies — no aliasing of scheduler internals.
           const s = scheduler.buildBuffer();
-          const step = ++stepRef.current;
-          const wireValues: Record<string, SignalValue> = {};
-          for (const wire of Object.values(c.wires)) {
-            wireValues[wire.id] = (s.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
-          }
-          const gateValues: Record<string, SignalValue> = {};
-          for (const [gId, ports] of Object.entries(s.outputs)) {
-            for (const [pId, val] of Object.entries(ports)) {
-              gateValues[`${gId}:${pId}`] = val;
-            }
-          }
-          newSnaps.push({ step, tick: batchTime, wireValues, gateValues });
+          newSnaps.push(buildTimingSnapshot(s.outputs, c, batchTime));
         };
 
         const detectedRaces = scheduler.advance(
@@ -570,18 +567,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           // In paused step mode: push exactly 1 final-state snapshot per ⏭ click.
           // (Per-batch sampling was suppressed in onBatchCommit above.)
           if (isClockPausedRef.current && newSnaps.length === 0) {
-            const step = ++stepRef.current;
-            const wireValues: Record<string, SignalValue> = {};
-            for (const wire of Object.values(c.wires)) {
-              wireValues[wire.id] = (newBuf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
-            }
-            const gateValues: Record<string, SignalValue> = {};
-            for (const [gId, ports] of Object.entries(newBuf.outputs)) {
-              for (const [pId, val] of Object.entries(ports)) {
-                gateValues[`${gId}:${pId}`] = val;
-              }
-            }
-            newSnaps.push({ step, tick: newBuf.tick, wireValues, gateValues });
+            newSnaps.push(buildTimingSnapshot(newBuf.outputs, c, newBuf.tick));
           }
         }
 

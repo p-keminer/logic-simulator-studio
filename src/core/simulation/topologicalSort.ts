@@ -28,8 +28,9 @@ export function topologicalSort(circuit: Circuit): SortResult {
   }
 
   const order: string[] = [];
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  let head = 0;
+  while (head < queue.length) {
+    const current = queue[head++];
     order.push(current);
     for (const neighbor of adjacency.get(current) ?? []) {
       const newDeg = (inDegree.get(neighbor) ?? 1) - 1;
@@ -38,7 +39,8 @@ export function topologicalSort(circuit: Circuit): SortResult {
     }
   }
 
-  const remaining = gateIds.filter((id) => !order.includes(id));
+  const orderSet = new Set(order);
+  const remaining = gateIds.filter((id) => !orderSet.has(id));
 
   // ── Kosaraju SCC on remaining (feedback) nodes ────────────────────────────
   // Decomposes the cycle set into individual strongly-connected components so

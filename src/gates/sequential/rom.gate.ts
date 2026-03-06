@@ -69,7 +69,7 @@ gateRegistry.register({
       `  if (${cs_n} == 1'b0 && ${oe_n} == 1'b0)`,
       `    ${dataCat} = rom_${sid}[${addrCat}];`,
       `  else`,
-      `    ${dataCat} = 8'h00;`,
+      `    ${dataCat} = 8'hzz;`,
       `end // ROM256 ${sid}`,
     ].join('\n');
   },
@@ -95,7 +95,7 @@ gateRegistry.register({
       `process(${sense})`,
       `  variable addr_v : integer range 0 to 255;`,
       `begin`,
-      `  ${ds.map(d => `${d} <= '0'`).join('; ')};`,
+      `  ${ds.map(d => `${d} <= 'Z'`).join('; ')};`,
       `  if ${cs_n} = '0' and ${oe_n} = '0' then`,
       `    addr_v := to_integer(unsigned(${addrCat}));`,
       ...ds.map((d, i) => `    ${d} <= rom_${sid}(addr_v)(${i});`),

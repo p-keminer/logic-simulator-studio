@@ -486,7 +486,7 @@ gateRegistry.register({
       `always @(posedge ${stcp}) begin`,
       `  ${latch} <= ${shift};`,
       `end // 74HC595 ${sid}`,
-      ...qs.map((q,i) => `assign ${q} = ${oe} ? 1'b0 : ${latch}[${i}];`),
+      ...qs.map((q,i) => `assign ${q} = ${oe} ? 1'bz : ${latch}[${i}];`),
     ].join('\n');
   },
   toVHDL: (g, w) => {
@@ -512,7 +512,7 @@ gateRegistry.register({
       `  if rising_edge(${stcp}) then ${latch} <= ${shift};`,
       `  end if;`,
       `end process; -- 74HC595 ${sid}`,
-      ...qs.map((q,i) => `${q} <= '0' when ${oe} = '1' else ${latch}(${i});`),
+      ...qs.map((q,i) => `${q} <= 'Z' when ${oe} = '1' else ${latch}(${i});`),
     ].join('\n');
   },
   verilogExtraRegs: (g) => [
@@ -906,9 +906,13 @@ gateRegistry.register({
     { id: 'q6', label: 'Q6', relativeX: 1, relativeY: 0.82 },
     { id: 'q7', label: 'Q7', relativeX: 1, relativeY: 0.92 },
   ],
-  evaluate: ({ oe }, state) => {
-    const latch = (state?.latch as number) ?? 0;
+  evaluate: ({ oe, le, d0, d1, d2, d3, d4, d5, d6, d7 }, state) => {
     if ((oe ?? 0) === 1) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
+    if ((le ?? 0) === 1) {
+      return { q0:(d0??0) as 0|1, q1:(d1??0) as 0|1, q2:(d2??0) as 0|1, q3:(d3??0) as 0|1,
+               q4:(d4??0) as 0|1, q5:(d5??0) as 0|1, q6:(d6??0) as 0|1, q7:(d7??0) as 0|1 };
+    }
+    const latch = (state?.latch as number) ?? 0;
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((latch >> i) & 1) as 0|1;
     return out;
@@ -933,7 +937,7 @@ gateRegistry.register({
       `always @(*) begin`,
       `  if (${le}) ${latch} = {${d[7]},${d[6]},${d[5]},${d[4]},${d[3]},${d[2]},${d[1]},${d[0]}};`,
       `end // 74HC373 ${sid}`,
-      ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'b0 : ${latch}[${i}];`),
+      ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'bz : ${latch}[${i}];`),
     ].join('\n');
   },
   toVHDL: (g, w) => {
@@ -951,7 +955,7 @@ gateRegistry.register({
       `    ${latch} <= ${d[7]} & ${d[6]} & ${d[5]} & ${d[4]} & ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
       `  end if;`,
       `end process; -- 74HC373 ${sid}`,
-      ...q.map((qi,i) => `${qi} <= '0' when ${oe} = '1' else ${latch}(${i});`),
+      ...q.map((qi,i) => `${qi} <= 'Z' when ${oe} = '1' else ${latch}(${i});`),
     ].join('\n');
   },
   verilogExtraRegs: (g) => [{ name: `latch_${sanitize(g.id)}`, width: 8 }],
@@ -1014,7 +1018,7 @@ gateRegistry.register({
       `always @(posedge ${clk}) begin`,
       `  ${reg} <= {${d[7]},${d[6]},${d[5]},${d[4]},${d[3]},${d[2]},${d[1]},${d[0]}};`,
       `end // 74HC374 ${sid}`,
-      ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'b0 : ${reg}[${i}];`),
+      ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'bz : ${reg}[${i}];`),
     ].join('\n');
   },
   toVHDL: (g, w) => {
@@ -1032,7 +1036,7 @@ gateRegistry.register({
       `    ${reg} <= ${d[7]} & ${d[6]} & ${d[5]} & ${d[4]} & ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
       `  end if;`,
       `end process; -- 74HC374 ${sid}`,
-      ...q.map((qi,i) => `${qi} <= '0' when ${oe} = '1' else ${reg}(${i});`),
+      ...q.map((qi,i) => `${qi} <= 'Z' when ${oe} = '1' else ${reg}(${i});`),
     ].join('\n');
   },
   verilogExtraRegs: (g) => [{ name: `reg_${sanitize(g.id)}`, width: 8 }],
