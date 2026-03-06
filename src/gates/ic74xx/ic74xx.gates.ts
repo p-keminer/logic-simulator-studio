@@ -321,6 +321,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC74', label: '74HC74', category: 'ic74', width: 110, height: 130,
   propagationDelay: 14, isSynchronous: true,
+  defaultInputValues: { pre1: 1, clr1: 1, pre2: 1, clr2: 1 },
   inputs: [
     { id: 'pre1', label: '/PRE1', relativeX: 0, relativeY: 0.08 },
     { id: 'clr1', label: '/CLR1', relativeX: 0, relativeY: 0.22 },
@@ -347,11 +348,11 @@ gateRegistry.register({
     const pc2 = (state?.pc2 as 0|1) ?? 0;
     let q1 = (state?.q1 as 0|1) ?? 0;
     let q2 = (state?.q2 as 0|1) ?? 0;
-    if ((pre1 ?? 1) === 0) q1 = 1;
-    else if ((clr1 ?? 1) === 0) q1 = 0;
+    if (pre1 === 0) q1 = 1;
+    else if (clr1 === 0) q1 = 0;
     else if (clk1 === 1 && pc1 === 0) q1 = d1 as 0|1;
-    if ((pre2 ?? 1) === 0) q2 = 1;
-    else if ((clr2 ?? 1) === 0) q2 = 0;
+    if (pre2 === 0) q2 = 1;
+    else if (clr2 === 0) q2 = 0;
     else if (clk2 === 1 && pc2 === 0) q2 = d2 as 0|1;
     return { q1, q2, pc1: clk1, pc2: clk2 };
   },
@@ -430,6 +431,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC595', label: '74HC595', category: 'ic74', width: 110, height: 160,
   propagationDelay: 25, isSynchronous: true,
+  defaultInputValues: { mr: 1 },
   inputs: [
     { id: 'ds',   label: 'DS',   relativeX: 0, relativeY: 0.08 },
     { id: 'shcp', label: 'SHCP', relativeX: 0, relativeY: 0.18 },
@@ -460,7 +462,7 @@ gateRegistry.register({
     const pStcp = (state?.pStcp as 0|1) ?? 0;
     let shift = (state?.shift as number) ?? 0;
     let latch = (state?.latch as number) ?? 0;
-    if ((mr ?? 1) === 0) shift = 0;
+    if (mr === 0) shift = 0;
     else if (shcp === 1 && pShcp === 0) shift = ((shift << 1) | (ds ?? 0)) & 0xFF;
     if (stcp === 1 && pStcp === 0) latch = shift;
     return { shift, latch, pShcp: shcp, pStcp: stcp };
@@ -530,6 +532,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC161', label: '74HC161', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
+  defaultInputValues: { clrn: 1, ldn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
     { id: 'clrn', label: '/CLR', relativeX: 0, relativeY: 0.17 },
@@ -563,8 +566,8 @@ gateRegistry.register({
     let cnt = (state?.cnt as number) ?? 0;
     const rising = clk === 1 && prev === 0;
     if (rising) {
-      if ((clrn ?? 1) === 0) cnt = 0;
-      else if ((ldn ?? 1) === 0) {
+      if (clrn === 0) cnt = 0;
+      else if (ldn === 0) {
         cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
       } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
         cnt = (cnt + 1) & 0xF;
@@ -769,6 +772,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC194', label: '74HC194', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
+  defaultInputValues: { clrn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
     { id: 'clrn', label: '/CLR', relativeX: 0, relativeY: 0.17 },
@@ -800,7 +804,7 @@ gateRegistry.register({
     const prev = (state?.pClk as 0|1) ?? 0;
     let reg = (state?.reg as number) ?? 0;
     const rising = clk === 1 && prev === 0;
-    if ((clrn ?? 1) === 0) { reg = 0; }
+    if (clrn === 0) { reg = 0; }
     else if (rising) {
       const mode = ((s1 ?? 0) << 1) | (s0 ?? 0);
       if (mode === 1) reg = ((reg >> 1) | ((sr ?? 0) << 3)) & 0xF;        // shift right
@@ -1042,6 +1046,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC148', label: '74HC148', category: 'ic74', width: 110, height: 160,
   propagationDelay: 16,
+  defaultInputValues: { ein: 1, i0: 1, i1: 1, i2: 1, i3: 1, i4: 1, i5: 1, i6: 1, i7: 1 },
   inputs: [
     { id: 'ein', label: 'EI',  relativeX: 0, relativeY: 0.07 },
     { id: 'i0',  label: 'I0',  relativeX: 0, relativeY: 0.20 },
@@ -1062,11 +1067,11 @@ gateRegistry.register({
   ],
   evaluate: ({ ein, i0, i1, i2, i3, i4, i5, i6, i7 }) => {
     // active-low inputs and outputs
-    if ((ein ?? 1) === 1) return { a0: 1, a1: 1, a2: 1, gs: 1, eo: 1 };
+    if (ein === 1) return { a0: 1, a1: 1, a2: 1, gs: 1, eo: 1 };
     const inputs = [i7, i6, i5, i4, i3, i2, i1, i0]; // priority: i7 highest
     let pri = -1;
     for (let i = 0; i < 8; i++) {
-      if ((inputs[i] ?? 1) === 0) { pri = 7 - i; break; }
+      if (inputs[i] === 0) { pri = 7 - i; break; }
     }
     if (pri < 0) return { a0: 1, a1: 1, a2: 1, gs: 1, eo: 0 }; // no input active
     const a = pri ^ 0b111; // active-low output
@@ -1135,6 +1140,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC163', label: '74HC163', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
+  defaultInputValues: { clrn: 1, ldn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
     { id: 'clrn', label: '/CLR', relativeX: 0, relativeY: 0.17 },
@@ -1167,10 +1173,10 @@ gateRegistry.register({
     const prev = (state?.pClk as 0|1) ?? 0;
     let cnt = (state?.cnt as number) ?? 0;
     // 74HC163: asynchronous clear (active immediately)
-    if ((clrn ?? 1) === 0) return { cnt: 0, pClk: clk };
+    if (clrn === 0) return { cnt: 0, pClk: clk };
     const rising = clk === 1 && prev === 0;
     if (rising) {
-      if ((ldn ?? 1) === 0) {
+      if (ldn === 0) {
         cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
       } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
         cnt = (cnt + 1) & 0xF;

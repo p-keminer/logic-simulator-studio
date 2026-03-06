@@ -17,7 +17,8 @@ function sanitize(id: string) {
 // Gate types that have no direct Verilog equivalent and should be excluded from logic
 const EXCLUDE_FROM_VERILOG = new Set([
   'CLOCK', 'PUSH_BTN', 'JUNCTION', 'TEXT_NOTE',
-  'OUTPUT_LED_7SEG', 'DOT_MATRIX', 'STEPPER_MOTOR', 'ADC8',
+  'SEG7', 'SEG7_BCD', 'SEG7_DUAL', 'SEG7_BCD_2',
+  'DOTMATRIX8', 'STEPPER_VIZ', 'ADC8',
   'CUSTOM_IC',
 ]);
 

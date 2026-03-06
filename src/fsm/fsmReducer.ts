@@ -56,6 +56,24 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
     case 'UPDATE_STATE': {
       const { id, ...rest } = action.payload;
       if (!state.states[id]) return state;
+
+      // Ensure label uniqueness (case-insensitive)
+      if (rest.label != null) {
+        let candidate = rest.label;
+        const otherLabels = Object.values(state.states)
+          .filter(s => s.id !== id)
+          .map(s => s.label.toUpperCase());
+
+        if (otherLabels.includes(candidate.toUpperCase())) {
+          let suffix = 1;
+          while (otherLabels.includes(`${candidate}_${suffix}`.toUpperCase())) {
+            suffix++;
+          }
+          candidate = `${candidate}_${suffix}`;
+        }
+        rest.label = candidate;
+      }
+
       return { ...state, states: { ...state.states, [id]: { ...state.states[id], ...rest } } };
     }
 

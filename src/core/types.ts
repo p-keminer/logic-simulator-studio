@@ -130,6 +130,20 @@ export interface GateDefinition {
    * Not applicable to latches (level-sensitive) or async gates.
    */
   clockInputId?: string;
+  /**
+   * Default input values for disconnected pins. Used by the simulation engines
+   * when an input has no upstream wire. Active-low control pins (e.g. /PRE, /CLR)
+   * should default to 1 (inactive) instead of the global default of 0.
+   */
+  defaultInputValues?: Record<string, SignalValue>;
+  /**
+   * Which customState keys hold this gate's user-visible state.
+   * Used by the State Transition Table to force / read state correctly.
+   * Default when not specified: ['q'] (works for standard D/JK/T/SR flip-flops).
+   * Examples: MS_JK_FF → ['qS'], REG4 → ['q0','q1','q2','q3'],
+   *           BIN_CTR7S → ['count'].
+   */
+  stateKeys?: string[];
 }
 
 export interface GateInstance {

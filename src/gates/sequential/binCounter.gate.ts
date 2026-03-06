@@ -26,6 +26,7 @@ const binCounterDef: GateDefinition = {
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.85 },
   ],
   isSynchronous: true,
+  stateKeys: ['count'],
   evaluate(_inputs, customState) {
     const count = Math.max(0, Math.min(15, (customState?.count as number) ?? 0));
     return {
@@ -133,6 +134,7 @@ const binCounter99Def: GateDefinition = {
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.93 },
   ],
   isSynchronous: true,
+  stateKeys: ['count'],
   evaluate(_inputs, customState) {
     const count = Math.max(0, Math.min(99, (customState?.count as number) ?? 0));
     return {

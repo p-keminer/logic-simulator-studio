@@ -88,6 +88,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell aus',
   isSynchronous: true,
+  stateKeys: ['bit0', 'bit1', 'bit2', 'bit3'],
   // sr reg is driven by always @(posedge) → reg; q driven by assign q=sr[3] → wire
   verilogWireOutputs: ['q'],
 });
@@ -157,6 +158,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'PIPO 4-Bit Register: lädt P0–P3 bei CLK↑',
   isSynchronous: true,
+  stateKeys: ['bit0', 'bit1', 'bit2', 'bit3'],
 });
 
 // ─── PIPO8 ───────────────────────────────────────────────────────────────────
@@ -233,4 +235,5 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: 'PIPO 8-Bit Register: lädt P0–P7 bei CLK↑',
   isSynchronous: true,
+  stateKeys: ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'],
 });

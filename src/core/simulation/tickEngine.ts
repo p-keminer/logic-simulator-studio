@@ -195,7 +195,7 @@ export function runOneTick(
       const upstream = wireMap.get(`${gate.id}:${inputPort.id}`);
       inputValues[inputPort.id] = upstream
         ? ((buffer.outputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
-        : 0;
+        : (def.defaultInputValues?.[inputPort.id] ?? 0);
     }
 
     // ── Phase 2: Neue Ausgaben berechnen ──────────────────────────────────

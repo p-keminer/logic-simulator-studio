@@ -29,6 +29,63 @@ function getEncoding(fsm: FsmMachine): Map<string, number> {
   return enc;
 }
 
+// ── overlap detection ─────────────────────────────────────────────────────────
+
+export interface OverlapWarning {
+  stateId: string;
+  transitionIds: [string, string];
+  inputCombo: string;
+}
+
+/**
+ * Detect overlapping transitions: for each state, find pairs of outgoing
+ * transitions whose conditions are simultaneously true for at least one
+ * input combination.  Returns one warning per overlapping pair (with the
+ * first conflicting input combination as example).
+ */
+export function detectOverlappingTransitions(fsm: FsmMachine): OverlapWarning[] {
+  const { inputCount: M, inputNames, transitions, states } = fsm;
+  const warnings: OverlapWarning[] = [];
+  const seenPairs = new Set<string>();
+
+  for (const state of Object.values(states)) {
+    const outgoing = transitions.filter(t => t.fromId === state.id);
+    if (outgoing.length < 2) continue;
+
+    const combos = 1 << M;
+    for (let x = 0; x < combos; x++) {
+      const vals: Record<string, boolean> = {};
+      for (let j = 0; j < M; j++) vals[inputNames[j]] = ((x >> j) & 1) === 1;
+
+      // collect every transition whose condition is true for this combo
+      const matching: typeof outgoing = [];
+      for (const t of outgoing) {
+        const { ast, error } = parseCondition(t.conditionText);
+        if (!error && ast && evalCondition(ast, vals)) matching.push(t);
+      }
+
+      if (matching.length > 1) {
+        for (let i = 0; i < matching.length; i++) {
+          for (let j = i + 1; j < matching.length; j++) {
+            const key = `${matching[i].id}|${matching[j].id}`;
+            if (!seenPairs.has(key)) {
+              seenPairs.add(key);
+              const combo = inputNames.map(name => (vals[name] ? '1' : '0')).join('');
+              warnings.push({
+                stateId: state.id,
+                transitionIds: [matching[i].id, matching[j].id],
+                inputCombo: combo,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return warnings;
+}
+
 // ── main synthesis ────────────────────────────────────────────────────────────
 export function synthesizeFsm(
   fsm: FsmMachine,

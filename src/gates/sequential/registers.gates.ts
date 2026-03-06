@@ -95,6 +95,7 @@ gateRegistry.register({
   shapeComponent: ShiftRegShape,
   description: '4-Bit D-Register mit EN (steigende CLK-Flanke, async RST)',
   isSynchronous: true,
+  stateKeys: ['q0', 'q1', 'q2', 'q3'],
 });
 
 // ─── 8-bit Register ──────────────────────────────────────────────────────────
@@ -166,6 +167,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape,
   description: '8-Bit D-Register (steigende CLK-Flanke)',
   isSynchronous: true,
+  stateKeys: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'],
 });
 
 // ─── Shift Register (4-bit SIPO) ─────────────────────────────────────────────
@@ -240,4 +242,5 @@ gateRegistry.register({
   shapeComponent: ShiftRegShape,
   description: '4-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)',
   isSynchronous: true,
+  stateKeys: ['q0', 'q1', 'q2', 'q3'],
 });

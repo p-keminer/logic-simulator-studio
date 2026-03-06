@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useFsm } from '../../fsm/FsmContext';
 import type { FsmStateNode } from '../../fsm/types';
 import { parseCondition, evalCondition } from '../../fsm/conditionParser';
+import { detectOverlappingTransitions } from '../../fsm/synthesis/synthesize';
 
 function getStateEncoding(states: Record<string, FsmStateNode>): Map<string, string> {
   const list    = Object.values(states);
@@ -44,6 +45,12 @@ export function FsmStateTable() {
       return { label: i.toString(2).padStart(n, '0'), vals };
     });
   }, [inputCount, inputNames]);
+
+  const overlapWarnings = useMemo(() => detectOverlappingTransitions(fsm), [fsm]);
+  const statesWithOverlaps = useMemo(
+    () => new Set(overlapWarnings.map(w => w.stateId)),
+    [overlapWarnings],
+  );
 
   const findNext = (stateId: string, vals: Record<string, boolean>) => {
     for (const t of transitions.filter(t => t.fromId === stateId)) {
@@ -97,6 +104,11 @@ export function FsmStateTable() {
                     style={ci===0 ? { borderTop:'1px solid #1e293b' } : {}}>
                     <td style={{ ...CELL, color:'#e2e8f0', fontWeight: ci===0?700:400 }}>
                       {ci===0 ? s.label : ''}
+                      {ci===0 && statesWithOverlaps.has(s.id) && (
+                        <span style={{ color:'#f59e0b', marginLeft:4, fontSize:9 }} title="Overlapping transitions">
+                          !! overlap
+                        </span>
+                      )}
                     </td>
                     <td style={{ ...CELL, color:'#7dd3fc' }}>
                       {ci===0 ? (encoding.get(s.id)??'?') : ''}
@@ -120,6 +132,28 @@ export function FsmStateTable() {
           </tbody>
         </table>
       </div>
+      {overlapWarnings.length > 0 && (
+        <div style={{
+          marginTop: 8, padding: '6px 8px', background: '#451a03',
+          border: '1px solid #78350f', borderRadius: 4,
+          color: '#fbbf24', fontSize: 10, fontFamily: 'monospace',
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 2 }}>
+            Overlapping transitions detected
+          </div>
+          {overlapWarnings.map((w, i) => {
+            const st = states[w.stateId];
+            const t0 = transitions.find(t => t.id === w.transitionIds[0]);
+            const t1 = transitions.find(t => t.id === w.transitionIds[1]);
+            return (
+              <div key={i} style={{ color: '#fcd34d', marginTop: 2 }}>
+                State {st?.label ?? '?'}: &quot;{t0?.conditionText}&quot; and &quot;{t1?.conditionText}&quot;
+                {' '}overlap at {inputNames.join('')}={w.inputCombo}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

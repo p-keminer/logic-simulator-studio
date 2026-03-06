@@ -26,7 +26,7 @@ const SKIP_TYPES = new Set([
 // ── Typen ────────────────────────────────────────────────────────────────────
 
 interface IntermediateCol { gateId: string; portId: string; header: string; }
-interface StateVar        { gateId: string; portId: string; label: string;  }
+interface StateVar        { gateId: string; portId: string; stateKey: string; label: string; }
 
 interface TruthTableResult {
   mode:            'truth-table';
@@ -213,16 +213,28 @@ export function TruthTableModal({ onClose }: Props) {
     for (const gate of feedbackGatesSorted) {
       let def; try { def = gateRegistry.get(gate.typeId); } catch { continue; }
       const lbl = gateLabel(gate);
-      // Synchrone Gatter (D/JK/T-FF): nur den Primärausgang 'q' als Zustandsvariable
-      // nehmen. Q̄ (q_n) ist vollständig durch q determiniert und verdoppelt nur die Zeilen.
-      // Für Feedback-Gates ohne isSynchronous (SR-Latch, kombinatorisch) alle Ausgänge nehmen.
-      const portsToTrack = def.isSynchronous ? def.outputs.slice(0, 1) : def.outputs;
-      for (const p of portsToTrack) {
-        stateVars.push({
-          gateId: gate.id,
-          portId: p.id,
-          label:  def.outputs.length === 1 ? lbl : `${lbl}.${p.label ?? p.id}`,
-        });
+      if (def.isSynchronous) {
+        // Synchrone Gatter: stateKeys bestimmt, welche customState-Schlüssel den
+        // sichtbaren Zustand tragen. Default ['q'] für einfache D/JK/T/SR-FFs.
+        const keys = def.stateKeys ?? ['q'];
+        for (const key of keys) {
+          stateVars.push({
+            gateId:   gate.id,
+            portId:   key,      // wird nur für Feedback-Gates (nicht-synchron) gebraucht
+            stateKey: key,
+            label:    keys.length === 1 ? lbl : `${lbl}.${key}`,
+          });
+        }
+      } else {
+        // Feedback-Gates ohne isSynchronous (SR-Latch, kombinatorisch): alle Ausgänge nehmen.
+        for (const p of def.outputs) {
+          stateVars.push({
+            gateId:   gate.id,
+            portId:   p.id,
+            stateKey: p.id,
+            label:    def.outputs.length === 1 ? lbl : `${lbl}.${p.label ?? p.id}`,
+          });
+        }
       }
     }
 
@@ -301,22 +313,36 @@ export function TruthTableModal({ onClose }: Props) {
       }
 
       // ── Zustandsvariablen erzwingen ───────────────────────────────────────
-      // 1) buf.outputs: damit downstream-Gates den vorgegebenen Zustand lesen
-      // 2) buf.customStates.q: damit das Gatter in evaluate() / stateUpdate()
+      // 1) buf.customStates: damit das Gatter in evaluate() / stateUpdate()
       //    den korrekten aktuellen Zustand kennt (nicht den aus der echten Schaltung)
-      // 3) prevClk = 0: damit clock=1 immer eine steigende Flanke auslöst.
+      // 2) prevClk = 0: damit clock=1 immer eine steigende Flanke auslöst.
       //    Ohne diesen Reset hängt Q(t+1) vom letzten echten Takt-Zustand ab.
       for (let s = 0; s < stateVars.length; s++) {
         const sv  = stateVars[s];
         const val = stateBits[s] as SignalValue;
-        if (!buf.outputs[sv.gateId]) buf.outputs[sv.gateId] = {};
-        buf.outputs[sv.gateId][sv.portId] = val;
-        // Synchrones Gatter: q und prevClk in customState überschreiben
+        // Synchrones Gatter: stateKey und prevClk in customState überschreiben
         buf.customStates[sv.gateId] = {
           ...(buf.customStates[sv.gateId] ?? {}),
-          q:       val,
+          [sv.stateKey]: val,
           prevClk: 0,  // Flanken-Erkennung beginnt bei 0 → clk=1 = steigende Flanke
         };
+      }
+
+      // Ausgabe-Ports aus dem erzwungenen customState via evaluate() berechnen,
+      // damit downstream-Gates den vorgegebenen Zustand lesen.
+      const forcedGateIds = new Set(stateVars.map(sv => sv.gateId));
+      for (const gateId of forcedGateIds) {
+        try {
+          const def = gateRegistry.get(circuit.gates[gateId].typeId);
+          const evalOutputs = def.evaluate(
+            {} as Record<string, SignalValue>,
+            buf.customStates[gateId] as Record<string, unknown>,
+          );
+          if (!buf.outputs[gateId]) buf.outputs[gateId] = {};
+          for (const [pid, v] of Object.entries(evalOutputs)) {
+            buf.outputs[gateId][pid] = v as SignalValue;
+          }
+        } catch { /* unbekannter Typ */ }
       }
 
       // Alle anderen synchronen Gatter (nicht State-Variable) ebenfalls auf prevClk=0
@@ -338,18 +364,16 @@ export function TruthTableModal({ onClose }: Props) {
       const nextBuf = runOneTick(circuit, buf, wireMap, /* isClockPaused */ true);
 
       // Nächster Zustand Q(t+1) bestimmen:
-      // - Synchrone FF: evaluate() gibt Q(t) zurück (liest alten cs.q).
-      //   stateUpdate() berechnet Q(t+1) und speichert es in nextBuf.customStates.q.
-      //   → Lesen aus customStates, nicht aus outputs!
+      // - Synchrone FF: evaluate() gibt Q(t) zurück (liest alten customState).
+      //   stateUpdate() berechnet Q(t+1) und speichert es in nextBuf.customStates.
+      //   → Lesen aus customStates[stateKey], nicht aus outputs!
       // - Kombinatorische Feedback-Gates (SR-Latch etc.): Ausgabe sofort propagiert
       //   → Lesen aus outputs wie bisher.
       const nextState = stateVars.map(sv => {
         try {
           const gType = circuit.gates[sv.gateId]?.typeId ?? '';
           if (gateRegistry.get(gType).isSynchronous) {
-            // Q(t+1) ist in customStates.q; bei portId 'q_n' wäre es das Komplement
-            const newQ = (nextBuf.customStates[sv.gateId]?.q ?? 0) as number;
-            return sv.portId === 'q_n' ? (newQ ^ 1) : newQ;
+            return (nextBuf.customStates[sv.gateId]?.[sv.stateKey] ?? 0) as number;
           }
         } catch { /* unbekannter Typ → Fallback */ }
         return (nextBuf.outputs[sv.gateId]?.[sv.portId] ?? 0) as number;
