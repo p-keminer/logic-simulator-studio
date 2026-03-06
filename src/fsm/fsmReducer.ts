@@ -40,21 +40,23 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
 
     case 'ADD_STATE': {
       const id  = generateId();
-      const pos = (action.payload?.x != null)
+      const pos = (action.payload?.x != null && action.payload?.y != null)
         ? { x: action.payload.x!, y: action.payload.y! }
         : findFreePos(state.states);
-      const idx = Object.keys(state.states).length;
+      const existingLabels = new Set(Object.values(state.states).map(s => s.label.toUpperCase()));
+      let idx = Object.keys(state.states).length;
+      while (existingLabels.has(`S${idx}`.toUpperCase())) idx++;
       return {
         ...state,
         states: {
           ...state.states,
-          [id]: { id, label: `S${idx}`, x: pos.x, y: pos.y, isInitial: idx===0, output: 0 },
+          [id]: { id, label: `S${idx}`, x: pos.x, y: pos.y, isInitial: idx===0 && Object.keys(state.states).length===0, output: 0 },
         },
       };
     }
 
     case 'UPDATE_STATE': {
-      const { id, ...rest } = action.payload;
+      const { id, isInitial: _stripInitial, ...rest } = action.payload as { id: string; isInitial?: boolean } & Partial<Omit<FsmStateNode,'id'>>;
       if (!state.states[id]) return state;
 
       // Ensure label uniqueness (case-insensitive)
@@ -104,6 +106,7 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
 
     case 'SET_INITIAL': {
       const { id } = action.payload;
+      if (!state.states[id]) return state;
       const ns: Record<string,FsmStateNode> = {};
       for (const [sid,s] of Object.entries(state.states)) ns[sid] = { ...s, isInitial: sid===id };
       return { ...state, states: ns };
@@ -126,13 +129,13 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
     case 'SET_ARCH': return { ...state, archType: action.payload.archType };
 
     case 'SET_INPUT_COUNT': {
-      const { count } = action.payload;
+      const count = Math.max(0, Math.min(26, action.payload.count));
       const names = Array.from({length:count}, (_,i) => state.inputNames[i] ?? String.fromCharCode(65+i));
       return { ...state, inputCount: count, inputNames: names };
     }
 
     case 'SET_OUTPUT_COUNT': {
-      const { count } = action.payload;
+      const count = Math.max(0, Math.min(30, action.payload.count));
       const names = Array.from({length:count}, (_,i) => state.outputNames[i] ?? String.fromCharCode(89-i));
       const mask  = (1<<count)-1;
       const ns: Record<string,FsmStateNode> = {};
@@ -147,7 +150,21 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
         const candidate = action.payload.name.toUpperCase().slice(0,4);
         // Reject names starting with a digit (V3-M5) – they are unusable in conditions
         if (/^[0-9]/.test(candidate)) return state;
+        // Reject empty strings and names with invalid characters (FSM-M4)
+        if (!/^[A-Z_][A-Z_0-9]{0,3}$/.test(candidate)) return state;
+        // Reject duplicate names (FSM-M5)
+        if (names.some((n, i) => i !== action.payload.index && n === candidate)) return state;
+        // Propagate rename in existing transition conditions (FSM-M6)
+        const oldName = names[action.payload.index];
         names[action.payload.index] = candidate;
+        if (oldName !== candidate) {
+          const pattern = new RegExp(`\\b${oldName}\\b`, 'gi');
+          const updatedTransitions = state.transitions.map(t => ({
+            ...t,
+            conditionText: t.conditionText.replace(pattern, candidate),
+          }));
+          return { ...state, inputNames: names, transitions: updatedTransitions };
+        }
       }
       return { ...state, inputNames: names };
     }

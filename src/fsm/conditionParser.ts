@@ -30,6 +30,7 @@ function tokenize(text: string): Tok[] {
     if (c===')') { toks.push({type:'RP', pos:i}); i++; continue; }
     if (c==='1') { toks.push({type:'TRUE',pos:i}); i++; continue; }
     if (c==='0') { toks.push({type:'FALSE',pos:i}); i++; continue; }
+    if (/[2-9]/.test(c)) throw new Error(`Ziffer '${c}' an Position ${i} – nur 0 (FALSE) und 1 (TRUE) erlaubt`);
     if (/[a-zA-Z_]/.test(c)) {
       let j = i;
       while (j < text.length && /[a-zA-Z_0-9]/.test(text[j])) j++;
@@ -134,15 +135,16 @@ export function validateVars(ast: Expr, inputNames: string[]): string | null {
 
 /**
  * Return all minterm indices where the condition is true.
- * Bit order: MSB = inputNames[0], LSB = inputNames[n-1].
+ * Bit order: LSB = inputNames[0], MSB = inputNames[n-1].
  * Used by the hardware-synthesis engine (Phase 2).
  */
 export function getMinterms(ast: Expr, inputNames: string[]): number[] {
   const n = inputNames.length;
+  if (n > 20) throw new Error(`getMinterms: zu viele Inputs (${n}), Maximum 20`);
   const result: number[] = [];
   for (let i = 0; i < (1<<n); i++) {
     const vals: Record<string,boolean> = {};
-    for (let j = 0; j < n; j++) vals[inputNames[j]] = ((i>>(n-1-j))&1)===1;
+    for (let j = 0; j < n; j++) vals[inputNames[j]] = ((i>>j)&1)===1;
     if (evalCondition(ast,vals)) result.push(i);
   }
   return result;

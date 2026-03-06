@@ -1,7 +1,8 @@
 import { generateId } from '../../utils/idGenerator';
 import type { GateInstance, Wire, Circuit } from '../../core/types';
 import type { FsmMachine, FsmStateNode } from '../types';
-import { parseCondition, evalCondition } from '../conditionParser';
+import { parseCondition, evalCondition, validateVars } from '../conditionParser';
+import type { Expr } from '../conditionParser';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const SIG0 = { value: 0 as const, version: 0, lastChangedAt: 0 };
@@ -20,10 +21,13 @@ interface Sig { gateId: string; portId: string; }
 
 // ── state encoding ─────────────────────────────────────────────────────────────
 function getEncoding(fsm: FsmMachine): Map<string, number> {
-  const list    = Object.values(fsm.states);
-  const initial = list.find(s => s.isInitial);
+  const list     = Object.values(fsm.states);
+  const initials = list.filter(s => s.isInitial);
+  if (initials.length === 0) throw new Error('FSM hat keinen Startzustand');
+  if (initials.length > 1)   throw new Error('FSM hat mehrere Startzustände');
+  const initial = initials[0];
   const others  = list.filter(s => !s.isInitial).sort((a, b) => a.label.localeCompare(b.label));
-  const ordered = initial ? [initial, ...others] : others;
+  const ordered = [initial, ...others];
   const enc     = new Map<string, number>();
   ordered.forEach((s, i) => enc.set(s.id, i));
   return enc;
@@ -48,10 +52,20 @@ export function detectOverlappingTransitions(fsm: FsmMachine): OverlapWarning[] 
   const warnings: OverlapWarning[] = [];
   const seenPairs = new Set<string>();
 
+  // Cache parsed ASTs to avoid re-parsing per input combo (FSM-L4)
+  const astCache = new Map<string, Expr | null>();
+  for (const t of transitions) {
+    if (!astCache.has(t.id)) {
+      const { ast, error } = parseCondition(t.conditionText);
+      astCache.set(t.id, (!error && ast) ? ast : null);
+    }
+  }
+
   for (const state of Object.values(states)) {
     const outgoing = transitions.filter(t => t.fromId === state.id);
     if (outgoing.length < 2) continue;
 
+    if (M > 15) return warnings; // Too many inputs for brute-force enumeration
     const combos = 1 << M;
     for (let x = 0; x < combos; x++) {
       const vals: Record<string, boolean> = {};
@@ -60,8 +74,8 @@ export function detectOverlappingTransitions(fsm: FsmMachine): OverlapWarning[] 
       // collect every transition whose condition is true for this combo
       const matching: typeof outgoing = [];
       for (const t of outgoing) {
-        const { ast, error } = parseCondition(t.conditionText);
-        if (!error && ast && evalCondition(ast, vals)) matching.push(t);
+        const ast = astCache.get(t.id);
+        if (ast && evalCondition(ast, vals)) matching.push(t);
       }
 
       if (matching.length > 1) {
@@ -90,20 +104,26 @@ export function detectOverlappingTransitions(fsm: FsmMachine): OverlapWarning[] 
 export function synthesizeFsm(
   fsm: FsmMachine,
   existingCircuit: Circuit,
-): { gates: Record<string, GateInstance>; wires: Record<string, Wire> } {
+): { gates: Record<string, GateInstance>; wires: Record<string, Wire>; warnings: string[] } {
 
   const gates: Record<string, GateInstance> = {};
   const wires: Record<string, Wire>         = {};
   const add  = (g: GateInstance) => { gates[g.id] = g; return g; };
   const conn = (a: Sig, b: Sig)  => { const w = mkWire(a.gateId, a.portId, b.gateId, b.portId); wires[w.id] = w; };
+  const warnings: string[] = [];
 
-  // ── Pre-validate all transition conditions (V3-M7) ─────────────────────────
+  // ── Pre-validate all transition conditions (V3-M7 + FSM-M7) ────────────────
   for (const t of fsm.transitions) {
-    const { error } = parseCondition(t.conditionText);
+    const { ast, error } = parseCondition(t.conditionText);
     if (error) throw new Error(`Transition "${t.conditionText}": ${error}`);
+    if (ast) {
+      const varErr = validateVars(ast, fsm.inputNames);
+      if (varErr) throw new Error(`Transition "${t.conditionText}": ${varErr}`);
+    }
   }
 
   const { inputCount: M, outputCount: K, inputNames, outputNames, archType, states } = fsm;
+  if (M > 15) throw new Error(`Zu viele Eingänge für Synthese (${M}). Maximum: 15.`);
   const encMap = getEncoding(fsm);
   const N = Math.ceil(Math.log2(Math.max(2, Object.keys(states).length)));
   const V = N + M;                          // total variables for D functions
@@ -157,6 +177,7 @@ export function synthesizeFsm(
   const mintSets: Set<number>[] = Array.from({ length: N + K }, () => new Set<number>());
 
   const stateList = Object.values(states);
+  const unmatchedStates = new Set<string>();
 
   for (const state of stateList) {
     const encInt    = encMap.get(state.id) ?? 0;
@@ -182,6 +203,10 @@ export function synthesizeFsm(
         }
       }
 
+      if (!nextState && archType === 'mealy') {
+        unmatchedStates.add(state.label);
+      }
+
       // D_i: bit i of next-state encoding
       const nsEnc = nextState ? (encMap.get(nextState.id) ?? 0) : encInt;
       for (let i = 0; i < N; i++) {
@@ -202,6 +227,10 @@ export function synthesizeFsm(
         if (((state.output >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(encInt);
       }
     }
+  }
+
+  if (unmatchedStates.size > 0) {
+    warnings.push(`Mealy: Unvollständige Transitions in ${[...unmatchedStates].join(', ')} — fehlende Kombinationen verwenden Output=0`);
   }
 
   // ── SOP circuit builder ───────────────────────────────────────────────────
@@ -300,5 +329,5 @@ export function synthesizeFsm(
     conn({ gateId: dffGs[i].id, portId: 'q' }, { gateId: led.id, portId: 'in' });
   }
 
-  return { gates, wires };
+  return { gates, wires, warnings };
 }

@@ -75,6 +75,8 @@ export function FsmToolbar({ mode, onModeChange, onBack }: Props) {
         for (const s of Object.values(loaded.states)) {
           if (s.output < 0 || s.output > maxOutput)
             throw new Error(`Zustand "${s.label}": Output ${s.output} außerhalb des Bereichs 0–${maxOutput}`);
+          // Clamp output to valid range (FSM-M8)
+          s.output = s.output & maxOutput;
         }
 
         for (const t of loaded.transitions) {
@@ -82,6 +84,8 @@ export function FsmToolbar({ mode, onModeChange, onBack }: Props) {
             throw new Error(`Übergang "${t.conditionText}": fromId "${t.fromId}" referenziert keinen existierenden Zustand`);
           if (!stateIds.has(t.toId))
             throw new Error(`Übergang "${t.conditionText}": toId "${t.toId}" referenziert keinen existierenden Zustand`);
+          // Clamp mealyOutput to valid range (FSM-M8)
+          if (t.mealyOutput != null) t.mealyOutput = t.mealyOutput & maxOutput;
         }
 
         dispatch({ type: 'LOAD_FSM', payload: loaded });
@@ -107,7 +111,7 @@ export function FsmToolbar({ mode, onModeChange, onBack }: Props) {
     const sc = Object.keys(fsm.states).length;
     if (sc < 2) { alert('Bitte mindestens 2 Zustände definieren.'); return; }
     try {
-      const { gates: newGates, wires: newWires } = synthesizeFsm(fsm, circuit);
+      const { gates: newGates, wires: newWires, warnings } = synthesizeFsm(fsm, circuit);
       cDispatch({
         type: 'CIRCUIT_LOAD',
         payload: {
@@ -119,6 +123,7 @@ export function FsmToolbar({ mode, onModeChange, onBack }: Props) {
         },
       });
       onBack();
+      if (warnings.length > 0) alert('Synthese-Warnungen:\n' + warnings.join('\n'));
     } catch (e) {
       alert('Synthese fehlgeschlagen: ' + (e as Error).message);
     }

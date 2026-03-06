@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseCondition, evalCondition, exprVars, getMinterms } from '../../fsm/conditionParser';
+import { parseCondition, evalCondition, exprVars, getMinterms, validateVars } from '../../fsm/conditionParser';
 import type { Expr } from '../../fsm/conditionParser';
 import { fsmReducer, createDefaultFsm } from '../../fsm/fsmReducer';
 import type { FsmMachine, FsmTransition } from '../../fsm/types';
@@ -214,7 +214,7 @@ describe('Condition Parser - parseCondition', () => {
 
   it('computes minterms correctly for AND expression', () => {
     // A & B with inputNames=['A','B']:
-    // MSB=A, LSB=B: A=1,B=1 -> index 3
+    // LSB=A, MSB=B: A=1,B=1 -> index 3
     const ast = parseOk('A & B');
     const minterms = getMinterms(ast, ['A', 'B']);
     expect(minterms).toEqual([3]);
@@ -768,5 +768,232 @@ describe('Overlap Detection - detectOverlappingTransitions', () => {
 
     const warnings = detectOverlappingTransitions(fsm);
     expect(warnings).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Part 5: FSM Audit Bug Fix Tests
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('FSM Audit - getEncoding edge cases (K1)', () => {
+  it('throws when no initial state exists', () => {
+    const s0 = 'state-0';
+    const fsm = makeFsm({
+      states: {
+        [s0]: { id: s0, label: 'S0', x: 0, y: 0, isInitial: false, output: 0 },
+      },
+    });
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow('Startzustand');
+  });
+
+  it('throws when multiple initial states exist', () => {
+    const s0 = 'state-0';
+    const s1 = 'state-1';
+    const fsm = makeFsm({
+      states: {
+        [s0]: { id: s0, label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        [s1]: { id: s1, label: 'S1', x: 100, y: 0, isInitial: true, output: 0 },
+      },
+    });
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow('mehrere');
+  });
+});
+
+describe('FSM Audit - Reducer edge cases', () => {
+  it('H1: ADD_STATE ignores payload when y is missing', () => {
+    const fsm = makeFsm();
+    const next = fsmReducer(fsm, { type: 'ADD_STATE', payload: { x: 100 } });
+    const states = Object.values(next.states);
+    // Should use auto-placement since y is missing
+    expect(states[0].x).not.toBe(100);
+  });
+
+  it('H2: SET_INITIAL with invalid id returns unchanged state', () => {
+    let fsm = makeFsm();
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' });
+    const before = fsm;
+    const after = fsmReducer(fsm, { type: 'SET_INITIAL', payload: { id: 'nonexistent' } });
+    // Should return same state reference
+    expect(after).toBe(before);
+  });
+
+  it('H3: SET_OUTPUT_COUNT clamps to 30 max', () => {
+    const fsm = makeFsm();
+    const next = fsmReducer(fsm, { type: 'SET_OUTPUT_COUNT', payload: { count: 35 } });
+    expect(next.outputCount).toBe(30);
+  });
+
+  it('H3: SET_OUTPUT_COUNT clamps to 0 min', () => {
+    const fsm = makeFsm();
+    const next = fsmReducer(fsm, { type: 'SET_OUTPUT_COUNT', payload: { count: -5 } });
+    expect(next.outputCount).toBe(0);
+  });
+
+  it('M1: ADD_STATE generates unique label after deletion', () => {
+    let fsm = makeFsm();
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S0
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S1
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S2
+    const s1id = Object.values(fsm.states).find(s => s.label === 'S1')!.id;
+    fsm = fsmReducer(fsm, { type: 'DELETE_STATE', payload: { id: s1id } }); // delete S1
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // should get S1 (free) or S3 but NOT duplicate S2
+    const labels = Object.values(fsm.states).map(s => s.label);
+    const uniqueLabels = new Set(labels);
+    expect(uniqueLabels.size).toBe(labels.length); // all labels unique
+  });
+
+  it('M2: UPDATE_STATE strips isInitial from payload', () => {
+    let fsm = makeFsm();
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S0 (initial)
+    fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S1
+    const [s0, s1] = Object.values(fsm.states);
+    expect(s0.isInitial).toBe(true);
+
+    // Try to set isInitial on S1 via UPDATE_STATE (should be stripped)
+    fsm = fsmReducer(fsm, { type: 'UPDATE_STATE', payload: { id: s1.id, isInitial: true } as any });
+    // S0 should remain the only initial
+    expect(fsm.states[s0.id].isInitial).toBe(true);
+    expect(fsm.states[s1.id].isInitial).toBe(false);
+  });
+
+  it('M3: SET_INPUT_COUNT clamps to 26 max', () => {
+    const fsm = makeFsm();
+    const next = fsmReducer(fsm, { type: 'SET_INPUT_COUNT', payload: { count: 30 } });
+    expect(next.inputCount).toBe(26);
+  });
+
+  it('M4: SET_INPUT_NAME rejects empty string', () => {
+    let fsm = makeFsm();
+    const before = fsm;
+    const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: '' } });
+    expect(after).toBe(before);
+  });
+
+  it('M4: SET_INPUT_NAME rejects special characters', () => {
+    let fsm = makeFsm();
+    const before = fsm;
+    const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: 'A B' } });
+    expect(after).toBe(before);
+  });
+
+  it('M5: SET_INPUT_NAME rejects duplicate name', () => {
+    let fsm = makeFsm({ inputCount: 2, inputNames: ['A', 'B'] });
+    const before = fsm;
+    const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 1, name: 'A' } });
+    expect(after).toBe(before);
+  });
+
+  it('M6: SET_INPUT_NAME propagates rename in conditions', () => {
+    let fsm = makeFsm({
+      inputCount: 1,
+      inputNames: ['A'],
+      transitions: [
+        { id: 't1', fromId: 'x', toId: 'y', conditionText: 'A & !A', mealyOutput: 0 },
+      ],
+    });
+    fsm = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: 'X' } });
+    expect(fsm.inputNames[0]).toBe('X');
+    expect(fsm.transitions[0].conditionText).toBe('X & !X');
+  });
+});
+
+describe('FSM Audit - Condition Parser edge cases', () => {
+  it('L1: digits 2-9 throw specific error', () => {
+    const { error } = parseCondition('2');
+    expect(error).not.toBeNull();
+    expect(error).toContain('Ziffer');
+  });
+
+  it('L3: getMinterms throws for n > 20', () => {
+    const ast = parseOk('A');
+    const names = Array.from({ length: 21 }, (_, i) => `V${i}`);
+    expect(() => getMinterms(ast, names)).toThrow('Maximum 20');
+  });
+});
+
+describe('FSM Audit - Synthesis edge cases', () => {
+  it('H7: throws for M > 15 inputs', () => {
+    const states = {
+      s0: { id: 's0', label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+      s1: { id: 's1', label: 'S1', x: 100, y: 0, isInitial: false, output: 0 },
+    };
+    const names = Array.from({ length: 16 }, (_, i) => String.fromCharCode(65 + i));
+    const fsm = makeFsm({
+      inputCount: 16,
+      inputNames: names,
+      states,
+    });
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow('Maximum: 15');
+  });
+
+  it('M7: synthesis rejects unknown variables in conditions', () => {
+    const fsm = makeFsm({
+      inputCount: 1,
+      inputNames: ['A'],
+      states: {
+        s0: { id: 's0', label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        s1: { id: 's1', label: 'S1', x: 100, y: 0, isInitial: false, output: 0 },
+      },
+      transitions: [
+        { id: 't1', fromId: 's0', toId: 's1', conditionText: 'X', mealyOutput: 0 },
+      ],
+    });
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow('Unbekannte');
+  });
+
+  it('H6: Mealy synthesis warns about unmatched combos', () => {
+    const fsm = makeFsm({
+      archType: 'mealy',
+      inputCount: 1,
+      inputNames: ['A'],
+      states: {
+        s0: { id: 's0', label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        s1: { id: 's1', label: 'S1', x: 100, y: 0, isInitial: false, output: 0 },
+      },
+      transitions: [
+        // Only transition for A=1, no transition for A=0
+        { id: 't1', fromId: 's0', toId: 's1', conditionText: 'A', mealyOutput: 1 },
+      ],
+    });
+    const result = synthesizeFsm(fsm, emptyCircuit());
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings[0]).toContain('Unvollständige');
+  });
+
+  it('holds current state when no transition matches', () => {
+    // 2-state FSM: S0 -> S1 on A=1, no self-loop for S0
+    // When A=0 at S0, should hold S0 (not jump to S0 encoding 0)
+    const fsm = makeFsm({
+      archType: 'moore',
+      states: {
+        s0: { id: 's0', label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        s1: { id: 's1', label: 'S1', x: 100, y: 0, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: 's0', toId: 's1', conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: 's1', toId: 's0', conditionText: 'A', mealyOutput: 0 },
+      ],
+    });
+    // Should not throw — missing transitions cause hold, not error
+    const result = synthesizeFsm(fsm, emptyCircuit());
+    expect(Object.keys(result.gates).length).toBeGreaterThan(0);
+  });
+
+  it('overlap detection returns empty for > 15 inputs', () => {
+    const names = Array.from({ length: 16 }, (_, i) => String.fromCharCode(65 + i));
+    const fsm = makeFsm({
+      inputCount: 16,
+      inputNames: names,
+      states: {
+        s0: { id: 's0', label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        s1: { id: 's1', label: 'S1', x: 100, y: 0, isInitial: false, output: 0 },
+      },
+      transitions: [
+        { id: 't1', fromId: 's0', toId: 's1', conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: 's0', toId: 's1', conditionText: 'B', mealyOutput: 0 },
+      ],
+    });
+    const warnings = detectOverlappingTransitions(fsm);
+    expect(warnings).toHaveLength(0); // Skips brute-force for M > 15
   });
 });

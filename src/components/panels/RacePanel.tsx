@@ -7,6 +7,8 @@
 import { useEffect } from 'react';
 import type { RaceInfo, RaceSeverity } from '../../core/types';
 import { useCircuitContext } from '../../store/CircuitContext';
+import { gateRegistry } from '../../core/registry/GateRegistry';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../../utils/constants';
 
 const SEVERITY_LABEL: Record<RaceSeverity, string> = {
   critical: 'KRITISCH',
@@ -52,12 +54,23 @@ export function RacePanel({ onClose }: Props) {
     const gate   = gateId ? circuit.gates[gateId] : undefined;
     if (!gate) return;
 
-    // Center viewport on the gate.
-    const cx = gate.x + 50;
-    const cy = gate.y + 40;
+    // Look up actual gate dimensions from registry.
+    const def = gateRegistry.get(gate.typeId);
+    const gw  = def?.width  ?? 80;
+    const gh  = def?.height ?? 60;
+
+    // Center of the gate in SVG coordinates.
+    const cx = gate.x + gw / 2;
+    const cy = gate.y + gh / 2;
+
+    // Use a comfortable zoom level that shows the gate large and centered.
+    const zoom = 5;
+    const vbW  = CANVAS_WIDTH  / zoom;
+    const vbH  = CANVAS_HEIGHT / zoom;
+
     dispatch({
       type: 'VIEWPORT_SET',
-      payload: { panX: cx - 400, panY: cy - 300, zoom: 2 },
+      payload: { panX: cx - vbW / 2, panY: cy - vbH / 2, zoom },
     });
     onClose();
   };
