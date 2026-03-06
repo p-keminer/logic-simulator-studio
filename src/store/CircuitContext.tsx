@@ -494,6 +494,10 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           // committed value equals the final value → no downstream change.
           if (batchChangedNets.size === 0) return;
 
+          // In paused (step) mode: skip per-batch snapshots.
+          // One final-state snapshot is pushed after advance() completes (below).
+          if (isClockPausedRef.current) return;
+
           sampleCounterRef.current++;
           if (sampleCounterRef.current < GATE_DELAY_SAMPLE_EVERY) return;
           sampleCounterRef.current = 0;
@@ -556,7 +560,25 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         const newBuf = scheduler.buildBuffer();
 
         // Determine if any signals changed compared to the last committed state.
-        if (!isStable(buf, newBuf)) anyChanged = true;
+        if (!isStable(buf, newBuf)) {
+          anyChanged = true;
+          // In paused step mode: push exactly 1 final-state snapshot per ⏭ click.
+          // (Per-batch sampling was suppressed in onBatchCommit above.)
+          if (isClockPausedRef.current && newSnaps.length === 0) {
+            const step = ++stepRef.current;
+            const wireValues: Record<string, SignalValue> = {};
+            for (const wire of Object.values(c.wires)) {
+              wireValues[wire.id] = (newBuf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as SignalValue;
+            }
+            const gateValues: Record<string, SignalValue> = {};
+            for (const [gId, ports] of Object.entries(newBuf.outputs)) {
+              for (const [pId, val] of Object.entries(ports)) {
+                gateValues[`${gId}:${pId}`] = val;
+              }
+            }
+            newSnaps.push({ step, tick: newBuf.tick, wireValues, gateValues });
+          }
+        }
 
         // Keep the ZERO_DELAY simBuffer in sync so settle still works correctly.
         simBufferRef.current = {

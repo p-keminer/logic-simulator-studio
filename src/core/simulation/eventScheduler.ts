@@ -93,6 +93,14 @@ export class EventScheduler {
    */
   private scheduled = new Map<string, { value: SignalValue; sourceGateId: string }>();
 
+  /**
+   * Last scheduled output value per netId — used during the autonomous evaluation
+   * loop to prevent redundant same-direction events and correctly detect reversals.
+   * committedOutputs is not updated until events fire, so without this tracker
+   * the clock would schedule multiple CLK=1 events and miss the CLK=0 event.
+   */
+  private lastScheduledOutputs = new Map<string, SignalValue>();
+
   // ── Public API ─────────────────────────────────────────────────────────────
 
   /**
@@ -130,6 +138,7 @@ export class EventScheduler {
 
     this.queue = [];
     this.scheduled.clear();
+    this.lastScheduledOutputs.clear();
 
     // Schedule initial evaluation of every gate to populate the queue.
     // This gives all gates a chance to produce their first events.
@@ -492,8 +501,14 @@ export class EventScheduler {
       const val = rawVal as SignalValue;
       const netId    = `${gate.id}:${portId}`;
       const committed = this.committedOutputs[gate.id]?.[portId];
+      // During the autonomous evaluation loop committedOutputs is not updated until
+      // events fire (Step 2). Use the last scheduled value so we don't emit redundant
+      // same-direction events and correctly detect direction reversals (e.g. CLK 0→1→0).
+      const effectiveCommitted = this.lastScheduledOutputs.has(netId)
+        ? this.lastScheduledOutputs.get(netId)
+        : committed;
 
-      if (committed === val) continue; // No change — no event needed.
+      if (effectiveCommitted === val) continue; // No change — no event needed.
 
       // Deduplication: if an event already scheduled for (eventTime, netId) with the
       // same value and same source, skip. If conflicting, replace (newer evaluation wins).
@@ -512,6 +527,7 @@ export class EventScheduler {
       // Enqueue new event in sorted order.
       this._enqueue({ time: eventTime, netId, value: val, sourceGateId: gate.id });
       this.scheduled.set(shadowKey, { value: val, sourceGateId: gate.id });
+      this.lastScheduledOutputs.set(netId, val);
     }
   }
 
