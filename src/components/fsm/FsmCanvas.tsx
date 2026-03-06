@@ -279,7 +279,9 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
   // ── Pointer-Up ───────────────────────────────────────────────────────────────
   const handlePointerUp = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
-    (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+    try { (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId); } catch {}
+    const ctm = svgRef.current.getScreenCTM();
+    if (!ctm) return;
     const svgP   = clientToSvg(svgRef.current, e.clientX, e.clientY);
     const worldP = svgToWorld(svgP.x, svgP.y, zoomRef.current, panRef.current.x, panRef.current.y);
     const ia = interactionRef.current;
@@ -308,6 +310,7 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
           if (lassoHits(ia.originX, ia.originY, lw, lh, s.x, s.y)) lassoIds.add(s.id);
         });
         if (lassoIds.size > 0) {
+          setSelectedTransId(null); // Clear transition selection on lasso
           // V3-L6: Shift+lasso extends existing selection instead of replacing
           if (e.shiftKey) {
             const merged = new Set(selectedIdsRef.current);

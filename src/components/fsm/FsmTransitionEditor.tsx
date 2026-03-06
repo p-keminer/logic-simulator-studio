@@ -103,7 +103,7 @@ export function FsmTransitionEditor(props: Props) {
             ✓ Aktiv bei: {preview.slice(0,4).join(' | ')}{preview.length>4?' …':''}
           </p>
         )}
-        {!err && preview.length===0 && cond.trim() && (
+        {!err && preview.length===0 && cond.trim() && fsm.inputCount <= 4 && (
           <p style={{ color:'#f59e0b',fontSize:10,fontFamily:'monospace',marginTop:6 }}>
             ⚠ Bedingung niemals wahr
           </p>

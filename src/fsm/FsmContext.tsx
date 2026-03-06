@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import type React from 'react';
 import type { FsmMachine } from './types';
 import { fsmReducer, createDefaultFsm } from './fsmReducer';
@@ -23,8 +23,13 @@ const FsmContext = createContext<FsmCtxValue | null>(null);
 
 export function FsmProvider({ children }: { children: React.ReactNode }) {
   const [fsm, dispatch] = useReducer(fsmReducer, undefined, loadFsm);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    try { localStorage.setItem(FSM_KEY, JSON.stringify(fsm)); } catch { /* ignore */ }
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      try { localStorage.setItem(FSM_KEY, JSON.stringify(fsm)); } catch { /* ignore */ }
+    }, 300);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [fsm]);
   return <FsmContext.Provider value={{ fsm, dispatch }}>{children}</FsmContext.Provider>;
 }

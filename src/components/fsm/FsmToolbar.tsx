@@ -57,17 +57,36 @@ export function FsmToolbar({ mode, onModeChange, onBack }: Props) {
         if (loaded.archType !== 'moore' && loaded.archType !== 'mealy')
           throw new Error(`Ungültiger archType: "${loaded.archType}" (erlaubt: moore, mealy)`);
 
-        if (!Number.isInteger(loaded.inputCount) || loaded.inputCount < 1)
-          throw new Error(`inputCount muss eine positive Ganzzahl sein (erhalten: ${loaded.inputCount})`);
+        if (!Number.isInteger(loaded.inputCount) || loaded.inputCount < 1 || loaded.inputCount > 26)
+          throw new Error(`inputCount muss zwischen 1 und 26 liegen (erhalten: ${loaded.inputCount})`);
 
-        if (!Number.isInteger(loaded.outputCount) || loaded.outputCount < 1)
-          throw new Error(`outputCount muss eine positive Ganzzahl sein (erhalten: ${loaded.outputCount})`);
+        if (!Number.isInteger(loaded.outputCount) || loaded.outputCount < 1 || loaded.outputCount > 30)
+          throw new Error(`outputCount muss zwischen 1 und 30 liegen (erhalten: ${loaded.outputCount})`);
 
         if (!Array.isArray(loaded.inputNames) || loaded.inputNames.length !== loaded.inputCount)
           throw new Error(`inputNames muss ein Array der Länge ${loaded.inputCount} sein`);
 
         if (!Array.isArray(loaded.outputNames) || loaded.outputNames.length !== loaded.outputCount)
           throw new Error(`outputNames muss ein Array der Länge ${loaded.outputCount} sein`);
+
+        // Validate input names: unique, valid identifiers, no reserved keywords
+        const RESERVED = ['AND', 'OR', 'NOT', 'TRUE', 'FALSE'];
+        const seenNames = new Set<string>();
+        for (const name of loaded.inputNames) {
+          const upper = String(name).toUpperCase();
+          if (RESERVED.includes(upper))
+            throw new Error(`Input-Name "${name}" ist ein reserviertes Schlüsselwort`);
+          if (seenNames.has(upper))
+            throw new Error(`Doppelter Input-Name: "${name}"`);
+          seenNames.add(upper);
+        }
+
+        // Validate exactly one initial state
+        const initials = Object.values(loaded.states).filter(s => s.isInitial);
+        if (initials.length === 0)
+          throw new Error('FSM hat keinen Startzustand (isInitial)');
+        if (initials.length > 1)
+          throw new Error(`FSM hat ${initials.length} Startzustände – es darf nur einen geben`);
 
         const stateIds = new Set(Object.keys(loaded.states));
         const maxOutput = (1 << loaded.outputCount) - 1;

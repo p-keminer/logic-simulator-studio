@@ -179,6 +179,13 @@ export function synthesizeFsm(
   const stateList = Object.values(states);
   const unmatchedStates = new Set<string>();
 
+  // Pre-parse transition ASTs for O(1) lookup in the inner loop
+  const transAstMap = new Map<string, Expr | null>();
+  for (const t of fsm.transitions) {
+    const { ast, error } = parseCondition(t.conditionText);
+    transAstMap.set(t.id, (!error && ast) ? ast : null);
+  }
+
   for (const state of stateList) {
     const encInt    = encMap.get(state.id) ?? 0;
     const inputCombos = 1 << M;
@@ -195,8 +202,8 @@ export function synthesizeFsm(
       let nextState: FsmStateNode | null = null;
       let mealyOut  = 0;
       for (const t of fsm.transitions.filter(t => t.fromId === state.id)) {
-        const { ast, error } = parseCondition(t.conditionText);
-        if (!error && ast && evalCondition(ast, vals)) {
+        const ast = transAstMap.get(t.id);
+        if (ast && evalCondition(ast, vals)) {
           nextState = states[t.toId] ?? null;
           mealyOut  = t.mealyOutput;
           break;

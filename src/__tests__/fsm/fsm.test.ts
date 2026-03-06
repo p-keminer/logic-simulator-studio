@@ -385,12 +385,15 @@ describe('FSM Reducer', () => {
       expect(fsm.inputNames).toEqual(['X']);
     });
 
-    it('preserves existing names when increasing', () => {
+    it('preserves existing names when increasing and avoids duplicates', () => {
       let fsm = makeFsm({ inputCount: 1, inputNames: ['X'] });
       fsm = fsmReducer(fsm, { type: 'SET_INPUT_COUNT', payload: { count: 3 } });
       expect(fsm.inputNames[0]).toBe('X');
-      expect(fsm.inputNames[1]).toBe('B');
-      expect(fsm.inputNames[2]).toBe('C');
+      // New names should be the first free letters (A, B) since X is taken
+      expect(fsm.inputNames[1]).toBe('A');
+      expect(fsm.inputNames[2]).toBe('B');
+      // All unique
+      expect(new Set(fsm.inputNames).size).toBe(3);
     });
   });
 
@@ -894,6 +897,24 @@ describe('FSM Audit - Reducer edge cases', () => {
     fsm = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: 'X' } });
     expect(fsm.inputNames[0]).toBe('X');
     expect(fsm.transitions[0].conditionText).toBe('X & !X');
+  });
+
+  it('rejects reserved keywords as input names (AND, OR, NOT, TRUE, FALSE)', () => {
+    const fsm = makeFsm();
+    for (const kw of ['AND', 'OR', 'NOT', 'TRUE', 'FALSE']) {
+      const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: kw } });
+      expect(after).toBe(fsm); // should reject
+    }
+  });
+
+  it('SET_INPUT_COUNT avoids duplicate names after rename', () => {
+    let fsm = makeFsm({ inputCount: 1, inputNames: ['C'] });
+    fsm = fsmReducer(fsm, { type: 'SET_INPUT_COUNT', payload: { count: 4 } });
+    const names = fsm.inputNames;
+    // C is preserved, new ones should not duplicate C
+    expect(names[0]).toBe('C');
+    expect(new Set(names).size).toBe(4); // all unique
+    expect(names).not.toContain(undefined);
   });
 });
 

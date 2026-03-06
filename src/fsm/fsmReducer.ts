@@ -130,7 +130,17 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
 
     case 'SET_INPUT_COUNT': {
       const count = Math.max(0, Math.min(26, action.payload.count));
-      const names = Array.from({length:count}, (_,i) => state.inputNames[i] ?? String.fromCharCode(65+i));
+      const preserved = state.inputNames.slice(0, count);
+      const usedNames = new Set(preserved.map(n => n.toUpperCase()));
+      const names = Array.from({length:count}, (_,i) => {
+        if (i < preserved.length) return preserved[i];
+        // Find a letter not already used
+        for (let c = 0; c < 26; c++) {
+          const ch = String.fromCharCode(65 + c);
+          if (!usedNames.has(ch)) { usedNames.add(ch); return ch; }
+        }
+        return `I${i}`;
+      });
       return { ...state, inputCount: count, inputNames: names };
     }
 
@@ -147,7 +157,11 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
     case 'SET_INPUT_NAME': {
       const names = [...state.inputNames];
       if (action.payload.index >= 0 && action.payload.index < names.length) {
-        const candidate = action.payload.name.toUpperCase().slice(0,4);
+        const rawUpper = action.payload.name.toUpperCase();
+        // Reject parser-reserved keywords before truncation (AND, OR, NOT, TRUE, FALSE)
+        const RESERVED = ['AND', 'OR', 'NOT', 'TRUE', 'FALSE'];
+        if (RESERVED.includes(rawUpper)) return state;
+        const candidate = rawUpper.slice(0,4);
         // Reject names starting with a digit (V3-M5) – they are unusable in conditions
         if (/^[0-9]/.test(candidate)) return state;
         // Reject empty strings and names with invalid characters (FSM-M4)
