@@ -215,7 +215,8 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       g.typeId === 'INPUT_SWITCH' ||
       g.typeId === 'PUSH_BTN'     ||
       g.typeId === 'CONST_HIGH'   ||
-      g.typeId === 'CONST_LOW'
+      g.typeId === 'CONST_LOW'    ||
+      g.typeId === 'ADC8'
     )
     .map(g => g.id + ':' + ((g.customState?.value as number) ?? 0))
     .sort().join(',');
@@ -326,7 +327,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           preSettleBuf = schedulerRef.current.buildBuffer();
           switchGateIds = new Set(
             Object.values(c.gates)
-              .filter(g => g.typeId === 'INPUT_SWITCH' || g.typeId === 'PUSH_BTN')
+              .filter(g => g.typeId === 'INPUT_SWITCH' || g.typeId === 'PUSH_BTN' || g.typeId === 'ADC8')
               .map(g => g.id),
           );
         }
@@ -354,6 +355,10 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       // ── Mode-Switch Detection: re-seed GATE_DELAY scheduler ──────────────
       if (mode !== prevModeRef.current) {
         prevModeRef.current = mode;
+        // Reset sampling counters to avoid stale values from the previous mode
+        // leaking into the new mode's snapshot cadence.
+        sampleCounterRef.current = 0;
+        stepRef.current = 0;
         if (mode === SimulationMode.GATE_DELAY) {
           // Create or re-create the scheduler and seed from current settled state.
           schedulerRef.current = new EventScheduler();

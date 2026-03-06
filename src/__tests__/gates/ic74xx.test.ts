@@ -474,10 +474,10 @@ describe('74HC161 – 4-Bit Counter', () => {
     expect(nextState.cnt).toBe(5);
   });
 
-  it('/CLR=0 clears counter on rising edge (synchronous clear)', () => {
+  it('/CLR=0 clears immediately (asynchronous), even without clock edge', () => {
     const state: Record<string, unknown> = { cnt: 10, pClk: 0 };
     const { nextState } = stateTransition('74HC161', {
-      clk: 1, clrn: 0, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0,
+      clk: 0, clrn: 0, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0,
     }, state);
     expect(nextState.cnt).toBe(0);
   });
@@ -840,9 +840,9 @@ describe('74HC148 – Priority Encoder', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────────
-// 17. 74HC163 – 4-Bit Synchronous Counter with Asynchronous Clear
+// 17. 74HC163 – 4-Bit Synchronous Counter with Synchronous Clear
 // ─────────────────────────────────────────────────────────────────────────────────
-describe('74HC163 – 4-Bit Sync Counter (Async Clear)', () => {
+describe('74HC163 – 4-Bit Sync Counter (Sync Clear)', () => {
   it('should be registered', () => {
     expect(gateRegistry.has('74HC163')).toBe(true);
   });
@@ -860,12 +860,20 @@ describe('74HC163 – 4-Bit Sync Counter (Async Clear)', () => {
     expect(nextState.cnt).toBe(4);
   });
 
-  it('/CLR=0 clears immediately (asynchronous), even without clock edge', () => {
+  it('/CLR=0 clears counter on rising edge (synchronous clear)', () => {
+    const state: Record<string, unknown> = { cnt: 12, pClk: 0 };
+    const { nextState } = stateTransition('74HC163', {
+      clk: 1, clrn: 0, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0,
+    }, state);
+    expect(nextState.cnt).toBe(0);
+  });
+
+  it('/CLR=0 does NOT clear without rising edge (synchronous)', () => {
     const state: Record<string, unknown> = { cnt: 12, pClk: 0 };
     const { nextState } = stateTransition('74HC163', {
       clk: 0, clrn: 0, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0,
     }, state);
-    expect(nextState.cnt).toBe(0);
+    expect(nextState.cnt).toBe(12);
   });
 
   it('/LD=0 parallel loads on rising edge', () => {

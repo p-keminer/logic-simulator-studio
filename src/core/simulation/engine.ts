@@ -44,32 +44,34 @@ export function runSimulation(circuit: Circuit): SimulationResult {
     const gate = circuit.gates[gateId];
     if (!gate) continue;
 
-    const definition = gateRegistry.get(gate.typeId);
-    const inputValues: Record<string, SignalValue> = {};
+    try {
+      const definition = gateRegistry.get(gate.typeId);
+      const inputValues: Record<string, SignalValue> = {};
 
-    for (const inputPort of definition.inputs) {
-      const wire = inputWireMap.get(`${gateId}:${inputPort.id}`);
-      if (wire) {
-        const upstreamOutputs = resolvedOutputs.get(wire.from.gateId);
-        inputValues[inputPort.id] = upstreamOutputs?.[wire.from.portId]?.value ?? 0;
-      } else {
-        inputValues[inputPort.id] = 0;
+      for (const inputPort of definition.inputs) {
+        const wire = inputWireMap.get(`${gateId}:${inputPort.id}`);
+        if (wire) {
+          const upstreamOutputs = resolvedOutputs.get(wire.from.gateId);
+          inputValues[inputPort.id] = upstreamOutputs?.[wire.from.portId]?.value ?? 0;
+        } else {
+          inputValues[inputPort.id] = (definition.defaultInputValues?.[inputPort.id] ?? 0);
+        }
       }
-    }
 
-    const outputValues = definition.evaluate(inputValues, gate.customState);
+      const outputValues = definition.evaluate(inputValues, gate.customState);
 
-    // Stateful gates (flip-flops, registers) compute next state
-    if (definition.stateUpdate) {
-      customStateUpdates[gateId] = definition.stateUpdate(inputValues, outputValues, gate.customState);
-    }
+      // Stateful gates (flip-flops, registers) compute next state
+      if (definition.stateUpdate) {
+        customStateUpdates[gateId] = definition.stateUpdate(inputValues, outputValues, gate.customState);
+      }
 
-    const newOutputSignals: Record<string, SignalState> = {};
-    for (const [portId, value] of Object.entries(outputValues)) {
-      newOutputSignals[portId] = makeSignal(value as SignalValue, gate.outputSignals[portId]);
-    }
+      const newOutputSignals: Record<string, SignalState> = {};
+      for (const [portId, value] of Object.entries(outputValues)) {
+        newOutputSignals[portId] = makeSignal(value as SignalValue, gate.outputSignals[portId]);
+      }
 
-    resolvedOutputs.set(gateId, newOutputSignals);
+      resolvedOutputs.set(gateId, newOutputSignals);
+    } catch { /* unknown gate type — skip silently */ }
   }
 
   const wireSignals: Record<string, SignalState> = {};

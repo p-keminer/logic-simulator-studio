@@ -528,7 +528,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape, description: '8-Bit Schieberegister mit Ausgangs-Latch',
 });
 
-// 74HC161 – 4-bit synchronous binary counter with synchronous clear and load
+// 74HC161 – 4-bit synchronous binary counter with asynchronous clear and load
 gateRegistry.register({
   typeId: '74HC161', label: '74HC161', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
@@ -551,27 +551,27 @@ gateRegistry.register({
     { id: 'q3',  label: 'Q3',  relativeX: 1, relativeY: 0.89 },
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.15 },
   ],
-  evaluate: (_i, state) => {
+  evaluate: ({ ent }, state) => {
     const cnt = (state?.cnt as number) ?? 0;
     return {
       q0: ((cnt >> 0) & 1) as 0|1,
       q1: ((cnt >> 1) & 1) as 0|1,
       q2: ((cnt >> 2) & 1) as 0|1,
       q3: ((cnt >> 3) & 1) as 0|1,
-      rco: (cnt === 15 ? 1 : 0) as 0|1,
+      rco: (cnt === 15 && ent === 1 ? 1 : 0) as 0|1,
     };
   },
   stateUpdate: ({ clk, clrn, ldn, enp, ent, d0, d1, d2, d3 }, _o, state) => {
     const prev = (state?.pClk as 0|1) ?? 0;
     let cnt = (state?.cnt as number) ?? 0;
+    // 74HC161: asynchronous clear (active immediately, regardless of clock)
+    if (clrn === 0) return { cnt: 0, pClk: clk };
     const rising = clk === 1 && prev === 0;
-    if (rising) {
-      if (clrn === 0) cnt = 0;
-      else if (ldn === 0) {
-        cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
-      } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
-        cnt = (cnt + 1) & 0xF;
-      }
+    if (!rising) return { ...state, pClk: clk };
+    if (ldn === 0) {
+      cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
+    } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
+      cnt = (cnt + 1) & 0xF;
     }
     return { cnt, pClk: clk };
   },
@@ -588,7 +588,7 @@ gateRegistry.register({
     const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
     return [
       `// 74HC161 ${sid}`,
-      `always @(posedge ${clk}) begin`,
+      `always @(posedge ${clk} or negedge ${clrn}) begin`,
       `  if      (!${clrn})               ${cnt} <= 4'd0;`,
       `  else if (!${ldn})                ${cnt} <= {${d[3]},${d[2]},${d[1]},${d[0]}};`,
       `  else if (${enp} && ${ent})       ${cnt} <= ${cnt} + 1'b1;`,
@@ -613,11 +613,11 @@ gateRegistry.register({
     const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
     return [
       `-- 74HC161 ${sid}`,
-      `process(${clk})`,
+      `process(${clk}, ${clrn})`,
       `begin`,
-      `  if rising_edge(${clk}) then`,
-      `    if    ${clrn} = '0'                       then ${cnt} <= (others => '0');`,
-      `    elsif ${ldn}  = '0'                       then ${cnt} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `  if    ${clrn} = '0'             then ${cnt} <= (others => '0');`,
+      `  elsif rising_edge(${clk}) then`,
+      `    if    ${ldn}  = '0'                       then ${cnt} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
       `    elsif ${enp}  = '1' and ${ent} = '1'      then ${cnt} <= std_logic_vector(unsigned(${cnt}) + 1);`,
       `    end if;`,
       `  end if;`,
@@ -633,7 +633,7 @@ gateRegistry.register({
   vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   verilogWireOutputs: ['q0','q1','q2','q3','rco'],
   clockInputId: 'clk',
-  shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit Load/Clear',
+  shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit asynchronem Clear',
 });
 
 // 74HC151 – 8-to-1 Multiplexer
@@ -1136,7 +1136,7 @@ gateRegistry.register({
   shapeComponent: FlipFlopShape, description: '8-zu-3 Prioritätsencoder (active-low)',
 });
 
-// 74HC163 – 4-bit synchronous binary counter with asynchronous clear
+// 74HC163 – 4-bit synchronous binary counter with synchronous clear
 gateRegistry.register({
   typeId: '74HC163', label: '74HC163', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
@@ -1159,28 +1159,27 @@ gateRegistry.register({
     { id: 'q3',  label: 'Q3',  relativeX: 1, relativeY: 0.89 },
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.15 },
   ],
-  evaluate: (_i, state) => {
+  evaluate: ({ ent }, state) => {
     const cnt = (state?.cnt as number) ?? 0;
     return {
       q0: ((cnt >> 0) & 1) as 0|1,
       q1: ((cnt >> 1) & 1) as 0|1,
       q2: ((cnt >> 2) & 1) as 0|1,
       q3: ((cnt >> 3) & 1) as 0|1,
-      rco: (cnt === 15 ? 1 : 0) as 0|1,
+      rco: (cnt === 15 && ent === 1 ? 1 : 0) as 0|1,
     };
   },
   stateUpdate: ({ clk, clrn, ldn, enp, ent, d0, d1, d2, d3 }, _o, state) => {
     const prev = (state?.pClk as 0|1) ?? 0;
     let cnt = (state?.cnt as number) ?? 0;
-    // 74HC163: asynchronous clear (active immediately)
-    if (clrn === 0) return { cnt: 0, pClk: clk };
     const rising = clk === 1 && prev === 0;
-    if (rising) {
-      if (ldn === 0) {
-        cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
-      } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
-        cnt = (cnt + 1) & 0xF;
-      }
+    if (!rising) return { ...state, pClk: clk };
+    // 74HC163: synchronous clear (only on rising clock edge)
+    if (clrn === 0) return { cnt: 0, pClk: clk };
+    if (ldn === 0) {
+      cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
+    } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
+      cnt = (cnt + 1) & 0xF;
     }
     return { cnt, pClk: clk };
   },
@@ -1197,7 +1196,7 @@ gateRegistry.register({
     const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
     return [
       `// 74HC163 ${sid}`,
-      `always @(posedge ${clk} or negedge ${clrn}) begin`,
+      `always @(posedge ${clk}) begin`,
       `  if      (!${clrn})               ${cnt} <= 4'd0;`,
       `  else if (!${ldn})                ${cnt} <= {${d[3]},${d[2]},${d[1]},${d[0]}};`,
       `  else if (${enp} && ${ent})       ${cnt} <= ${cnt} + 1'b1;`,
@@ -1222,11 +1221,11 @@ gateRegistry.register({
     const rco  = w[`${g.id}:rco`] ?? `w_${sid}_rco`;
     return [
       `-- 74HC163 ${sid}`,
-      `process(${clk}, ${clrn})`,
+      `process(${clk})`,
       `begin`,
-      `  if    ${clrn} = '0'             then ${cnt} <= (others => '0');`,
-      `  elsif rising_edge(${clk}) then`,
-      `    if    ${ldn}  = '0'                       then ${cnt} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
+      `  if rising_edge(${clk}) then`,
+      `    if    ${clrn} = '0'                       then ${cnt} <= (others => '0');`,
+      `    elsif ${ldn}  = '0'                       then ${cnt} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
       `    elsif ${enp}  = '1' and ${ent} = '1'      then ${cnt} <= std_logic_vector(unsigned(${cnt}) + 1);`,
       `    end if;`,
       `  end if;`,
@@ -1242,5 +1241,5 @@ gateRegistry.register({
   vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   verilogWireOutputs: ['q0','q1','q2','q3','rco'],
   clockInputId: 'clk',
-  shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit asynchronem Clear',
+  shapeComponent: FlipFlopShape, description: '4-Bit synchroner Binärzähler mit synchronem Clear',
 });

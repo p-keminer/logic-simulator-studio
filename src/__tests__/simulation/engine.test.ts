@@ -540,7 +540,7 @@ describe('7 - isStable detection', () => {
     expect(isStable(bufA, bufB)).toBe(false);
   });
 
-  it('returns true when second buffer has extra gates not in first', () => {
+  it('returns false when second buffer has extra gates not in first', () => {
     const bufA: SimBuffer = {
       outputs: { g1: { out: 0 } },
       customStates: {},
@@ -551,8 +551,8 @@ describe('7 - isStable detection', () => {
       customStates: {},
       tick: 1,
     };
-    // isStable only checks gates in bufA
-    expect(isStable(bufA, bufB)).toBe(true);
+    // isStable is symmetric — extra keys in either buffer means not stable
+    expect(isStable(bufA, bufB)).toBe(false);
   });
 
   it('returns true for empty outputs', () => {

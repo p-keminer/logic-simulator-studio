@@ -418,6 +418,11 @@ export class EventScheduler {
     // Advance clock even if no events fired (queue may be empty / past targetTime).
     if (targetTime > this.currentTime) this.currentTime = targetTime;
 
+    // Clear stale last-scheduled outputs so they don't cause incorrect event
+    // deduplication in the next advance() call.  The map is only meaningful
+    // within a single advance() window (autonomous evaluation → event processing).
+    this.lastScheduledOutputs.clear();
+
     return races;
   }
 

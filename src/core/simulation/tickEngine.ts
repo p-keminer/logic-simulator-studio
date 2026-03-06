@@ -226,9 +226,15 @@ export function runOneTick(
  * Für Ringoszillatoren / Clock-Schaltungen: Gibt nie true zurück (erwünscht!).
  */
 export function isStable(a: SimBuffer, b: SimBuffer): boolean {
+  const aKeys = Object.keys(a.outputs);
+  const bKeys = Object.keys(b.outputs);
+  if (aKeys.length !== bKeys.length) return false;
   for (const [gateId, aPorts] of Object.entries(a.outputs)) {
     const bPorts = b.outputs[gateId];
     if (!bPorts) return false;
+    const aPortKeys = Object.keys(aPorts);
+    const bPortKeys = Object.keys(bPorts);
+    if (aPortKeys.length !== bPortKeys.length) return false;
     for (const [portId, aVal] of Object.entries(aPorts)) {
       if (bPorts[portId] !== aVal) return false;
     }
