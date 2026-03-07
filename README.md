@@ -42,7 +42,7 @@ Ein vollständiger, interaktiver Logikschaltkreis-Simulator, gebaut mit React, T
 | **Wahrheitstabelle** | ✅ Alle Eingangskombinationen, Zwischenwerte | – |
 | **Zustandsübergangstabelle** | – | ✅ Bei Rückkopplungen oder sequenziellen Zustandsbausteinen; Einzel-Tick Q(t) → Q(t+1) |
 | **Timing-Diagramm** | ✅ | ✅ |
-| **Race-Condition-Panel** | – | ✅ Klick-to-Focus auf betroffene Netze |
+| **Race-Condition-Panel** | ✅ Statische Hazards / rekonfluente Glitches | ✅ Klick-to-Focus auf betroffene Netze |
 
 ### Export
 | Format | Hinweise |
@@ -211,7 +211,7 @@ A fully featured, interactive logic circuit simulator built with React, TypeScri
 | **Truth Table** | ✅ All input combinations, intermediate values | – |
 | **State Transition Table** | – | ✅ With feedback loops or sequential state elements; single-tick Q(t) → Q(t+1) |
 | **Timing Diagram** | ✅ | ✅ |
-| **Race Condition Panel** | – | ✅ Click-to-focus on affected nets |
+| **Race Condition Panel** | ✅ Static hazards / reconvergent glitches | ✅ Click-to-focus on affected nets |
 
 ### Export
 | Format | Notes |
