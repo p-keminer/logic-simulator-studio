@@ -470,9 +470,11 @@ export class EventScheduler {
     const inputValues: Record<string, SignalValue> = {};
     for (const inp of def.inputs) {
       const upstream = wireMap.get(`${gate.id}:${inp.id}`);
-      inputValues[inp.id] = upstream
+      const raw = upstream
         ? ((this.committedOutputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
         : (def.defaultInputValues?.[inp.id] ?? 0);
+      // Sanitize hi-Z (2) → 0 so gate evaluate functions only see 0|1
+      inputValues[inp.id] = (raw === 2 ? 0 : raw) as SignalValue;
     }
 
     // Evaluate outputs with OLD state (for combinational gates).

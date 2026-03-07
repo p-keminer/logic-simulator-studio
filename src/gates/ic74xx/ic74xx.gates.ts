@@ -478,7 +478,7 @@ gateRegistry.register({
   evaluate: (inputs, state) => {
     const latch = bitsFromState(state as Record<string, unknown>, 'q', 8, 'latch');
     const oe = (inputs as any).oe ?? 0;
-    if (oe !== 0) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
+    if (oe !== 0) return { q0:2,q1:2,q2:2,q3:2,q4:2,q5:2,q6:2,q7:2 };
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((latch >> i) & 1) as 0|1;
     return out;
@@ -936,7 +936,7 @@ gateRegistry.register({
     { id: 'q7', label: 'Q7', relativeX: 1, relativeY: 0.92 },
   ],
   evaluate: ({ oe, le, d0, d1, d2, d3, d4, d5, d6, d7 }, state) => {
-    if ((oe ?? 0) === 1) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
+    if ((oe ?? 0) === 1) return { q0:2,q1:2,q2:2,q3:2,q4:2,q5:2,q6:2,q7:2 };
     if ((le ?? 0) === 1) {
       return { q0:(d0??0) as 0|1, q1:(d1??0) as 0|1, q2:(d2??0) as 0|1, q3:(d3??0) as 0|1,
                q4:(d4??0) as 0|1, q5:(d5??0) as 0|1, q6:(d6??0) as 0|1, q7:(d7??0) as 0|1 };
@@ -1022,7 +1022,7 @@ gateRegistry.register({
   ],
   evaluate: ({ oe }, state) => {
     const reg = bitsFromState(state as Record<string, unknown> | undefined, 'q', 8, 'reg');
-    if ((oe ?? 0) === 1) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
+    if ((oe ?? 0) === 1) return { q0:2,q1:2,q2:2,q3:2,q4:2,q5:2,q6:2,q7:2 };
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((reg >> i) & 1) as 0|1;
     return out;

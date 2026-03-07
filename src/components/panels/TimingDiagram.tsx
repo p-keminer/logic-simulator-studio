@@ -245,27 +245,60 @@ export function TimingDiagram({ history, onClose }: Props) {
                   /* ── Sichtbare Zeile mit Signalverlauf ───────────── */
                   const yH = y0 + 5;
                   const yL = y0 + CH_H - 8;
+                  const yZ = y0 + (CH_H - 3) / 2;  // midline for hi-Z
                   const segs: string[] = [];
+                  const hiZsegs: string[] = [];  // separate path for hi-Z dashed segments
                   let prev = -1;
 
                   displayHistory.forEach((snap, si) => {
                     const val = getVal(snap, ch.key);
                     const x   = xOf(si);
-                    const y   = val === 1 ? yH : yL;
+                    const yPrev = prev === 2 ? yZ : prev === 1 ? yH : yL;
+                    const yCurr = val === 2 ? yZ : val === 1 ? yH : yL;
                     if (si === 0) {
-                      segs.push('M ' + x + ' ' + y);
+                      if (val === 2) {
+                        hiZsegs.push('M ' + x + ' ' + yCurr);
+                      } else {
+                        segs.push('M ' + x + ' ' + yCurr);
+                      }
                     } else {
-                      if (val !== prev)
-                        segs.push('L ' + x + ' ' + (prev === 1 ? yH : yL) + ' L ' + x + ' ' + y);
-                      else
-                        segs.push('L ' + x + ' ' + y);
+                      if (val !== prev) {
+                        // Transition: draw vertical line from previous Y to current Y
+                        if (prev === 2) {
+                          hiZsegs.push('L ' + x + ' ' + yPrev);
+                          if (val === 2) {
+                            hiZsegs.push('L ' + x + ' ' + yCurr);
+                          } else {
+                            segs.push('M ' + x + ' ' + yPrev + ' L ' + x + ' ' + yCurr);
+                          }
+                        } else {
+                          segs.push('L ' + x + ' ' + yPrev);
+                          if (val === 2) {
+                            segs.push('L ' + x + ' ' + yCurr);
+                            hiZsegs.push('M ' + x + ' ' + yCurr);
+                          } else {
+                            segs.push('L ' + x + ' ' + yCurr);
+                          }
+                        }
+                      } else {
+                        if (val === 2) {
+                          hiZsegs.push('L ' + x + ' ' + yCurr);
+                        } else {
+                          segs.push('L ' + x + ' ' + yCurr);
+                        }
+                      }
                     }
                     prev = val;
                   });
                   // Linie bis zum rechten Rand ziehen (letzter bekannter Wert)
                   if (displayHistory.length > 0) {
                     const endX = lastX + 20;
-                    segs.push('L ' + endX + ' ' + (prev === 1 ? yH : yL));
+                    const yEnd = prev === 2 ? yZ : prev === 1 ? yH : yL;
+                    if (prev === 2) {
+                      hiZsegs.push('L ' + endX + ' ' + yEnd);
+                    } else {
+                      segs.push('L ' + endX + ' ' + yEnd);
+                    }
                   }
 
                   rows.push(
@@ -284,6 +317,11 @@ export function TimingDiagram({ history, onClose }: Props) {
                       {/* Signalverlauf */}
                       {segs.length > 0 && (
                         <path d={segs.join(' ')} stroke={ch.color} strokeWidth={1.5} fill="none" />
+                      )}
+                      {/* Hi-Z segments (dashed, amber) */}
+                      {hiZsegs.length > 0 && (
+                        <path d={hiZsegs.join(' ')} stroke="#f59e0b" strokeWidth={1.5} fill="none"
+                          strokeDasharray="4 3" />
                       )}
                       {/* Trennlinie */}
                       <line x1={0} y1={y0 + CH_H - 1} x2={Math.max(totalW, 400)} y2={y0 + CH_H - 1}

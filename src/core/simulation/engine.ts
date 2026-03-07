@@ -52,7 +52,9 @@ export function runSimulation(circuit: Circuit): SimulationResult {
         const wire = inputWireMap.get(`${gateId}:${inputPort.id}`);
         if (wire) {
           const upstreamOutputs = resolvedOutputs.get(wire.from.gateId);
-          inputValues[inputPort.id] = upstreamOutputs?.[wire.from.portId]?.value ?? 0;
+          const raw = upstreamOutputs?.[wire.from.portId]?.value ?? 0;
+          // Sanitize hi-Z (2) → 0 so gate evaluate functions only see 0|1
+          inputValues[inputPort.id] = (raw === 2 ? 0 : raw) as SignalValue;
         } else {
           inputValues[inputPort.id] = (definition.defaultInputValues?.[inputPort.id] ?? 0);
         }

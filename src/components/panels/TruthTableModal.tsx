@@ -334,12 +334,20 @@ export function TruthTableModal({ onClose }: Props) {
 
       // Ausgabe-Ports aus dem erzwungenen customState via evaluate() berechnen,
       // damit downstream-Gates den vorgegebenen Zustand lesen.
+      // Echte Input-Werte (z.B. OE) werden aus dem Buffer via WireMap gelesen.
       const forcedGateIds = new Set(stateVars.map(sv => sv.gateId));
       for (const gateId of forcedGateIds) {
         try {
           const def = gateRegistry.get(circuit.gates[gateId].typeId);
+          const gateInputs: Record<string, SignalValue> = {};
+          for (const inp of def.inputs) {
+            const upstream = wireMap.get(`${gateId}:${inp.id}`);
+            gateInputs[inp.id] = upstream
+              ? ((buf.outputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
+              : (def.defaultInputValues?.[inp.id] ?? 0);
+          }
           const evalOutputs = def.evaluate(
-            {} as Record<string, SignalValue>,
+            gateInputs,
             buf.customStates[gateId] as Record<string, unknown>,
           );
           if (!buf.outputs[gateId]) buf.outputs[gateId] = {};
@@ -372,13 +380,23 @@ export function TruthTableModal({ onClose }: Props) {
       // stateUpdate berechnet Q(t+1) → nextBuf.customStates.
       // Damit nachgelagerte LEDs den korrekten Q(t+1) sehen, müssen wir
       // evaluate() für synchrone Gatter mit dem neuen customState wiederholen.
+      // Dabei werden die echten Input-Werte (z.B. OE) aus dem Wire-Map gelesen,
+      // damit tri-state Outputs korrekt Z liefern wenn OE inaktiv ist.
       for (const gate of allGates) {
         let def; try { def = gateRegistry.get(gate.typeId); } catch { continue; }
         if (!def.isSynchronous) continue;
         const newCs = nextBuf.customStates[gate.id];
         if (!newCs) continue;
+        // Re-read actual input values from post-tick buffer via wireMap
+        const reInputs: Record<string, SignalValue> = {};
+        for (const inp of def.inputs) {
+          const upstream = wireMap.get(`${gate.id}:${inp.id}`);
+          reInputs[inp.id] = upstream
+            ? ((nextBuf.outputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
+            : (def.defaultInputValues?.[inp.id] ?? 0);
+        }
         const reEval = def.evaluate(
-          {} as Record<string, SignalValue>,
+          reInputs,
           newCs as Record<string, unknown>,
         );
         if (!nextBuf.outputs[gate.id]) nextBuf.outputs[gate.id] = {};
@@ -449,9 +467,12 @@ export function TruthTableModal({ onClose }: Props) {
   const tdStyle = (v: number, kind: ColKind): React.CSSProperties => ({
     padding: '3px 12px',
     textAlign: 'center' as const,
-    color:      v === 0 ? '#475569' : kindColor(kind),
+    color:      v === 2 ? '#f59e0b' : v === 0 ? '#475569' : kindColor(kind),
     fontWeight: v && kind !== 'in' ? 700 : 400,
   });
+
+  /** Display a signal value: 0, 1, or 'Z' for high-impedance */
+  const displayVal = (v: number) => v === 2 ? 'Z' : v;
 
   const sepTh: React.CSSProperties = {
     padding: '4px 4px', borderBottom: '1px solid #334155', color: '#334155',
@@ -539,9 +560,9 @@ export function TruthTableModal({ onClose }: Props) {
                       <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.025)' }}>
                         {row.ins.map((v, i)  => <td key={i} style={tdStyle(v, 'in')} >{v}</td>)}
                         {intermediateCols.length > 0 && <td style={sepTd}>│</td>}
-                        {row.mids.map((v, i) => <td key={i} style={tdStyle(v, 'mid')}>{v}</td>)}
+                        {row.mids.map((v, i) => <td key={i} style={tdStyle(v, 'mid')}>{displayVal(v)}</td>)}
                         <td style={sepTd}>│</td>
-                        {row.outs.map((v, i) => <td key={i} style={tdStyle(v, 'out')}>{v}</td>)}
+                        {row.outs.map((v, i) => <td key={i} style={tdStyle(v, 'out')}>{displayVal(v)}</td>)}
                       </tr>
                     ))}
                   </tbody>
@@ -643,9 +664,9 @@ export function TruthTableModal({ onClose }: Props) {
                         {hasInputs && <td style={sepTd}>│</td>}
                         {row.stateBits.map( (v, i) => <td key={i} style={tdStyle(v, 'state')}>{v}</td>)}
                         <td style={sepTd}>│</td>
-                        {row.nextState.map( (v, i) => <td key={i} style={tdStyle(v, 'next') }>{v}</td>)}
+                        {row.nextState.map( (v, i) => <td key={i} style={tdStyle(v, 'next') }>{displayVal(v)}</td>)}
                         {hasOutputs && <td style={sepTd}>│</td>}
-                        {row.outputBits.map((v, i) => <td key={i} style={tdStyle(v, 'out')  }>{v}</td>)}
+                        {row.outputBits.map((v, i) => <td key={i} style={tdStyle(v, 'out')  }>{displayVal(v)}</td>)}
                       </tr>
                     );
                   })}

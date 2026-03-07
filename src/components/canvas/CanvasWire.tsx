@@ -3,7 +3,7 @@ import type React from 'react';
 import type { Wire } from '../../core/types';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { computeWirePath } from '../../utils/geometry';
-import { SIGNAL_HIGH_COLOR, SIGNAL_LOW_COLOR } from '../../utils/constants';
+import { SIGNAL_HIGH_COLOR, SIGNAL_LOW_COLOR, SIGNAL_UNKNOWN_COLOR } from '../../utils/constants';
 import { screenToSVG } from '../../hooks/useViewport';
 
 interface Props {
@@ -22,6 +22,7 @@ export function CanvasWire({ wire, onContextMenu, onWaypointContextMenu }: Props
 
   const pathData = computeWirePath(wire, fromGate, toGate);
   const isHigh   = wire.signal.value === 1;
+  const isHiZ    = wire.signal.value === 2;
 
   // Race condition: override wire color based on severity of the worst race on this net.
   const netId = `${wire.from.gateId}:${wire.from.portId}`;
@@ -38,7 +39,7 @@ export function CanvasWire({ wire, onContextMenu, onWaypointContextMenu }: Props
   };
   const raceColor = raceSeverity ? (RACE_COLORS[raceSeverity] ?? '#ef4444') : '#ef4444';
 
-  const strokeColor = isRace ? raceColor : (wire.color || (isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR));
+  const strokeColor = isRace ? raceColor : (wire.color || (isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR));
   const pulseKey    = `${wire.id}-${wire.signal.version}`;
 
   const handleClick = (e: React.MouseEvent) => {

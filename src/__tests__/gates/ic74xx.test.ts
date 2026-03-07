@@ -426,11 +426,11 @@ describe('74HC595 – Shift Register', () => {
     expect(nextState.latch).toBe(0xFF);
   });
 
-  it('/OE=1 forces all outputs to 0', () => {
+  it('/OE=1 forces all outputs to Hi-Z (2)', () => {
     const state: Record<string, unknown> = { latch: 0xFF };
     const def = gateRegistry.get('74HC595')!;
     const out = def.evaluate({ oe: 1 }, state) as Record<string, number>;
-    for (let i = 0; i < 8; i++) expect(out['q' + i]).toBe(0);
+    for (let i = 0; i < 8; i++) expect(out['q' + i]).toBe(2);
   });
 });
 
@@ -693,11 +693,11 @@ describe('74HC373 – 8-Bit Transparent D-Latch', () => {
     expect(outputs.q4).toBe(1);
   });
 
-  it('/OE=1 forces all outputs to 0', () => {
+  it('/OE=1 forces all outputs to Hi-Z (2)', () => {
     const state: Record<string, unknown> = { latch: 0xFF };
     const def = gateRegistry.get('74HC373')!;
     const out = def.evaluate({ oe: 1 }, state) as Record<string, number>;
-    for (let i = 0; i < 8; i++) expect(out['q' + i]).toBe(0);
+    for (let i = 0; i < 8; i++) expect(out['q' + i]).toBe(2);
   });
 
   it('/OE=0 outputs latched data', () => {
@@ -741,11 +741,11 @@ describe('74HC374 – 8-Bit D-FF', () => {
     expect(nextState.reg).toBe(0b11111111); // unchanged
   });
 
-  it('/OE=1 forces all outputs to 0', () => {
+  it('/OE=1 forces all outputs to Hi-Z (2)', () => {
     const state: Record<string, unknown> = { reg: 0xFF };
     const def = gateRegistry.get('74HC374')!;
     const out = def.evaluate({ oe: 1 }, state) as Record<string, number>;
-    for (let i = 0; i < 8; i++) expect(out['q' + i]).toBe(0);
+    for (let i = 0; i < 8; i++) expect(out['q' + i]).toBe(2);
   });
 
   it('/OE=0 outputs registered data', () => {

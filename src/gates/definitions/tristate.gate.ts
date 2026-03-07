@@ -3,7 +3,7 @@ import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
 
-// Tri-State Buffer: /OE=0 → Y=A;  /OE=1 → Y=0 (Hi-Z represented as 0)
+// Tri-State Buffer: /OE=0 → Y=A;  /OE=1 → Y=Z (high-impedance)
 gateRegistry.register({
   typeId: 'TRIBUF',
   label: 'TRI',
@@ -17,7 +17,7 @@ gateRegistry.register({
     { id: 'y', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
   evaluate: ({ a, oe }) => ({
-    y: (oe === 0 ? (a as 0 | 1) : 0) as 0 | 1,
+    y: oe === 0 ? (a as 0 | 1) : 2,
   }),
   toVerilog: (g, w) => {
     const sid = sanitize(g.id);
@@ -40,5 +40,5 @@ gateRegistry.register({
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,
-  description: 'Tri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-Z (als 0 dargestellt)',
+  description: 'Tri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-Z',
 });

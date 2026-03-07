@@ -3,7 +3,7 @@
  * Port labels are read directly from the gate definition.
  */
 import type { GateShapeProps } from '../../core/types';
-import { GATE_BODY_FILL, GATE_SELECTED_STROKE, GATE_STROKE, SIGNAL_HIGH_COLOR } from '../../utils/constants';
+import { GATE_BODY_FILL, GATE_SELECTED_STROKE, GATE_STROKE, SIGNAL_HIGH_COLOR, SIGNAL_UNKNOWN_COLOR } from '../../utils/constants';
 import { PortDots } from './GateBase';
 
 export function FlipFlopShape({ gate, definition, isSelected, inputSignals, onPointerDown, onPortClick }: GateShapeProps) {
@@ -37,6 +37,7 @@ export function FlipFlopShape({ gate, definition, isSelected, inputSignals, onPo
         const y = p.relativeY * H;
         const sig = gate.outputSignals[p.id];
         const isHigh = sig?.value === 1;
+        const isHiZ  = sig?.value === 2;
         return (
           <g key={p.id}>
             <line x1={W} y1={y} x2={W + 12} y2={y} stroke={GATE_STROKE} strokeWidth={1.5} />
@@ -44,7 +45,7 @@ export function FlipFlopShape({ gate, definition, isSelected, inputSignals, onPo
               x={W - 12}
               y={y + 4}
               fontSize={9}
-              fill={isHigh ? SIGNAL_HIGH_COLOR : '#94a3b8'}
+              fill={isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? SIGNAL_HIGH_COLOR : '#94a3b8'}
               fontFamily="monospace"
               textAnchor="end"
               pointerEvents="none"

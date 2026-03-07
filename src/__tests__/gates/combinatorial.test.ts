@@ -122,9 +122,9 @@ describe('TRIBUF – tri-state buffer', () => {
     expect(evalGate('TRIBUF', { a: 1, oe: 0 })).toEqual({ y: 1 });
   });
 
-  it('/OE=1 (disabled): output is 0 (Hi-Z)', () => {
-    expect(evalGate('TRIBUF', { a: 0, oe: 1 })).toEqual({ y: 0 });
-    expect(evalGate('TRIBUF', { a: 1, oe: 1 })).toEqual({ y: 0 });
+  it('/OE=1 (disabled): output is Hi-Z (2)', () => {
+    expect(evalGate('TRIBUF', { a: 0, oe: 1 })).toEqual({ y: 2 });
+    expect(evalGate('TRIBUF', { a: 1, oe: 1 })).toEqual({ y: 2 });
   });
 });
 
