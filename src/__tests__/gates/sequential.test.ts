@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { gateRegistry } from '../../core/registry/index';
 import { SIM_TICKS_PER_SEC } from '../../core/simulation/tickEngine';
+import type { SignalValue } from '../../core/types';
 
 /**
  * Simulates a full state transition cycle for a sequential gate:
@@ -1087,8 +1088,8 @@ describe('BIN_CTR7S', () => {
     // Source: const en = inputs['en'] ?? 1;
     const def = gateRegistry.get(typeId)!;
     const nextState = def.stateUpdate!(
-      { clk: 1, rst: 0 } as any,
-      {} as any,
+      { clk: 1, rst: 0 } as Record<string, SignalValue>,
+      {} as Record<string, SignalValue>,
       { count: 0, prevClk: 0 },
     );
     expect(nextState!.count).toBe(1);

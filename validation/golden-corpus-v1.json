@@ -1,0 +1,186 @@
+{
+  "version": "1.0.0",
+  "createdAt": "2026-03-07",
+  "description": "Golden Corpus v1 â€” first regression suite for LogicSim HDL export and simulation correctness",
+  "circuits": [
+    {
+      "slug": "gc_c1_basic_gates",
+      "class": "combinational",
+      "title": "AND + OR + NOT chain",
+      "gates": ["AND", "OR", "NOT"],
+      "inputs": ["a", "b", "c"],
+      "outputs": ["w_2"],
+      "checkPoints": {
+        "truthTable": "y = NOT((a AND b) OR c)",
+        "verilogPorts": ["input wire a", "input wire b", "input wire c", "output wire w_2"],
+        "internalWires": ["w_0", "w_1"],
+        "primitives": ["and g_and1", "or g_or1", "not g_not1"]
+      },
+      "rationale": "Smallest combinational chain: covers AND/OR/NOT primitives and wire propagation through 3-gate DAG. Not in focused-nine."
+    },
+    {
+      "slug": "gc_c2_half_adder",
+      "class": "combinational",
+      "title": "Half Adder (XOR + AND fan-out)",
+      "gates": ["XOR", "AND"],
+      "inputs": ["a", "b"],
+      "outputs": ["w_0", "w_1"],
+      "checkPoints": {
+        "truthTable": "sum = a XOR b; carry = a AND b",
+        "verilogPorts": ["input wire a", "input wire b", "output wire w_0", "output wire w_1"],
+        "fanOut": "sw_a drives xor1 and and1; sw_b drives xor1 and and1",
+        "primitives": ["xor g_xor1", "and g_and1"]
+      },
+      "rationale": "Fan-out from two inputs, two independent output paths. XOR coverage. Not in focused-nine."
+    },
+    {
+      "slug": "gc_c3_sr_latch",
+      "class": "combinational",
+      "title": "SR-Latch (cross-coupled NOR)",
+      "gates": ["SR_LATCH"],
+      "inputs": ["s", "r"],
+      "outputs": ["w_0", "w_1"],
+      "checkPoints": {
+        "semantics": "S=1,R=0 â†’ Q=1; S=0,R=1 â†’ Q=0; S=0,R=0 â†’ hold; S=1,R=1 â†’ forbidden",
+        "verilogPrimitives": ["nor g_dut_q (w_0,  r, w_1)", "nor g_dut_qn(w_1, s, w_0)"],
+        "vhdlShadow": "w_0_q, w_1_q used for cross-coupled reads"
+      },
+      "rationale": "Asynchronous latch: tests isSynchronous=false gate in HDL export, cross-coupled NOR pattern, shadow signal for both outputs. Not in focused-nine."
+    },
+    {
+      "slug": "gc_s1_dff_assr",
+      "class": "sequential",
+      "title": "D-FF with async Set + Reset",
+      "gates": ["D_FF_ASSR"],
+      "inputs": ["d", "clk", "s", "r"],
+      "outputs": ["w_0"],
+      "checkPoints": {
+        "asyncPriority": "R overrides S overrides CLK",
+        "verilogSens": "posedge clk or posedge r or posedge s",
+        "verilogBranches": ["if (r) Q<=0", "else if (s) Q<=1", "else Q<=d"],
+        "internalWire": "w_dut_q_n â€” q_n unconnected, assigned by toVerilog"
+      },
+      "rationale": "D_FF_ASSR covers asyncSRWrapVerilog/VHDL with both S and R active (sc=null, rc=null â€” full 3-branch). Not in focused-nine."
+    },
+    {
+      "slug": "gc_s2_jkff_toggle",
+      "class": "sequential",
+      "title": "JK-FF toggle mode (J=K=1 static)",
+      "gates": ["JK_FF"],
+      "inputs": ["j", "k", "clk"],
+      "outputs": ["w_0"],
+      "initialState": {"j": 1, "k": 1},
+      "checkPoints": {
+        "semantics": "J=K=1 â†’ toggle on each CLK rising edge",
+        "verilogBranches": ["if (j&&!k) Q<=1", "else if (!j&&k) Q<=0", "else if (j&&k) Q<=~Q"],
+        "vhdlBranches": ["j='1' and k='0'", "j='0' and k='1'", "j='1' and k='1' then not Q"]
+      },
+      "rationale": "JK_FF full 3-branch case (jc=null, kc=null). Toggle mode is a standard JK use case. Not in focused-nine."
+    },
+    {
+      "slug": "gc_s3_74hc74",
+      "class": "sequential",
+      "title": "74HC74 Dual D-FF with Preset/Clear",
+      "gates": ["IC_74HC74"],
+      "inputs": ["pre1", "clr1", "d1", "clk1", "pre2", "clr2", "d2", "clk2"],
+      "outputs": ["w_0", "w_1"],
+      "checkPoints": {
+        "asyncPreset": "pre=0 (active-low) â†’ Q=1 immediately",
+        "asyncClear": "clr=0 (active-low) â†’ Q=0 immediately",
+        "verilogSens": "posedge clk1 or negedge pre1 or negedge clr1",
+        "verilogWireOutputs": "qn1, qn2 are assign wires; q1, q2 are regs"
+      },
+      "rationale": "Dual FF with active-low preset/clear. Covers negedge sensitivity, two independent clock domains. Not in focused-nine (focused-nine uses hc373/374 tri-state, not 74HC74)."
+    },
+    {
+      "slug": "gc_s4_reg4_enable",
+      "class": "sequential",
+      "title": "REG4 with clock enable",
+      "gates": ["REG4"],
+      "inputs": ["d0", "d1", "d2", "d3", "en", "clk", "rst"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3"],
+      "initialState": {"d0": 1, "d1": 0, "d2": 1, "d3": 0, "en": 1},
+      "checkPoints": {
+        "semantics": "rst=1 â†’ async clear all bits; en=1 + CLKâ†‘ â†’ load d0..d3",
+        "verilogPattern": "always @(posedge clk or posedge rst)",
+        "noInternalWires": "all 4 outputs are entity out-ports"
+      },
+      "rationale": "4-bit register with EN: covers multi-output register, async reset, enable gating. Not in focused-nine."
+    },
+    {
+      "slug": "gc_t1_tribuf_direct",
+      "class": "tristate",
+      "title": "Single TRIBUF â€” OE control",
+      "gates": ["TRIBUF"],
+      "inputs": ["a", "oe"],
+      "outputs": ["w_0"],
+      "checkPoints": {
+        "oe0": "oe=0 â†’ y=a (driven)",
+        "oe1": "oe=1 â†’ y=Z (high-impedance)",
+        "verilog": "assign w_0 = (~oe) ? a : 1'bz",
+        "vhdl": "w_0_q <= a when oe = '0' else 'Z'"
+      },
+      "rationale": "Simplest tri-state: single buffer, OE control. Baseline for Z-value output. Not in focused-nine."
+    },
+    {
+      "slug": "gc_t2_bus_mux",
+      "class": "tristate",
+      "title": "Two-driver wired-OR bus (TRIBUF Ã— 2)",
+      "gates": ["TRIBUF", "TRIBUF"],
+      "inputs": ["a1", "oe1", "a2", "oe2"],
+      "outputs": ["w_1"],
+      "checkPoints": {
+        "wireMapNote": "Two wires to same led:in â€” last wire (buf2:y=w_1) wins as output port; buf1:y=w_0 is orphan internal wire",
+        "hdlLimitation": "buf1 output (w_0) is driven but not exported as output port â€” known exporter limitation for multi-driver tri-state",
+        "verilog": "assign w_0 = (~oe1) ? a1 : 1'bz; assign w_1 = (~oe2) ? a2 : 1'bz"
+      },
+      "rationale": "Validates exporter behavior for multi-driver bus: last-wire-wins byPort, orphan internal signal, no multi-driver guard triggered. Intentionally documents limitation."
+    },
+    {
+      "slug": "gc_m1_dff_chain",
+      "class": "mixed",
+      "title": "Two D-FFs in series (pipeline stage)",
+      "gates": ["D_FF", "D_FF"],
+      "inputs": ["d", "clk"],
+      "outputs": ["w_1"],
+      "checkPoints": {
+        "pipeline": "Output delays input by 2 clock cycles",
+        "clockFanOut": "sw_clk drives both dff1:clk and dff2:clk",
+        "internalReg": "w_0 is internal reg (dff1 output); w_1 is output reg (dff2 output)",
+        "shadowSignals": "w_1_q shadow; dff1/dff2 q_n as internal wires"
+      },
+      "rationale": "Multi-gate sequential: tests clock fan-out, internal reg declaration, sequential pipeline. Not in focused-nine (focused-nine has single DFF only)."
+    },
+    {
+      "slug": "gc_m2_283_adder",
+      "class": "mixed",
+      "title": "74HC283 4-bit adder (A=7, B=8 â†’ S=15)",
+      "gates": ["IC_74HC283"],
+      "inputs": ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4", "c0"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4"],
+      "initialState": {"a1": 1, "a2": 1, "a3": 1, "a4": 0, "b1": 0, "b2": 0, "b3": 0, "b4": 1, "c0": 0},
+      "checkPoints": {
+        "initialResult": "A=0b0111=7, B=0b1000=8, C0=0 â†’ S=15 (0b1111), C4=0",
+        "verilog": "wire [4:0] sum_dut = {1'b0,a4,a3,a2,a1} + {1'b0,b4,b3,b2,b1} + {4'b0,c0}",
+        "vhdl": "process with unsigned arithmetic, sum_v(4 downto 0)",
+        "outputShadows": "w_0_q..w_4_q shadow signals in VHDL"
+      },
+      "rationale": "74HC283 combinational IC: covers multi-output non-sequential IC, unsigned arithmetic export, 5-output shadow signal pattern. Not in focused-nine."
+    },
+    {
+      "slug": "gc_m3_counter_gate",
+      "class": "mixed",
+      "title": "74HC161 counter + AND gate (detect state 3)",
+      "gates": ["IC_74HC161", "AND"],
+      "inputs": ["clk", "clrn", "ldn", "enp", "ent", "d0", "d1", "d2", "d3"],
+      "outputs": ["w_2"],
+      "checkPoints": {
+        "semantics": "AND(q0, q1) goes HIGH when counter reaches 3 (0b0011), and stays HIGH at 7 (0b0111), 11 (0b1011), 15 (0b1111)",
+        "verilogExtraReg": "reg [3:0] cnt_ctr â€” verilogExtraRegs mechanism",
+        "vhdlExtraSignal": "signal cnt_ctr : STD_LOGIC_VECTOR(3 downto 0) â€” vhdlExtraSignals mechanism",
+        "mixedGateFF": "AND in gateLines + 74HC161 in ffLines â€” tests mixed combinational/sequential emit order"
+      },
+      "rationale": "Counter feeding combinational logic: covers verilogExtraRegs, mixed gateLines+ffLines ordering, IC+primitive composition. Not in focused-nine."
+    }
+  ]
+}

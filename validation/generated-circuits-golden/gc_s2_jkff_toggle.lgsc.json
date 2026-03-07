@@ -1,0 +1,78 @@
+{
+  "id": "gc_s2_jkff_toggle",
+  "name": "gc_s2_jkff_toggle",
+  "version": "1.0.0",
+  "gates": {
+    "sw_j": {
+      "id": "sw_j",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 40,
+      "label": "j",
+      "customState": { "value": 1 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "sw_k": {
+      "id": "sw_k",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 120,
+      "label": "k",
+      "customState": { "value": 1 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "sw_clk": {
+      "id": "sw_clk",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 200,
+      "label": "clk",
+      "customState": { "value": 0 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "dut": {
+      "id": "dut",
+      "typeId": "JK_FF",
+      "x": 260, "y": 100,
+      "customState": { "q": 0, "prevClk": 0 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "led": {
+      "id": "led",
+      "typeId": "OUTPUT_LED",
+      "x": 480, "y": 100,
+      "label": "q",
+      "customState": {},
+      "outputSignals": {}, "isSelected": false
+    }
+  },
+  "wires": {
+    "w1": {
+      "id": "w1",
+      "from": { "gateId": "sw_j",   "portId": "out" },
+      "to":   { "gateId": "dut",    "portId": "j" },
+      "signal": { "value": 1, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w2": {
+      "id": "w2",
+      "from": { "gateId": "sw_k",   "portId": "out" },
+      "to":   { "gateId": "dut",    "portId": "k" },
+      "signal": { "value": 1, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w3": {
+      "id": "w3",
+      "from": { "gateId": "sw_clk", "portId": "out" },
+      "to":   { "gateId": "dut",    "portId": "clk" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w4": {
+      "id": "w4",
+      "from": { "gateId": "dut",    "portId": "q" },
+      "to":   { "gateId": "led",    "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-07", "updatedAt": "2026-03-07" }
+}

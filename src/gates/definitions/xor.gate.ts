@@ -1,5 +1,6 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { XorShape } from '../shapes/XorShape';
+import { logicXOR } from '../../core/simulation/signal';
 
 gateRegistry.register({
   typeId: 'XOR',
@@ -14,7 +15,7 @@ gateRegistry.register({
   outputs: [
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
-  evaluate: ({ a, b }) => ({ out: ((a ^ b) as 0 | 1) }),
+  evaluate: ({ a, b }) => ({ out: logicXOR(a, b) }),
   shapeComponent: XorShape,
   description: 'HIGH wenn Eingänge verschieden',
 });

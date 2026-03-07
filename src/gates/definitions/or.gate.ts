@@ -1,5 +1,6 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { OrShape } from '../shapes/OrShape';
+import { logicOR } from '../../core/simulation/signal';
 
 gateRegistry.register({
   typeId: 'OR',
@@ -14,7 +15,7 @@ gateRegistry.register({
   outputs: [
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
-  evaluate: ({ a, b }) => ({ out: ((a | b) as 0 | 1) }),
+  evaluate: ({ a, b }) => ({ out: logicOR([a, b]) }),
   shapeComponent: OrShape,
   description: 'Ausgang HIGH wenn mindestens ein Eingang HIGH',
 });

@@ -1,0 +1,1106 @@
+{
+  "auditType": "ui",
+  "runCount": 3,
+  "files": [
+    "validation/determinism-runs/ui-run1.json",
+    "validation/determinism-runs/ui-run2.json",
+    "validation/determinism-runs/ui-run3.json"
+  ],
+  "volatileFieldsIgnored": [
+    "generatedAt",
+    "generatedAtISO"
+  ],
+  "comparison": {
+    "topLevel": {
+      "resultCount": [
+        12,
+        12,
+        12
+      ],
+      "stableTop": true
+    },
+    "caseResults": {
+      "tri_not_sanitized": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "No sanitized Z-row found.",
+            "No sanitized Z-row found.",
+            "No sanitized Z-row found."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            11,
+            11,
+            11
+          ]
+        }
+      },
+      "dff_led": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "Table/Timing loaded.",
+            "Table/Timing loaded.",
+            "Table/Timing loaded."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "jkff_led": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "Table/Timing loaded.",
+            "Table/Timing loaded.",
+            "Table/Timing loaded."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "tff_led": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "Table/Timing loaded.",
+            "Table/Timing loaded.",
+            "Table/Timing loaded."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "hc373_oe_z": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "hc374_oe_z": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "hc595_oe_shift": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "hc161_clear": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "hc163_clear": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "hc194_modes": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      },
+      "multi_driver_same_input": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "Table/Timing loaded.",
+            "Table/Timing loaded.",
+            "Table/Timing loaded."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            0,
+            0,
+            0
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            false,
+            false,
+            false
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            11,
+            11,
+            11
+          ]
+        }
+      },
+      "mixed_datapath": {
+        "error": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "checkStatus": {
+          "stable": true,
+          "values": [
+            "pass",
+            "pass",
+            "pass"
+          ]
+        },
+        "checkMessage": {
+          "stable": true,
+          "values": [
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case.",
+            "UI rendered a reduced control-flow table for a wide sequential case."
+          ]
+        },
+        "semanticPass": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "steps": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasZPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "hasXPath": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "verilogMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "vhdlMatches": {
+          "stable": true,
+          "values": [
+            true,
+            true,
+            true
+          ]
+        },
+        "tableRowCount": {
+          "stable": true,
+          "values": [
+            null,
+            null,
+            null
+          ]
+        },
+        "tableParagraphCount": {
+          "stable": true,
+          "values": [
+            13,
+            13,
+            13
+          ]
+        }
+      }
+    }
+  },
+  "verdict": "deterministic"
+}

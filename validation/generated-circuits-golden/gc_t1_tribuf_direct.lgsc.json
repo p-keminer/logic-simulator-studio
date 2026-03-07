@@ -1,0 +1,63 @@
+{
+  "id": "gc_t1_tribuf_direct",
+  "name": "gc_t1_tribuf_direct",
+  "version": "1.0.0",
+  "gates": {
+    "sw_a": {
+      "id": "sw_a",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 60,
+      "label": "a",
+      "customState": { "value": 1 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "sw_oe": {
+      "id": "sw_oe",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 160,
+      "label": "oe",
+      "customState": { "value": 0 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "dut": {
+      "id": "dut",
+      "typeId": "TRIBUF",
+      "x": 240, "y": 100,
+      "customState": {},
+      "outputSignals": {}, "isSelected": false
+    },
+    "led": {
+      "id": "led",
+      "typeId": "OUTPUT_LED",
+      "x": 440, "y": 100,
+      "label": "y",
+      "customState": {},
+      "outputSignals": {}, "isSelected": false
+    }
+  },
+  "wires": {
+    "w1": {
+      "id": "w1",
+      "from": { "gateId": "sw_a",  "portId": "out" },
+      "to":   { "gateId": "dut",   "portId": "a" },
+      "signal": { "value": 1, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w2": {
+      "id": "w2",
+      "from": { "gateId": "sw_oe", "portId": "out" },
+      "to":   { "gateId": "dut",   "portId": "oe" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w3": {
+      "id": "w3",
+      "from": { "gateId": "dut",   "portId": "y" },
+      "to":   { "gateId": "led",   "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-07", "updatedAt": "2026-03-07" }
+}

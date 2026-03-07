@@ -80,7 +80,8 @@ gateRegistry.register({
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.65 },
   ],
   outputs: qqnOutputs,
-  evaluate: ({ d: _d, clk: _clk }, state) => {
+  evaluate: (inputs, state) => {
+    void inputs;
     const q = (state?.q as 0 | 1) ?? 0;
     return { q, q_n: (q ^ 1) as 0 | 1 };
   },

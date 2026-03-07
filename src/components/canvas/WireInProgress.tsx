@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type React from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { screenToSVG } from '../../hooks/useViewport';
@@ -17,10 +18,16 @@ interface Props {
 
 export function WireInProgress({ from, waypoints, mouseX, mouseY, svgRef, snapMode }: Props) {
   const { circuit } = useCircuitContext();
-  const fromGate = circuit.gates[from.gateId];
-  if (!fromGate || !svgRef.current) return null;
+  const [svgElement, setSvgElement] = useState<SVGSVGElement | null>(null);
 
-  const { x: svgX, y: svgY } = screenToSVG(svgRef.current, mouseX, mouseY);
+  useEffect(() => {
+    setSvgElement(svgRef.current);
+  }, [svgRef]);
+
+  const fromGate = circuit.gates[from.gateId];
+  if (!fromGate || !svgElement) return null;
+
+  const { x: svgX, y: svgY } = screenToSVG(svgElement, mouseX, mouseY);
 
   let endX = svgX;
   let endY = svgY;

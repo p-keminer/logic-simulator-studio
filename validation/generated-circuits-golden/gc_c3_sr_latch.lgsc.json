@@ -1,0 +1,78 @@
+{
+  "id": "gc_c3_sr_latch",
+  "name": "gc_c3_sr_latch",
+  "version": "1.0.0",
+  "gates": {
+    "sw_s": {
+      "id": "sw_s",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 60,
+      "label": "s",
+      "customState": { "value": 0 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "sw_r": {
+      "id": "sw_r",
+      "typeId": "INPUT_SWITCH",
+      "x": 40, "y": 160,
+      "label": "r",
+      "customState": { "value": 0 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "dut": {
+      "id": "dut",
+      "typeId": "SR_LATCH",
+      "x": 220, "y": 100,
+      "customState": { "q": 0 },
+      "outputSignals": {}, "isSelected": false
+    },
+    "led_q": {
+      "id": "led_q",
+      "typeId": "OUTPUT_LED",
+      "x": 420, "y": 80,
+      "label": "q",
+      "customState": {},
+      "outputSignals": {}, "isSelected": false
+    },
+    "led_qn": {
+      "id": "led_qn",
+      "typeId": "OUTPUT_LED",
+      "x": 420, "y": 160,
+      "label": "qn",
+      "customState": {},
+      "outputSignals": {}, "isSelected": false
+    }
+  },
+  "wires": {
+    "w1": {
+      "id": "w1",
+      "from": { "gateId": "sw_s", "portId": "out" },
+      "to":   { "gateId": "dut",  "portId": "s" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w2": {
+      "id": "w2",
+      "from": { "gateId": "sw_r", "portId": "out" },
+      "to":   { "gateId": "dut",  "portId": "r" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w3": {
+      "id": "w3",
+      "from": { "gateId": "dut",   "portId": "q" },
+      "to":   { "gateId": "led_q", "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    },
+    "w4": {
+      "id": "w4",
+      "from": { "gateId": "dut",    "portId": "q_n" },
+      "to":   { "gateId": "led_qn", "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [], "isSelected": false
+    }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-07", "updatedAt": "2026-03-07" }
+}

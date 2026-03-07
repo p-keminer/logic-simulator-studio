@@ -1,0 +1,89 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC161",
+  "label": "74HC161 4-bit Synchronous Binary Counter with Async Clear",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "clrn", "effect": "clear", "activeLevel": 0, "activeLow": true }
+    ],
+    "stateVariables": ["cnt0", "cnt1", "cnt2", "cnt3"],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit binary counter, counts 0-15. ASYNC clear via /CLRN (active-low, overrides clock). Synchronous parallel load via /LDN (active-low, loads d0-d3 at next CLKâ†‘ when /LDN=0). ENP and ENT must both be 1 for counting. RCO=1 when Q=15 AND ENT=1 (ripple carry out for cascading). Key distinction from 74HC163: /CLR is asynchronous here."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "clk",  "label": "CLK",   "role": "clock",        "activeLow": false, "defaultValue": 0 },
+      { "id": "clrn", "label": "/CLRN", "role": "async-reset",  "activeLow": true,  "defaultValue": 1 },
+      { "id": "ldn",  "label": "/LDN",  "role": "control",      "activeLow": true,  "defaultValue": 1 },
+      { "id": "enp",  "label": "ENP",   "role": "enable",       "activeLow": false, "defaultValue": 0 },
+      { "id": "ent",  "label": "ENT",   "role": "enable",       "activeLow": false, "defaultValue": 0 },
+      { "id": "d0",   "label": "D0",    "role": "data",         "activeLow": false, "defaultValue": 0 },
+      { "id": "d1",   "label": "D1",    "role": "data",         "activeLow": false, "defaultValue": 0 },
+      { "id": "d2",   "label": "D2",    "role": "data",         "activeLow": false, "defaultValue": 0 },
+      { "id": "d3",   "label": "D3",    "role": "data",         "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0",  "label": "Q0",  "role": "data",        "canBeTriState": false },
+      { "id": "q1",  "label": "Q1",  "role": "data",        "canBeTriState": false },
+      { "id": "q2",  "label": "Q2",  "role": "data",        "canBeTriState": false },
+      { "id": "q3",  "label": "Q3",  "role": "data",        "canBeTriState": false },
+      { "id": "rco", "label": "RCO", "role": "ripple-carry","canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk or negedge clrn) â€” async /CLR. Counter increment inside clocked block. RCO via assign.",
+    "vhdlNotes": "process(clk, clrn) â€” async reset in sensitivity list.",
+    "verilogExtraRegs": true,
+    "vhdlExtraSignals": true
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "async-control-override",
+      "reset-to-known-state",
+      "counter-rollover",
+      "clock-edge-detection",
+      "load-shift-mode",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Tests: count 0â†’15 with ENP=ENT=1; verify RCO=1 only at count=15 with ENT=1; async /CLRN=0 resets immediately (not waiting for clock edge); parallel load /LDN=0 at CLKâ†‘ loads D[3:0]; hold when ENP=0 or ENT=0; cascade: connect RCO to ENP of next stage. Verify /CLRN is truly async (resets mid-clock-cycle)."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "74HC161 has ASYNC clear. 74HC163 has SYNCHRONOUS clear. The two are commonly confused. Correct distinction must be verified in the implementation.",
+      "confirmed": true
+    },
+    {
+      "class": "documentation-gap",
+      "description": "RCO condition: real 74HC161 datasheet shows RCO=1 when count=15 AND ENT=1. Implementation must be checked to confirm ENT is included in RCO logic.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "Modulus is always 16 (binary 4-bit). No variable modulus.",
+    "Uses internal extra reg (cnt_xxx) in HDL export.",
+    "Propagation delay 20ns applies uniformly to all outputs."
+  ]
+}

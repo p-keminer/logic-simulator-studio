@@ -11,12 +11,13 @@ const BTN = { padding:'4px 12px',borderRadius:4,cursor:'pointer',fontSize:12,fon
 
 export function FsmTransitionEditor(props: Props) {
   const { fsm, dispatch } = useFsm();
+  const { onClose } = props;
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') props.onClose(); };
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [props.onClose]);
+  }, [onClose]);
   const initial = props.mode === 'edit' ? props.transition : null;
 
   const [cond,   setCond]    = useState(initial?.conditionText ?? '1');
@@ -55,18 +56,18 @@ export function FsmTransitionEditor(props: Props) {
       dispatch({ type:'UPDATE_TRANSITION', payload:{ id:initial!.id,
         conditionText: cond.trim()||'1', mealyOutput: mealy } });
     }
-    props.onClose();
+    onClose();
   };
 
   const del = () => {
     if (props.mode === 'edit') dispatch({ type:'DELETE_TRANSITION', payload:{ id:initial!.id } });
-    props.onClose();
+    onClose();
   };
 
   return (
     <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',display:'flex',
       alignItems:'center',justifyContent:'center',zIndex:4000 }}
-      onMouseDown={props.onClose}
+      onMouseDown={onClose}
     >
       <div style={{ background:'#0f172a',border:'1px solid #334155',borderRadius:10,
         padding:'20px 24px',minWidth:320,maxWidth:400,boxShadow:'0 20px 60px rgba(0,0,0,0.8)' }}

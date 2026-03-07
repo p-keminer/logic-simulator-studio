@@ -50,6 +50,7 @@ function buildSubcircuitCopy(
 }
 
 /** Register a saved custom IC into the gate registry */
+// eslint-disable-next-line react-refresh/only-export-components
 export function registerCustomIC(name: string, subcircuit: Circuit, portNames?: string[]) {
   const typeId = 'CIC_' + name.toUpperCase().replace(/[^A-Z0-9]/g, '_');
   if (gateRegistry.has(typeId)) return; // already registered
@@ -105,6 +106,7 @@ export function registerCustomIC(name: string, subcircuit: Circuit, portNames?: 
 }
 
 /** Call on app start to reload all saved custom ICs */
+// eslint-disable-next-line react-refresh/only-export-components
 export function reloadAllCustomICs() {
   for (const ic of loadCustomICs()) {
     registerCustomIC(ic.name, ic.circuit, ic.portNames);

@@ -7,6 +7,7 @@ import {
   Or3Shape, Or4Shape, Nor3Shape, Nor4Shape,
   Xor3Shape,
 } from '../shapes/MultiGateShapes';
+import { logicAND, logicOR, logicNAND, logicNOR, logicXOR } from '../../core/simulation/signal';
 
 // Helper: distribute N inputs evenly on left side
 function makeInputs(n: number) {
@@ -27,7 +28,7 @@ gateRegistry.register({
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c }) => ({ out: ((a & b & c) as 0 | 1) }),
+  evaluate: ({ a, b, c }) => ({ out: logicAND([a, b, c]) }),
   shapeComponent: And3Shape,
   description: '3-Eingang AND',
 });
@@ -39,7 +40,7 @@ gateRegistry.register({
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c, d }) => ({ out: ((a & b & c & d) as 0 | 1) }),
+  evaluate: ({ a, b, c, d }) => ({ out: logicAND([a, b, c, d]) }),
   shapeComponent: And4Shape,
   description: '4-Eingang AND',
 });
@@ -51,7 +52,7 @@ gateRegistry.register({
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c }) => ({ out: (((a & b & c) === 1 ? 0 : 1) as 0 | 1) }),
+  evaluate: ({ a, b, c }) => ({ out: logicNAND([a, b, c]) }),
   shapeComponent: Nand3Shape,
   description: '3-Eingang NAND',
 });
@@ -63,7 +64,7 @@ gateRegistry.register({
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c, d }) => ({ out: (((a & b & c & d) === 1 ? 0 : 1) as 0 | 1) }),
+  evaluate: ({ a, b, c, d }) => ({ out: logicNAND([a, b, c, d]) }),
   shapeComponent: Nand4Shape,
   description: '4-Eingang NAND',
 });
@@ -77,7 +78,7 @@ gateRegistry.register({
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c }) => ({ out: ((a | b | c) as 0 | 1) }),
+  evaluate: ({ a, b, c }) => ({ out: logicOR([a, b, c]) }),
   shapeComponent: Or3Shape,
   description: '3-Eingang OR',
 });
@@ -89,7 +90,7 @@ gateRegistry.register({
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c, d }) => ({ out: ((a | b | c | d) as 0 | 1) }),
+  evaluate: ({ a, b, c, d }) => ({ out: logicOR([a, b, c, d]) }),
   shapeComponent: Or4Shape,
   description: '4-Eingang OR',
 });
@@ -101,7 +102,7 @@ gateRegistry.register({
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c }) => ({ out: (((a | b | c) === 0 ? 1 : 0) as 0 | 1) }),
+  evaluate: ({ a, b, c }) => ({ out: logicNOR([a, b, c]) }),
   shapeComponent: Nor3Shape,
   description: '3-Eingang NOR',
 });
@@ -113,7 +114,7 @@ gateRegistry.register({
   width: 80, height: 80,
   inputs: makeInputs(4),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c, d }) => ({ out: (((a | b | c | d) === 0 ? 1 : 0) as 0 | 1) }),
+  evaluate: ({ a, b, c, d }) => ({ out: logicNOR([a, b, c, d]) }),
   shapeComponent: Nor4Shape,
   description: '4-Eingang NOR',
 });
@@ -127,7 +128,7 @@ gateRegistry.register({
   width: 80, height: 70,
   inputs: makeInputs(3),
   outputs: [{ id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 }],
-  evaluate: ({ a, b, c }) => ({ out: ((a ^ b ^ c) as 0 | 1) }),
+  evaluate: ({ a, b, c }) => ({ out: logicXOR(logicXOR(a, b), c) }),
   shapeComponent: Xor3Shape,
   description: '3-Eingang XOR (Parität)',
 });

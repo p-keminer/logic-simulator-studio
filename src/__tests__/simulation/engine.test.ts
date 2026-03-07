@@ -6,8 +6,8 @@
  * stability, clock behaviour, and topological ordering.
  */
 import { describe, it, expect } from 'vitest';
-import { gateRegistry } from '../../core/registry/index';
-import type { Circuit, GateInstance, Wire, SignalState, SignalValue } from '../../core/types';
+import '../../core/registry/index';
+import type { Circuit, GateInstance, Wire, SignalState } from '../../core/types';
 import {
   initBuffer,
   runOneTick,
@@ -710,9 +710,9 @@ describe('9 - Wire map building', () => {
 
     const wireMap = buildWireMap(circuit);
 
-    expect(wireMap.get('not1:a')).toEqual({ fromGateId: 'sw', fromPortId: 'out' });
-    expect(wireMap.get('and1:a')).toEqual({ fromGateId: 'not1', fromPortId: 'out' });
-    expect(wireMap.get('and1:b')).toEqual({ fromGateId: 'sw', fromPortId: 'out' });
+    expect(wireMap.get('not1:a')).toEqual([{ fromGateId: 'sw', fromPortId: 'out' }]);
+    expect(wireMap.get('and1:a')).toEqual([{ fromGateId: 'not1', fromPortId: 'out' }]);
+    expect(wireMap.get('and1:b')).toEqual([{ fromGateId: 'sw', fromPortId: 'out' }]);
   });
 
   it('source ports are not in the map (only destinations)', () => {

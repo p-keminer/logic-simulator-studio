@@ -12,7 +12,10 @@ export function useViewport(svgRef: React.RefObject<SVGSVGElement | null>) {
 
   // Immer-aktueller Viewport-Ref – verhindert stale closures im Wheel-Handler
   const vpRef = useRef(circuit.viewport);
-  vpRef.current = circuit.viewport;
+
+  useEffect(() => {
+    vpRef.current = circuit.viewport;
+  }, [circuit.viewport]);
 
   useEffect(() => {
     const el = svgRef.current;

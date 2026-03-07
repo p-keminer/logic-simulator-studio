@@ -1,0 +1,118 @@
+{
+  "id": "dff_led",
+  "name": "dff_led",
+  "version": "1.0.0",
+  "gates": {
+    "sw_d": {
+      "id": "sw_d",
+      "typeId": "INPUT_SWITCH",
+      "x": 40,
+      "y": 40,
+      "label": "d",
+      "customState": {
+        "value": 1
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "sw_clk": {
+      "id": "sw_clk",
+      "typeId": "INPUT_SWITCH",
+      "x": 40,
+      "y": 120,
+      "label": "clk",
+      "customState": {
+        "value": 1
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "dff": {
+      "id": "dff",
+      "typeId": "D_FF",
+      "x": 300,
+      "y": 80,
+      "customState": {
+        "q": 0,
+        "prevClk": 0
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "led": {
+      "id": "led",
+      "typeId": "OUTPUT_LED",
+      "x": 540,
+      "y": 80,
+      "label": "q",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    }
+  },
+  "wires": {
+    "w1": {
+      "id": "w1",
+      "from": {
+        "gateId": "sw_d",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "dff",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w2": {
+      "id": "w2",
+      "from": {
+        "gateId": "sw_clk",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "dff",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w3": {
+      "id": "w3",
+      "from": {
+        "gateId": "dff",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "led",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    }
+  },
+  "viewport": {
+    "panX": 0,
+    "panY": 0,
+    "zoom": 1
+  },
+  "metadata": {
+    "createdAt": "2026-03-07",
+    "updatedAt": "2026-03-07T17:53:10.070Z"
+  }
+}

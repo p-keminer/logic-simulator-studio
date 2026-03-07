@@ -1,0 +1,93 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC74",
+  "label": "74HC74 Dual D Flip-Flop with /PRE and /CLR",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": null,
+    "asyncControls": [
+      { "portId": "pre1", "effect": "preset", "activeLevel": 0, "activeLow": true },
+      { "portId": "clr1", "effect": "clear",  "activeLevel": 0, "activeLow": true },
+      { "portId": "pre2", "effect": "preset", "activeLevel": 0, "activeLow": true },
+      { "portId": "clr2", "effect": "clear",  "activeLevel": 0, "activeLow": true }
+    ],
+    "stateVariables": ["q1", "q2"],
+    "hasStableUndefinedState": true,
+    "invalidInputCombinations": [
+      { "pre1": 0, "clr1": 0, "result": "Q1=1, QÌ„1=1 (both high â€” undefined state)" },
+      { "pre2": 0, "clr2": 0, "result": "Q2=1, QÌ„2=1 (both high â€” undefined state)" }
+    ],
+    "notes": "Dual D-FF, each with independent clock (clk1/clk2). /PRE and /CLR are active-low asynchronous overrides. /PRE=0 forces Q=1. /CLR=0 forces Q=0. /PRE=/CLR=0 is forbidden (both Q and QÌ„ go HIGH). clockInputId is NOT set because there are two independent clocks â€” race/setup-hold detection does not operate for this gate. Each FF uses separate clock. stateKeys=['q1','q2'] are the exposed state for STT."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d1",   "label": "D1",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "clk1", "label": "CLK1", "role": "clock",       "activeLow": false, "defaultValue": 0 },
+      { "id": "pre1", "label": "/PRE1","role": "async-set",   "activeLow": true,  "defaultValue": 1 },
+      { "id": "clr1", "label": "/CLR1","role": "async-reset", "activeLow": true,  "defaultValue": 1 },
+      { "id": "d2",   "label": "D2",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "clk2", "label": "CLK2", "role": "clock",       "activeLow": false, "defaultValue": 0 },
+      { "id": "pre2", "label": "/PRE2","role": "async-set",   "activeLow": true,  "defaultValue": 1 },
+      { "id": "clr2", "label": "/CLR2","role": "async-reset", "activeLow": true,  "defaultValue": 1 }
+    ],
+    "outputs": [
+      { "id": "q1",  "label": "Q1",  "role": "q",     "canBeTriState": false },
+      { "id": "q1n", "label": "QÌ„1", "role": "q-bar", "canBeTriState": false },
+      { "id": "q2",  "label": "Q2",  "role": "q",     "canBeTriState": false },
+      { "id": "q2n", "label": "QÌ„2", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Each FF: always @(posedge clk1 or negedge pre1 or negedge clr1) â€” with async /PRE and /CLR. q driven as reg, qn driven by assign.",
+    "vhdlNotes": "process(clk1, pre1, clr1) with rising_edge + async conditions.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "async-control-override",
+      "forbidden-input-combination",
+      "reset-to-known-state",
+      "clock-edge-detection",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test both FFs independently: normal clocked operation; async /PRE override; async /CLR override; /PRE-before-clock; /CLR-during-clock; forbidden /PRE=/CLR=0 combination (Q=QÌ„=1). Verify defaultInputValues=1 for /PRE and /CLR keep them inactive when unconnected."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "/PRE=/CLR=0 forbidden: both Q and QÌ„ go HIGH (Q=1, QÌ„=1). Model maps this explicitly. Real hardware race when both released simultaneously.",
+      "confirmed": true
+    },
+    {
+      "class": "ui-risk",
+      "description": "clockInputId=null â€” no setup/hold race detection for either clock. Users may not notice timing violations.",
+      "confirmed": true
+    }
+  ],
+
+  "modelLimits": [
+    "Race condition on simultaneous /PRE and /CLR release not simulated.",
+    "Propagation delay=14ns applies to both FFs equally (not independent).",
+    "No cross-coupling between FF1 and FF2 in this model."
+  ]
+}

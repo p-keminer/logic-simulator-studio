@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-03-07",
+  "runEnvironment": {
+    "platform": "linux (WSL2)",
+    "node": "v24.14.0",
+    "devServer": "<dev-server>",
+    "puppeteer": "headless: true"
+  },
+  "runners": {
+    "core": {
+      "script": "validation/focused-nine-audit.mjs",
+      "runs": 3,
+      "rawFiles": [
+        "validation/determinism-runs/core-run1.json",
+        "validation/determinism-runs/core-run2.json",
+        "validation/determinism-runs/core-run3.json"
+      ],
+      "diffFile": "validation/determinism-runs/core-diff.json"
+    },
+    "ui": {
+      "script": "validation/focused-nine-ui-audit.mjs",
+      "runs": 3,
+      "rawFiles": [
+        "validation/determinism-runs/ui-run1.json",
+        "validation/determinism-runs/ui-run2.json",
+        "validation/determinism-runs/ui-run3.json"
+      ],
+      "diffFile": "validation/determinism-runs/ui-diff.json"
+    }
+  },
+  "verdicts": {
+    "core": {
+      "classification": "stable with expected volatile fields",
+      "ciReady": true,
+      "ciMode": "with field whitelist",
+      "volatileFields": ["generatedAt", "result.details.gateSignals.*.*.lastChangedAt"],
+      "volatileFieldExplanation": "lastChangedAt uses Date.now() inside the simulation engine; changes with each run but carries no semantic meaning for pass/fail. All statuses, toolingStatuses, signal values, and toolchain outputs are bit-identical.",
+      "stableFields": ["slug", "kind", "result.status", "result.expectation", "result.details (excluding lastChangedAt)", "toolingStatus", "tools.verilog.*", "tools.vhdl.*", "files.*"]
+    },
+    "ui": {
+      "classification": "deterministic",
+      "ciReady": true,
+      "ciMode": "direct (no whitelist needed)",
+      "volatileFields": ["generatedAt"],
+      "stableFields": ["error", "check.status", "check.message", "timingSemantic.semanticPass", "timingSemantic.stepsRecorded", "timingSemantic.findings", "hdl.verilogMatches", "hdl.vhdlMatches", "table.paragraphs (count)", "table.rows (count)"],
+      "notes": {
+        "steps": "steps=0 was stable across all 3 runs for all 5 semantic cases (no flakiness â€” headless RAF limitation is consistent, not random)",
+        "tff_led": "tff_led passed all 3 runs (no timeout with 30s page.setDefaultTimeout)",
+        "hasZPath_hasXPath": "Z/X path detection stable: tri_not_sanitized always has both, multi_driver_same_input always has X only, others always have neither"
+      }
+    }
+  },
+  "unstableFieldsFound": {
+    "core": [
+      {
+        "slug": "multi_driver_same_input",
+        "field": "result.details.gateSignals.*.*.lastChangedAt",
+        "values": ["1772915398882", "1772915404002", "1772915408522"],
+        "semanticImpact": "none",
+        "explanation": "Date.now() timestamp from simulation engine init. No effect on pass/fail or signal values."
+      }
+    ],
+    "ui": []
+  },
+  "recommendation": {
+    "coreAudit": "CI-geeignet mit Feld-Whitelist (generatedAt, lastChangedAt ignorieren)",
+    "uiAudit": "CI-geeignet (direkt, ohne Whitelist)",
+    "diffTool": "validation/diff-audit-runs.mjs kann als CI-Gate verwendet werden"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC194",
+  "label": "74HC194 4-bit Bidirectional Universal Shift Register",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "clrn", "effect": "clear", "activeLevel": 0, "activeLow": true }
+    ],
+    "stateVariables": ["q0", "q1", "q2", "q3"],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit bidirectional shift register with mode select S1:S0. Modes: 00=Hold, 01=Shift-right (DSRâ†’Q0), 10=Shift-left (DSLâ†’Q3), 11=Parallel-load (D[3:0]â†’Q[3:0]). Async /CLR (active-low) resets all outputs to 0. DSR=serial data for right shift, DSL=serial data for left shift."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "clk",  "label": "CLK",   "role": "clock",       "activeLow": false, "defaultValue": 0 },
+      { "id": "clrn", "label": "/CLRN", "role": "async-reset", "activeLow": true,  "defaultValue": 1 },
+      { "id": "s0",   "label": "S0",    "role": "select",      "activeLow": false, "defaultValue": 0 },
+      { "id": "s1",   "label": "S1",    "role": "select",      "activeLow": false, "defaultValue": 0 },
+      { "id": "dsr",  "label": "DSR",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "dsl",  "label": "DSL",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "d0",   "label": "D0",    "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "d1",   "label": "D1",    "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "d2",   "label": "D2",    "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "d3",   "label": "D3",    "role": "data",        "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "data", "canBeTriState": false },
+      { "id": "q1", "label": "Q1", "role": "data", "canBeTriState": false },
+      { "id": "q2", "label": "Q2", "role": "data", "canBeTriState": false },
+      { "id": "q3", "label": "Q3", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk or negedge clrn) with case statement on {s1,s0}.",
+    "vhdlNotes": "process(clk, clrn) with case on s1 & s0.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "async-control-override",
+      "reset-to-known-state",
+      "shift-sequence",
+      "load-shift-mode",
+      "clock-edge-detection",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test all four modes: S1:S0=00 (hold stays unchanged); S1:S0=01 (shift-right: verify DSR enters Q0, previous Q0â†’Q1, Q1â†’Q2, Q2â†’Q3); S1:S0=10 (shift-left: verify DSL enters Q3, Q3â†’Q2, Q2â†’Q1, Q1â†’Q0); S1:S0=11 (parallel load all 16 combinations). Async /CLR: verify immediate reset regardless of mode. Test through all 16 shift-right steps to verify full 4-bit shift."
+  },
+
+  "risks": [
+    {
+      "class": "documentation-gap",
+      "description": "No detailed description of shift-right vs shift-left bit ordering in project documentation.",
+      "confirmed": false
+    },
+    {
+      "class": "core-risk",
+      "description": "No serial output pins. Real 74HC194 has serial outputs QA (=Q0) and QD (=Q3) for cascading. Cascading of shift registers requires using Q0/Q3 directly.",
+      "confirmed": true
+    }
+  ],
+
+  "modelLimits": [
+    "No explicit serial cascade output pin (use Q0 or Q3 for cascading).",
+    "Propagation delay 20ns uniform.",
+    "Power-on state: all Q=0."
+  ]
+}

@@ -7,6 +7,7 @@ import {
   SIGNAL_HIGH_COLOR,
   SIGNAL_LOW_COLOR,
   SIGNAL_UNKNOWN_COLOR,
+  SIGNAL_XSTATE_COLOR,
   PORT_RADIUS,
   GATE_LABEL_COLOR,
 } from '../../utils/constants';
@@ -29,7 +30,8 @@ export function PortDots({ gate, definition, inputSignals, onPortClick, showLabe
         const sig = inputSignals[p.id];
         const isHigh = sig?.value === 1;
         const isHiZ  = sig?.value === 2;
-        const color = isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR;
+        const isX    = sig?.value === 3;
+        const color = isX ? SIGNAL_XSTATE_COLOR : isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR;
         const isLeft = p.relativeX <= 0.5;
         const labelX = isLeft ? x + PORT_RADIUS + 8 : x - PORT_RADIUS - 8;
         const anchor: 'start' | 'end' = isLeft ? 'start' : 'end';
@@ -63,7 +65,8 @@ export function PortDots({ gate, definition, inputSignals, onPortClick, showLabe
         const sig = gate.outputSignals[p.id];
         const isHigh = sig?.value === 1;
         const isHiZ  = sig?.value === 2;
-        const color = isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR;
+        const isX    = sig?.value === 3;
+        const color = isX ? SIGNAL_XSTATE_COLOR : isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? SIGNAL_HIGH_COLOR : SIGNAL_LOW_COLOR;
         const isRight = p.relativeX >= 0.5;
         const labelX = isRight ? x - PORT_RADIUS - 8 : x + PORT_RADIUS + 8;
         const anchor: 'start' | 'end' = isRight ? 'end' : 'start';

@@ -16,6 +16,7 @@ gateRegistry.register({
   outputs: [
     { id: 'y', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
+  defaultInputValues: { oe: 1 },
   evaluate: ({ a, oe }) => ({
     y: oe === 0 ? (a as 0 | 1) : 2,
   }),

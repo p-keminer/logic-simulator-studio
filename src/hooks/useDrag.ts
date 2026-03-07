@@ -97,7 +97,7 @@ export function useDrag(svgRef: React.RefObject<SVGSVGElement | null>, isDrawing
   );
 
   const onPointerUp = useCallback(
-    (_e: React.PointerEvent<SVGSVGElement>) => {
+    () => {
       drag.current.active = false;
       drag.current.gateId = null;
       isPanning.current = false;

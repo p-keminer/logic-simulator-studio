@@ -5,7 +5,7 @@ import { loadSavedCircuit } from './store/CircuitContext';
 // Reload any previously saved custom ICs on startup
 reloadAllCustomICs();
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { CircuitProvider } from './store/CircuitContext';
 import { useCircuitContext } from './store/CircuitContext';
 import { CircuitCanvas } from './components/canvas/CircuitCanvas';
@@ -25,7 +25,10 @@ function AppInner() {
 
   // Ref hält immer die aktuelle Höhe – kein stale-closure-Problem im mousemove-Handler
   const timingHeightRef = useRef(timingHeight);
-  timingHeightRef.current = timingHeight;
+
+  useEffect(() => {
+    timingHeightRef.current = timingHeight;
+  }, [timingHeight]);
 
   const handleResizerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

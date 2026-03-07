@@ -1,0 +1,662 @@
+{
+  "generatedAt": "2026-03-07T20:30:48.469Z",
+  "baseUrl": "<dev-server>",
+  "results": [
+    {
+      "slug": "tri_not_sanitized",
+      "check": {
+        "status": "pass",
+        "message": "No sanitized Z-row found."
+      },
+      "table": {
+        "rowCount": 4,
+        "paragraphs": [
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 20,
+        "signalLabels": [
+          "HIGH",
+          "Q",
+          "a",
+          "HIGH",
+          "Q",
+          "oe",
+          "A",
+          "/OE",
+          "Y",
+          "TRI",
+          "1",
+          "A",
+          "Y",
+          "D",
+          "y",
+          "a",
+          "oe",
+          "not_inv",
+          "tribuf_tri",
+          "y"
+        ],
+        "hasZPath": true,
+        "hasXPath": true
+      },
+      "timingSemantic": {
+        "semanticPass": false,
+        "note": "TRIBUF(a=1, oe=1) â†’ Z; NOT(Z) â†’ X. Z and X colored paths expected.",
+        "findings": [
+          "Labels OK: [a, oe, y] all visible in timing SVG",
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)",
+          "Z-path (amber): present â€” HI_Z signal visible in timing waveform",
+          "X-path (red): present â€” conflict/X signal visible in timing waveform"
+        ],
+        "stepsRecorded": 0,
+        "labelsFound": [
+          "HIGH",
+          "Q",
+          "a",
+          "HIGH",
+          "Q",
+          "oe",
+          "A",
+          "/OE",
+          "Y",
+          "TRI",
+          "1",
+          "A",
+          "Y",
+          "D",
+          "y",
+          "a",
+          "oe",
+          "not_inv",
+          "tribuf_tri",
+          "y"
+        ]
+      }
+    },
+    {
+      "slug": "dff_led",
+      "check": {
+        "status": "pass",
+        "message": "Table/Timing loaded."
+      },
+      "table": {
+        "rowCount": 8,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 17,
+        "signalLabels": [
+          "HIGH",
+          "Q",
+          "d",
+          "LOW",
+          "Q",
+          "clk",
+          "D",
+          "Q",
+          "QÌ„",
+          "D-FF",
+          "D",
+          "q",
+          "clk",
+          "d",
+          "dff_dut.Q",
+          "dff_dut.QÌ„",
+          "q"
+        ],
+        "hasZPath": false,
+        "hasXPath": false
+      },
+      "timingSemantic": {
+        "semanticPass": false,
+        "note": "D_FF initial settle: labels and step count confirm timing tracks correctly.",
+        "findings": [
+          "Labels OK: [d, clk, q] all visible in timing SVG",
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)"
+        ],
+        "stepsRecorded": 0,
+        "labelsFound": [
+          "HIGH",
+          "Q",
+          "d",
+          "LOW",
+          "Q",
+          "clk",
+          "D",
+          "Q",
+          "QÌ„",
+          "D-FF",
+          "D",
+          "q",
+          "clk",
+          "d",
+          "dff_dut.Q",
+          "dff_dut.QÌ„",
+          "q"
+        ]
+      }
+    },
+    {
+      "slug": "jkff_led",
+      "check": {
+        "status": "pass",
+        "message": "Table/Timing loaded."
+      },
+      "table": {
+        "rowCount": 16,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 22,
+        "signalLabels": [
+          "HIGH",
+          "Q",
+          "j",
+          "LOW",
+          "Q",
+          "k",
+          "LOW",
+          "Q",
+          "clk",
+          "J",
+          "K",
+          "Q",
+          "QÌ„",
+          "JK-FF",
+          "D",
+          "q",
+          "clk",
+          "j",
+          "k",
+          "jkff_dut.Q",
+          "jkff_dut.QÌ„",
+          "q"
+        ],
+        "hasZPath": false,
+        "hasXPath": false
+      },
+      "timingSemantic": {
+        "semanticPass": false,
+        "note": "JK_FF initial settle: four input/output labels confirm channel presence.",
+        "findings": [
+          "Labels OK: [j, k, clk, q] all visible in timing SVG",
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)"
+        ],
+        "stepsRecorded": 0,
+        "labelsFound": [
+          "HIGH",
+          "Q",
+          "j",
+          "LOW",
+          "Q",
+          "k",
+          "LOW",
+          "Q",
+          "clk",
+          "J",
+          "K",
+          "Q",
+          "QÌ„",
+          "JK-FF",
+          "D",
+          "q",
+          "clk",
+          "j",
+          "k",
+          "jkff_dut.Q",
+          "jkff_dut.QÌ„",
+          "q"
+        ]
+      }
+    },
+    {
+      "slug": "tff_led",
+      "check": {
+        "status": "pass",
+        "message": "Table/Timing loaded."
+      },
+      "table": {
+        "rowCount": 8,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 17,
+        "signalLabels": [
+          "HIGH",
+          "Q",
+          "t",
+          "LOW",
+          "Q",
+          "clk",
+          "T",
+          "Q",
+          "QÌ„",
+          "T-FF",
+          "D",
+          "q",
+          "clk",
+          "t",
+          "tff_dut.Q",
+          "tff_dut.QÌ„",
+          "q"
+        ],
+        "hasZPath": false,
+        "hasXPath": false
+      },
+      "timingSemantic": {
+        "semanticPass": false,
+        "note": "T_FF initial settle: three labels confirm sequential gate channels.",
+        "findings": [
+          "Labels OK: [t, clk, q] all visible in timing SVG",
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)"
+        ],
+        "stepsRecorded": 0,
+        "labelsFound": [
+          "HIGH",
+          "Q",
+          "t",
+          "LOW",
+          "Q",
+          "clk",
+          "T",
+          "Q",
+          "QÌ„",
+          "T-FF",
+          "D",
+          "q",
+          "clk",
+          "t",
+          "tff_dut.Q",
+          "tff_dut.QÌ„",
+          "q"
+        ]
+      }
+    },
+    {
+      "slug": "hc373_oe_z",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 8,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 8192 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 70
+      }
+    },
+    {
+      "slug": "hc374_oe_z",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 8,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 8192 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 69
+      }
+    },
+    {
+      "slug": "hc595_oe_shift",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 32,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 32768 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 48
+      }
+    },
+    {
+      "slug": "hc161_clear",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 64,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 2048 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 61
+      }
+    },
+    {
+      "slug": "hc163_clear",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 64,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 2048 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 61
+      }
+    },
+    {
+      "slug": "hc194_modes",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 128,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 4096 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 70
+      }
+    },
+    {
+      "slug": "multi_driver_same_input",
+      "check": {
+        "status": "pass",
+        "message": "Table/Timing loaded."
+      },
+      "table": {
+        "rowCount": 4,
+        "paragraphs": [
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 11,
+        "signalLabels": [
+          "HIGH",
+          "Q",
+          "a",
+          "LOW",
+          "Q",
+          "b",
+          "D",
+          "y",
+          "a",
+          "b",
+          "y"
+        ],
+        "hasZPath": false,
+        "hasXPath": false
+      },
+      "timingSemantic": {
+        "semanticPass": false,
+        "note": "Dual drivers (1 vs 0) resolve to X. Red X-conflict path expected in timing.",
+        "findings": [
+          "Labels OK: [a, b, y] all visible in timing SVG",
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)",
+          "X-path (red): not present â€” requires steps > 0 (timing history empty)"
+        ],
+        "stepsRecorded": 0,
+        "labelsFound": [
+          "HIGH",
+          "Q",
+          "a",
+          "LOW",
+          "Q",
+          "b",
+          "D",
+          "y",
+          "a",
+          "b",
+          "y"
+        ]
+      }
+    },
+    {
+      "slug": "mixed_datapath",
+      "check": {
+        "status": "pass",
+        "message": "UI rendered a reduced control-flow table for a wide sequential case."
+      },
+      "table": {
+        "rowCount": 256,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 262144 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ]
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 114
+      }
+    }
+  ]
+}

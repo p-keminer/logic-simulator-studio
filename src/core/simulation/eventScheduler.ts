@@ -29,6 +29,7 @@
 import type { Circuit, SignalValue, RaceInfo, RaceSeverity, RaceType } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
 import type { SimBuffer, WireMap } from './tickEngine';
+import { resolveWiredValues } from './signal';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -353,9 +354,9 @@ export class EventScheduler {
 
         // Report on the net that drives the clock input.
         const clkInputId = gateClockInputId.get(gateId)!;
-        const upstream   = wireMap.get(`${gateId}:${clkInputId}`);
-        const clkNetId   = upstream
-          ? `${upstream.fromGateId}:${upstream.fromPortId}`
+        const upstream   = wireMap.get(`${gateId}:${clkInputId}`) ?? [];
+        const clkNetId   = upstream.length === 1
+          ? `${upstream[0].fromGateId}:${upstream[0].fromPortId}`
           : `${gateId}:${clkInputId}`;
 
         races.push({
@@ -469,12 +470,15 @@ export class EventScheduler {
     // Read input signals from committed state.
     const inputValues: Record<string, SignalValue> = {};
     for (const inp of def.inputs) {
-      const upstream = wireMap.get(`${gate.id}:${inp.id}`);
-      const raw = upstream
-        ? ((this.committedOutputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
-        : (def.defaultInputValues?.[inp.id] ?? 0);
-      // Sanitize hi-Z (2) → 0 so gate evaluate functions only see 0|1
-      inputValues[inp.id] = (raw === 2 ? 0 : raw) as SignalValue;
+      const sources = wireMap.get(`${gate.id}:${inp.id}`);
+      if (sources && sources.length > 0) {
+        const driverValues = sources.map(s =>
+          (this.committedOutputs[s.fromGateId]?.[s.fromPortId] ?? 0) as SignalValue
+        );
+        inputValues[inp.id] = resolveWiredValues(driverValues);
+      } else {
+        inputValues[inp.id] = (def.defaultInputValues?.[inp.id] ?? 0) as SignalValue;
+      }
     }
 
     // Evaluate outputs with OLD state (for combinational gates).

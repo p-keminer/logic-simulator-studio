@@ -34,6 +34,7 @@ export function FsmProvider({ children }: { children: React.ReactNode }) {
   return <FsmContext.Provider value={{ fsm, dispatch }}>{children}</FsmContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFsm(): FsmCtxValue {
   const ctx = useContext(FsmContext);
   if (!ctx) throw new Error('useFsm must be inside FsmProvider');

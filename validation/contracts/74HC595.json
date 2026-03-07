@@ -1,0 +1,93 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC595",
+  "label": "74HC595 8-bit Serial-In/Parallel-Out Shift Register with Output Latch",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "shcp",
+    "asyncControls": [
+      { "portId": "mr",  "effect": "clear", "activeLevel": 0, "activeLow": true }
+    ],
+    "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7"],
+    "hasStableUndefinedState": false,
+    "notes": "Two-stage register: internal 8-bit shift register clocked by SHCP (shift clock) and an output latch clocked by STCP (storage/latch clock). DS=serial data input; /MR=async reset of shift register only (NOT the output latch); /OE=tri-state output enable. Typical use: shift 8 bits via SHCP, then pulse STCP to transfer to outputs. Q7S is the serial output for daisy-chaining. clockInputId=shcp â€” timing detection only on shift clock. STCP is a second independent clock not covered by clockInputId."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "ds",   "label": "DS",   "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "shcp", "label": "SHCP", "role": "clock",         "activeLow": false, "defaultValue": 0 },
+      { "id": "stcp", "label": "STCP", "role": "clock",         "activeLow": false, "defaultValue": 0 },
+      { "id": "mr",   "label": "/MR",  "role": "async-reset",   "activeLow": true,  "defaultValue": 1 },
+      { "id": "oe",   "label": "/OE",  "role": "output-enable", "activeLow": true,  "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0",  "label": "Q0",  "role": "data", "canBeTriState": true },
+      { "id": "q1",  "label": "Q1",  "role": "data", "canBeTriState": true },
+      { "id": "q2",  "label": "Q2",  "role": "data", "canBeTriState": true },
+      { "id": "q3",  "label": "Q3",  "role": "data", "canBeTriState": true },
+      { "id": "q4",  "label": "Q4",  "role": "data", "canBeTriState": true },
+      { "id": "q5",  "label": "Q5",  "role": "data", "canBeTriState": true },
+      { "id": "q6",  "label": "Q6",  "role": "data", "canBeTriState": true },
+      { "id": "q7",  "label": "Q7",  "role": "data", "canBeTriState": true },
+      { "id": "q7s", "label": "Q7S", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1, 2],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": true
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Two always blocks: one for SHCP (shift clock), one for STCP (latch clock). /MR handled async in SHCP block. /OE handled by assign on outputs. Q7S driven by assign from internal shift register MSB.",
+    "vhdlNotes": "Two processes for SHCP and STCP. Concurrent assign for Q7S and /OE.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "async-control-override",
+      "shift-sequence",
+      "oe-tristate",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Full test sequence: 1) /MR=0â†’reset shift register; 2) shift 8 bits via DS+SHCP; 3) verify outputs NOT yet updated (still old value in output latch); 4) pulse STCP to transfer; 5) verify Q[7:0] matches shifted bits; 6) test Q7S serial output appears at correct clock; 7) test /OE=1â†’Hi-Z outputs; 8) daisy-chain test: Q7S of first â†’ DS of second."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "Two independent clocks (SHCP and STCP). clockInputId=shcp only. STCP timing violations are not detected by the race condition engine.",
+      "confirmed": true
+    },
+    {
+      "class": "core-risk",
+      "description": "/MR resets the shift register but NOT the output latch. This is a common misunderstanding. Verify that the implementation correctly keeps output latch unchanged when /MR=0.",
+      "confirmed": false
+    },
+    {
+      "class": "documentation-gap",
+      "description": "stateKeys=['q0'..'q7'] represent the OUTPUT LATCH, not the internal shift register. The internal shift register state is an implementation detail not exposed to STT.",
+      "confirmed": true
+    }
+  ],
+
+  "modelLimits": [
+    "Internal shift register not exposed as user-visible state (not in stateKeys).",
+    "Propagation delay 25ns applies uniformly.",
+    "Power-on: output latch Q[7:0]=0, internal shift register=0."
+  ]
+}

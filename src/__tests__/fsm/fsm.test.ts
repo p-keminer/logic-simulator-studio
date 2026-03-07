@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { parseCondition, evalCondition, exprVars, getMinterms, validateVars } from '../../fsm/conditionParser';
+import { parseCondition, evalCondition, exprVars, getMinterms } from '../../fsm/conditionParser';
 import type { Expr } from '../../fsm/conditionParser';
-import { fsmReducer, createDefaultFsm } from '../../fsm/fsmReducer';
-import type { FsmMachine, FsmTransition } from '../../fsm/types';
+import { fsmReducer, createDefaultFsm, type FsmAction } from '../../fsm/fsmReducer';
+import type { FsmMachine } from '../../fsm/types';
 import { synthesizeFsm, detectOverlappingTransitions } from '../../fsm/synthesis/synthesize';
 import type { Circuit } from '../../core/types';
 
@@ -307,7 +307,7 @@ describe('FSM Reducer', () => {
       let fsm = makeFsm();
       fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S0
       fsm = fsmReducer(fsm, { type: 'ADD_STATE' }); // S1
-      const [s0, s1] = Object.values(fsm.states);
+      const [, s1] = Object.values(fsm.states);
 
       // Try to rename S1 to "S0" - should get auto-suffixed
       fsm = fsmReducer(fsm, { type: 'UPDATE_STATE', payload: { id: s1.id, label: 'S0' } });
@@ -853,7 +853,11 @@ describe('FSM Audit - Reducer edge cases', () => {
     expect(s0.isInitial).toBe(true);
 
     // Try to set isInitial on S1 via UPDATE_STATE (should be stripped)
-    fsm = fsmReducer(fsm, { type: 'UPDATE_STATE', payload: { id: s1.id, isInitial: true } as any });
+    const action = {
+      type: 'UPDATE_STATE',
+      payload: { id: s1.id, isInitial: true },
+    } as unknown as FsmAction;
+    fsm = fsmReducer(fsm, action);
     // S0 should remain the only initial
     expect(fsm.states[s0.id].isInitial).toBe(true);
     expect(fsm.states[s1.id].isInitial).toBe(false);
@@ -866,21 +870,21 @@ describe('FSM Audit - Reducer edge cases', () => {
   });
 
   it('M4: SET_INPUT_NAME rejects empty string', () => {
-    let fsm = makeFsm();
+    const fsm = makeFsm();
     const before = fsm;
     const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: '' } });
     expect(after).toBe(before);
   });
 
   it('M4: SET_INPUT_NAME rejects special characters', () => {
-    let fsm = makeFsm();
+    const fsm = makeFsm();
     const before = fsm;
     const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 0, name: 'A B' } });
     expect(after).toBe(before);
   });
 
   it('M5: SET_INPUT_NAME rejects duplicate name', () => {
-    let fsm = makeFsm({ inputCount: 2, inputNames: ['A', 'B'] });
+    const fsm = makeFsm({ inputCount: 2, inputNames: ['A', 'B'] });
     const before = fsm;
     const after = fsmReducer(fsm, { type: 'SET_INPUT_NAME', payload: { index: 1, name: 'A' } });
     expect(after).toBe(before);

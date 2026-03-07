@@ -6,7 +6,8 @@ export const PORT_HIT_RADIUS = 10;
 
 export const SIGNAL_HIGH_COLOR = '#22c55e';   // green-500
 export const SIGNAL_LOW_COLOR = '#475569';    // slate-600
-export const SIGNAL_UNKNOWN_COLOR = '#f59e0b'; // amber-500 (V2: high-impedance)
+export const SIGNAL_UNKNOWN_COLOR = '#f59e0b'; // amber-500 (hi-impedance / Z)
+export const SIGNAL_XSTATE_COLOR = '#ef4444'; // red-500 (unknown/conflict X)
 
 export const WIRE_STROKE_HIGH = 2.5;
 export const WIRE_STROKE_LOW = 1.5;

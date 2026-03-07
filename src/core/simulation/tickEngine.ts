@@ -14,6 +14,7 @@
 
 import type { Circuit, SignalValue, SignalState, SimulationResult } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
+import { resolveWiredValues } from './signal';
 
 // ── Konfiguration ─────────────────────────────────────────────────────────────
 
@@ -144,16 +145,16 @@ export function syncBuffer(
 
 // ── Wire-Map ──────────────────────────────────────────────────────────────────
 
-export type WireMap = Map<string, { fromGateId: string; fromPortId: string }>;
+export type WireMap = Map<string, Array<{ fromGateId: string; fromPortId: string }>>;
 
-/** Erstellt eine schnelle Lookup-Map: "gateId:portId" → Upstream-Quelle */
+/** Erstellt eine schnelle Lookup-Map: "gateId:portId" → Array aller Upstream-Quellen */
 export function buildWireMap(circuit: Circuit): WireMap {
   const map: WireMap = new Map();
   for (const wire of Object.values(circuit.wires)) {
-    map.set(`${wire.to.gateId}:${wire.to.portId}`, {
-      fromGateId: wire.from.gateId,
-      fromPortId: wire.from.portId,
-    });
+    const key = `${wire.to.gateId}:${wire.to.portId}`;
+    let sources = map.get(key);
+    if (!sources) { sources = []; map.set(key, sources); }
+    sources.push({ fromGateId: wire.from.gateId, fromPortId: wire.from.portId });
   }
   return map;
 }
@@ -192,12 +193,15 @@ export function runOneTick(
     // ── Phase 1: Eingänge aus AKTUELLEM Buffer lesen ──────────────────────
     const inputValues: Record<string, SignalValue> = {};
     for (const inputPort of def.inputs) {
-      const upstream = wireMap.get(`${gate.id}:${inputPort.id}`);
-      const raw = upstream
-        ? ((buffer.outputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
-        : (def.defaultInputValues?.[inputPort.id] ?? 0);
-      // Sanitize hi-Z (2) → 0 so gate evaluate functions only see 0|1
-      inputValues[inputPort.id] = (raw === 2 ? 0 : raw) as SignalValue;
+      const sources = wireMap.get(`${gate.id}:${inputPort.id}`);
+      if (sources && sources.length > 0) {
+        const driverValues = sources.map(s =>
+          (buffer.outputs[s.fromGateId]?.[s.fromPortId] ?? 0) as SignalValue
+        );
+        inputValues[inputPort.id] = resolveWiredValues(driverValues);
+      } else {
+        inputValues[inputPort.id] = (def.defaultInputValues?.[inputPort.id] ?? 0) as SignalValue;
+      }
     }
 
     // ── Phase 2: Neue Ausgaben berechnen ──────────────────────────────────

@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gate-contract-schema",
+  "title": "Gate Contract Schema",
+  "description": "Machine-readable specification for a single gate or IC component. Used for test generation, gap analysis, and regression coverage.",
+  "type": "object",
+  "required": ["typeId", "label", "category", "semantics", "ports", "signalModel", "exportSupport", "testability"],
+  "additionalProperties": false,
+  "properties": {
+
+    "typeId": {
+      "type": "string",
+      "description": "Unique gate type identifier, matches GateDefinition.typeId in the registry."
+    },
+
+    "label": {
+      "type": "string",
+      "description": "Human-readable display name."
+    },
+
+    "category": {
+      "type": "string",
+      "enum": [
+        "logic_basic", "logic_multi", "logic_special", "logic_comp_out",
+        "mux", "bus", "arith", "flipflop", "register", "memory",
+        "input", "output", "annotation", "ic74", "custom", "internal"
+      ]
+    },
+
+    "semantics": {
+      "type": "object",
+      "description": "Describes the timing and compute model of this gate.",
+      "required": ["timingModel"],
+      "additionalProperties": false,
+      "properties": {
+        "timingModel": {
+          "type": "string",
+          "enum": [
+            "combinational",
+            "latch-level-sensitive",
+            "edge-triggered-rising",
+            "edge-triggered-falling",
+            "master-slave",
+            "memory-async",
+            "memory-sync",
+            "composite",
+            "io",
+            "annotation"
+          ],
+          "description": "Primary timing model. Drives which test patterns are required."
+        },
+        "clockEdge": {
+          "type": "string",
+          "enum": ["rising", "falling", "none"],
+          "description": "Active clock edge, if any."
+        },
+        "clockInputId": {
+          "type": ["string", "null"],
+          "description": "Port ID of the clock input, if present."
+        },
+        "asyncControls": {
+          "type": "array",
+          "description": "Ports that take effect asynchronously (override clock), e.g. /PRE, /CLR, RST.",
+          "items": {
+            "type": "object",
+            "required": ["portId", "effect", "activeLevel"],
+            "properties": {
+              "portId": { "type": "string" },
+              "effect": { "type": "string", "enum": ["set", "reset", "preset", "clear", "enable", "other"] },
+              "activeLevel": { "type": "integer", "enum": [0, 1] },
+              "activeLow": { "type": "boolean" }
+            }
+          }
+        },
+        "stateVariables": {
+          "type": "array",
+          "description": "Names of persistent state keys held in customState.",
+          "items": { "type": "string" }
+        },
+        "hasStableUndefinedState": {
+          "type": "boolean",
+          "description": "True if some input combinations produce undefined/X output (e.g. SR S=R=1)."
+        },
+        "invalidInputCombinations": {
+          "type": "array",
+          "description": "Input combinations that are explicitly forbidden or produce undefined behavior.",
+          "items": { "type": "object" }
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free text for model nuances, deviations from real hardware, or known simplifications."
+        }
+      }
+    },
+
+    "ports": {
+      "type": "object",
+      "required": ["inputs", "outputs"],
+      "properties": {
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "role": {
+                "type": "string",
+                "enum": ["data", "clock", "enable", "select", "control", "address", "async-set", "async-reset", "output-enable", "chip-select", "write-enable", "other"]
+              },
+              "activeLow": { "type": "boolean" },
+              "defaultValue": { "type": "integer", "enum": [0, 1, 2] }
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "role": {
+                "type": "string",
+                "enum": ["data", "q", "q-bar", "carry", "overflow", "zero", "ripple-carry", "tri-state", "other"]
+              },
+              "canBeTriState": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+
+    "signalModel": {
+      "type": "object",
+      "description": "Assumptions about signal values used in simulation.",
+      "additionalProperties": false,
+      "properties": {
+        "allowedInputValues": {
+          "type": "array",
+          "items": { "type": "integer", "enum": [0, 1, 2] },
+          "description": "Signal values (0=LOW, 1=HIGH, 2=Hi-Z) this gate accepts on its inputs."
+        },
+        "allowedOutputValues": {
+          "type": "array",
+          "items": { "type": "integer", "enum": [0, 1, 2] },
+          "description": "Signal values this gate can drive on its outputs."
+        },
+        "hiZInputHandling": {
+          "type": "string",
+          "enum": ["treated-as-0", "propagates", "undefined", "not-applicable"],
+          "description": "How Hi-Z on an input is treated by this gate's evaluate()."
+        },
+        "busCapable": {
+          "type": "boolean",
+          "description": "True if this gate drives a shared bus (tri-state output)."
+        }
+      }
+    },
+
+    "exportSupport": {
+      "type": "object",
+      "description": "HDL export status.",
+      "required": ["verilog", "vhdl"],
+      "additionalProperties": false,
+      "properties": {
+        "verilog": {
+          "type": "string",
+          "enum": ["full", "partial", "none", "not-applicable"],
+          "description": "full=toVerilog present; partial=present but known gaps; none=missing; not-applicable=IO/display only."
+        },
+        "vhdl": {
+          "type": "string",
+          "enum": ["full", "partial", "none", "not-applicable"]
+        },
+        "verilogNotes": { "type": "string" },
+        "vhdlNotes": { "type": "string" },
+        "verilogExtraRegs": { "type": "boolean", "description": "True if the gate emits verilogExtraRegs declarations." },
+        "vhdlExtraSignals": { "type": "boolean", "description": "True if the gate emits vhdlExtraSignals declarations." }
+      }
+    },
+
+    "testability": {
+      "type": "object",
+      "description": "Required and recommended test patterns for this gate.",
+      "additionalProperties": false,
+      "properties": {
+        "requiredPatterns": {
+          "type": "array",
+          "description": "Test pattern classes that MUST be run for this gate.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "truth-table-exhaustive",
+              "sequential-step-sequence",
+              "async-control-override",
+              "oe-tristate",
+              "multi-driver-conflict",
+              "export-verilog",
+              "export-vhdl",
+              "ui-state-projection",
+              "reset-to-known-state",
+              "clock-edge-detection",
+              "hold-state",
+              "forbidden-input-combination",
+              "counter-rollover",
+              "shift-sequence",
+              "load-shift-mode"
+            ]
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "risks": {
+      "type": "array",
+      "description": "Known or suspected risk items for verification. Each entry has a class and description.",
+      "items": {
+        "type": "object",
+        "required": ["class", "description"],
+        "properties": {
+          "class": {
+            "type": "string",
+            "enum": ["core-risk", "ui-risk", "export-risk", "synthesis-risk", "model-limit", "documentation-gap"]
+          },
+          "description": { "type": "string" },
+          "confirmed": { "type": "boolean", "description": "If false or absent, this is a suspected risk, not a confirmed bug." }
+        }
+      }
+    },
+
+    "modelLimits": {
+      "type": "array",
+      "description": "Explicit scope boundaries: what this model does NOT simulate.",
+      "items": { "type": "string" }
+    },
+
+    "schemaVersion": {
+      "type": "string",
+      "description": "Contract schema version, for forward compatibility.",
+      "const": "1.0"
+    }
+  }
+}

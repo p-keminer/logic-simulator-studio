@@ -1,0 +1,87 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SR_LATCH",
+  "label": "SR-Latch (asynchronous NOR)",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "latch-level-sensitive",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [
+      { "portId": "s", "effect": "preset", "activeLevel": 1, "activeLow": false },
+      { "portId": "r", "effect": "clear",  "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q"],
+    "hasStableUndefinedState": true,
+    "invalidInputCombinations": [
+      { "s": 1, "r": 1, "result": "Q=0, QÌ„=0 (both outputs LOW â€” undefined/forbidden state)" }
+    ],
+    "notes": "Cross-coupled NOR latch. Level-sensitive, no clock. Forbidden state: both S=R=1 â†’ Q=QÌ„=0. Model maps this to Q=0, QÌ„=0. Real hardware: both outputs momentarily low, then race to one of the stable states on release. The model does NOT simulate this race â€” it deterministically outputs Q=0. HDL export uses primitive nor gates (structural model). isSynchronous=false."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "s", "label": "S", "role": "async-set",   "activeLow": false, "defaultValue": 0 },
+      { "id": "r", "label": "R", "role": "async-reset", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Structural NOR instantiation: nor g_q(q, r, q_n); nor g_qn(q_n, s, q);",
+    "vhdlNotes": "Cross-coupled concurrent statements: q <= q_n nor r; q_n <= q nor s;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "hold-state",
+      "forbidden-input-combination",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Required: S=1,R=0â†’Q=1; S=0,R=1â†’Q=0; S=0,R=0â†’hold (test from both Q=0 and Q=1); S=1,R=1â†’forbidden (Q=0,QÌ„=0 model output). Release from forbidden state: model will hold Q=0 â€” verify this determinism. VHDL simulation may reveal combinational loop (delta cycles)."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "S=R=1 forbidden state mapped deterministically to Q=0. Real NOR latch race behavior not simulated. This is a known model simplification.",
+      "confirmed": true
+    },
+    {
+      "class": "synthesis-risk",
+      "description": "VHDL concurrent NOR assignments form a combinational feedback loop. VHDL simulators may require delta-cycle resolution. Some synthesis tools will refuse or warn.",
+      "confirmed": false
+    },
+    {
+      "class": "model-limit",
+      "description": "Asynchronous feedback loop. The simulation engine processes this gate in topological order but SR_LATCH is inherently cyclic. Engine handles this via iterative re-evaluation up to cycle limit.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "Race condition on S=R=1 release not simulated.",
+    "No propagation delay.",
+    "Power-on state is Q=0 (customState undefined â†’ q=0).",
+    "Hi-Z on S or R treated as 0 (hold behavior)."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "D_LATCH",
+  "label": "D-Latch (level-sensitive)",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "latch-level-sensitive",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [
+      { "portId": "en", "effect": "enable", "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q"],
+    "hasStableUndefinedState": false,
+    "notes": "Transparent latch: when EN=1, Q follows D continuously (transparent). When EN=0, Q holds. isSynchronous not set (undefined, assumed false). Verilog uses always@(*) with blocking '=' assignment â€” intentional latch inference. This causes Verilog tools to produce a latch warning, which is correct. Special const-propagation: if EN is const-1, generates assign (purely combinational); if EN is const-0, generates only a comment (holds init value)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d",  "label": "D",  "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "en", "label": "EN", "role": "enable", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Normal: always@(*) begin if (en) begin q=d; q_n=~d; end end (latch inference). EN=const-1: assign q=d; assign q_n=~d; EN=const-0: comment only.",
+    "vhdlNotes": "Normal: process(en, d) begin if en='1' then q<=d; q_n<=not d; end if; end process; EN=const-1: concurrent assign.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "hold-state",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test EN=1: Q follows D changes in real-time. Test EN=0: Q unchanged when D changes. Latch race-through: apply rapid D toggle while EN=1 (engine should handle via iterative evaluation). Test const-propagation: EN driven by CONST_HIGH or CONST_LOW."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "Latch race-through risk when EN is held HIGH for extended time â€” any glitch on D propagates directly to Q. Not an implementation bug but a model characteristic that tests should exercise.",
+      "confirmed": true
+    },
+    {
+      "class": "synthesis-risk",
+      "description": "Intentional latch inference in Verilog. Synthesis tools will flag this. This is correct behavior per the component specification, but users may be confused by tool warnings.",
+      "confirmed": true
+    },
+    {
+      "class": "ui-risk",
+      "description": "isSynchronous field not explicitly set on this gate definition. Default is undefined (falsy). STT and timing diagram may treat this as synchronous or combinational unexpectedly.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "No propagation delay.",
+    "Power-on state: Q=0 (state.q=undefinedâ†’0).",
+    "Hi-Z on D or EN treated as 0."
+  ]
+}

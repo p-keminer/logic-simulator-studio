@@ -7,6 +7,7 @@ import type {
 } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
 import { topologicalSort } from './topologicalSort';
+import { resolveWiredValues } from './signal';
 
 export function makeSignal(value: SignalValue, prev?: SignalState): SignalState {
   const changed = prev === undefined || prev.value !== value;
@@ -17,10 +18,13 @@ export function makeSignal(value: SignalValue, prev?: SignalState): SignalState 
   };
 }
 
-function buildInputWireMap(circuit: Circuit): Map<string, Wire> {
-  const map = new Map<string, Wire>();
+function buildInputWireMap(circuit: Circuit): Map<string, Wire[]> {
+  const map = new Map<string, Wire[]>();
   for (const wire of Object.values(circuit.wires)) {
-    map.set(`${wire.to.gateId}:${wire.to.portId}`, wire);
+    const key = `${wire.to.gateId}:${wire.to.portId}`;
+    let arr = map.get(key);
+    if (!arr) { arr = []; map.set(key, arr); }
+    arr.push(wire);
   }
   return map;
 }
@@ -49,12 +53,13 @@ export function runSimulation(circuit: Circuit): SimulationResult {
       const inputValues: Record<string, SignalValue> = {};
 
       for (const inputPort of definition.inputs) {
-        const wire = inputWireMap.get(`${gateId}:${inputPort.id}`);
-        if (wire) {
-          const upstreamOutputs = resolvedOutputs.get(wire.from.gateId);
-          const raw = upstreamOutputs?.[wire.from.portId]?.value ?? 0;
-          // Sanitize hi-Z (2) → 0 so gate evaluate functions only see 0|1
-          inputValues[inputPort.id] = (raw === 2 ? 0 : raw) as SignalValue;
+        const wires = inputWireMap.get(`${gateId}:${inputPort.id}`);
+        if (wires && wires.length > 0) {
+          const driverValues = wires.map(w => {
+            const upstreamOutputs = resolvedOutputs.get(w.from.gateId);
+            return (upstreamOutputs?.[w.from.portId]?.value ?? 0) as SignalValue;
+          });
+          inputValues[inputPort.id] = resolveWiredValues(driverValues);
         } else {
           inputValues[inputPort.id] = (definition.defaultInputValues?.[inputPort.id] ?? 0);
         }

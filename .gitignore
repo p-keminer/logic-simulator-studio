@@ -40,3 +40,8 @@ nul
 
 # Security
 .env
+.env.*
+
+# Validation / HDL tool artifacts
+validation/**/work-obj08.cf
+validation/**/*.out

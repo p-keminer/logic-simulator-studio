@@ -47,7 +47,7 @@ export function topologicalSort(circuit: Circuit): SortResult {
   // that independent feedback loops are reported as separate cycle arrays.
   // cycles.flat() equals the old `remaining` array — callers using hasCycles /
   // feedbackGateIds (via flat()) are unaffected.
-  let cycles: string[][] = [];
+  const cycles: string[][] = [];
   if (remaining.length > 0) {
     const remainingSet = new Set(remaining);
 

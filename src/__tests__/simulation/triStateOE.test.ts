@@ -1,18 +1,17 @@
 /**
  * Tests for tri-state / OE (Output Enable) behavior:
  * - 74HC595, 74HC373, 74HC374, TRIBUF output HI_Z (2) when OE is inactive
- * - Downstream gates receive 0 (pull-down sanitization) when input is HI_Z
+ * - Downstream gates receiving HI_Z produce UNKNOWN (X=3) — no pull-down sanitization
  * - Wire signals carry HI_Z for display purposes
  */
 import { describe, it, expect } from 'vitest';
 import { gateRegistry } from '../../core/registry/index';
 import type { Circuit, GateInstance, Wire, SignalState, SignalValue } from '../../core/types';
-import { HI_Z } from '../../core/types';
+import { HI_Z, UNKNOWN } from '../../core/types';
 import {
   initBuffer,
   runOneTick,
   buildWireMap,
-  type SimBuffer,
 } from '../../core/simulation/tickEngine';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -78,6 +77,11 @@ describe('HI_Z constant', () => {
 // ── TRIBUF ───────────────────────────────────────────────────────────────────
 
 describe('TRIBUF tri-state', () => {
+  it('should have defaultInputValues oe=1 (Hi-Z when unconnected)', () => {
+    const def = gateRegistry.get('TRIBUF');
+    expect(def.defaultInputValues).toEqual({ oe: 1 });
+  });
+
   it('outputs A when OE=0 (active)', () => {
     const def = gateRegistry.get('TRIBUF');
     const result = def.evaluate({ a: 1, oe: 0 });
@@ -199,8 +203,8 @@ describe('Input sanitization: HI_Z → 0 for downstream gates', () => {
 
     // TRIBUF output should be HI_Z
     expect(buf.outputs['tri']?.['y']).toBe(HI_Z);
-    // NOT gate should see sanitized 0 → output 1
-    expect(buf.outputs['inv']?.['out']).toBe(1);
+    // NOT gate receives Z input → logicNOT(Z) = X (UNKNOWN)
+    expect(buf.outputs['inv']?.['out']).toBe(UNKNOWN);
   });
 });
 

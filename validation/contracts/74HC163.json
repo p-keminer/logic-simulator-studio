@@ -1,0 +1,86 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC163",
+  "label": "74HC163 4-bit Synchronous Binary Counter with Synchronous Clear",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["cnt0", "cnt1", "cnt2", "cnt3"],
+    "hasStableUndefinedState": false,
+    "notes": "Identical interface to 74HC161 but /CLR is SYNCHRONOUS here â€” reset only takes effect at the next rising CLK edge when /CLRN=0. This is the critical difference from 74HC161. All other behavior (ENP, ENT, /LDN, RCO, cascade) is the same. Verify that the implementation correctly defers clear to clock edge."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "clk",  "label": "CLK",   "role": "clock",   "activeLow": false, "defaultValue": 0 },
+      { "id": "clrn", "label": "/CLRN", "role": "control", "activeLow": true,  "defaultValue": 1 },
+      { "id": "ldn",  "label": "/LDN",  "role": "control", "activeLow": true,  "defaultValue": 1 },
+      { "id": "enp",  "label": "ENP",   "role": "enable",  "activeLow": false, "defaultValue": 0 },
+      { "id": "ent",  "label": "ENT",   "role": "enable",  "activeLow": false, "defaultValue": 0 },
+      { "id": "d0",   "label": "D0",    "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "d1",   "label": "D1",    "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "d2",   "label": "D2",    "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "d3",   "label": "D3",    "role": "data",    "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0",  "label": "Q0",  "role": "data",         "canBeTriState": false },
+      { "id": "q1",  "label": "Q1",  "role": "data",         "canBeTriState": false },
+      { "id": "q2",  "label": "Q2",  "role": "data",         "canBeTriState": false },
+      { "id": "q3",  "label": "Q3",  "role": "data",         "canBeTriState": false },
+      { "id": "rco", "label": "RCO", "role": "ripple-carry", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) only â€” NO negedge clrn in sensitivity list (sync clear). /CLRN handled inside the always block: if (!clrn) cnt<=0;",
+    "vhdlNotes": "process(clk) â€” clrn NOT in sensitivity list. Inside: if rising_edge then if clrn='0' then...",
+    "verilogExtraRegs": true,
+    "vhdlExtraSignals": true
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "reset-to-known-state",
+      "counter-rollover",
+      "clock-edge-detection",
+      "load-shift-mode",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Critical test distinguishing 74HC163 from 74HC161: with /CLRN=0, apply CLKâ†‘ and verify reset happens on clock edge (NOT immediately). Verify that before CLKâ†‘, counter still holds its old value despite /CLRN=0. All other counter/load/cascade tests same as 74HC161."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "Synchronous vs asynchronous clear is the key difference from 74HC161. Must be confirmed that the implementation does NOT include clrn in async sensitivity list. High risk of copy-paste error between 161 and 163 implementations.",
+      "confirmed": false
+    },
+    {
+      "class": "export-risk",
+      "description": "Verilog HDL export must NOT include 'negedge clrn' in sensitivity list. If incorrectly exports with async clear, synthesis behavior differs from simulation.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "Modulus always 16.",
+    "Uses extra reg in HDL export (cnt_xxx).",
+    "Propagation delay 20ns uniform."
+  ]
+}

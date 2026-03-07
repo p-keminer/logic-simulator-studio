@@ -90,13 +90,22 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
   const [lasso, setLasso] = useState<LassoRect | null>(null);
 
   // ── Immer-aktuelle Refs (kein stale-closure-Problem in useCallback) ─────────
-  const zoomRef          = useRef(zoom);      zoomRef.current = zoom;
-  const panRef           = useRef(pan);       panRef.current  = pan;
-  const modeRef          = useRef(mode);      modeRef.current = mode;
-  const connectFromRef   = useRef(connectFrom); connectFromRef.current = connectFrom;
-  const selectedIdsRef   = useRef(selectedIds); selectedIdsRef.current = selectedIds;
-  const fsmRef           = useRef(fsm);       fsmRef.current  = fsm;
+  const zoomRef          = useRef(zoom);
+  const panRef           = useRef(pan);
+  const modeRef          = useRef(mode);
+  const connectFromRef   = useRef(connectFrom);
+  const selectedIdsRef   = useRef(selectedIds);
+  const fsmRef           = useRef(fsm);
   const interactionRef   = useRef<Interaction | null>(null);
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+    panRef.current = pan;
+    modeRef.current = mode;
+    connectFromRef.current = connectFrom;
+    selectedIdsRef.current = selectedIds;
+    fsmRef.current = fsm;
+  }, [zoom, pan, mode, connectFrom, selectedIds, fsm]);
 
   // ── Nicht-passiver Wheel-Listener für Zoom ───────────────────────────────────
   useEffect(() => {
@@ -279,7 +288,11 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
   // ── Pointer-Up ───────────────────────────────────────────────────────────────
   const handlePointerUp = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
-    try { (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId); } catch {}
+    try {
+      (e.currentTarget as SVGSVGElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore cases where the pointer capture is already released.
+    }
     const ctm = svgRef.current.getScreenCTM();
     if (!ctm) return;
     const svgP   = clientToSvg(svgRef.current, e.clientX, e.clientY);
@@ -508,4 +521,3 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
     </div>
   );
 }
-

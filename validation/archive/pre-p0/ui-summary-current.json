@@ -1,0 +1,305 @@
+{
+  "generatedAt": "2026-03-07T14:23:14.581Z",
+  "baseUrl": "<dev-server>",
+  "results": [
+    {
+      "slug": "tri_led_z",
+      "table": {
+        "rowCount": 4,
+        "paragraphs": [
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ],
+        "check": {
+          "expected": "Truth table should render Z for disabled TRIBUF output",
+          "pass": true
+        }
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 16
+      }
+    },
+    {
+      "slug": "tri_not_sanitized",
+      "table": {
+        "rowCount": 4,
+        "paragraphs": [
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ],
+        "check": {
+          "expected": "For A=1 and OE=1 the truth table currently shows output 1 due to Z->0 sanitization",
+          "pass": true,
+          "row": [
+            "1",
+            "1",
+            "â”‚",
+            "Z",
+            "1",
+            "â”‚",
+            "1"
+          ]
+        }
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 20
+      }
+    },
+    {
+      "slug": "dff_led",
+      "table": {
+        "rowCount": 8,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ],
+        "sampleRows": [
+          [
+            "0",
+            "0",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0"
+          ],
+          [
+            "0",
+            "0",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1"
+          ],
+          [
+            "0",
+            "1",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0"
+          ],
+          [
+            "0",
+            "1",
+            "â”‚",
+            "1",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0"
+          ],
+          [
+            "1",
+            "0",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0",
+            "â”‚",
+            "0"
+          ],
+          [
+            "1",
+            "0",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1"
+          ],
+          [
+            "1",
+            "1",
+            "â”‚",
+            "0",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1"
+          ],
+          [
+            "1",
+            "1",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1"
+          ]
+        ],
+        "check": {
+          "expected": "State table should contain D=1, CLK=1, Q(t)=0 -> Q(t+1)=1 and output 1",
+          "pass": true,
+          "row": [
+            "1",
+            "1",
+            "â”‚",
+            "0",
+            "â”‚",
+            "1",
+            "â”‚",
+            "1"
+          ]
+        }
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 2,
+        "textNodeCount": 17
+      }
+    },
+    {
+      "slug": "hc373_oe_z",
+      "table": {
+        "rowCount": 0,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "Zu viele Variablen (10 EingÃ¤nge + 8 Zustandsbits = 18 > 8). Max. 256 Tabellenzeilen.",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ],
+        "check": {
+          "expected": "State table is expected to hit the variable-count UI limit for this wide sequential circuit",
+          "pass": true
+        }
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 70
+      }
+    },
+    {
+      "slug": "hc374_oe_z",
+      "table": {
+        "rowCount": 0,
+        "paragraphs": [
+          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
+          "Zu viele Variablen (10 EingÃ¤nge + 8 Zustandsbits = 18 > 8). Max. 256 Tabellenzeilen.",
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ],
+        "check": {
+          "expected": "State table is expected to hit the variable-count UI limit for this wide sequential circuit",
+          "pass": true
+        }
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 69
+      }
+    },
+    {
+      "slug": "multi_driver_same_input",
+      "table": {
+        "rowCount": 4,
+        "paragraphs": [
+          "Ziehen zum Platzieren",
+          "â€¢ Doppelklick: Umschalten / Umbenennen",
+          "â€¢ R: Gatter drehen",
+          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
+          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
+          "â€¢ Klick auf Port: Draht",
+          "â€¢ Klick auf Canvas: Wegpunkt",
+          "â€¢ Rechtsklick Draht: Farbe",
+          "â€¢ Strg+Klick Draht: LÃ¶schen",
+          "â€¢ Alt+Ziehen: Verschieben",
+          "â€¢ Entf: Auswahl lÃ¶schen"
+        ],
+        "check": {
+          "expected": "No specific table assertion",
+          "pass": true
+        }
+      },
+      "hdl": {
+        "verilogMatches": true,
+        "vhdlMatches": true
+      },
+      "timing": {
+        "titlePresent": true,
+        "steps": 0,
+        "textNodeCount": 11
+      }
+    }
+  ]
+}

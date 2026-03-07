@@ -1,5 +1,5 @@
 import type { GateShapeProps } from '../../core/types';
-import { GATE_SELECTED_STROKE, SIGNAL_HIGH_COLOR, SIGNAL_UNKNOWN_COLOR } from '../../utils/constants';
+import { GATE_SELECTED_STROKE, SIGNAL_HIGH_COLOR, SIGNAL_UNKNOWN_COLOR, SIGNAL_XSTATE_COLOR } from '../../utils/constants';
 import { PortDots } from './GateBase';
 
 const W = 60;
@@ -9,9 +9,10 @@ export function OutputLedShape({ gate, definition, isSelected, inputSignals, onP
   const inputSig = inputSignals['in'];
   const isHigh = inputSig?.value === 1;
   const isHiZ  = inputSig?.value === 2;
+  const isX    = inputSig?.value === 3;
   const customColor = gate.customState?.ledColor as string | undefined;
   const onColor = customColor || SIGNAL_HIGH_COLOR;
-  const ledColor = isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? onColor : '#1e293b';
+  const ledColor = isX ? SIGNAL_XSTATE_COLOR : isHiZ ? SIGNAL_UNKNOWN_COLOR : isHigh ? onColor : '#1e293b';
   const stroke = isSelected ? GATE_SELECTED_STROKE : '#64748b';
 
   return (

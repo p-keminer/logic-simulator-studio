@@ -1,5 +1,6 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { NandShape } from '../shapes/NandShape';
+import { logicNAND } from '../../core/simulation/signal';
 
 gateRegistry.register({
   typeId: 'NAND',
@@ -14,7 +15,7 @@ gateRegistry.register({
   outputs: [
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
-  evaluate: ({ a, b }) => ({ out: ((a & b) === 1 ? 0 : 1) }),
+  evaluate: ({ a, b }) => ({ out: logicNAND([a, b]) }),
   shapeComponent: NandShape,
   description: 'Negiertes AND – LOW nur wenn alle Eingänge HIGH',
 });

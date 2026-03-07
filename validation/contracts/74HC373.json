@@ -1,0 +1,97 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC373",
+  "label": "74HC373 8-bit Transparent D-Latch with Tri-State Output",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "latch-level-sensitive",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [
+      { "portId": "le",  "effect": "enable",       "activeLevel": 1, "activeLow": false },
+      { "portId": "oe",  "effect": "other",         "activeLevel": 0, "activeLow": true }
+    ],
+    "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7"],
+    "hasStableUndefinedState": false,
+    "notes": "8-bit transparent latch. LE=1: outputs follow inputs (transparent). LE=0: outputs hold. /OE (active-low): when /OE=1, all outputs go Hi-Z. When /OE=0, outputs are driven from internal state. Note: LE and /OE are independent. You can hold /OE=1 (outputs disabled) while latch is transparent or held. isSynchronous field is NOT set (falsy) â€” latches are level-sensitive. clockInputId=null â€” no timing detection."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d0", "label": "D0", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d1", "label": "D1", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d2", "label": "D2", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d3", "label": "D3", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d4", "label": "D4", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d5", "label": "D5", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d6", "label": "D6", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d7", "label": "D7", "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "le", "label": "LE", "role": "enable",        "activeLow": false, "defaultValue": 0 },
+      { "id": "oe", "label": "/OE","role": "output-enable", "activeLow": true,  "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "data", "canBeTriState": true },
+      { "id": "q1", "label": "Q1", "role": "data", "canBeTriState": true },
+      { "id": "q2", "label": "Q2", "role": "data", "canBeTriState": true },
+      { "id": "q3", "label": "Q3", "role": "data", "canBeTriState": true },
+      { "id": "q4", "label": "Q4", "role": "data", "canBeTriState": true },
+      { "id": "q5", "label": "Q5", "role": "data", "canBeTriState": true },
+      { "id": "q6", "label": "Q6", "role": "data", "canBeTriState": true },
+      { "id": "q7", "label": "Q7", "role": "data", "canBeTriState": true }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1, 2],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": true
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "LE latch via always@(*). /OE tri-state via conditional assign. Verify the exact HDL pattern â€” may use two separate always blocks or nested conditionals.",
+    "vhdlNotes": "Process for latch + concurrent assignment for tri-state.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "hold-state",
+      "oe-tristate",
+      "multi-driver-conflict",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Tests: LE=1 transparent (Q follows D changes); LE=0 hold (D changes don't affect Q); /OE=1 outputs go Hi-Z regardless of LE and Q state; /OE=0 outputs driven from latched state; combine: LE=1,/OE=1 (inputs update internal, but outputs still Hi-Z); multi-driver bus test with two 74HC373 chips and complementary /OE."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "No defaultInputValues set for /OE. Disconnected /OE=0 by default (active) â€” outputs driven immediately. This is the opposite-safe default vs. typical bus designs.",
+      "confirmed": true
+    },
+    {
+      "class": "core-risk",
+      "description": "Does the implementation correctly combine LE (latch) and /OE (tri-state) as independent controls? Risk of incorrect coupling.",
+      "confirmed": false
+    },
+    {
+      "class": "model-limit",
+      "description": "isSynchronous not set â€” unclear how STT treats this gate.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "No setup/hold timing for LE vs D.",
+    "Propagation delay 14ns uniform.",
+    "Power-on state: Q[7:0]=0."
+  ]
+}

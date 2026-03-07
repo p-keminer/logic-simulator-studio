@@ -1,0 +1,77 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "JK_FF",
+  "label": "JK Flip-Flop (rising edge)",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": false,
+    "invalidInputCombinations": [],
+    "notes": "JK truth table at rising CLK edge: J=0,K=0â†’Hold; J=0,K=1â†’Reset(Q=0); J=1,K=0â†’Set(Q=1); J=1,K=1â†’Toggle. No forbidden combination (unlike SR). prevClk is internal state. Const-propagation simplifies toVerilog output for constant J/K values (jkSimplifiedVerilog)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "j",   "label": "J",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 },
+      { "id": "k",   "label": "K",   "role": "data",  "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) begin ... jkSimplifiedVerilog ... end; assign q_n = ~q;",
+    "vhdlNotes": "process(clk) begin if rising_edge(clk) then ... jkSimplifiedVHDL ... end if; end process;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Required step sequences: Hold (J=0,K=0), Reset (J=0,K=1), Set (J=1,K=0), Toggle (J=1,K=1). Each must be followed by CLKâ†‘. Verify Q does not change outside clock edges. Toggle must be tested starting from both Q=0 and Q=1."
+  },
+
+  "risks": [
+    {
+      "class": "documentation-gap",
+      "description": "No defaultInputValues. J=K=0 by default â†’ hold state. Safe but not explicitly documented.",
+      "confirmed": false
+    },
+    {
+      "class": "export-risk",
+      "description": "jkSimplifiedVerilog/VHDL const-propagation may generate unusual code for specific J/K constant combinations. Needs coverage in export tests.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "No metastability modeled.",
+    "No propagation delay.",
+    "Hi-Z on J or K treated as 0 (hold/reset behavior)."
+  ]
+}

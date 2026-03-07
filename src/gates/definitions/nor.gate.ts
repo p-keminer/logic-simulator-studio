@@ -1,5 +1,6 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { NorShape } from '../shapes/NorShape';
+import { logicNOR } from '../../core/simulation/signal';
 
 gateRegistry.register({
   typeId: 'NOR',
@@ -14,7 +15,7 @@ gateRegistry.register({
   outputs: [
     { id: 'out', label: 'Y', relativeX: 1, relativeY: 0.5 },
   ],
-  evaluate: ({ a, b }) => ({ out: ((a | b) === 0 ? 1 : 0) }),
+  evaluate: ({ a, b }) => ({ out: logicNOR([a, b]) }),
   shapeComponent: NorShape,
   description: 'Negiertes OR – HIGH nur wenn alle Eingänge LOW',
 });

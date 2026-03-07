@@ -1,0 +1,80 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "TRIBUF",
+  "label": "TRI (Tri-State Buffer)",
+  "category": "logic_special",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [
+      {
+        "portId": "oe",
+        "effect": "enable",
+        "activeLevel": 0,
+        "activeLow": true
+      }
+    ],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "/OE is active-low output-enable. When /OE=0, Y=A. When /OE=1, Y=Hi-Z (2). No state. The defaultInputValues field is NOT set in the implementation, meaning a disconnected /OE pin receives global default=0, which makes the output ACTIVE. This is the non-safe default for a tri-state buffer â€” typically /OE should default inactive (1)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a",  "label": "A",   "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "oe", "label": "/OE", "role": "output-enable", "activeLow": true,  "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y", "label": "Y", "role": "tri-state", "canBeTriState": true }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1, 2],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": true
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign y = (~oe) ? a : 1'bz;",
+    "vhdlNotes": "y <= a when oe = '0' else 'Z';",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "oe-tristate",
+      "multi-driver-conflict",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Must verify: /OE=0â†’Y=A for A=0 and A=1; /OE=1â†’Y=Hi-Z(2) regardless of A. Multi-driver test: two TRIBUF outputs wired together with opposite OE signals. Bus float test: all drivers disabled."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "No defaultInputValues set for /OE. Disconnected /OE defaults to 0 (active), which drivesbusoutput unexpectedly in simulations where /OE is left unconnected.",
+      "confirmed": true
+    },
+    {
+      "class": "synthesis-risk",
+      "description": "Hi-Z output (SignalValue=2) on a non-bus net causes undefined downstream behavior. The bus-conflict detector in the engine should catch this, but gates with no bus-conflict check do not guard against floating inputs.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "No propagation delay modeled (propagationDelay not set).",
+    "No analog/electrical modeling of bus contention voltage.",
+    "Hi-Z input on 'a' is treated as 0 by evaluate(). Real hardware may maintain last driven value."
+  ]
+}

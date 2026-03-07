@@ -2,10 +2,13 @@ import type React from 'react';
 
 // ─── Signal ──────────────────────────────────────────────────────────────────
 
-export type SignalValue = 0 | 1 | 2;
+export type SignalValue = 0 | 1 | 2 | 3;
 
 /** High-impedance value (tri-state output when OE is inactive). */
 export const HI_Z: SignalValue = 2;
+
+/** Unknown/conflict value (X): produced by Z/X inputs to logic gates or bus fights. */
+export const UNKNOWN: SignalValue = 3;
 
 export interface SignalState {
   value: SignalValue;

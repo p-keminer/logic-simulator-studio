@@ -1,11 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import { gateRegistry } from '../../core/registry/index';
+import type { SignalValue } from '../../core/types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
+function asSignals(inputs: Record<string, number>): Record<string, SignalValue> {
+  return inputs as Record<string, SignalValue>;
+}
+
 function evalGate(typeId: string, inputs: Record<string, number>): Record<string, number> {
   const def = gateRegistry.get(typeId)!;
-  return def.evaluate(inputs, {}) as Record<string, number>;
+  return def.evaluate(asSignals(inputs), {}) as Record<string, number>;
 }
 
 function stateTransition(
@@ -14,12 +19,13 @@ function stateTransition(
   state: Record<string, unknown>,
 ) {
   const def = gateRegistry.get(typeId)!;
-  const outputsOld = def.evaluate(inputs, state) as Record<string, number>;
+  const signalInputs = asSignals(inputs);
+  const outputsOld = def.evaluate(signalInputs, state) as Record<string, SignalValue>;
   const nextState = def.stateUpdate
-    ? def.stateUpdate(inputs, outputsOld, state)
+    ? def.stateUpdate(signalInputs, outputsOld, state)
     : { ...state };
-  const outputs = def.evaluate(inputs, nextState) as Record<string, number>;
-  return { outputs, nextState };
+  const outputs = def.evaluate(signalInputs, nextState) as Record<string, SignalValue>;
+  return { outputs: outputs as Record<string, number>, nextState };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────
@@ -379,9 +385,9 @@ describe('74HC595 – Shift Register', () => {
     expect(gateRegistry.has('74HC595')).toBe(true);
   });
 
-  it('should have correct defaultInputValues for /MR (BUG-K1 fix)', () => {
+  it('should have correct defaultInputValues for /MR and /OE (BUG-K1 fix)', () => {
     const def = gateRegistry.get('74HC595')!;
-    expect(def.defaultInputValues).toEqual({ mr: 1 });
+    expect(def.defaultInputValues).toEqual({ mr: 1, oe: 1 });
   });
 
   it('serial shift on SRCLK rising edge', () => {
@@ -405,7 +411,7 @@ describe('74HC595 – Shift Register', () => {
   });
 
   it('latch to output on RCLK (STCP) rising edge', () => {
-    let state: Record<string, unknown> = { shift: 0b10101010, latch: 0, pShcp: 0, pStcp: 0 };
+    const state: Record<string, unknown> = { shift: 0b10101010, latch: 0, pShcp: 0, pStcp: 0 };
     // Latch: STCP 0->1
     const { outputs, nextState } = stateTransition('74HC595', {
       ds: 0, shcp: 0, stcp: 1, mr: 1, oe: 0,
@@ -448,7 +454,7 @@ describe('74HC161 – 4-Bit Counter', () => {
   });
 
   it('counts up on CLK rising edge when ENP=1 and ENT=1', () => {
-    let state: Record<string, unknown> = { cnt: 0, pClk: 0 };
+    const state: Record<string, unknown> = { cnt: 0, pClk: 0 };
     // CLK 0->1
     const { outputs, nextState } = stateTransition('74HC161', {
       clk: 1, clrn: 1, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0,
@@ -666,6 +672,11 @@ describe('74HC373 – 8-Bit Transparent D-Latch', () => {
     expect(gateRegistry.has('74HC373')).toBe(true);
   });
 
+  it('should have correct defaultInputValues for /OE (BUG-K1 fix)', () => {
+    const def = gateRegistry.get('74HC373')!;
+    expect(def.defaultInputValues).toEqual({ oe: 1 });
+  });
+
   it('LE=1 transparent: outputs follow inputs', () => {
     const state: Record<string, unknown> = { latch: 0 };
     const { outputs, nextState } = stateTransition('74HC373', {
@@ -716,6 +727,11 @@ describe('74HC373 – 8-Bit Transparent D-Latch', () => {
 describe('74HC374 – 8-Bit D-FF', () => {
   it('should be registered', () => {
     expect(gateRegistry.has('74HC374')).toBe(true);
+  });
+
+  it('should have correct defaultInputValues for /OE (BUG-K1 fix)', () => {
+    const def = gateRegistry.get('74HC374')!;
+    expect(def.defaultInputValues).toEqual({ oe: 1 });
   });
 
   it('latches data on rising CLK edge', () => {
@@ -923,10 +939,11 @@ describe('Active-Low defaultInputValues verification (BUG-K1)', () => {
     expect(def.defaultInputValues!.clr2).toBe(1);
   });
 
-  it('74HC595: /MR pin defaults to 1 (inactive)', () => {
+  it('74HC595: /MR and /OE pins default to 1 (inactive)', () => {
     const def = gateRegistry.get('74HC595')!;
     expect(def.defaultInputValues).toBeDefined();
     expect(def.defaultInputValues!.mr).toBe(1);
+    expect(def.defaultInputValues!.oe).toBe(1);
   });
 
   it('74HC161: /CLR and /LD pins default to 1 (inactive)', () => {
@@ -956,6 +973,24 @@ describe('Active-Low defaultInputValues verification (BUG-K1)', () => {
     expect(def.defaultInputValues).toBeDefined();
     expect(def.defaultInputValues!.clrn).toBe(1);
     expect(def.defaultInputValues!.ldn).toBe(1);
+  });
+
+  it('TRIBUF: /OE pin defaults to 1 (inactive = Hi-Z output)', () => {
+    const def = gateRegistry.get('TRIBUF')!;
+    expect(def.defaultInputValues).toBeDefined();
+    expect(def.defaultInputValues!.oe).toBe(1);
+  });
+
+  it('74HC373: /OE pin defaults to 1 (inactive = Hi-Z output)', () => {
+    const def = gateRegistry.get('74HC373')!;
+    expect(def.defaultInputValues).toBeDefined();
+    expect(def.defaultInputValues!.oe).toBe(1);
+  });
+
+  it('74HC374: /OE pin defaults to 1 (inactive = Hi-Z output)', () => {
+    const def = gateRegistry.get('74HC374')!;
+    expect(def.defaultInputValues).toBeDefined();
+    expect(def.defaultInputValues!.oe).toBe(1);
   });
 
   it('ICs without active-low pins should NOT have defaultInputValues', () => {

@@ -6,6 +6,7 @@ import { topologicalSort } from '../../core/simulation/topologicalSort';
 import {
   initBuffer, buildWireMap, runOneTick,
 } from '../../core/simulation/tickEngine';
+import { resolveWiredValues } from '../../core/simulation/signal';
 import type { Circuit, GateInstance, SignalValue } from '../../core/types';
 
 // ── Gattertyp-Kategorien ─────────────────────────────────────────────────────
@@ -28,6 +29,22 @@ const SKIP_TYPES = new Set([
 interface IntermediateCol { gateId: string; portId: string; header: string; }
 interface StateVar        { gateId: string; portId: string; stateKey: string; label: string; }
 
+/**
+ * Metadata present when the STT was computed in "reduced" mode because
+ * totalVars > 8.  The table uses only control inputs and 1 representative
+ * state bit; all data inputs and the remaining state bits were fixed at 0.
+ */
+interface ReducedMeta {
+  /** Labels of the data-input gates whose value was held at 0 */
+  fixedDataLabels: string[];
+  /** Total number of state bits in the circuit (only 1 is enumerated) */
+  totalStateBits: number;
+  /** Number of control inputs that were actually enumerated */
+  controlCount: number;
+  /** True if some control inputs were also capped (> 7) */
+  cappedControls: boolean;
+}
+
 interface TruthTableResult {
   mode:            'truth-table';
   inputs:          GateInstance[];
@@ -49,6 +66,8 @@ interface StateTransitionResult {
     outputBits: number[];
   }>;
   tooMany: boolean;
+  /** Present when the analysis was reduced to fit within the row limit. */
+  reducedMeta?: ReducedMeta;
 }
 
 type Computed = TruthTableResult | StateTransitionResult;
@@ -60,6 +79,33 @@ interface Props { onClose: () => void; }
 
 function gateLabel(g: GateInstance): string {
   return g.label || g.typeId.replace(/_/g, '') + '_' + g.id.slice(0, 4);
+}
+
+/**
+ * Returns true if the port ID on the *downstream* gate looks like a "data"
+ * pin (D0–D31 or DS) rather than a control pin.
+ */
+function isDataPortId(portId: string): boolean {
+  return /^d\d+$|^ds$/i.test(portId);
+}
+
+/**
+ * Separates a list of input gates into "control" vs "data" based on what
+ * port(s) each gate drives downstream.  A gate is classified as "data" when
+ * every one of its downstream connections targets a data port.
+ */
+function classifyInputs(
+  inputGates: GateInstance[],
+  circuit: Circuit,
+): { controls: GateInstance[]; data: GateInstance[] } {
+  const controls: GateInstance[] = [];
+  const data: GateInstance[]     = [];
+  for (const g of inputGates) {
+    const outWires = Object.values(circuit.wires).filter(w => w.from.gateId === g.id);
+    const allData  = outWires.length > 0 && outWires.every(w => isDataPortId(w.to.portId));
+    (allData ? data : controls).push(g);
+  }
+  return { controls, data };
 }
 
 // ── Komponente ────────────────────────────────────────────────────────────────
@@ -270,43 +316,71 @@ export function TruthTableModal({ onClose }: Props) {
 
     const totalVars = inputs.length + stateVars.length;
 
-    // Zu viele Kombinationen? (>256 Zeilen)
-    if (totalVars > 8 || stateVars.length === 0) {
-      return {
-        mode: 'state-transition',
-        inputs, stateVars, outputGates,
-        rows: [], tooMany: stateVars.length === 0 ? false : true,
-      };
+    // Keine Zustandsvariablen → kein valides STT-Modell
+    if (stateVars.length === 0) {
+      return { mode: 'state-transition', inputs, stateVars, outputGates, rows: [], tooMany: false };
     }
+
+    // ── Reduzierte Analyse für breite Schaltungen (totalVars > 8) ────────────
+    //
+    // Strategie: Eingänge in "Steuer-Pins" (CLK, /CLR, LE, OE, …) und
+    // "Daten-Pins" (D0-D7, DS) trennen.  Nur Steuerpins × ein repräsentatives
+    // Zustandsbit werden enumerated.  Datenpins werden auf 0 fixiert, alle
+    // übrigen Zustandsbits auf 0 fixiert.  Damit bleibt die Tabelle ≤ 256 Zeilen
+    // und zeigt das wesentliche Steuerverhalten des IC.
+    let activeInputs  = inputs;
+    let activeStateVars = stateVars;
+    let dataInputsToZero: GateInstance[] = [];
+    let nonRepStateBits: StateVar[] = [];
+    let reducedMeta: StateTransitionResult['reducedMeta'];
+
+    if (totalVars > 8) {
+      const { controls, data } = classifyInputs(inputs, circuit);
+      // Reserve 1 slot for the representative state bit → max 7 control inputs
+      const MAX_CTRL    = 7;
+      const cappedCtrls = controls.length > MAX_CTRL;
+      activeInputs       = cappedCtrls ? controls.slice(0, MAX_CTRL) : controls;
+      activeStateVars    = [stateVars[0]];   // one representative bit
+      dataInputsToZero   = data;
+      nonRepStateBits    = stateVars.slice(1);
+      reducedMeta = {
+        fixedDataLabels: data.map(g => gateLabel(g)),
+        totalStateBits:  stateVars.length,
+        controlCount:    activeInputs.length,
+        cappedControls:  cappedCtrls,
+      };
+      // Sanity: if we still can't fit (shouldn't happen), fall back to tooMany
+      if (activeInputs.length + 1 > 8) {
+        return { mode: 'state-transition', inputs, stateVars, outputGates, rows: [], tooMany: true };
+      }
+    }
+
+    const activeTotalVars = activeInputs.length + activeStateVars.length;
 
     // Wire-Map für Single-Tick-Simulation (einmal berechnen)
     const wireMap = buildWireMap(circuit);
 
-    // Alle Kombinationen von (Eingänge × aktueller Zustand) enumerated
+    // Alle Kombinationen von (aktive Eingänge × aktiver Zustand) enumerated
     const rows: StateTransitionResult['rows'] = [];
 
-    for (let combo = 0; combo < (1 << totalVars); combo++) {
+    for (let combo = 0; combo < (1 << activeTotalVars); combo++) {
       // Bit-Layout: [input0 ... inputN-1 | state0 ... stateM-1], MSB links
-      const inputBits = inputs.map(
-        (_, i) => (combo >> (totalVars - 1 - i)) & 1
+      const inputBits = activeInputs.map(
+        (_, i) => (combo >> (activeTotalVars - 1 - i)) & 1
       );
-      const stateBits = stateVars.map(
-        (_, s) => (combo >> (stateVars.length - 1 - s)) & 1
+      const stateBits = activeStateVars.map(
+        (_, s) => (combo >> (activeStateVars.length - 1 - s)) & 1
       );
 
       // Buffer aus aktuellem Circuit-Zustand initialisieren
       const buf = initBuffer(circuit);
 
-      // ── Externe Eingänge erzwingen ────────────────────────────────────────
-      // customStates: evaluate() liest den Wert daraus
-      // outputs: nachgelagerte Gatter lesen im gleichen Tick aus dem Vorgänger-Buffer
-      // Wichtig: Ausgabe-Port korrekt bestimmen (CLOCK → 'clk', INPUT_SWITCH → 'out')
-      for (let i = 0; i < inputs.length; i++) {
-        const g   = inputs[i];
+      // ── Aktive Steuer-Eingänge erzwingen ─────────────────────────────────
+      for (let i = 0; i < activeInputs.length; i++) {
+        const g   = activeInputs[i];
         const val = inputBits[i] as SignalValue;
         buf.customStates[g.id] = { ...(buf.customStates[g.id] ?? {}), value: val };
         if (!buf.outputs[g.id]) buf.outputs[g.id] = {};
-        // Alle Ausgangsports mit dem erzwungenen Wert belegen (1-Bit-Gates haben nur einen)
         try {
           for (const port of gateRegistry.get(g.typeId).outputs) {
             buf.outputs[g.id][port.id] = val;
@@ -316,13 +390,35 @@ export function TruthTableModal({ onClose }: Props) {
         }
       }
 
-      // ── Zustandsvariablen erzwingen ───────────────────────────────────────
+      // ── Datenpins fest 0 (reduzierte Analyse) ────────────────────────────
+      for (const g of dataInputsToZero) {
+        buf.customStates[g.id] = { ...(buf.customStates[g.id] ?? {}), value: 0 };
+        if (!buf.outputs[g.id]) buf.outputs[g.id] = {};
+        try {
+          for (const port of gateRegistry.get(g.typeId).outputs) {
+            buf.outputs[g.id][port.id] = 0 as SignalValue;
+          }
+        } catch {
+          buf.outputs[g.id]['out'] = 0 as SignalValue;
+        }
+      }
+
+      // ── Nicht-repräsentative Zustandsbits auf 0 fixieren ─────────────────
+      for (const sv of nonRepStateBits) {
+        buf.customStates[sv.gateId] = {
+          ...(buf.customStates[sv.gateId] ?? {}),
+          [sv.stateKey]: 0,
+          prevClk: 0,
+        };
+      }
+
+      // ── Aktive Zustandsvariablen erzwingen ────────────────────────────────
       // 1) buf.customStates: damit das Gatter in evaluate() / stateUpdate()
       //    den korrekten aktuellen Zustand kennt (nicht den aus der echten Schaltung)
       // 2) prevClk = 0: damit clock=1 immer eine steigende Flanke auslöst.
       //    Ohne diesen Reset hängt Q(t+1) vom letzten echten Takt-Zustand ab.
-      for (let s = 0; s < stateVars.length; s++) {
-        const sv  = stateVars[s];
+      for (let s = 0; s < activeStateVars.length; s++) {
+        const sv  = activeStateVars[s];
         const val = stateBits[s] as SignalValue;
         // Synchrones Gatter: stateKey und prevClk in customState überschreiben
         buf.customStates[sv.gateId] = {
@@ -335,15 +431,19 @@ export function TruthTableModal({ onClose }: Props) {
       // Ausgabe-Ports aus dem erzwungenen customState via evaluate() berechnen,
       // damit downstream-Gates den vorgegebenen Zustand lesen.
       // Echte Input-Werte (z.B. OE) werden aus dem Buffer via WireMap gelesen.
+      // NOTE: we use stateVars (full list) here to ensure all state-gate outputs
+      // are initialised, even if their state is fixed at 0 in reducedMeta mode.
       const forcedGateIds = new Set(stateVars.map(sv => sv.gateId));
       for (const gateId of forcedGateIds) {
         try {
           const def = gateRegistry.get(circuit.gates[gateId].typeId);
           const gateInputs: Record<string, SignalValue> = {};
           for (const inp of def.inputs) {
-            const upstream = wireMap.get(`${gateId}:${inp.id}`);
-            gateInputs[inp.id] = upstream
-              ? ((buf.outputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
+            const upstream = wireMap.get(`${gateId}:${inp.id}`) ?? [];
+            gateInputs[inp.id] = upstream.length > 0
+              ? resolveWiredValues(
+                upstream.map((src) => ((buf.outputs[src.fromGateId]?.[src.fromPortId] ?? 0) as SignalValue)),
+              )
               : (def.defaultInputValues?.[inp.id] ?? 0);
           }
           const evalOutputs = def.evaluate(
@@ -390,9 +490,11 @@ export function TruthTableModal({ onClose }: Props) {
         // Re-read actual input values from post-tick buffer via wireMap
         const reInputs: Record<string, SignalValue> = {};
         for (const inp of def.inputs) {
-          const upstream = wireMap.get(`${gate.id}:${inp.id}`);
-          reInputs[inp.id] = upstream
-            ? ((nextBuf.outputs[upstream.fromGateId]?.[upstream.fromPortId] ?? 0) as SignalValue)
+          const upstream = wireMap.get(`${gate.id}:${inp.id}`) ?? [];
+          reInputs[inp.id] = upstream.length > 0
+            ? resolveWiredValues(
+              upstream.map((src) => ((nextBuf.outputs[src.fromGateId]?.[src.fromPortId] ?? 0) as SignalValue)),
+            )
             : (def.defaultInputValues?.[inp.id] ?? 0);
         }
         const reEval = def.evaluate(
@@ -405,13 +507,8 @@ export function TruthTableModal({ onClose }: Props) {
         }
       }
 
-      // Nächster Zustand Q(t+1) bestimmen:
-      // - Synchrone FF: evaluate() gibt Q(t) zurück (liest alten customState).
-      //   stateUpdate() berechnet Q(t+1) und speichert es in nextBuf.customStates.
-      //   → Lesen aus customStates[stateKey], nicht aus outputs!
-      // - Kombinatorische Feedback-Gates (SR-Latch etc.): Ausgabe sofort propagiert
-      //   → Lesen aus outputs wie bisher.
-      const nextState = stateVars.map(sv => {
+      // Nächster Zustand Q(t+1) bestimmen (only for active/enumerated state vars):
+      const nextState = activeStateVars.map(sv => {
         try {
           const gType = circuit.gates[sv.gateId]?.typeId ?? '';
           if (gateRegistry.get(gType).isSynchronous) {
@@ -431,7 +528,15 @@ export function TruthTableModal({ onClose }: Props) {
       rows.push({ inputBits, stateBits, nextState, outputBits });
     }
 
-    return { mode: 'state-transition', inputs, stateVars, outputGates, rows, tooMany: false };
+    return {
+      mode: 'state-transition',
+      inputs:      activeInputs,
+      stateVars:   activeStateVars,
+      outputGates,
+      rows,
+      tooMany:     false,
+      reducedMeta,
+    };
 
   }, [circuit]);
 
@@ -471,8 +576,8 @@ export function TruthTableModal({ onClose }: Props) {
     fontWeight: v && kind !== 'in' ? 700 : 400,
   });
 
-  /** Display a signal value: 0, 1, or 'Z' for high-impedance */
-  const displayVal = (v: number) => v === 2 ? 'Z' : v;
+  /** Display a signal value: 0, 1, 'Z' for high-impedance, 'X' for unknown */
+  const displayVal = (v: number) => v === 3 ? 'X' : v === 2 ? 'Z' : v;
 
   const sepTh: React.CSSProperties = {
     padding: '4px 4px', borderBottom: '1px solid #334155', color: '#334155',
@@ -576,7 +681,7 @@ export function TruthTableModal({ onClose }: Props) {
         {/* MODUS 2: Zustandsübergangstabelle                                 */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {computed.mode === 'state-transition' && (() => {
-          const { inputs, stateVars, outputGates, rows, tooMany } = computed;
+          const { inputs, stateVars, outputGates, rows, tooMany, reducedMeta } = computed;
 
           if (stateVars.length === 0) {
             return (
@@ -589,8 +694,7 @@ export function TruthTableModal({ onClose }: Props) {
           if (tooMany) {
             return (
               <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                Zu viele Variablen ({inputs.length} Eingänge + {stateVars.length} Zustandsbits
-                = {inputs.length + stateVars.length} &gt; 8). Max. 256 Tabellenzeilen.
+                Zu viele Steuer-Eingänge für reduzierte Analyse (&gt;7). Schaltung zu komplex für tabellarische Darstellung.
               </p>
             );
           }
@@ -600,9 +704,47 @@ export function TruthTableModal({ onClose }: Props) {
 
           return (
             <>
+              {/* ── Reduzierte-Analyse-Banner ────────────────────────────── */}
+              {reducedMeta && (
+                <div style={{
+                  marginBottom: 14,
+                  padding: '8px 12px',
+                  background: '#18181b',
+                  border: '1px solid #92400e',
+                  borderRadius: 6,
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                }}>
+                  <div style={{ color: '#fbbf24', fontWeight: 700, marginBottom: 4 }}>
+                    ⚠ Reduzierte Steuerlogik-Analyse
+                  </div>
+                  <div style={{ color: '#94a3b8', lineHeight: 1.7 }}>
+                    <div>
+                      Zeigt Zustandsbit <span style={{ color: '#f59e0b' }}>{stateVars[0].label}</span>
+                      {' '}stellvertretend für alle{' '}
+                      <span style={{ color: '#f59e0b' }}>{reducedMeta.totalStateBits}</span> Zustandsbits
+                      {reducedMeta.totalStateBits > 1 && ' (übrige Bits: 0)'}
+                    </div>
+                    {reducedMeta.fixedDataLabels.length > 0 && (
+                      <div>
+                        Dateneingänge fest 0:{' '}
+                        <span style={{ color: '#64748b' }}>
+                          {reducedMeta.fixedDataLabels.join(', ')}
+                        </span>
+                      </div>
+                    )}
+                    {reducedMeta.cappedControls && (
+                      <div style={{ color: '#f87171' }}>
+                        Steuer-Eingänge auf {reducedMeta.controlCount} begrenzt (überschüssige weggelassen)
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Legende */}
               <div style={{ marginBottom: 12, fontSize: 11, fontFamily: 'monospace', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                {hasInputs  && <span style={{ color: '#60a5fa' }}>■ Eingänge</span>}
+                {hasInputs  && <span style={{ color: '#60a5fa' }}>■ Steuer-Eingänge</span>}
                 <span style={{ color: '#f59e0b' }}>■ Aktueller Zustand Q(t)</span>
                 <span style={{ color: '#a78bfa' }}>■ Nächster Zustand Q(t+1)</span>
                 {hasOutputs && <span style={{ color: '#22c55e' }}>■ Ausgänge</span>}
@@ -613,7 +755,7 @@ export function TruthTableModal({ onClose }: Props) {
                   {/* Sektions-Zeile (Gruppen-Beschriftung) */}
                   <tr>
                     {hasInputs && (
-                      <th colSpan={inputs.length} style={sectionTh('in')}>EINGÄNGE</th>
+                      <th colSpan={inputs.length} style={sectionTh('in')}>STEUER-EINGÄNGE</th>
                     )}
                     {hasInputs && <th style={{ ...sectionTh('in'), color: '#334155', padding: '3px 4px' }}></th>}
                     <th colSpan={stateVars.length} style={sectionTh('state')}>ZUSTAND Q(t)</th>
@@ -678,6 +820,11 @@ export function TruthTableModal({ onClose }: Props) {
                 ′ = Zustand nach einem Simulationsschritt (Settle-Phase)
                 &nbsp;|&nbsp;
                 <span style={{ color: '#f59e0b' }}>■</span> = Stabiler Zustand Q(t) = Q(t+1)
+                {reducedMeta && (
+                  <span style={{ color: '#78716c' }}>
+                    &nbsp;|&nbsp; Reduzierte Ansicht – vollständige Analyse bei {reducedMeta.totalStateBits * Math.pow(2, inputs.length + reducedMeta.totalStateBits)} Zeilen nicht darstellbar
+                  </span>
+                )}
               </p>
             </>
           );

@@ -56,7 +56,9 @@ export function fsmReducer(state: FsmMachine, action: FsmAction): FsmMachine {
     }
 
     case 'UPDATE_STATE': {
-      const { id, isInitial: _stripInitial, ...rest } = action.payload as { id: string; isInitial?: boolean } & Partial<Omit<FsmStateNode,'id'>>;
+      const { id, ...restWithMaybeInitial } = action.payload as { id: string; isInitial?: boolean } & Partial<Omit<FsmStateNode,'id'>>;
+      const { isInitial, ...rest } = restWithMaybeInitial;
+      void isInitial;
       if (!state.states[id]) return state;
 
       // Ensure label uniqueness (case-insensitive)

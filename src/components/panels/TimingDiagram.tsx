@@ -208,7 +208,7 @@ export function TimingDiagram({ history, onClose }: Props) {
           <svg width={Math.max(totalW, 400)} height={totalH} style={{ display: 'block' }}>
 
             {/* Vertikale Rasterlinien — an Sample-Positionen */}
-            {displayHistory.map((snap, si) => (
+            {displayHistory.map((_, si) => (
               <line key={'vl' + si}
                 x1={xOf(si)} y1={0}
                 x2={xOf(si)} y2={totalH}
@@ -246,59 +246,44 @@ export function TimingDiagram({ history, onClose }: Props) {
                   const yH = y0 + 5;
                   const yL = y0 + CH_H - 8;
                   const yZ = y0 + (CH_H - 3) / 2;  // midline for hi-Z
+                  const yX = yZ;                     // midline for X (same height, different colour)
                   const segs: string[] = [];
                   const hiZsegs: string[] = [];  // separate path for hi-Z dashed segments
+                  const xSegs: string[] = [];    // separate path for X/conflict dashed segments
                   let prev = -1;
+
+                  const pathOf = (v: number): string[] => v === 2 ? hiZsegs : v === 3 ? xSegs : segs;
+                  const yOf    = (v: number): number => v === 2 ? yZ : v === 3 ? yX : v === 1 ? yH : yL;
 
                   displayHistory.forEach((snap, si) => {
                     const val = getVal(snap, ch.key);
                     const x   = xOf(si);
-                    const yPrev = prev === 2 ? yZ : prev === 1 ? yH : yL;
-                    const yCurr = val === 2 ? yZ : val === 1 ? yH : yL;
+                    const yPrev = yOf(prev);
+                    const yCurr = yOf(val);
                     if (si === 0) {
-                      if (val === 2) {
-                        hiZsegs.push('M ' + x + ' ' + yCurr);
-                      } else {
-                        segs.push('M ' + x + ' ' + yCurr);
-                      }
+                      pathOf(val).push('M ' + x + ' ' + yCurr);
                     } else {
                       if (val !== prev) {
-                        // Transition: draw vertical line from previous Y to current Y
-                        if (prev === 2) {
-                          hiZsegs.push('L ' + x + ' ' + yPrev);
-                          if (val === 2) {
-                            hiZsegs.push('L ' + x + ' ' + yCurr);
-                          } else {
-                            segs.push('M ' + x + ' ' + yPrev + ' L ' + x + ' ' + yCurr);
-                          }
+                        // Close current path at x
+                        pathOf(prev).push('L ' + x + ' ' + yPrev);
+                        // Draw vertical transition connector and open new path
+                        if (yPrev !== yCurr) {
+                          pathOf(val).push('M ' + x + ' ' + yPrev + ' L ' + x + ' ' + yCurr);
                         } else {
-                          segs.push('L ' + x + ' ' + yPrev);
-                          if (val === 2) {
-                            segs.push('L ' + x + ' ' + yCurr);
-                            hiZsegs.push('M ' + x + ' ' + yCurr);
-                          } else {
-                            segs.push('L ' + x + ' ' + yCurr);
-                          }
+                          // Same Y (e.g. Z↔X): just reopen path at current position
+                          pathOf(val).push('M ' + x + ' ' + yCurr);
                         }
                       } else {
-                        if (val === 2) {
-                          hiZsegs.push('L ' + x + ' ' + yCurr);
-                        } else {
-                          segs.push('L ' + x + ' ' + yCurr);
-                        }
+                        pathOf(val).push('L ' + x + ' ' + yCurr);
                       }
                     }
                     prev = val;
                   });
-                  // Linie bis zum rechten Rand ziehen (letzter bekannter Wert)
+                  // Extend to right edge
                   if (displayHistory.length > 0) {
                     const endX = lastX + 20;
-                    const yEnd = prev === 2 ? yZ : prev === 1 ? yH : yL;
-                    if (prev === 2) {
-                      hiZsegs.push('L ' + endX + ' ' + yEnd);
-                    } else {
-                      segs.push('L ' + endX + ' ' + yEnd);
-                    }
+                    const yEnd = yOf(prev);
+                    pathOf(prev).push('L ' + endX + ' ' + yEnd);
                   }
 
                   rows.push(
@@ -322,6 +307,11 @@ export function TimingDiagram({ history, onClose }: Props) {
                       {hiZsegs.length > 0 && (
                         <path d={hiZsegs.join(' ')} stroke="#f59e0b" strokeWidth={1.5} fill="none"
                           strokeDasharray="4 3" />
+                      )}
+                      {/* X/conflict segments (dashed, red) */}
+                      {xSegs.length > 0 && (
+                        <path d={xSegs.join(' ')} stroke="#ef4444" strokeWidth={1.5} fill="none"
+                          strokeDasharray="2 2" />
                       )}
                       {/* Trennlinie */}
                       <line x1={0} y1={y0 + CH_H - 1} x2={Math.max(totalW, 400)} y2={y0 + CH_H - 1}

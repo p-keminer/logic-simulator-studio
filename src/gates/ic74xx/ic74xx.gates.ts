@@ -457,7 +457,7 @@ gateRegistry.register({
   typeId: '74HC595', label: '74HC595', category: 'ic74', width: 110, height: 160,
   propagationDelay: 25, isSynchronous: true,
   stateKeys: makeStateKeys('q', 8),
-  defaultInputValues: { mr: 1 },
+  defaultInputValues: { mr: 1, oe: 1 },
   inputs: [
     { id: 'ds',   label: 'DS',   relativeX: 0, relativeY: 0.08 },
     { id: 'shcp', label: 'SHCP', relativeX: 0, relativeY: 0.18 },
@@ -477,7 +477,7 @@ gateRegistry.register({
   ],
   evaluate: (inputs, state) => {
     const latch = bitsFromState(state as Record<string, unknown>, 'q', 8, 'latch');
-    const oe = (inputs as any).oe ?? 0;
+    const oe = inputs.oe ?? 0;
     if (oe !== 0) return { q0:2,q1:2,q2:2,q3:2,q4:2,q5:2,q6:2,q7:2 };
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((latch >> i) & 1) as 0|1;
@@ -887,7 +887,7 @@ gateRegistry.register({
       `begin`,
       `  if ${clrn} = '0' then ${reg} <= (others => '0');`,
       `  elsif rising_edge(${clk}) then`,
-      `    case ${s1} & ${s0} is`,
+      `    case STD_LOGIC_VECTOR'(${s1} & ${s0}) is`,
       `      when "01" => ${reg} <= ${sr} & ${reg}(3 downto 1);`,
       `      when "10" => ${reg} <= ${reg}(2 downto 0) & ${sl};`,
       `      when "11" => ${reg} <= ${d[3]} & ${d[2]} & ${d[1]} & ${d[0]};`,
@@ -913,6 +913,7 @@ gateRegistry.register({
   typeId: '74HC373', label: '74HC373', category: 'ic74', width: 110, height: 180,
   propagationDelay: 14, isSynchronous: true,
   stateKeys: makeStateKeys('q', 8),
+  defaultInputValues: { oe: 1 },
   inputs: [
     { id: 'oe', label: '/OE', relativeX: 0, relativeY: 0.05 },
     { id: 'le', label: 'LE',  relativeX: 0, relativeY: 0.12 },
@@ -963,9 +964,10 @@ gateRegistry.register({
     const q     = ['q0','q1','q2','q3','q4','q5','q6','q7'].map(p => w[`${g.id}:${p}`] ?? `w_${sid}_${p}`);
     return [
       `// 74HC373 ${sid}`,
+      `/* verilator lint_off LATCH */`,
       `always @(*) begin`,
       `  if (${le}) ${latch} = {${d[7]},${d[6]},${d[5]},${d[4]},${d[3]},${d[2]},${d[1]},${d[0]}};`,
-      `end // 74HC373 ${sid}`,
+      `end /* verilator lint_on LATCH */ // 74HC373 ${sid}`,
       ...q.map((qi,i) => `assign ${qi} = ${oe} ? 1'bz : ${latch}[${i}];`),
     ].join('\n');
   },
@@ -998,6 +1000,7 @@ gateRegistry.register({
   typeId: '74HC374', label: '74HC374', category: 'ic74', width: 110, height: 180,
   propagationDelay: 14, isSynchronous: true,
   stateKeys: makeStateKeys('q', 8),
+  defaultInputValues: { oe: 1 },
   inputs: [
     { id: 'oe',  label: '/OE', relativeX: 0, relativeY: 0.05 },
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.12 },

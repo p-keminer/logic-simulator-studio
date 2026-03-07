@@ -1,0 +1,90 @@
+name: Quality Gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: quality-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gates:
+    name: Test, Build, Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run quality gates
+        run: ./scripts/ci/run_quality_gates.sh
+
+  focused-nine-core:
+    name: Focused-Nine Core Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs:
+      - quality-gates
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install HDL tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog ghdl yosys verilator
+
+      - name: Run focused-nine core audit
+        run: ./scripts/ci/run_focused_nine_core.sh
+
+      - name: Upload focused-nine artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: focused-nine-core
+          path: |
+            validation/focused-nine-report.md
+            validation/focused-nine-summary.json
+            validation/generated-circuits-focused/
+            validation/generated-exports-focused/
+
+  hdl-toolchain:
+    name: HDL Toolchain Readiness
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install HDL tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog ghdl yosys verilator
+
+      - name: Verify HDL toolchain
+        run: ./scripts/ci/check_hdl_toolchain.sh

@@ -1,0 +1,93 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC374",
+  "label": "74HC374 8-bit Edge-Triggered D Flip-Flop with Tri-State Output",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "oe", "effect": "other", "activeLevel": 0, "activeLow": true }
+    ],
+    "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7"],
+    "hasStableUndefinedState": false,
+    "notes": "8-bit D-FF (edge-triggered, rising). /OE (active-low): when /OE=1, all outputs go Hi-Z; when /OE=0, outputs driven from flip-flop state. No async reset. Clock loads all 8 bits simultaneously. Contrast with 74HC373 which is a latch."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d0",  "label": "D0",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d1",  "label": "D1",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d2",  "label": "D2",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d3",  "label": "D3",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d4",  "label": "D4",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d5",  "label": "D5",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d6",  "label": "D6",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "d7",  "label": "D7",  "role": "data",          "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock",         "activeLow": false, "defaultValue": 0 },
+      { "id": "oe",  "label": "/OE", "role": "output-enable", "activeLow": true,  "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "data", "canBeTriState": true },
+      { "id": "q1", "label": "Q1", "role": "data", "canBeTriState": true },
+      { "id": "q2", "label": "Q2", "role": "data", "canBeTriState": true },
+      { "id": "q3", "label": "Q3", "role": "data", "canBeTriState": true },
+      { "id": "q4", "label": "Q4", "role": "data", "canBeTriState": true },
+      { "id": "q5", "label": "Q5", "role": "data", "canBeTriState": true },
+      { "id": "q6", "label": "Q6", "role": "data", "canBeTriState": true },
+      { "id": "q7", "label": "Q7", "role": "data", "canBeTriState": true }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1, 2],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": true
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) for FF state. /OE tri-state on outputs via conditional assign or always @(*). Check exact implementation â€” the output logic may use a single assign per bit or a bus assign.",
+    "vhdlNotes": "process(clk) for state. Concurrent tri-state assign for outputs.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "clock-edge-detection",
+      "hold-state",
+      "oe-tristate",
+      "multi-driver-conflict",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Tests: normal CLKâ†‘ loads D into Q; Q holds between edges; /OE=1â†’all outputs Hi-Z; /OE=0â†’outputs driven; /OE=1 during CLKâ†‘ (state updates internally but output stays Hi-Z); switch /OE from 1â†’0 after a clock edge to verify correct Q is driven. Multi-driver bus with complementary /OE."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "No defaultInputValues for /OE. Disconnected /OE=0 (active), outputs driven immediately.",
+      "confirmed": true
+    },
+    {
+      "class": "core-risk",
+      "description": "Does the implementation correctly update internal state at CLKâ†‘ even when /OE=1 (outputs disabled)? Real hardware does this.",
+      "confirmed": false
+    }
+  ],
+
+  "modelLimits": [
+    "No async reset.",
+    "Propagation delay 14ns.",
+    "Power-on state: Q[7:0]=0."
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "D_FF",
+  "label": "D Flip-Flop (rising edge)",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "Q captures D on rising CLK edge. Q is stable between edges. prevClk is an internal implementation detail stored in customState â€” it is NOT a user-visible state key. stateKeys=['q'] is the default. evaluate() always reads state.q regardless of current inputs; stateUpdate() implements the edge detection by comparing clk to prevClk."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d",   "label": "D",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) begin q <= d; end; assign q_n = ~q; â€” q declared as reg, q_n declared as wire (verilogWireOutputs=['q_n']).",
+    "vhdlNotes": "process(clk) begin if rising_edge(clk) then q <= d; end if; end process; q_n <= not q;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Step sequence: verify Q doesn't change while CLK is held 0; verify Q follows D at CLKâ†‘; verify Q holds at CLKâ†“. Initial state: Q=0 at simulation start. Test both D=0â†’CLKâ†‘ and D=1â†’CLKâ†‘."
+  },
+
+  "risks": [
+    {
+      "class": "documentation-gap",
+      "description": "No defaultInputValues â€” D and CLK default to 0. Safe for CLK, but D=0 at start means initialstate Q=0 at first rising edge even if no D was ever driven.",
+      "confirmed": false
+    },
+    {
+      "class": "model-limit",
+      "description": "No setup/hold violation detection in basic engine mode. Race condition detector in GATE_DELAY mode uses clockInputId='clk' to flag setup_hold_risk.",
+      "confirmed": true
+    }
+  ],
+
+  "modelLimits": [
+    "No metastability modeled.",
+    "No propagation delay (propagationDelay not set on this gate).",
+    "Hi-Z on D is treated as 0.",
+    "prevClk hidden state not exposed to STT or test framework."
+  ]
+}

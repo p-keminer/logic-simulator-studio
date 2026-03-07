@@ -48,6 +48,7 @@ interface RaceMark {
   lastSeenMs: number;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function loadSavedCircuit(): Circuit | null {
   try {
     const s = sessionStorage.getItem(AUTOSAVE_KEY);
@@ -170,7 +171,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Strukturelle Änderungen → Settle anfordern ────────────────────────────
   // (Gate hinzugefügt/entfernt, Draht gezogen/getrennt, Input-Schalter umgelegt)
@@ -204,7 +205,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     wireMapRef.current   = buildWireMap(circuitRef.current);
     fanoutMapRef.current = buildFanoutMap(circuitRef.current);
     needsSettleRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gateKeys, wireKeys, switchStates]);
 
   // ── Push-Button Auto-Release (150 ms) ─────────────────────────────────────
@@ -231,7 +231,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       .forEach(g => dispatch({ type: 'GATE_CLOCK_TICK', payload: { gateId: g.id } }));
     // Settle auslösen: syncBuffer übernimmt den getoggleten Clock-Wert beim nächsten Frame
     needsSettleRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Shared snapshot builder (deduplicates 3 identical blocks) ─────────────
@@ -544,7 +543,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     raceMarkRef.current.clear();
     raceMarkDirtyRef.current = false;
     // The scheduler will be re-seeded automatically on the next settle.
-  }, [circuit.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [circuit.id]);
 
   return (
     <CircuitContext.Provider value={{
@@ -561,6 +560,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCircuitContext(): CircuitContextValue {
   const ctx = useContext(CircuitContext);
   if (!ctx) throw new Error('useCircuitContext must be used within CircuitProvider');
