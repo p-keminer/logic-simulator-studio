@@ -28,10 +28,10 @@ const runs = files.map((f) => ({
   data: JSON.parse(fs.readFileSync(f, 'utf8')),
 }));
 
-// â”€â”€ Volatile fields to document but ignore for equality â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Volatile fields to document but ignore for equality ──────────────────────
 const VOLATILE_FIELDS = new Set(['generatedAt', 'generatedAtISO']);
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function deepEqual(a, b) {
   if (a === b) return true;
@@ -54,7 +54,7 @@ function normalize(obj) {
   return out;
 }
 
-// â”€â”€ Core audit comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Core audit comparison ────────────────────────────────────────────────────
 
 function compareCoreRuns(runList) {
   const perCase = {};
@@ -99,7 +99,7 @@ function compareCoreRuns(runList) {
   return { topLevel, caseResults };
 }
 
-// â”€â”€ UI audit comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── UI audit comparison ──────────────────────────────────────────────────────
 
 function compareUiRuns(runList) {
   const perCase = {};
@@ -159,7 +159,7 @@ function compareUiRuns(runList) {
   return { topLevel, caseResults };
 }
 
-// â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main ─────────────────────────────────────────────────────────────────────
 
 const result = {
   auditType,

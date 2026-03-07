@@ -16,9 +16,9 @@
     "stateVariables": ["q"],
     "hasStableUndefinedState": true,
     "invalidInputCombinations": [
-      { "s": 1, "r": 1, "result": "Q=0, QÌ„=0 (both outputs LOW â€” undefined/forbidden state)" }
+      { "s": 1, "r": 1, "result": "Q=0, Q̄=0 (both outputs LOW — undefined/forbidden state)" }
     ],
-    "notes": "Cross-coupled NOR latch. Level-sensitive, no clock. Forbidden state: both S=R=1 â†’ Q=QÌ„=0. Model maps this to Q=0, QÌ„=0. Real hardware: both outputs momentarily low, then race to one of the stable states on release. The model does NOT simulate this race â€” it deterministically outputs Q=0. HDL export uses primitive nor gates (structural model). isSynchronous=false."
+    "notes": "Cross-coupled NOR latch. Level-sensitive, no clock. Forbidden state: both S=R=1 → Q=Q̄=0. Model maps this to Q=0, Q̄=0. Real hardware: both outputs momentarily low, then race to one of the stable states on release. The model does NOT simulate this race — it deterministically outputs Q=0. HDL export uses primitive nor gates (structural model). isSynchronous=false."
   },
 
   "ports": {
@@ -28,7 +28,7 @@
     ],
     "outputs": [
       { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
-      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
     ]
   },
 
@@ -57,7 +57,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Required: S=1,R=0â†’Q=1; S=0,R=1â†’Q=0; S=0,R=0â†’hold (test from both Q=0 and Q=1); S=1,R=1â†’forbidden (Q=0,QÌ„=0 model output). Release from forbidden state: model will hold Q=0 â€” verify this determinism. VHDL simulation may reveal combinational loop (delta cycles)."
+    "notes": "Required: S=1,R=0→Q=1; S=0,R=1→Q=0; S=0,R=0→hold (test from both Q=0 and Q=1); S=1,R=1→forbidden (Q=0,Q̄=0 model output). Release from forbidden state: model will hold Q=0 — verify this determinism. VHDL simulation may reveal combinational loop (delta cycles)."
   },
 
   "risks": [
@@ -81,7 +81,7 @@
   "modelLimits": [
     "Race condition on S=R=1 release not simulated.",
     "No propagation delay.",
-    "Power-on state is Q=0 (customState undefined â†’ q=0).",
+    "Power-on state is Q=0 (customState undefined → q=0).",
     "Hi-Z on S or R treated as 0 (hold behavior)."
   ]
 }

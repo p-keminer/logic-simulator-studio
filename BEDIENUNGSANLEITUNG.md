@@ -37,6 +37,7 @@
 16. [Tastenkürzel](#16-tastenkürzel)
 17. [Häufige Fehler & Lösungen](#17-häufige-fehler--lösungen)
 18. [Baustein-Referenz: ALU4](#18-baustein-referenz-alu4)
+19. [Der Ordner validation/](#19-der-ordner-validation)
 
 ---
 
@@ -496,6 +497,41 @@ Für 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU 
 
 ---
 
+## 19. Der Ordner validation/
+
+> Dieser Abschnitt ist vor allem für Entwicklung, Verifikation und Dokumentation relevant. Für das normale Bauen und Simulieren von Schaltungen kann der Ordner ignoriert werden.
+
+Der Ordner [`validation/`](validation/) sammelt die QA-, Audit- und Regressionsartefakte des Projekts.
+
+### Was dort liegt
+
+| Bereich | Inhalt | Wann nutzen? |
+|---|---|---|
+| [`validation/README.md`](validation/README.md) | Einstiegspunkt, Lesereihenfolge, kanonische Dateien | Immer zuerst |
+| `focused-nine-*` | Hochrisiko-Suite mit Berichten und Rohdaten | Wenn du den aktuellen Kernzustand prüfen willst |
+| `golden-corpus-v1.*` | Basis-Regressionskorpus mit 12 Referenzschaltungen | Wenn du Integrationsfälle oder Exportartefakte vergleichen willst |
+| `generated-circuits-*` | gespeicherte Testschaltungen | Zur Reproduktion im Simulator |
+| `generated-exports-*` | generierte Verilog-/VHDL-Dateien | Für externe HDL-Checks |
+| `generated-ui-*` | Screenshots aus UI-Audits | Für visuelle Nachweise |
+| `contracts/` | maschinenlesbare Gate-Contracts | Für Spezifikation und spätere Test-Generierung |
+| `maturity-*`, `industry-lite-roadmap.md`, `verification-matrix.md` | Reifegrad, Prioritäten, Prüfstrategie | Für Planung und Einordnung |
+| `archive/` | alte, historisch aufgehobene Stände | Nur bei Bedarf; nicht die aktuelle Wahrheit |
+
+### Wie man damit umgeht
+
+- Für den aktuellen Projektstand immer zuerst [`validation/README.md`](validation/README.md) lesen.
+- Die `.md`-Dateien sind für Menschen gedacht; die `.json`-Dateien für automatisierte Auswertung.
+- `focused-nine-summary.json` und `focused-nine-ui-summary.json` beschreiben den aktuellen fokussierten Prüfstand.
+- `golden-corpus-v1.*` ist der Basiskorpus für wiederholbare Referenzfälle, aber nicht automatisch Teil der Laufzeit der App.
+- Die `generated-*`-Ordner enthalten Nachweise und Reproduktionsmaterial; sie werden typischerweise nicht von Hand editiert.
+- Inhalte unter `archive/` sind historische Snapshots und sollen nicht mit dem aktuellen kanonischen Stand verwechselt werden.
+
+### Für normale Nutzung des Simulators
+
+Wenn du nur Schaltungen bauen, simulieren, speichern oder exportieren möchtest, kannst du den Ordner `validation/` vollständig ignorieren.
+
+---
+
 *Bedienungsanleitung für LogicSim – Browser-basierter Logikgatter-Simulator*
 
 ---
@@ -533,6 +569,7 @@ Für 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU 
 16. [Keyboard Shortcuts](#16-keyboard-shortcuts)
 17. [Common Errors & Solutions](#17-common-errors--solutions)
 18. [Component Reference: ALU4](#18-component-reference-alu4)
+19. [The validation/ Folder](#19-the-validation-folder)
 
 ---
 
@@ -997,6 +1034,41 @@ Open via **Toolbar → "Export"**.
 
 ### Cascading multiple ALUs
 For an 8-bit addition: connect COUT of the lower-order ALU to CIN of the higher-order ALU (ripple-carry).
+
+---
+
+## 19. The validation/ Folder
+
+> This section is mainly relevant for development, verification, and documentation. If you only want to build and simulate circuits, you can ignore this folder.
+
+The [`validation/`](validation/) folder contains the project's QA, audit, and regression artefacts.
+
+### What it contains
+
+| Area | Contents | When to use it |
+|---|---|---|
+| [`validation/README.md`](validation/README.md) | Entry point, reading order, canonical files | Always start here |
+| `focused-nine-*` | High-risk suite with reports and raw data | When checking the current core status |
+| `golden-corpus-v1.*` | Baseline regression corpus with 12 reference circuits | When comparing integration cases or export artefacts |
+| `generated-circuits-*` | saved test circuits | To reproduce scenarios in the simulator |
+| `generated-exports-*` | generated Verilog/VHDL files | For external HDL checks |
+| `generated-ui-*` | screenshots from UI audits | For visual evidence |
+| `contracts/` | machine-readable gate contracts | For specification and future test generation |
+| `maturity-*`, `industry-lite-roadmap.md`, `verification-matrix.md` | maturity tracking, priorities, validation strategy | For planning and project status |
+| `archive/` | older historical snapshots | Only when needed; not the current source of truth |
+
+### How to use it
+
+- Read [`validation/README.md`](validation/README.md) first for the current project status.
+- `.md` files are primarily human-facing; `.json` files are intended for automation and downstream tooling.
+- `focused-nine-summary.json` and `focused-nine-ui-summary.json` describe the current focused validation baseline.
+- `golden-corpus-v1.*` is the seed corpus for repeatable reference cases, but it is not part of the app's runtime.
+- The `generated-*` directories contain evidence and reproduction material; they are usually not edited by hand.
+- Files under `archive/` are historical snapshots and should not be mistaken for the current canonical state.
+
+### For normal simulator use
+
+If you only want to design, simulate, save, or export circuits, you can safely ignore the `validation/` folder.
 
 ---
 

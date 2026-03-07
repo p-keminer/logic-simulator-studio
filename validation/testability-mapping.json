@@ -6,7 +6,7 @@
   },
 
   "patternDefinitions": {
-    "truth-table-exhaustive": "Run all 2^N input combinations and verify outputs match evaluate() spec. Applicable only to combinational gates with N â‰¤ 6 inputs.",
+    "truth-table-exhaustive": "Run all 2^N input combinations and verify outputs match evaluate() spec. Applicable only to combinational gates with N ≤ 6 inputs.",
     "sequential-step-sequence": "Apply a time-ordered sequence of input stimuli and verify state transitions and output responses at each step.",
     "async-control-override": "Assert async control (SET/RESET/PRESET/CLEAR) while clock is stable and verify output changes immediately without waiting for clock edge.",
     "oe-tristate": "Toggle /OE and verify outputs switch between driven (0/1) and Hi-Z (2) values.",
@@ -15,7 +15,7 @@
     "export-vhdl": "Call toVHDL() and verify the produced string parses as valid VHDL and matches behavioral spec.",
     "ui-state-projection": "Verify stateKeys match the values displayed in the STT/UI, and that forcing state via STT produces the expected simulation output.",
     "reset-to-known-state": "Apply async or sync reset and verify all Q outputs go to 0 (or preset value) and state is cleared.",
-    "clock-edge-detection": "Apply all 4 CLK transitions (0â†’0, 0â†’1, 1â†’0, 1â†’1) and verify state only changes on the active edge.",
+    "clock-edge-detection": "Apply all 4 CLK transitions (0→0, 0→1, 1→0, 1→1) and verify state only changes on the active edge.",
     "hold-state": "Verify Q remains unchanged when no active clock edge or enable signal occurs.",
     "forbidden-input-combination": "Apply an illegal input combination (e.g. S=R=1, /PRE=/CLR=0) and verify the model produces its documented deterministic output.",
     "counter-rollover": "Count from max value (15 or 99) and verify the counter wraps to 0 and RCO/carry behavior is correct.",
@@ -33,7 +33,7 @@
         { "pattern": "export-verilog", "condition": "hasToVerilog == true" },
         { "pattern": "export-vhdl",    "condition": "hasToVHDL == true" }
       ],
-      "notes": "Currently missing toVerilog/toVHDL â€” export patterns cannot run until implemented. P0 priority fix."
+      "notes": "Currently missing toVerilog/toVHDL — export patterns cannot run until implemented. P0 priority fix."
     },
     {
       "classId": "combinational-multi",
@@ -55,7 +55,7 @@
         "TRIBUF": ["oe-tristate", "multi-driver-conflict"],
         "SCHMITT": []
       },
-      "notes": "TRIBUF needs defaultInputValues fix for /OE (see gap analysis Â§3). SCHMITT is modeled as inverting buffer â€” no hysteresis."
+      "notes": "TRIBUF needs defaultInputValues fix for /OE (see gap analysis §3). SCHMITT is modeled as inverting buffer — no hysteresis."
     },
     {
       "classId": "combinational-comp-out",
@@ -114,7 +114,7 @@
         "export-verilog",
         "export-vhdl"
       ],
-      "notes": "D_FF_R: verify RST overrides clock synchronously. SR_FF_EDGE: verify S=R=1 at CLKâ†‘."
+      "notes": "D_FF_R: verify RST overrides clock synchronously. SR_FF_EDGE: verify S=R=1 at CLK↑."
     },
     {
       "classId": "edge-triggered-ff-async",
@@ -142,7 +142,7 @@
         "export-verilog",
         "export-vhdl"
       ],
-      "notes": "Q changes only on falling edge. Master tracks during CLK=1. HDL export approximates as negedge-triggered â€” synthesis-risk."
+      "notes": "Q changes only on falling edge. Master tracks during CLK=1. HDL export approximates as negedge-triggered — synthesis-risk."
     },
     {
       "classId": "register",
@@ -180,7 +180,7 @@
         { "pattern": "export-verilog",         "condition": "hasToVerilog == true" },
         { "pattern": "export-vhdl",            "condition": "hasToVHDL == true" }
       ],
-      "notes": "Critical: 74HC161 clear is ASYNC (apply /CLRN mid-cycle, verify immediate reset). 74HC163 clear is SYNC (verify reset waits for CLKâ†‘). BIN_CTR7S/99: no HDL export â€” export tests skip."
+      "notes": "Critical: 74HC161 clear is ASYNC (apply /CLRN mid-cycle, verify immediate reset). 74HC163 clear is SYNC (verify reset waits for CLK↑). BIN_CTR7S/99: no HDL export — export tests skip."
     },
     {
       "classId": "memory",
@@ -223,7 +223,7 @@
         "export-verilog",
         "export-vhdl"
       ],
-      "notes": "Verify SHCP advances shift register, STCP latches to output. /MR resets shift only. /OE enables outputs. /OE fix needed (see gap analysis Â§3)."
+      "notes": "Verify SHCP advances shift register, STCP latches to output. /MR resets shift only. /OE enables outputs. /OE fix needed (see gap analysis §3)."
     },
     {
       "classId": "universal-shift-reg-ic",
@@ -267,7 +267,7 @@
         "export-verilog",
         "export-vhdl"
       ],
-      "notes": "Verify state update happens at CLKâ†‘ even when /OE=1 (outputs Hi-Z but internal state updates). Needs /OE defaultInputValues fix."
+      "notes": "Verify state update happens at CLK↑ even when /OE=1 (outputs Hi-Z but internal state updates). Needs /OE defaultInputValues fix."
     },
     {
       "classId": "combinational-ic",
@@ -278,7 +278,7 @@
         "74HC138": ["truth-table-exhaustive"],
         "74HC148": ["truth-table-exhaustive"]
       },
-      "notes": "74HC138: active-low enable inputs â€” defaultInputValues verify correct behavior when G2A/G2B left unconnected. 74HC148: active-low I/O encoding."
+      "notes": "74HC138: active-low enable inputs — defaultInputValues verify correct behavior when G2A/G2B left unconnected. 74HC148: active-low I/O encoding."
     },
     {
       "classId": "io-input",

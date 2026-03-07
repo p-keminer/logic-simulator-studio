@@ -12,7 +12,7 @@
     "asyncControls": [],
     "stateVariables": ["q", "prevClk"],
     "hasStableUndefinedState": false,
-    "notes": "Q captures D on rising CLK edge. Q is stable between edges. prevClk is an internal implementation detail stored in customState â€” it is NOT a user-visible state key. stateKeys=['q'] is the default. evaluate() always reads state.q regardless of current inputs; stateUpdate() implements the edge detection by comparing clk to prevClk."
+    "notes": "Q captures D on rising CLK edge. Q is stable between edges. prevClk is an internal implementation detail stored in customState — it is NOT a user-visible state key. stateKeys=['q'] is the default. evaluate() always reads state.q regardless of current inputs; stateUpdate() implements the edge detection by comparing clk to prevClk."
   },
 
   "ports": {
@@ -22,7 +22,7 @@
     ],
     "outputs": [
       { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
-      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
     ]
   },
 
@@ -36,7 +36,7 @@
   "exportSupport": {
     "verilog": "full",
     "vhdl": "full",
-    "verilogNotes": "always @(posedge clk) begin q <= d; end; assign q_n = ~q; â€” q declared as reg, q_n declared as wire (verilogWireOutputs=['q_n']).",
+    "verilogNotes": "always @(posedge clk) begin q <= d; end; assign q_n = ~q; — q declared as reg, q_n declared as wire (verilogWireOutputs=['q_n']).",
     "vhdlNotes": "process(clk) begin if rising_edge(clk) then q <= d; end if; end process; q_n <= not q;",
     "verilogExtraRegs": false,
     "vhdlExtraSignals": false
@@ -51,13 +51,13 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Step sequence: verify Q doesn't change while CLK is held 0; verify Q follows D at CLKâ†‘; verify Q holds at CLKâ†“. Initial state: Q=0 at simulation start. Test both D=0â†’CLKâ†‘ and D=1â†’CLKâ†‘."
+    "notes": "Step sequence: verify Q doesn't change while CLK is held 0; verify Q follows D at CLK↑; verify Q holds at CLK↓. Initial state: Q=0 at simulation start. Test both D=0→CLK↑ and D=1→CLK↑."
   },
 
   "risks": [
     {
       "class": "documentation-gap",
-      "description": "No defaultInputValues â€” D and CLK default to 0. Safe for CLK, but D=0 at start means initialstate Q=0 at first rising edge even if no D was ever driven.",
+      "description": "No defaultInputValues — D and CLK default to 0. Safe for CLK, but D=0 at start means initialstate Q=0 at first rising edge even if no D was ever driven.",
       "confirmed": false
     },
     {

@@ -75,6 +75,9 @@ gateRegistry.register({
   label: 'D-FF',
   category: 'flipflop',
   width: 80, height: 80,
+  stateKeys: ['q'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q: 0, prevClk: 0 },
   inputs: [
     { id: 'd',   label: 'D',   relativeX: 0, relativeY: 0.3 },
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.65 },
@@ -133,6 +136,9 @@ gateRegistry.register({
   label: 'D-FF/R',
   category: 'flipflop',
   width: 80, height: 100,
+  stateKeys: ['q'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q: 0, prevClk: 0 },
   inputs: [
     { id: 'd',   label: 'D',   relativeX: 0, relativeY: 0.25 },
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.55 },
@@ -224,6 +230,9 @@ gateRegistry.register({
   label: 'JK-FF',
   category: 'flipflop',
   width: 80, height: 90,
+  stateKeys: ['q'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q: 0, prevClk: 0 },
   inputs: [
     { id: 'j',   label: 'J',   relativeX: 0, relativeY: 0.25 },
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.55 },
@@ -289,6 +298,9 @@ gateRegistry.register({
   label: 'T-FF',
   category: 'flipflop',
   width: 80, height: 80,
+  stateKeys: ['q'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q: 0, prevClk: 0 },
   inputs: [
     { id: 't',   label: 'T',   relativeX: 0, relativeY: 0.3 },
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.65 },

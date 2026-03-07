@@ -52,19 +52,19 @@ Fuer `tri_not_sanitized`, `dff_led`, `jkff_led`, `tff_led` und `multi_driver_sam
 - Z-farbige Pfade (amber, #f59e0b) bei Tri-State-Faellen
 - X-farbige Pfade (rot, #ef4444) bei Konflikten
 
-### `tri_not_sanitized` â€” WARN
+### `tri_not_sanitized` — WARN
 
-TRIBUF(a=1, oe=1) â†’ Z; NOT(Z) â†’ X. Z and X colored paths expected.
+TRIBUF(a=1, oe=1) → Z; NOT(Z) → X. Z and X colored paths expected.
 
 Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
 
 Befunde:
   - Labels OK: [a, oe, y] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)
-  - Z-path (amber): present â€” HI_Z signal visible in timing waveform
-  - X-path (red): present â€” conflict/X signal visible in timing waveform
+  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
+  - Z-path (amber): present — HI_Z signal visible in timing waveform
+  - X-path (red): present — conflict/X signal visible in timing waveform
 
-### `dff_led` â€” WARN
+### `dff_led` — WARN
 
 D_FF initial settle: labels and step count confirm timing tracks correctly.
 
@@ -72,9 +72,9 @@ Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
 
 Befunde:
   - Labels OK: [d, clk, q] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)
+  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
 
-### `jkff_led` â€” WARN
+### `jkff_led` — WARN
 
 JK_FF initial settle: four input/output labels confirm channel presence.
 
@@ -82,9 +82,9 @@ Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
 
 Befunde:
   - Labels OK: [j, k, clk, q] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)
+  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
 
-### `tff_led` â€” WARN
+### `tff_led` — WARN
 
 T_FF initial settle: three labels confirm sequential gate channels.
 
@@ -92,9 +92,9 @@ Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
 
 Befunde:
   - Labels OK: [t, clk, q] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)
+  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
 
-### `multi_driver_same_input` â€” WARN
+### `multi_driver_same_input` — WARN
 
 Dual drivers (1 vs 0) resolve to X. Red X-conflict path expected in timing.
 
@@ -102,8 +102,8 @@ Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
 
 Befunde:
   - Labels OK: [a, b, y] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)
-  - X-path (red): not present â€” requires steps > 0 (timing history empty)
+  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
+  - X-path (red): not present — requires steps > 0 (timing history empty)
 
 
 **Bekannte Grenze:** Bei 5 Faellen wurden 0 Schritte aufgezeichnet. Das Timing-Diagramm der App zeichnet nur bei tatsaechlichen Signalaenderungen (batchChangedNets > 0) auf. In headless Puppeteer kann der requestAnimationFrame-Tick ausbleiben bevor der Audit liest. Signal-Labels sind trotzdem pruefbar (SVG text-Elemente). Fuer Z/X-Pfad-Pruefung wird steps > 0 benoetigt.
@@ -111,7 +111,7 @@ Befunde:
 
 Der semantische Timing-Check ist ein erster Schritt ueber den reinen Smoke-Test hinaus.
 Signal-Label-Pruefung funktioniert zuverlaessig (SVG text-Elemente sind immer vorhanden).
-Z/X-Pfad-Pruefung setzt steps > 0 voraus â€” das haengt davon ab, ob der headless-Browser
+Z/X-Pfad-Pruefung setzt steps > 0 voraus — das haengt davon ab, ob der headless-Browser
 einen requestAnimationFrame-Tick zwischen Circuit-Load und Timing-Lesen ausfuehrt.
 
 Was noch fehlt fuer einen vollen Waveform-Diff:

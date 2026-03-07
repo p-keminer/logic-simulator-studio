@@ -13,7 +13,7 @@
     "stateVariables": ["q", "prevClk"],
     "hasStableUndefinedState": false,
     "invalidInputCombinations": [],
-    "notes": "JK truth table at rising CLK edge: J=0,K=0â†’Hold; J=0,K=1â†’Reset(Q=0); J=1,K=0â†’Set(Q=1); J=1,K=1â†’Toggle. No forbidden combination (unlike SR). prevClk is internal state. Const-propagation simplifies toVerilog output for constant J/K values (jkSimplifiedVerilog)."
+    "notes": "JK truth table at rising CLK edge: J=0,K=0→Hold; J=0,K=1→Reset(Q=0); J=1,K=0→Set(Q=1); J=1,K=1→Toggle. No forbidden combination (unlike SR). prevClk is internal state. Const-propagation simplifies toVerilog output for constant J/K values (jkSimplifiedVerilog)."
   },
 
   "ports": {
@@ -24,7 +24,7 @@
     ],
     "outputs": [
       { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
-      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
     ]
   },
 
@@ -53,13 +53,13 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Required step sequences: Hold (J=0,K=0), Reset (J=0,K=1), Set (J=1,K=0), Toggle (J=1,K=1). Each must be followed by CLKâ†‘. Verify Q does not change outside clock edges. Toggle must be tested starting from both Q=0 and Q=1."
+    "notes": "Required step sequences: Hold (J=0,K=0), Reset (J=0,K=1), Set (J=1,K=0), Toggle (J=1,K=1). Each must be followed by CLK↑. Verify Q does not change outside clock edges. Toggle must be tested starting from both Q=0 and Q=1."
   },
 
   "risks": [
     {
       "class": "documentation-gap",
-      "description": "No defaultInputValues. J=K=0 by default â†’ hold state. Safe but not explicitly documented.",
+      "description": "No defaultInputValues. J=K=0 by default → hold state. Safe but not explicitly documented.",
       "confirmed": false
     },
     {

@@ -405,26 +405,48 @@ export function TruthTableModal({ onClose }: Props) {
 
       // ── Nicht-repräsentative Zustandsbits auf 0 fixieren ─────────────────
       for (const sv of nonRepStateBits) {
+        let hiddenInit: Record<string, unknown> = {};
+        try {
+          const svDef = gateRegistry.get(circuit.gates[sv.gateId].typeId);
+          if (svDef.stateInit) {
+            // Pick only hidden state keys from stateInit
+            for (const hk of svDef.hiddenStateKeys ?? []) {
+              if (hk in svDef.stateInit) hiddenInit[hk] = svDef.stateInit[hk];
+            }
+          } else {
+            hiddenInit = { prevClk: 0 }; // legacy fallback
+          }
+        } catch { hiddenInit = { prevClk: 0 }; }
         buf.customStates[sv.gateId] = {
           ...(buf.customStates[sv.gateId] ?? {}),
           [sv.stateKey]: 0,
-          prevClk: 0,
+          ...hiddenInit,
         };
       }
 
       // ── Aktive Zustandsvariablen erzwingen ────────────────────────────────
       // 1) buf.customStates: damit das Gatter in evaluate() / stateUpdate()
       //    den korrekten aktuellen Zustand kennt (nicht den aus der echten Schaltung)
-      // 2) prevClk = 0: damit clock=1 immer eine steigende Flanke auslöst.
-      //    Ohne diesen Reset hängt Q(t+1) vom letzten echten Takt-Zustand ab.
+      // 2) Hidden state (z.B. prevClk) wird aus stateInit initialisiert,
+      //    damit clock=1 immer eine steigende Flanke auslöst.
       for (let s = 0; s < activeStateVars.length; s++) {
         const sv  = activeStateVars[s];
         const val = stateBits[s] as SignalValue;
-        // Synchrones Gatter: stateKey und prevClk in customState überschreiben
+        let hiddenInit: Record<string, unknown> = {};
+        try {
+          const svDef = gateRegistry.get(circuit.gates[sv.gateId].typeId);
+          if (svDef.stateInit) {
+            for (const hk of svDef.hiddenStateKeys ?? []) {
+              if (hk in svDef.stateInit) hiddenInit[hk] = svDef.stateInit[hk];
+            }
+          } else {
+            hiddenInit = { prevClk: 0 }; // legacy fallback
+          }
+        } catch { hiddenInit = { prevClk: 0 }; }
         buf.customStates[sv.gateId] = {
           ...(buf.customStates[sv.gateId] ?? {}),
           [sv.stateKey]: val,
-          prevClk: 0,  // Flanken-Erkennung beginnt bei 0 → clk=1 = steigende Flanke
+          ...hiddenInit,
         };
       }
 

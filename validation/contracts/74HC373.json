@@ -15,7 +15,7 @@
     ],
     "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7"],
     "hasStableUndefinedState": false,
-    "notes": "8-bit transparent latch. LE=1: outputs follow inputs (transparent). LE=0: outputs hold. /OE (active-low): when /OE=1, all outputs go Hi-Z. When /OE=0, outputs are driven from internal state. Note: LE and /OE are independent. You can hold /OE=1 (outputs disabled) while latch is transparent or held. isSynchronous field is NOT set (falsy) â€” latches are level-sensitive. clockInputId=null â€” no timing detection."
+    "notes": "8-bit transparent latch. LE=1: outputs follow inputs (transparent). LE=0: outputs hold. /OE (active-low): when /OE=1, all outputs go Hi-Z. When /OE=0, outputs are driven from internal state. Note: LE and /OE are independent. You can hold /OE=1 (outputs disabled) while latch is transparent or held. isSynchronous field is NOT set (falsy) — latches are level-sensitive. clockInputId=null — no timing detection."
   },
 
   "ports": {
@@ -53,7 +53,7 @@
   "exportSupport": {
     "verilog": "full",
     "vhdl": "full",
-    "verilogNotes": "LE latch via always@(*). /OE tri-state via conditional assign. Verify the exact HDL pattern â€” may use two separate always blocks or nested conditionals.",
+    "verilogNotes": "LE latch via always@(*). /OE tri-state via conditional assign. Verify the exact HDL pattern — may use two separate always blocks or nested conditionals.",
     "vhdlNotes": "Process for latch + concurrent assignment for tri-state.",
     "verilogExtraRegs": false,
     "vhdlExtraSignals": false
@@ -74,7 +74,7 @@
   "risks": [
     {
       "class": "core-risk",
-      "description": "No defaultInputValues set for /OE. Disconnected /OE=0 by default (active) â€” outputs driven immediately. This is the opposite-safe default vs. typical bus designs.",
+      "description": "No defaultInputValues set for /OE. Disconnected /OE=0 by default (active) — outputs driven immediately. This is the opposite-safe default vs. typical bus designs.",
       "confirmed": true
     },
     {
@@ -84,7 +84,7 @@
     },
     {
       "class": "model-limit",
-      "description": "isSynchronous not set â€” unclear how STT treats this gate.",
+      "description": "isSynchronous not set — unclear how STT treats this gate.",
       "confirmed": false
     }
   ],

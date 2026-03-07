@@ -12,7 +12,7 @@
     "asyncControls": [],
     "stateVariables": ["cnt0", "cnt1", "cnt2", "cnt3"],
     "hasStableUndefinedState": false,
-    "notes": "Identical interface to 74HC161 but /CLR is SYNCHRONOUS here â€” reset only takes effect at the next rising CLK edge when /CLRN=0. This is the critical difference from 74HC161. All other behavior (ENP, ENT, /LDN, RCO, cascade) is the same. Verify that the implementation correctly defers clear to clock edge."
+    "notes": "Identical interface to 74HC161 but /CLR is SYNCHRONOUS here — reset only takes effect at the next rising CLK edge when /CLRN=0. This is the critical difference from 74HC161. All other behavior (ENP, ENT, /LDN, RCO, cascade) is the same. Verify that the implementation correctly defers clear to clock edge."
   },
 
   "ports": {
@@ -46,8 +46,8 @@
   "exportSupport": {
     "verilog": "full",
     "vhdl": "full",
-    "verilogNotes": "always @(posedge clk) only â€” NO negedge clrn in sensitivity list (sync clear). /CLRN handled inside the always block: if (!clrn) cnt<=0;",
-    "vhdlNotes": "process(clk) â€” clrn NOT in sensitivity list. Inside: if rising_edge then if clrn='0' then...",
+    "verilogNotes": "always @(posedge clk) only — NO negedge clrn in sensitivity list (sync clear). /CLRN handled inside the always block: if (!clrn) cnt<=0;",
+    "vhdlNotes": "process(clk) — clrn NOT in sensitivity list. Inside: if rising_edge then if clrn='0' then...",
     "verilogExtraRegs": true,
     "vhdlExtraSignals": true
   },
@@ -62,7 +62,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Critical test distinguishing 74HC163 from 74HC161: with /CLRN=0, apply CLKâ†‘ and verify reset happens on clock edge (NOT immediately). Verify that before CLKâ†‘, counter still holds its old value despite /CLRN=0. All other counter/load/cascade tests same as 74HC161."
+    "notes": "Critical test distinguishing 74HC163 from 74HC161: with /CLRN=0, apply CLK↑ and verify reset happens on clock edge (NOT immediately). Verify that before CLK↑, counter still holds its old value despite /CLRN=0. All other counter/load/cascade tests same as 74HC161."
   },
 
   "risks": [

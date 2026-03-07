@@ -14,7 +14,7 @@
     ],
     "stateVariables": ["cnt0", "cnt1", "cnt2", "cnt3"],
     "hasStableUndefinedState": false,
-    "notes": "4-bit binary counter, counts 0-15. ASYNC clear via /CLRN (active-low, overrides clock). Synchronous parallel load via /LDN (active-low, loads d0-d3 at next CLKâ†‘ when /LDN=0). ENP and ENT must both be 1 for counting. RCO=1 when Q=15 AND ENT=1 (ripple carry out for cascading). Key distinction from 74HC163: /CLR is asynchronous here."
+    "notes": "4-bit binary counter, counts 0-15. ASYNC clear via /CLRN (active-low, overrides clock). Synchronous parallel load via /LDN (active-low, loads d0-d3 at next CLK↑ when /LDN=0). ENP and ENT must both be 1 for counting. RCO=1 when Q=15 AND ENT=1 (ripple carry out for cascading). Key distinction from 74HC163: /CLR is asynchronous here."
   },
 
   "ports": {
@@ -48,8 +48,8 @@
   "exportSupport": {
     "verilog": "full",
     "vhdl": "full",
-    "verilogNotes": "always @(posedge clk or negedge clrn) â€” async /CLR. Counter increment inside clocked block. RCO via assign.",
-    "vhdlNotes": "process(clk, clrn) â€” async reset in sensitivity list.",
+    "verilogNotes": "always @(posedge clk or negedge clrn) — async /CLR. Counter increment inside clocked block. RCO via assign.",
+    "vhdlNotes": "process(clk, clrn) — async reset in sensitivity list.",
     "verilogExtraRegs": true,
     "vhdlExtraSignals": true
   },
@@ -65,7 +65,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Tests: count 0â†’15 with ENP=ENT=1; verify RCO=1 only at count=15 with ENT=1; async /CLRN=0 resets immediately (not waiting for clock edge); parallel load /LDN=0 at CLKâ†‘ loads D[3:0]; hold when ENP=0 or ENT=0; cascade: connect RCO to ENP of next stage. Verify /CLRN is truly async (resets mid-clock-cycle)."
+    "notes": "Tests: count 0→15 with ENP=ENT=1; verify RCO=1 only at count=15 with ENT=1; async /CLRN=0 resets immediately (not waiting for clock edge); parallel load /LDN=0 at CLK↑ loads D[3:0]; hold when ENP=0 or ENT=0; cascade: connect RCO to ENP of next stage. Verify /CLRN is truly async (resets mid-clock-cycle)."
   },
 
   "risks": [

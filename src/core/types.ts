@@ -150,6 +150,20 @@ export interface GateDefinition {
    *           BIN_CTR7S → ['count'].
    */
   stateKeys?: string[];
+  /**
+   * CustomState keys that are internal implementation details (not shown in STT).
+   * Example: 'prevClk' for edge detection in flip-flops, 'qM' for MS_JK_FF master.
+   * These keys exist in customState but are intentionally hidden from the user.
+   * Tools can inspect this array to understand the full state space without
+   * exposing it in educational/UI contexts.
+   */
+  hiddenStateKeys?: string[];
+  /**
+   * Initial values for ALL customState keys (visible + hidden).
+   * Used by simulation init, STT enumeration, and reset logic.
+   * Example: D_FF → { q: 0, prevClk: 0 }
+   */
+  stateInit?: Record<string, unknown>;
 }
 
 export interface GateInstance {

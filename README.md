@@ -135,6 +135,26 @@ npm run dev
 
 ---
 
+## Validierung & QA-Artefakte
+
+Der Ordner [`validation/`](validation/) enthält die Verifikations-, Regressions- und Reifegrad-Artefakte des Projekts. Für die normale Nutzung des Simulators ist er nicht erforderlich, für Entwicklung und Qualitätssicherung aber die zentrale Referenz.
+
+Wichtigste Inhalte:
+- [`validation/README.md`](validation/README.md): kanonischer Einstiegspunkt mit Lesereihenfolge
+- `focused-nine-*`: aktuelle Hochrisiko-Suite mit Core-/UI-Berichten und Rohdaten
+- `golden-corpus-v1.*` plus `generated-circuits-golden/` und `generated-exports-golden/`: erster Basis-Regressionskorpus
+- `generated-circuits-focused/`, `generated-exports-focused/`, `generated-ui-focused/`: reproduzierbare Fokus-Artefakte
+- `contracts/`, `gate-contract-schema.json`, `gate-inventory.json`: maschinenlesbare Spezifikations- und Inventardaten
+- `maturity-gap-dashboard.md`, `maturity-priority-list.json`, `industry-lite-roadmap.md`, `verification-matrix.md`: Reifegrad, Prioritäten und Prüfstrategie
+- `archive/`: historische Altstände, nicht die aktuelle Quelle der Wahrheit
+
+Praktische Nutzung:
+- Für den aktuellen QA-Stand immer zuerst [`validation/README.md`](validation/README.md) lesen.
+- Markdown-Dateien sind für Menschen gedacht, JSON-Dateien für Automatisierung und Weiterverarbeitung.
+- Die `generated-*`-Ordner sind Nachweise und Reproduktionsmaterial, keine Laufzeit-Abhängigkeiten der App.
+
+---
+
 ## Tech-Stack
 
 | Schicht | Technologie |
@@ -300,6 +320,26 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+---
+
+## Validation and QA Artefacts
+
+The [`validation/`](validation/) folder contains the project's verification, regression, and maturity-tracking artefacts. It is not required for normal simulator usage, but it is the main reference area for development and QA.
+
+Most important contents:
+- [`validation/README.md`](validation/README.md): canonical entry point and reading order
+- `focused-nine-*`: current high-risk suite with core/UI reports and raw data
+- `golden-corpus-v1.*` plus `generated-circuits-golden/` and `generated-exports-golden/`: first baseline regression corpus
+- `generated-circuits-focused/`, `generated-exports-focused/`, `generated-ui-focused/`: reproducible focused-suite artefacts
+- `contracts/`, `gate-contract-schema.json`, `gate-inventory.json`: machine-readable specification and inventory data
+- `maturity-gap-dashboard.md`, `maturity-priority-list.json`, `industry-lite-roadmap.md`, `verification-matrix.md`: maturity tracking, priorities, and validation strategy
+- `archive/`: historical snapshots that are no longer the active source of truth
+
+Practical usage:
+- Read [`validation/README.md`](validation/README.md) first for the current QA status.
+- Markdown files are for humans; JSON files are for automation and downstream tooling.
+- The `generated-*` directories are evidence and reproduction material, not runtime dependencies of the app.
 
 ---
 

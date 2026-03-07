@@ -14,7 +14,7 @@
     ],
     "stateVariables": ["q"],
     "hasStableUndefinedState": false,
-    "notes": "Transparent latch: when EN=1, Q follows D continuously (transparent). When EN=0, Q holds. isSynchronous not set (undefined, assumed false). Verilog uses always@(*) with blocking '=' assignment â€” intentional latch inference. This causes Verilog tools to produce a latch warning, which is correct. Special const-propagation: if EN is const-1, generates assign (purely combinational); if EN is const-0, generates only a comment (holds init value)."
+    "notes": "Transparent latch: when EN=1, Q follows D continuously (transparent). When EN=0, Q holds. isSynchronous not set (undefined, assumed false). Verilog uses always@(*) with blocking '=' assignment — intentional latch inference. This causes Verilog tools to produce a latch warning, which is correct. Special const-propagation: if EN is const-1, generates assign (purely combinational); if EN is const-0, generates only a comment (holds init value)."
   },
 
   "ports": {
@@ -24,7 +24,7 @@
     ],
     "outputs": [
       { "id": "q",   "label": "Q",  "role": "q",     "canBeTriState": false },
-      { "id": "q_n", "label": "QÌ„", "role": "q-bar", "canBeTriState": false }
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
     ]
   },
 
@@ -58,7 +58,7 @@
   "risks": [
     {
       "class": "core-risk",
-      "description": "Latch race-through risk when EN is held HIGH for extended time â€” any glitch on D propagates directly to Q. Not an implementation bug but a model characteristic that tests should exercise.",
+      "description": "Latch race-through risk when EN is held HIGH for extended time — any glitch on D propagates directly to Q. Not an implementation bug but a model characteristic that tests should exercise.",
       "confirmed": true
     },
     {
@@ -75,7 +75,7 @@
 
   "modelLimits": [
     "No propagation delay.",
-    "Power-on state: Q=0 (state.q=undefinedâ†’0).",
+    "Power-on state: Q=0 (state.q=undefined→0).",
     "Hi-Z on D or EN treated as 0."
   ]
 }

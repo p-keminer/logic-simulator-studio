@@ -278,12 +278,12 @@
       "timingModel": "combinational",
       "triState": true,
       "riskClass": "core-risk",
-      "notes": "/OE active-low. No defaultInputValues defined â€” disconnected /OE defaults to 0 (enabled), which is the non-safe default."
+      "notes": "/OE active-low. No defaultInputValues defined — disconnected /OE defaults to 0 (enabled), which is the non-safe default."
     },
 
     {
       "typeId": "AND_C",
-      "label": "ANDÂ±",
+      "label": "AND±",
       "category": "logic_comp_out",
       "inputs": ["a", "b"],
       "outputs": ["q", "q_n"],
@@ -297,7 +297,7 @@
     },
     {
       "typeId": "OR_C",
-      "label": "ORÂ±",
+      "label": "OR±",
       "category": "logic_comp_out",
       "inputs": ["a", "b"],
       "outputs": ["q", "q_n"],
@@ -311,7 +311,7 @@
     },
     {
       "typeId": "XOR_C",
-      "label": "XORÂ±",
+      "label": "XOR±",
       "category": "logic_comp_out",
       "inputs": ["a", "b"],
       "outputs": ["q", "q_n"],
@@ -325,7 +325,7 @@
     },
     {
       "typeId": "NAND_C",
-      "label": "NANDÂ±",
+      "label": "NAND±",
       "category": "logic_comp_out",
       "inputs": ["a", "b"],
       "outputs": ["q", "q_n"],
@@ -336,11 +336,11 @@
       "hasDefaultInputValues": false,
       "timingModel": "combinational",
       "riskClass": "documentation-gap",
-      "notes": "q_n = AND result (inverted naming). q = NOT(AND). Naming is inverted vs. AND_C â€” risk of confusion."
+      "notes": "q_n = AND result (inverted naming). q = NOT(AND). Naming is inverted vs. AND_C — risk of confusion."
     },
     {
       "typeId": "NOR_C",
-      "label": "NORÂ±",
+      "label": "NOR±",
       "category": "logic_comp_out",
       "inputs": ["a", "b"],
       "outputs": ["q", "q_n"],
@@ -499,7 +499,7 @@
       "timingModel": "latch-level-sensitive",
       "isSynchronous": false,
       "riskClass": "core-risk",
-      "notes": "S=R=1 is invalid state â€” evaluates to Q=0, QÌ„=0. No defaultInputValues: both inputs default to 0 (hold). NOR-latch topology."
+      "notes": "S=R=1 is invalid state — evaluates to Q=0, Q̄=0. No defaultInputValues: both inputs default to 0 (hold). NOR-latch topology."
     },
     {
       "typeId": "D_LATCH",
@@ -552,7 +552,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "documentation-gap",
-      "notes": "Async reset (RST=1 overrides clock). No defaultInputValues for RST â€” defaults to 0 (inactive). Const-propagation via portConst."
+      "notes": "Async reset (RST=1 overrides clock). No defaultInputValues for RST — defaults to 0 (inactive). Const-propagation via portConst."
     },
     {
       "typeId": "D_FF_ASSR",
@@ -570,7 +570,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "core-risk",
-      "notes": "Async S and R, active-high. S=R=1 undefined (â†’Q=0). No defaultInputValues â€” S,R default to 0 (inactive) which is safe."
+      "notes": "Async S and R, active-high. S=R=1 undefined (→Q=0). No defaultInputValues — S,R default to 0 (inactive) which is safe."
     },
     {
       "typeId": "JK_FF",
@@ -606,7 +606,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "core-risk",
-      "notes": "S=R=1 undefined (â†’Q=0). Async S,R active-high."
+      "notes": "S=R=1 undefined (→Q=0). Async S,R active-high."
     },
     {
       "typeId": "T_FF",
@@ -676,7 +676,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "core-risk",
-      "notes": "S=R=1 at clock edge â†’ Q=0 (undefined behavior mapped to 0)."
+      "notes": "S=R=1 at clock edge → Q=0 (undefined behavior mapped to 0)."
     },
 
     {
@@ -713,7 +713,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "documentation-gap",
-      "notes": "No EN pin (unlike REG4). Always loads at CLKâ†‘."
+      "notes": "No EN pin (unlike REG4). Always loads at CLK↑."
     },
     {
       "typeId": "SHIFT4",
@@ -731,7 +731,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "documentation-gap",
-      "notes": "SIPO, SIâ†’Q0 on each CLKâ†‘. No serial output."
+      "notes": "SIPO, SI→Q0 on each CLK↑. No serial output."
     },
     {
       "typeId": "PISO4",
@@ -749,7 +749,7 @@
       "timingModel": "edge-triggered-rising",
       "isSynchronous": true,
       "riskClass": "documentation-gap",
-      "notes": "LD=1â†’load, LD=0â†’shift. Output Q is MSB (bit0). Uses verilogExtraRegs/vhdlExtraSignals."
+      "notes": "LD=1→load, LD=0→shift. Output Q is MSB (bit0). Uses verilogExtraRegs/vhdlExtraSignals."
     },
     {
       "typeId": "PIPO4",
@@ -954,7 +954,7 @@
       "defaultInputValues": { "g2a": 1, "g2b": 1 },
       "timingModel": "combinational",
       "riskClass": "documentation-gap",
-      "notes": "3â†’8 decoder. G1=1, G2A=0, G2B=0 enables. defaultInputValues keep /G2A,/G2B inactive (outputs all HIGH = disabled state)."
+      "notes": "3→8 decoder. G1=1, G2A=0, G2B=0 enables. defaultInputValues keep /G2A,/G2B inactive (outputs all HIGH = disabled state)."
     },
     {
       "typeId": "74HC283",
@@ -1009,7 +1009,7 @@
       "isSynchronous": true,
       "propagationDelay_ns": 25,
       "riskClass": "core-risk",
-      "notes": "Serial-in, parallel-out 8-bit shift register with output latch. Two clocks: SHCP (shift) and STCP (latch). /MR async reset active-low. /OE active-low, controls output enable (tri-state). clockInputId=shcp â€” timing detection on data clock only."
+      "notes": "Serial-in, parallel-out 8-bit shift register with output latch. Two clocks: SHCP (shift) and STCP (latch). /MR async reset active-low. /OE active-low, controls output enable (tri-state). clockInputId=shcp — timing detection on data clock only."
     },
     {
       "typeId": "74HC161",
@@ -1119,7 +1119,7 @@
       "propagationDelay_ns": 14,
       "triState": true,
       "riskClass": "core-risk",
-      "notes": "8-bit D-latch with tri-state outputs. LE=1: transparent (latch follows inputs). LE=0: holds. /OE active-low: outputs go Hi-Z when /OE=1. Check: does the model handle tri-state output correctly? No defaultInputValues â€” /OE defaults to 0 (enabled) which may be unsafe."
+      "notes": "8-bit D-latch with tri-state outputs. LE=1: transparent (latch follows inputs). LE=0: holds. /OE active-low: outputs go Hi-Z when /OE=1. Check: does the model handle tri-state output correctly? No defaultInputValues — /OE defaults to 0 (enabled) which may be unsafe."
     },
     {
       "typeId": "74HC374",
@@ -1139,7 +1139,7 @@
       "propagationDelay_ns": 14,
       "triState": true,
       "riskClass": "core-risk",
-      "notes": "8-bit D-FF (edge-triggered) with tri-state outputs. /OE active-low. No defaultInputValues â€” /OE defaults to 0 (enabled)."
+      "notes": "8-bit D-FF (edge-triggered) with tri-state outputs. /OE active-low. No defaultInputValues — /OE defaults to 0 (enabled)."
     },
     {
       "typeId": "74HC148",

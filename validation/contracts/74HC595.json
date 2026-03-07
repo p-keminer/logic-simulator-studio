@@ -14,7 +14,7 @@
     ],
     "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7"],
     "hasStableUndefinedState": false,
-    "notes": "Two-stage register: internal 8-bit shift register clocked by SHCP (shift clock) and an output latch clocked by STCP (storage/latch clock). DS=serial data input; /MR=async reset of shift register only (NOT the output latch); /OE=tri-state output enable. Typical use: shift 8 bits via SHCP, then pulse STCP to transfer to outputs. Q7S is the serial output for daisy-chaining. clockInputId=shcp â€” timing detection only on shift clock. STCP is a second independent clock not covered by clockInputId."
+    "notes": "Two-stage register: internal 8-bit shift register clocked by SHCP (shift clock) and an output latch clocked by STCP (storage/latch clock). DS=serial data input; /MR=async reset of shift register only (NOT the output latch); /OE=tri-state output enable. Typical use: shift 8 bits via SHCP, then pulse STCP to transfer to outputs. Q7S is the serial output for daisy-chaining. clockInputId=shcp — timing detection only on shift clock. STCP is a second independent clock not covered by clockInputId."
   },
 
   "ports": {
@@ -64,7 +64,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Full test sequence: 1) /MR=0â†’reset shift register; 2) shift 8 bits via DS+SHCP; 3) verify outputs NOT yet updated (still old value in output latch); 4) pulse STCP to transfer; 5) verify Q[7:0] matches shifted bits; 6) test Q7S serial output appears at correct clock; 7) test /OE=1â†’Hi-Z outputs; 8) daisy-chain test: Q7S of first â†’ DS of second."
+    "notes": "Full test sequence: 1) /MR=0→reset shift register; 2) shift 8 bits via DS+SHCP; 3) verify outputs NOT yet updated (still old value in output latch); 4) pulse STCP to transfer; 5) verify Q[7:0] matches shifted bits; 6) test Q7S serial output appears at correct clock; 7) test /OE=1→Hi-Z outputs; 8) daisy-chain test: Q7S of first → DS of second."
   },
 
   "risks": [

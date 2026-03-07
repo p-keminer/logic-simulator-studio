@@ -570,7 +570,7 @@ function evaluateMultiDriver(circuit) {
       resolvedLedValue: resolvedValue,
       gateSignals: sim.gateSignals,
     })
-    : pass('fail', 'Conflicting drivers did not resolve to X â€” bus resolution broken', {
+    : pass('fail', 'Conflicting drivers did not resolve to X — bus resolution broken', {
       wiresIntoLedInput,
       resolvedLedValue: resolvedValue,
       gateSignals: sim.gateSignals,

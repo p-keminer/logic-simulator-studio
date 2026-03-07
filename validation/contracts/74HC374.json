@@ -52,7 +52,7 @@
   "exportSupport": {
     "verilog": "full",
     "vhdl": "full",
-    "verilogNotes": "always @(posedge clk) for FF state. /OE tri-state on outputs via conditional assign or always @(*). Check exact implementation â€” the output logic may use a single assign per bit or a bus assign.",
+    "verilogNotes": "always @(posedge clk) for FF state. /OE tri-state on outputs via conditional assign or always @(*). Check exact implementation — the output logic may use a single assign per bit or a bus assign.",
     "vhdlNotes": "process(clk) for state. Concurrent tri-state assign for outputs.",
     "verilogExtraRegs": false,
     "vhdlExtraSignals": false
@@ -69,7 +69,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Tests: normal CLKâ†‘ loads D into Q; Q holds between edges; /OE=1â†’all outputs Hi-Z; /OE=0â†’outputs driven; /OE=1 during CLKâ†‘ (state updates internally but output stays Hi-Z); switch /OE from 1â†’0 after a clock edge to verify correct Q is driven. Multi-driver bus with complementary /OE."
+    "notes": "Tests: normal CLK↑ loads D into Q; Q holds between edges; /OE=1→all outputs Hi-Z; /OE=0→outputs driven; /OE=1 during CLK↑ (state updates internally but output stays Hi-Z); switch /OE from 1→0 after a clock edge to verify correct Q is driven. Multi-driver bus with complementary /OE."
   },
 
   "risks": [
@@ -80,7 +80,7 @@
     },
     {
       "class": "core-risk",
-      "description": "Does the implementation correctly update internal state at CLKâ†‘ even when /OE=1 (outputs disabled)? Real hardware does this.",
+      "description": "Does the implementation correctly update internal state at CLK↑ even when /OE=1 (outputs disabled)? Real hardware does this.",
       "confirmed": false
     }
   ],

@@ -20,7 +20,7 @@
 | Gates with `isSynchronous: true` | 16 |
 
 **Most critical gaps:**
-1. All `logic_basic` and `logic_multi` gates (AND, OR, NOT, NAND, NOR, XOR, XNOR, BUFFER, and 3/4-input variants) have **no HDL export** â€” these are the most commonly used gates in any circuit.
+1. All `logic_basic` and `logic_multi` gates (AND, OR, NOT, NAND, NOR, XOR, XNOR, BUFFER, and 3/4-input variants) have **no HDL export** — these are the most commonly used gates in any circuit.
 2. Several tri-state gates are missing `defaultInputValues` on their active-low `/OE` pins, leading to unsafe simulator defaults.
 3. 74HC161 vs 74HC163 async-vs-synchronous clear distinction must be validated.
 
@@ -81,7 +81,7 @@ These gates are intentionally excluded from HDL export (user interface only):
 
 ## 3. Missing or Unsafe `defaultInputValues` (`core-risk`)
 
-Active-low control pins without `defaultInputValues` default to `0` (active) â€” which is the **unsafe/dangerous** default.
+Active-low control pins without `defaultInputValues` default to `0` (active) — which is the **unsafe/dangerous** default.
 
 | typeId | Problem port | Active-level | Effect if unconnected | Verdict |
 |---|---|---|---|---|
@@ -95,13 +95,13 @@ Active-low control pins without `defaultInputValues` default to `0` (active) â�
 | D_FF_R | `rst` | 1 (active-high) | No reset | safe (hold) |
 
 **Well-handled cases (defaultInputValues present):**
-- 74HC74: `/PRE1`, `/CLR1`, `/PRE2`, `/CLR2` â†’ default=1 (inactive) âœ“
-- 74HC138: `/G2A`, `/G2B` â†’ default=1 (disabled) âœ“
-- 74HC161, 74HC163: `/CLRN`, `/LDN` â†’ default=1 âœ“
-- 74HC194: `/CLRN` â†’ default=1 âœ“
-- 74HC595: `/MR` â†’ default=1 âœ“
-- RAM256: `/WE`, `/CS`, `/OE` â†’ default=1 (all inactive) âœ“
-- ROM256: `/CS`, `/OE` â†’ default=1 âœ“
+- 74HC74: `/PRE1`, `/CLR1`, `/PRE2`, `/CLR2` → default=1 (inactive) ✓
+- 74HC138: `/G2A`, `/G2B` → default=1 (disabled) ✓
+- 74HC161, 74HC163: `/CLRN`, `/LDN` → default=1 ✓
+- 74HC194: `/CLRN` → default=1 ✓
+- 74HC595: `/MR` → default=1 ✓
+- RAM256: `/WE`, `/CS`, `/OE` → default=1 (all inactive) ✓
+- ROM256: `/CS`, `/OE` → default=1 ✓
 
 ---
 
@@ -111,12 +111,12 @@ Active-low control pins without `defaultInputValues` default to `0` (active) â�
 
 | typeId | S=R=1 behavior | Risk |
 |---|---|---|
-| SR_LATCH | Q=0, QÌ„=0 (both low) â€” deterministic, not a race | `model-limit` |
-| D_FF_ASSR | S=R=1 â†’ Q=0 (undefined mapped to reset) | `core-risk` |
-| JK_FF_ASSR | S=R=1 â†’ Q=0 | `core-risk` |
-| T_FF_ASSR | S=R=1 â†’ Q=0 | `core-risk` |
-| SR_FF_EDGE | S=R=1 at CLKâ†‘ â†’ Q=0 | `core-risk` |
-| 74HC74 | /PRE=/CLR=0 â†’ Q=1, QÌ„=1 (both high) | `core-risk` |
+| SR_LATCH | Q=0, Q̄=0 (both low) — deterministic, not a race | `model-limit` |
+| D_FF_ASSR | S=R=1 → Q=0 (undefined mapped to reset) | `core-risk` |
+| JK_FF_ASSR | S=R=1 → Q=0 | `core-risk` |
+| T_FF_ASSR | S=R=1 → Q=0 | `core-risk` |
+| SR_FF_EDGE | S=R=1 at CLK↑ → Q=0 | `core-risk` |
+| 74HC74 | /PRE=/CLR=0 → Q=1, Q̄=1 (both high) | `core-risk` |
 
 All forbidden states are deterministically resolved but do not simulate the actual hardware race behavior.
 
@@ -132,14 +132,14 @@ The HDL export for `MS_JK_FF` approximates the master-slave behavior as a simple
 
 | typeId | Issue |
 |---|---|
-| 74HC74 | Two independent clocks â€” `clockInputId=null` disables timing risk detection |
-| 74HC373 | Level-sensitive latch â€” no clock, correct |
+| 74HC74 | Two independent clocks — `clockInputId=null` disables timing risk detection |
+| 74HC373 | Level-sensitive latch — no clock, correct |
 
 ### 4.4 D_LATCH latch inference
 
-- Verilog: `always @(*)` with blocking assignment `=` â€” intentional latch inference.
+- Verilog: `always @(*)` with blocking assignment `=` — intentional latch inference.
 - This causes synthesis tool warnings (correct per spec).
-- VHDL: Incomplete `if` (no `else`) infers latch â€” correct.
+- VHDL: Incomplete `if` (no `else`) infers latch — correct.
 - Risk: Users unfamiliar with latch inference may be confused by warnings.
 
 ---
@@ -148,9 +148,9 @@ The HDL export for `MS_JK_FF` approximates the master-slave behavior as a simple
 
 | typeId | Risk |
 |---|---|
-| TRIBUF | Missing defaultInputValues on /OE (see Â§3). Hi-Z input on A treated as 0. |
+| TRIBUF | Missing defaultInputValues on /OE (see §3). Hi-Z input on A treated as 0. |
 | RAM256 | Transparent write latch (level-sensitive). Verilog: `always @(*)` with latch inference. May cause synthesis warnings or incorrect behavior in some tools. |
-| ROM256 | Read is level-sensitive. /OE tri-state. Output Z treated as 8'hzz in Verilog â€” may not be supported by all synthesis targets. |
+| ROM256 | Read is level-sensitive. /OE tri-state. Output Z treated as 8'hzz in Verilog — may not be supported by all synthesis targets. |
 | 74HC373 | Missing defaultInputValues on /OE. Unclear if LE and /OE interactions are fully tested. |
 | 74HC374 | Missing defaultInputValues on /OE. Internal state update while /OE=1 must be verified. |
 | 74HC595 | /OE interaction with dual-clock architecture needs explicit testing. |
@@ -165,12 +165,12 @@ The HDL export for `MS_JK_FF` approximates the master-slave behavior as a simple
 |---|---|
 | D_FF, JK_FF, T_FF, etc. | `prevClk` stored in customState but not in `stateKeys`. Hidden state. STT cannot force or read clock state. |
 | MS_JK_FF | `qM` (master state) not in `stateKeys`. Only `qS` exposed. Internal master state invisible to STT. |
-| BIN_CTR7S | `count` key stored alongside `cnt0..cnt3` for shape rendering. Dual-write pattern â€” risk of inconsistency if one is updated separately. |
+| BIN_CTR7S | `count` key stored alongside `cnt0..cnt3` for shape rendering. Dual-write pattern — risk of inconsistency if one is updated separately. |
 | BIN_CTR_99 | Same dual-write pattern as BIN_CTR7S. |
 | PISO4 | `stateKeys=['bit0..bit3']` but internal state also has `prevClk`. |
 | PIPO4/PIPO8 | `stateKeys=['bit0..bit3'/'b0..b7']` but state uses `bitN`/`bN`, not `qN`. Naming inconsistency. |
-| RAM256 | `stateKeys` not set â€” entire memory is a single large `data` array. STT cannot enumerate RAM states. |
-| ROM256 | `stateKeys` not set â€” same issue as RAM256. |
+| RAM256 | `stateKeys` not set — entire memory is a single large `data` array. STT cannot enumerate RAM states. |
+| ROM256 | `stateKeys` not set — same issue as RAM256. |
 
 ---
 
@@ -181,7 +181,7 @@ The HDL export for `MS_JK_FF` approximates the master-slave behavior as a simple
 | typeId | Issue |
 |---|---|
 | D_LATCH | `isSynchronous` not set (not `false`, just absent) |
-| 74HC373 | `isSynchronous` not set â€” latch gate |
+| 74HC373 | `isSynchronous` not set — latch gate |
 
 These gates work correctly in the simulator, but the absence of `isSynchronous: false` may cause unclear behavior in tools that check this flag.
 
@@ -189,16 +189,16 @@ These gates work correctly in the simulator, but the absence of `isSynchronous: 
 
 | typeId | Issue |
 |---|---|
-| RAM256 | No `stateKeys` â€” large array state |
-| ROM256 | No `stateKeys` â€” large array state |
+| RAM256 | No `stateKeys` — large array state |
+| ROM256 | No `stateKeys` — large array state |
 
 ### 7.3 Missing description / underdocumented
 
 | typeId | Issue |
 |---|---|
-| SCHMITT | Documented as buffer. Hysteresis not modeled â€” `model-limit` |
-| SPLIT4, SPLIT8 | "Bus Splitter/Merger" â€” direction is ambiguous (bidirectional use implied) |
-| NAND_C, NOR_C | Output naming (`q`, `q_n`) inverted vs AND_C / OR_C â€” confusing |
+| SCHMITT | Documented as buffer. Hysteresis not modeled — `model-limit` |
+| SPLIT4, SPLIT8 | "Bus Splitter/Merger" — direction is ambiguous (bidirectional use implied) |
+| NAND_C, NOR_C | Output naming (`q`, `q_n`) inverted vs AND_C / OR_C — confusing |
 
 ---
 
@@ -206,7 +206,7 @@ These gates work correctly in the simulator, but the absence of `isSynchronous: 
 
 | typeId | Risk |
 |---|---|
-| Custom ICs (category=`custom`) | Not analyzed in this pass â€” custom ICs are dynamically defined and registered at runtime. Contract verification cannot be applied statically. Future work needed. |
+| Custom ICs (category=`custom`) | Not analyzed in this pass — custom ICs are dynamically defined and registered at runtime. Contract verification cannot be applied statically. Future work needed. |
 
 ---
 
@@ -216,12 +216,12 @@ These gates work correctly in the simulator, but the absence of `isSynchronous: 
 
 | Pattern | Priority | Gates |
 |---|---|---|
-| `truth-table-exhaustive` | **Required** | All combinational gates with â‰¤4 inputs |
+| `truth-table-exhaustive` | **Required** | All combinational gates with ≤4 inputs |
 | `export-verilog` | High | All gates with `toVerilog` |
 | `export-vhdl` | High | All gates with `toVHDL` |
 | `ui-state-projection` | Medium | MUX4, DEMUX4, CMP4, ALU4 |
 
-**Note:** AND, OR, NOT, NAND, NOR, XOR, XNOR, BUFFER â€” truth-table testing is verifiable in simulation, but HDL export tests will fail until `toVerilog`/`toVHDL` are added.
+**Note:** AND, OR, NOT, NAND, NOR, XOR, XNOR, BUFFER — truth-table testing is verifiable in simulation, but HDL export tests will fail until `toVerilog`/`toVHDL` are added.
 
 ### 9.2 Latches (`SR_LATCH`, `D_LATCH`, `74HC373`)
 
@@ -237,8 +237,8 @@ These gates work correctly in the simulator, but the absence of `isSynchronous: 
 
 | Pattern | Priority | Notes |
 |---|---|---|
-| `sequential-step-sequence` | **Required** | All input combinations at CLKâ†‘ |
-| `clock-edge-detection` | **Required** | CLK=0â†’0, CLK=0â†’1, CLK=1â†’0, CLK=1â†’1 transitions |
+| `sequential-step-sequence` | **Required** | All input combinations at CLK↑ |
+| `clock-edge-detection` | **Required** | CLK=0→0, CLK=0→1, CLK=1→0, CLK=1→1 transitions |
 | `hold-state` | **Required** | Q unchanged when no clock edge |
 | `reset-to-known-state` | **Required** | Verify initial Q=0 |
 | `async-control-override` | **Required** | All gates with async S/R/PRE/CLR |
@@ -266,14 +266,14 @@ These gates work correctly in the simulator, but the absence of `isSynchronous: 
 | `async-control-override` | **Required** | 74HC161 async /CLR |
 | `export-verilog` / `export-vhdl` | High | |
 
-**Special:** 74HC161 vs 74HC163 distinction test: apply /CLRN=0 and verify 161 resets immediately, 163 waits for CLKâ†‘.
+**Special:** 74HC161 vs 74HC163 distinction test: apply /CLRN=0 and verify 161 resets immediately, 163 waits for CLK↑.
 
 ### 9.6 Memory (`RAM256`, `ROM256`)
 
 | Pattern | Priority | Notes |
 |---|---|---|
 | `sequential-step-sequence` | **Required** | Write/read cycle |
-| `oe-tristate` | **Required** | /OE=1â†’Hi-Z outputs |
+| `oe-tristate` | **Required** | /OE=1→Hi-Z outputs |
 | `multi-driver-conflict` | **Required** | Bus conflict when multiple RAMs connected |
 | `export-verilog` / `export-vhdl` | High | Verify latch inference is intentional |
 
@@ -302,21 +302,21 @@ These gates work correctly in the simulator, but the absence of `isSynchronous: 
 
 ## 11. Priority Recommendations for Next Phase
 
-### P0 â€” Immediate (blocks HDL export for any real circuit)
+### P0 — Immediate (blocks HDL export for any real circuit)
 1. Add `toVerilog` + `toVHDL` for: AND, OR, NOT, NAND, NOR, XOR, XNOR, BUFFER, AND3, AND4, NAND3, NAND4, OR3, OR4, NOR3, NOR4, XOR3
 
-### P1 â€” High (correctness, safety)
+### P1 — High (correctness, safety)
 2. Add `defaultInputValues: { oe: 1 }` to TRIBUF, 74HC373, 74HC374, 74HC595 (unsafe /OE default)
 3. Verify 74HC163 clear is truly synchronous (not async copy of 74HC161)
 4. Verify 74HC595 /MR resets shift register only, not output latch
 5. Verify 74HC374 updates internal state even when /OE=1
 
-### P2 â€” Medium (verification coverage)
+### P2 — Medium (verification coverage)
 6. Implement `truth-table-exhaustive` test runner for all combinational gates
 7. Implement `sequential-step-sequence` test runner for flip-flops
 8. Add `forbidden-input-combination` tests for SR, MS-JK, 74HC74
 
-### P3 â€” Long-term (completeness)
+### P3 — Long-term (completeness)
 9. Add contracts for remaining combinational gates (AND_C family, CMP1, CMP4, ALU4, etc.)
 10. Add contracts for remaining registers (REG4, REG8, SHIFT4, etc.)
 11. Add contracts for remaining 74xx ICs (74HC00, 74HC04, 74HC08, etc.)

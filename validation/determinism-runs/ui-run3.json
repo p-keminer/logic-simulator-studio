@@ -12,16 +12,16 @@
         "rowCount": 4,
         "paragraphs": [
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -59,12 +59,12 @@
       },
       "timingSemantic": {
         "semanticPass": false,
-        "note": "TRIBUF(a=1, oe=1) â†’ Z; NOT(Z) â†’ X. Z and X colored paths expected.",
+        "note": "TRIBUF(a=1, oe=1) → Z; NOT(Z) → X. Z and X colored paths expected.",
         "findings": [
           "Labels OK: [a, oe, y] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)",
-          "Z-path (amber): present â€” HI_Z signal visible in timing waveform",
-          "X-path (red): present â€” conflict/X signal visible in timing waveform"
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)",
+          "Z-path (amber): present — HI_Z signal visible in timing waveform",
+          "X-path (red): present — conflict/X signal visible in timing waveform"
         ],
         "stepsRecorded": 0,
         "labelsFound": [
@@ -100,19 +100,19 @@
       "table": {
         "rowCount": 8,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -132,14 +132,14 @@
           "clk",
           "D",
           "Q",
-          "QÌ„",
+          "Q̄",
           "D-FF",
           "D",
           "q",
           "clk",
           "d",
           "dff_dut.Q",
-          "dff_dut.QÌ„",
+          "dff_dut.Q̄",
           "q"
         ],
         "hasZPath": false,
@@ -150,7 +150,7 @@
         "note": "D_FF initial settle: labels and step count confirm timing tracks correctly.",
         "findings": [
           "Labels OK: [d, clk, q] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)"
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)"
         ],
         "stepsRecorded": 0,
         "labelsFound": [
@@ -162,14 +162,14 @@
           "clk",
           "D",
           "Q",
-          "QÌ„",
+          "Q̄",
           "D-FF",
           "D",
           "q",
           "clk",
           "d",
           "dff_dut.Q",
-          "dff_dut.QÌ„",
+          "dff_dut.Q̄",
           "q"
         ]
       }
@@ -183,19 +183,19 @@
       "table": {
         "rowCount": 16,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -219,7 +219,7 @@
           "J",
           "K",
           "Q",
-          "QÌ„",
+          "Q̄",
           "JK-FF",
           "D",
           "q",
@@ -227,7 +227,7 @@
           "j",
           "k",
           "jkff_dut.Q",
-          "jkff_dut.QÌ„",
+          "jkff_dut.Q̄",
           "q"
         ],
         "hasZPath": false,
@@ -238,7 +238,7 @@
         "note": "JK_FF initial settle: four input/output labels confirm channel presence.",
         "findings": [
           "Labels OK: [j, k, clk, q] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)"
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)"
         ],
         "stepsRecorded": 0,
         "labelsFound": [
@@ -254,7 +254,7 @@
           "J",
           "K",
           "Q",
-          "QÌ„",
+          "Q̄",
           "JK-FF",
           "D",
           "q",
@@ -262,7 +262,7 @@
           "j",
           "k",
           "jkff_dut.Q",
-          "jkff_dut.QÌ„",
+          "jkff_dut.Q̄",
           "q"
         ]
       }
@@ -276,19 +276,19 @@
       "table": {
         "rowCount": 8,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -308,14 +308,14 @@
           "clk",
           "T",
           "Q",
-          "QÌ„",
+          "Q̄",
           "T-FF",
           "D",
           "q",
           "clk",
           "t",
           "tff_dut.Q",
-          "tff_dut.QÌ„",
+          "tff_dut.Q̄",
           "q"
         ],
         "hasZPath": false,
@@ -326,7 +326,7 @@
         "note": "T_FF initial settle: three labels confirm sequential gate channels.",
         "findings": [
           "Labels OK: [t, clk, q] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)"
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)"
         ],
         "stepsRecorded": 0,
         "labelsFound": [
@@ -338,14 +338,14 @@
           "clk",
           "T",
           "Q",
-          "QÌ„",
+          "Q̄",
           "T-FF",
           "D",
           "q",
           "clk",
           "t",
           "tff_dut.Q",
-          "tff_dut.QÌ„",
+          "tff_dut.Q̄",
           "q"
         ]
       }
@@ -359,19 +359,19 @@
       "table": {
         "rowCount": 8,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 8192 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 8192 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -393,19 +393,19 @@
       "table": {
         "rowCount": 8,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 8192 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 8192 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -427,19 +427,19 @@
       "table": {
         "rowCount": 32,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 32768 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 32768 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -461,19 +461,19 @@
       "table": {
         "rowCount": 64,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 2048 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 2048 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -495,19 +495,19 @@
       "table": {
         "rowCount": 64,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 2048 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 2048 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -529,19 +529,19 @@
       "table": {
         "rowCount": 128,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 4096 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 4096 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -564,16 +564,16 @@
         "rowCount": 4,
         "paragraphs": [
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {
@@ -605,8 +605,8 @@
         "note": "Dual drivers (1 vs 0) resolve to X. Red X-conflict path expected in timing.",
         "findings": [
           "Labels OK: [a, b, y] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling â€” expectStepsGt0 not met)",
-          "X-path (red): not present â€” requires steps > 0 (timing history empty)"
+          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)",
+          "X-path (red): not present — requires steps > 0 (timing history empty)"
         ],
         "stepsRecorded": 0,
         "labelsFound": [
@@ -633,19 +633,19 @@
       "table": {
         "rowCount": 256,
         "paragraphs": [
-          "âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse",
-          "â€² = Zustand nach einem Simulationsschritt (Settle-Phase) Â |Â â–  = Stabiler Zustand Q(t) = Q(t+1)Â |Â  Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei 262144 Zeilen nicht darstellbar",
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 262144 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
-          "â€¢ Doppelklick: Umschalten / Umbenennen",
-          "â€¢ R: Gatter drehen",
-          "â€¢ Strg+C/V: Kopieren / EinfÃ¼gen",
-          "â€¢ Lasso â†’ Pfeiltasten: Gatter verschieben",
-          "â€¢ Klick auf Port: Draht",
-          "â€¢ Klick auf Canvas: Wegpunkt",
-          "â€¢ Rechtsklick Draht: Farbe",
-          "â€¢ Strg+Klick Draht: LÃ¶schen",
-          "â€¢ Alt+Ziehen: Verschieben",
-          "â€¢ Entf: Auswahl lÃ¶schen"
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
         ]
       },
       "hdl": {

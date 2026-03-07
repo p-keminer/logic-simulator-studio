@@ -18,10 +18,10 @@
     "stateVariables": ["q1", "q2"],
     "hasStableUndefinedState": true,
     "invalidInputCombinations": [
-      { "pre1": 0, "clr1": 0, "result": "Q1=1, QÌ„1=1 (both high â€” undefined state)" },
-      { "pre2": 0, "clr2": 0, "result": "Q2=1, QÌ„2=1 (both high â€” undefined state)" }
+      { "pre1": 0, "clr1": 0, "result": "Q1=1, Q̄1=1 (both high — undefined state)" },
+      { "pre2": 0, "clr2": 0, "result": "Q2=1, Q̄2=1 (both high — undefined state)" }
     ],
-    "notes": "Dual D-FF, each with independent clock (clk1/clk2). /PRE and /CLR are active-low asynchronous overrides. /PRE=0 forces Q=1. /CLR=0 forces Q=0. /PRE=/CLR=0 is forbidden (both Q and QÌ„ go HIGH). clockInputId is NOT set because there are two independent clocks â€” race/setup-hold detection does not operate for this gate. Each FF uses separate clock. stateKeys=['q1','q2'] are the exposed state for STT."
+    "notes": "Dual D-FF, each with independent clock (clk1/clk2). /PRE and /CLR are active-low asynchronous overrides. /PRE=0 forces Q=1. /CLR=0 forces Q=0. /PRE=/CLR=0 is forbidden (both Q and Q̄ go HIGH). clockInputId is NOT set because there are two independent clocks — race/setup-hold detection does not operate for this gate. Each FF uses separate clock. stateKeys=['q1','q2'] are the exposed state for STT."
   },
 
   "ports": {
@@ -37,9 +37,9 @@
     ],
     "outputs": [
       { "id": "q1",  "label": "Q1",  "role": "q",     "canBeTriState": false },
-      { "id": "q1n", "label": "QÌ„1", "role": "q-bar", "canBeTriState": false },
+      { "id": "q1n", "label": "Q̄1", "role": "q-bar", "canBeTriState": false },
       { "id": "q2",  "label": "Q2",  "role": "q",     "canBeTriState": false },
-      { "id": "q2n", "label": "QÌ„2", "role": "q-bar", "canBeTriState": false }
+      { "id": "q2n", "label": "Q̄2", "role": "q-bar", "canBeTriState": false }
     ]
   },
 
@@ -53,7 +53,7 @@
   "exportSupport": {
     "verilog": "full",
     "vhdl": "full",
-    "verilogNotes": "Each FF: always @(posedge clk1 or negedge pre1 or negedge clr1) â€” with async /PRE and /CLR. q driven as reg, qn driven by assign.",
+    "verilogNotes": "Each FF: always @(posedge clk1 or negedge pre1 or negedge clr1) — with async /PRE and /CLR. q driven as reg, qn driven by assign.",
     "vhdlNotes": "process(clk1, pre1, clr1) with rising_edge + async conditions.",
     "verilogExtraRegs": false,
     "vhdlExtraSignals": false
@@ -69,18 +69,18 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Test both FFs independently: normal clocked operation; async /PRE override; async /CLR override; /PRE-before-clock; /CLR-during-clock; forbidden /PRE=/CLR=0 combination (Q=QÌ„=1). Verify defaultInputValues=1 for /PRE and /CLR keep them inactive when unconnected."
+    "notes": "Test both FFs independently: normal clocked operation; async /PRE override; async /CLR override; /PRE-before-clock; /CLR-during-clock; forbidden /PRE=/CLR=0 combination (Q=Q̄=1). Verify defaultInputValues=1 for /PRE and /CLR keep them inactive when unconnected."
   },
 
   "risks": [
     {
       "class": "core-risk",
-      "description": "/PRE=/CLR=0 forbidden: both Q and QÌ„ go HIGH (Q=1, QÌ„=1). Model maps this explicitly. Real hardware race when both released simultaneously.",
+      "description": "/PRE=/CLR=0 forbidden: both Q and Q̄ go HIGH (Q=1, Q̄=1). Model maps this explicitly. Real hardware race when both released simultaneously.",
       "confirmed": true
     },
     {
       "class": "ui-risk",
-      "description": "clockInputId=null â€” no setup/hold race detection for either clock. Users may not notice timing violations.",
+      "description": "clockInputId=null — no setup/hold race detection for either clock. Users may not notice timing violations.",
       "confirmed": true
     }
   ],

@@ -44,7 +44,7 @@
       "volatileFields": ["generatedAt"],
       "stableFields": ["error", "check.status", "check.message", "timingSemantic.semanticPass", "timingSemantic.stepsRecorded", "timingSemantic.findings", "hdl.verilogMatches", "hdl.vhdlMatches", "table.paragraphs (count)", "table.rows (count)"],
       "notes": {
-        "steps": "steps=0 was stable across all 3 runs for all 5 semantic cases (no flakiness â€” headless RAF limitation is consistent, not random)",
+        "steps": "steps=0 was stable across all 3 runs for all 5 semantic cases (no flakiness — headless RAF limitation is consistent, not random)",
         "tff_led": "tff_led passed all 3 runs (no timeout with 30s page.setDefaultTimeout)",
         "hasZPath_hasXPath": "Z/X path detection stable: tri_not_sanitized always has both, multi_driver_same_input always has X only, others always have neither"
       }

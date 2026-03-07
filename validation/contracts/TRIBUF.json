@@ -19,7 +19,7 @@
     ],
     "stateVariables": [],
     "hasStableUndefinedState": false,
-    "notes": "/OE is active-low output-enable. When /OE=0, Y=A. When /OE=1, Y=Hi-Z (2). No state. The defaultInputValues field is NOT set in the implementation, meaning a disconnected /OE pin receives global default=0, which makes the output ACTIVE. This is the non-safe default for a tri-state buffer â€” typically /OE should default inactive (1)."
+    "notes": "/OE is active-low output-enable. When /OE=0, Y=A. When /OE=1, Y=Hi-Z (2). No state. The defaultInputValues field is NOT set in the implementation, meaning a disconnected /OE pin receives global default=0, which makes the output ACTIVE. This is the non-safe default for a tri-state buffer — typically /OE should default inactive (1)."
   },
 
   "ports": {
@@ -56,7 +56,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Must verify: /OE=0â†’Y=A for A=0 and A=1; /OE=1â†’Y=Hi-Z(2) regardless of A. Multi-driver test: two TRIBUF outputs wired together with opposite OE signals. Bus float test: all drivers disabled."
+    "notes": "Must verify: /OE=0→Y=A for A=0 and A=1; /OE=1→Y=Hi-Z(2) regardless of A. Multi-driver test: two TRIBUF outputs wired together with opposite OE signals. Bus float test: all drivers disabled."
   },
 
   "risks": [

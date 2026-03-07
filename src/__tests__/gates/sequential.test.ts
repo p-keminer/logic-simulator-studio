@@ -1322,3 +1322,174 @@ describe('CLOCK', () => {
     expect(state.value).toBe(0);
   });
 });
+
+// ===========================================================================
+// P1-3: prevClk / stateKeys / hiddenStateKeys consistency
+// ===========================================================================
+describe('P1-3: prevClk/stateKeys metadata consistency', () => {
+  const edgeTriggeredFFs = [
+    'D_FF', 'D_FF_R', 'JK_FF', 'T_FF', 'SR_FF_EDGE',
+    'D_FF_ASSR', 'JK_FF_ASSR', 'T_FF_ASSR', 'MS_JK_FF',
+  ];
+
+  for (const typeId of edgeTriggeredFFs) {
+    describe(typeId, () => {
+      it('has explicit stateKeys', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.stateKeys).toBeDefined();
+        expect(def.stateKeys!.length).toBeGreaterThan(0);
+      });
+
+      it('has hiddenStateKeys containing prevClk', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.hiddenStateKeys).toBeDefined();
+        expect(def.hiddenStateKeys).toContain(
+          typeId === '74HC74' ? 'pc1' : 'prevClk',
+        );
+      });
+
+      it('has stateInit covering both visible and hidden keys', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.stateInit).toBeDefined();
+        const init = def.stateInit!;
+        // All stateKeys must be in stateInit
+        for (const k of def.stateKeys!) {
+          expect(init).toHaveProperty(k);
+        }
+        // All hiddenStateKeys must be in stateInit
+        for (const k of def.hiddenStateKeys!) {
+          expect(init).toHaveProperty(k);
+        }
+      });
+
+      it('stateKeys and hiddenStateKeys do not overlap', () => {
+        const def = gateRegistry.get(typeId)!;
+        const visible = new Set(def.stateKeys!);
+        for (const k of def.hiddenStateKeys!) {
+          expect(visible.has(k)).toBe(false);
+        }
+      });
+
+      it('prevClk is NOT in stateKeys (hidden by design)', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.stateKeys).not.toContain('prevClk');
+      });
+    });
+  }
+});
+
+// ===========================================================================
+// P1-3: prevClk initialization - no false rising edge after reset/init
+// ===========================================================================
+describe('P1-3: no false rising edge after init/reset', () => {
+  it('D_FF: default initial state (empty) + CLK=1 triggers rising edge', () => {
+    // With empty initial state, prevClk defaults to 0, so CLK=1 IS a rising edge.
+    // This verifies the ?? 0 default correctly models an uninitialized FF.
+    const { outputs, nextState } = stateTransition(
+      'D_FF', { d: 1, clk: 1 }, {},
+    );
+    expect(outputs.q).toBe(1);
+    expect(nextState.prevClk).toBe(1);
+  });
+
+  it('D_FF: stateInit values + CLK=1 triggers rising edge', () => {
+    const def = gateRegistry.get('D_FF')!;
+    const { outputs, nextState } = stateTransition(
+      'D_FF', { d: 1, clk: 1 }, { ...def.stateInit! },
+    );
+    // prevClk=0 in stateInit + clk=1 = rising edge → Q should latch D=1
+    expect(outputs.q).toBe(1);
+    expect(nextState.prevClk).toBe(1);
+  });
+
+  it('D_FF: after prevClk=1, CLK=1 does NOT re-trigger', () => {
+    const { outputs, nextState } = stateTransition(
+      'D_FF', { d: 1, clk: 1 }, { q: 0, prevClk: 1 },
+    );
+    expect(outputs.q).toBe(0); // No rising edge → holds
+    expect(nextState.prevClk).toBe(1);
+  });
+
+  it('D_FF_R: RST=1 resets Q and prevClk tracks clock', () => {
+    const { nextState } = stateTransition(
+      'D_FF_R', { d: 1, clk: 1, rst: 1 }, { q: 1, prevClk: 0 },
+    );
+    expect(nextState.q).toBe(0);     // reset
+    expect(nextState.prevClk).toBe(1); // prevClk still tracks CLK value
+  });
+
+  it('D_FF_R: after RST with CLK=1, next tick CLK=1 does NOT trigger edge', () => {
+    // Simulate: RST=1,CLK=1 → prevClk=1. Then RST=0,D=1,CLK=1 → no edge.
+    const step1 = stateTransition(
+      'D_FF_R', { d: 1, clk: 1, rst: 1 }, { q: 0, prevClk: 0 },
+    );
+    const step2 = stateTransition(
+      'D_FF_R', { d: 1, clk: 1, rst: 0 }, step1.nextState as Record<string, unknown>,
+    );
+    expect(step2.outputs.q).toBe(0); // No edge (prevClk=1, clk=1)
+  });
+
+  it('JK_FF: stateInit + CLK=1, J=1, K=0 -> sets Q', () => {
+    const def = gateRegistry.get('JK_FF')!;
+    const { outputs } = stateTransition(
+      'JK_FF', { j: 1, clk: 1, k: 0 }, { ...def.stateInit! },
+    );
+    expect(outputs.q).toBe(1);
+  });
+
+  it('T_FF: stateInit + CLK=1, T=1 -> toggles Q from 0 to 1', () => {
+    const def = gateRegistry.get('T_FF')!;
+    const { outputs } = stateTransition(
+      'T_FF', { t: 1, clk: 1 }, { ...def.stateInit! },
+    );
+    expect(outputs.q).toBe(1);
+  });
+
+  it('MS_JK_FF: stateInit + falling edge triggers slave transfer', () => {
+    const def = gateRegistry.get('MS_JK_FF')!;
+    // First: CLK=1, J=1 → master loads
+    const step1 = stateTransition(
+      'MS_JK_FF', { j: 1, clk: 1, k: 0 }, { ...def.stateInit! },
+    );
+    expect(step1.nextState.qM).toBe(1);
+    expect(step1.nextState.qS).toBe(0); // Slave not yet transferred
+    // Second: CLK=0 → falling edge → slave copies master
+    const step2 = stateTransition(
+      'MS_JK_FF', { j: 1, clk: 0, k: 0 }, step1.nextState as Record<string, unknown>,
+    );
+    expect(step2.nextState.qS).toBe(1);
+    expect(step2.outputs.q).toBe(1);
+  });
+
+  it('SR_FF_EDGE: stateInit + CLK=1, S=1 -> sets Q', () => {
+    const def = gateRegistry.get('SR_FF_EDGE')!;
+    const { outputs } = stateTransition(
+      'SR_FF_EDGE', { s: 1, clk: 1, r: 0 }, { ...def.stateInit! },
+    );
+    expect(outputs.q).toBe(1);
+  });
+
+  it('D_FF_ASSR: stateInit + CLK=1, D=1 -> latches', () => {
+    const def = gateRegistry.get('D_FF_ASSR')!;
+    const { outputs } = stateTransition(
+      'D_FF_ASSR', { d: 1, clk: 1, s: 0, r: 0 }, { ...def.stateInit! },
+    );
+    expect(outputs.q).toBe(1);
+  });
+
+  it('JK_FF_ASSR: stateInit + async S=1 overrides', () => {
+    const def = gateRegistry.get('JK_FF_ASSR')!;
+    const { outputs } = stateTransition(
+      'JK_FF_ASSR', { j: 0, clk: 0, k: 0, s: 1, r: 0 }, { ...def.stateInit! },
+    );
+    expect(outputs.q).toBe(1);
+  });
+
+  it('T_FF_ASSR: stateInit + async R=1 resets', () => {
+    const def = gateRegistry.get('T_FF_ASSR')!;
+    const { outputs } = stateTransition(
+      'T_FF_ASSR', { t: 1, clk: 1, s: 0, r: 1 }, { ...def.stateInit!, q: 1 },
+    );
+    expect(outputs.q).toBe(0);
+  });
+});

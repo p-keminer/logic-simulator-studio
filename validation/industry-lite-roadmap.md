@@ -23,7 +23,7 @@ Zielbild:
 - `npm run build` ist gruen.
 - `npm run lint` ist gruen.
 - Tri-State-Ausgaenge propagieren korrekt: downstream-Gates sehen `Z`, nicht `0`.
-- Multi-Treiber-Konflikte auf demselben Netz ergeben `X` (3) â€” kein stilles Last-Write-Wins mehr.
+- Multi-Treiber-Konflikte auf demselben Netz ergeben `X` (3) — kein stilles Last-Write-Wins mehr.
 - Alle logic_basic- und logic_multi-Gatter exportieren nach Verilog und VHDL.
 - `tri_not_sanitized` und `multi_driver_same_input` sind im P0-Stand nicht mehr reproduzierbar.
 - Focused-nine-Audit: 12/12 funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen (hc373_oe_z Verilator-LATCH via Verilog-2001 + lint_off/lint_on geloest, P1-1 2026-03-07).
@@ -32,7 +32,7 @@ Zielbild:
 
 - Es gibt noch kein `X`-Signal fuer Setup/Hold-Verletzungen oder Metastabilitaet (Modellgrenze, kein Bug).
 - Hierarchische Custom-ICs sind simulativ brauchbar, aber fuer HDL-Export noch nicht first-class abgesichert.
-- ~~`74HC373` Verilog-Export Verilator-LATCH-Warnung~~ â€” RESOLVED P1-1 2026-03-07 (Verilog-2001 + `/* verilator lint_off LATCH */`â€¦`/* verilator lint_on LATCH */`, nicht `always_latch`).
+- ~~`74HC373` Verilog-Export Verilator-LATCH-Warnung~~ — RESOLVED P1-1 2026-03-07 (Verilog-2001 + `/* verilator lint_off LATCH */`…`/* verilator lint_on LATCH */`, nicht `always_latch`).
 
 ## Maturitaetsziel
 
@@ -57,13 +57,13 @@ Status:
 - weitgehend erreicht (P0-Fortschritt 2026-03-07)
 
 Abgeschlossen:
-- ~~`Z -> 0`-Sanitization~~ â€” RESOLVED P0 2026-03-07
-- ~~fehlende Mehrtreiberauflosung~~ â€” RESOLVED P0 2026-03-07 (Konflikte ergeben `X`)
-- ~~fehlende HDL-Export-Abdeckung fuer Basigatter~~ â€” RESOLVED P0 2026-03-07
+- ~~`Z -> 0`-Sanitization~~ — RESOLVED P0 2026-03-07
+- ~~fehlende Mehrtreiberauflosung~~ — RESOLVED P0 2026-03-07 (Konflikte ergeben `X`)
+- ~~fehlende HDL-Export-Abdeckung fuer Basigatter~~ — RESOLVED P0 2026-03-07
 
 Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
-- ~~Verilator-LATCH-Warnung bei `74HC373`~~ â€” RESOLVED P1-1 2026-03-07
+- ~~Verilator-LATCH-Warnung bei `74HC373`~~ — RESOLVED P1-1 2026-03-07
 - STT-Variablenlimit blockiert UI-Verifikation fuer breite sequenzielle Schaltungen: P2 (Reduzierte Ansicht implementiert)
 
 ### Stufe 3: Industry-Lite EDA
@@ -181,7 +181,7 @@ Ziel:
 - jede Aenderung laeuft durch dieselben reproduzierbaren Gates
 
 Aktueller Stand (2026-03-07):
-- CI vorhanden: `.github/workflows/quality-gates.yml` â€” Job `quality-gates` (test/build/lint), Job `focused-nine-core` (12-case Simulation + HDL-Regression), Job `hdl-toolchain` (iverilog/ghdl/yosys/verilator Pruefung)
+- CI vorhanden: `.github/workflows/quality-gates.yml` — Job `quality-gates` (test/build/lint), Job `focused-nine-core` (12-case Simulation + HDL-Regression), Job `hdl-toolchain` (iverilog/ghdl/yosys/verilator Pruefung)
 - focused-nine UI-Audit und Golden-Corpus-v1-Ausfuehrung: noch nicht in CI, laufen weiter manuell bzw. nur als Artefaktsatz
 
 Pflicht-Gates (vollstaendiges Ziel):
@@ -212,7 +212,7 @@ Definition of Done:
 - 15 bis 25 Referenzschaltungen
 - interner Simulator vs Verilog/VHDL laeuft automatisch
 
-### Phase B â€” Abgeschlossen 2026-03-07
+### Phase B — Abgeschlossen 2026-03-07
 
 Ziel:
 - Kernsemantik fuer Tri-State/Bus fachlich korrekt machen
@@ -221,8 +221,8 @@ Umfang:
 - W1 und W2
 
 Definition of Done:
-- kein bekannter `Z`-Downstream-Mismatch mehr â€” ERREICHT
-- echte Mehrtreiberfaelle modelliert â€” ERREICHT (Konflikte loesen zu `X` auf)
+- kein bekannter `Z`-Downstream-Mismatch mehr — ERREICHT
+- echte Mehrtreiberfaelle modelliert — ERREICHT (Konflikte loesen zu `X` auf)
 
 ### Phase C
 
@@ -273,13 +273,13 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 
 ## Naechster empfohlener Fokus (Post-P0/P1-1-Stand 2026-03-07)
 
-1. ~~**P1:** Verilator-LATCH-Warnung fuer `74HC373`~~ â€” RESOLVED P1-1 2026-03-07
+1. ~~**P1:** Verilator-LATCH-Warnung fuer `74HC373`~~ — RESOLVED P1-1 2026-03-07
 2. **P1:** `prevClk/stateKeys` fuer edge-getriggerte FFs sauber modellieren oder bewusst dokumentieren
 3. **P1/P2:** Automatischen Truth-Table- und Step-Sequence-Runner implementieren (W3-Grundgeruest)
-4. **P1/P2:** Golden-Corpus v1 zuerst ausfÃ¼hrbar machen und in CI bringen; danach v2 fuer sequentielle, Tri-State- und Hierarchiefaelle ausbauen
-5. **P2:** Timing-Waveform-Diff im UI-Audit semantisch vertiefen (5 Faelle WARN wegen headless RAF-Limit â€” steps=0)
+4. **P1/P2:** Golden-Corpus v1 zuerst ausführbar machen und in CI bringen; danach v2 fuer sequentielle, Tri-State- und Hierarchiefaelle ausbauen
+5. **P2:** Timing-Waveform-Diff im UI-Audit semantisch vertiefen (5 Faelle WARN wegen headless RAF-Limit — steps=0)
 
 Phasen A und B (HDL-Differenztest-Infrastruktur, `0/1/Z/X` und Mehrtreiberauflosung) sind abgeschlossen.
-W6 hat jetzt eine erste fachliche Regression in CI. Golden-Corpus v1 ist als Basissuite vorhanden, aber noch nicht ausfÃ¼hrbar.
+W6 hat jetzt eine erste fachliche Regression in CI. Golden-Corpus v1 ist als Basissuite vorhanden, aber noch nicht ausführbar.
 Naechster Schwerpunkt: breitere Verifikationsautomatisierung (Truth-Table-/Step-Runner, Golden-Corpus-Ausfuehrung)
 und UI-Konsistenz (Phase C Vorbereitung).

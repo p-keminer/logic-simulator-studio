@@ -59,7 +59,7 @@ Alle verglichenen Felder waren ueber 3 Laeufe hinweg in allen 12 Faellen identis
 | `check.status` | ja | 12x pass, konstant |
 | `check.message` | ja | Identische Nachrichten |
 | `semanticPass` | ja | 5x false (WARN), konstant |
-| `steps` | ja | 5x 0, konstant â€” headless RAF-Limit ist konsistent, nicht zufaellig |
+| `steps` | ja | 5x 0, konstant — headless RAF-Limit ist konsistent, nicht zufaellig |
 | `hasZPath` | ja | tri_not_sanitized: true; multi_driver_same_input: false; andere: false |
 | `hasXPath` | ja | tri_not_sanitized: true; multi_driver_same_input: true; andere: false |
 | `verilogMatches` | ja | Alle HDL-faehigen Faelle: true |
@@ -70,7 +70,7 @@ Alle verglichenen Felder waren ueber 3 Laeufe hinweg in allen 12 Faellen identis
 ### Beobachtungen
 
 - **`tff_led`**: In frueheren Laeufen gelegentlich per ProtocolError abgestuerzt (10s Timeout). Nach Erhoehung von `page.setDefaultTimeout(10000)` auf `page.setDefaultTimeout(30000)`: 3/3 stabil.
-- **`steps=0`**: Stabile Null in allen 3 Laeufen fuer alle 5 semantischen Faelle. Die Ursache ist die fehlende RAF-Scheduling in headless Puppeteer â€” das ist ein konsistentes Umgebungslimit, kein Flake.
+- **`steps=0`**: Stabile Null in allen 3 Laeufen fuer alle 5 semantischen Faelle. Die Ursache ist die fehlende RAF-Scheduling in headless Puppeteer — das ist ein konsistentes Umgebungslimit, kein Flake.
 - **Z/X-Pfad-Erkennung**: Deterministisch. `tri_not_sanitized` hat immer sowohl Z- als auch X-Pfade (SVG-Farben sind in der initialen Darstellung vorhanden). `multi_driver_same_input` hat immer X-Pfad (Konflikt-Farbe). Kein Fall schwankt zwischen vorhanden/nicht vorhanden.
 
 ### CI-Empfehlung: direkt geeignet
