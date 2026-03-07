@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "verifiedOn": "2026-03-07",
+  "status": {
+    "exists": true,
+    "executed": false,
+    "inCi": false
+  },
+  "counts": {
+    "indexEntries": 12,
+    "circuitFiles": 12,
+    "verilogExports": 12,
+    "vhdlExports": 12
+  },
+  "coverage": {
+    "combinational": [
+      "gc_c1_basic_gates",
+      "gc_c2_half_adder",
+      "gc_c3_sr_latch"
+    ],
+    "sequential": [
+      "gc_s1_dff_assr",
+      "gc_s2_jkff_toggle",
+      "gc_s3_74hc74",
+      "gc_s4_reg4_enable"
+    ],
+    "tristate": [
+      "gc_t1_tribuf_direct",
+      "gc_t2_bus_mux"
+    ],
+    "mixed": [
+      "gc_m1_dff_chain",
+      "gc_m2_283_adder",
+      "gc_m3_counter_gate"
+    ]
+  },
+  "knownBoundaries": [
+    {
+      "slug": "gc_t2_bus_mux",
+      "classification": "expected_limit",
+      "reason": "Documented exporter limitation / bus modeling boundary"
+    }
+  ],
+  "runnerAcceptanceCriteria": [
+    "discover_all_12_entries",
+    "resolve_slug_to_circuit_and_exports",
+    "classify_expected_limit_explicitly",
+    "keep_gc_t2_bus_mux_out_of_clean_pass_if_limitation_remains",
+    "produce_deterministic_summary",
+    "do_not_claim_ci_coverage_before_ci_wiring"
+  ],
+  "canonicalDocs": [
+    "validation/README.md",
+    "validation/maturity-gap-dashboard.md",
+    "validation/maturity-priority-list.json",
+    "validation/industry-lite-roadmap.md",
+    "validation/golden-corpus-v1.md",
+    "validation/golden-corpus-v1.json"
+  ]
+}

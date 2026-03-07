@@ -14,7 +14,7 @@
     ],
     "stateVariables": ["q0", "q1", "q2", "q3"],
     "hasStableUndefinedState": false,
-    "notes": "4-bit bidirectional shift register with mode select S1:S0. Modes: 00=Hold, 01=Shift-right (DSR→Q0), 10=Shift-left (DSL→Q3), 11=Parallel-load (D[3:0]→Q[3:0]). Async /CLR (active-low) resets all outputs to 0. DSR=serial data for right shift, DSL=serial data for left shift."
+    "notes": "4-bit bidirectional shift register with mode select S1:S0. Modes: 00=Hold, 01=Shift-right (SR→Q0), 10=Shift-left (SL→Q3), 11=Parallel-load (D[3:0]→Q[3:0]). Async /CLR (active-low) resets all outputs to 0. SR=serial data for right shift, SL=serial data for left shift. Implementation uses port IDs 'sr'/'sl' (not 'dsr'/'dsl')."
   },
 
   "ports": {
@@ -23,8 +23,8 @@
       { "id": "clrn", "label": "/CLRN", "role": "async-reset", "activeLow": true,  "defaultValue": 1 },
       { "id": "s0",   "label": "S0",    "role": "select",      "activeLow": false, "defaultValue": 0 },
       { "id": "s1",   "label": "S1",    "role": "select",      "activeLow": false, "defaultValue": 0 },
-      { "id": "dsr",  "label": "DSR",   "role": "data",        "activeLow": false, "defaultValue": 0 },
-      { "id": "dsl",  "label": "DSL",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "sr",   "label": "SR",    "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "sl",   "label": "SL",    "role": "data",        "activeLow": false, "defaultValue": 0 },
       { "id": "d0",   "label": "D0",    "role": "data",        "activeLow": false, "defaultValue": 0 },
       { "id": "d1",   "label": "D1",    "role": "data",        "activeLow": false, "defaultValue": 0 },
       { "id": "d2",   "label": "D2",    "role": "data",        "activeLow": false, "defaultValue": 0 },
@@ -65,7 +65,7 @@
       "export-verilog",
       "export-vhdl"
     ],
-    "notes": "Test all four modes: S1:S0=00 (hold stays unchanged); S1:S0=01 (shift-right: verify DSR enters Q0, previous Q0→Q1, Q1→Q2, Q2→Q3); S1:S0=10 (shift-left: verify DSL enters Q3, Q3→Q2, Q2→Q1, Q1→Q0); S1:S0=11 (parallel load all 16 combinations). Async /CLR: verify immediate reset regardless of mode. Test through all 16 shift-right steps to verify full 4-bit shift."
+    "notes": "Test all four modes: S1:S0=00 (hold stays unchanged); S1:S0=01 (shift-right: verify SR enters Q0, previous Q0→Q1, Q1→Q2, Q2→Q3); S1:S0=10 (shift-left: verify SL enters Q3, Q3→Q2, Q2→Q1, Q1→Q0); S1:S0=11 (parallel load all 16 combinations). Async /CLR: verify immediate reset regardless of mode. Test through all 16 shift-right steps to verify full 4-bit shift."
   },
 
   "risks": [

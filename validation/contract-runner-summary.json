@@ -1,0 +1,1851 @@
+{
+  "generatedAt": "2026-03-07T23:55:22.709Z",
+  "runnerVersion": "1.0.0",
+  "contractsLoaded": 12,
+  "totalCases": 123,
+  "executedCases": 89,
+  "passed": 89,
+  "failed": 0,
+  "unsupported": 34,
+  "verdict": "PASS",
+  "perGate": {
+    "74HC161": {
+      "pass": 7,
+      "fail": 0,
+      "unsupported": 4,
+      "total": 11
+    },
+    "74HC163": {
+      "pass": 5,
+      "fail": 0,
+      "unsupported": 4,
+      "total": 9
+    },
+    "74HC194": {
+      "pass": 7,
+      "fail": 0,
+      "unsupported": 4,
+      "total": 11
+    },
+    "74HC373": {
+      "pass": 6,
+      "fail": 0,
+      "unsupported": 3,
+      "total": 9
+    },
+    "74HC374": {
+      "pass": 9,
+      "fail": 0,
+      "unsupported": 3,
+      "total": 12
+    },
+    "74HC595": {
+      "pass": 4,
+      "fail": 0,
+      "unsupported": 3,
+      "total": 7
+    },
+    "74HC74": {
+      "pass": 19,
+      "fail": 0,
+      "unsupported": 2,
+      "total": 21
+    },
+    "D_FF": {
+      "pass": 9,
+      "fail": 0,
+      "unsupported": 2,
+      "total": 11
+    },
+    "D_LATCH": {
+      "pass": 4,
+      "fail": 0,
+      "unsupported": 2,
+      "total": 6
+    },
+    "JK_FF": {
+      "pass": 9,
+      "fail": 0,
+      "unsupported": 2,
+      "total": 11
+    },
+    "SR_LATCH": {
+      "pass": 5,
+      "fail": 0,
+      "unsupported": 2,
+      "total": 7
+    },
+    "TRIBUF": {
+      "pass": 5,
+      "fail": 0,
+      "unsupported": 3,
+      "total": 8
+    }
+  },
+  "results": [
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-parallel-load",
+      "status": "pass",
+      "expected": {
+        "cnt0": 1
+      },
+      "actual": {
+        "cnt0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "async-control-override",
+      "caseId": "clrn-clear",
+      "status": "pass",
+      "expected": {
+        "cnt0": 0
+      },
+      "actual": {
+        "cnt0": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "reset-to-known-state",
+      "caseId": "async-reset",
+      "status": "pass",
+      "expected": {
+        "cnt0": 0,
+        "cnt1": 0,
+        "cnt2": 0,
+        "cnt3": 0
+      },
+      "actual": {
+        "cnt0": 0,
+        "cnt1": 0,
+        "cnt2": 0,
+        "cnt3": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "counter-rollover",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "load-shift-mode",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC161",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC161.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-parallel-load",
+      "status": "pass",
+      "expected": {
+        "cnt0": 1
+      },
+      "actual": {
+        "cnt0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "counter-rollover",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "load-shift-mode",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-basic-edge",
+      "status": "pass",
+      "expected": "no crash",
+      "actual": "OK",
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "async-control-override",
+      "caseId": "clrn-clear",
+      "status": "pass",
+      "expected": {
+        "q0": 0
+      },
+      "actual": {
+        "q0": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "reset-to-known-state",
+      "caseId": "async-reset",
+      "status": "pass",
+      "expected": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0
+      },
+      "actual": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "shift-sequence",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "load-shift-mode",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC194",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC194.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "sequential-step-sequence",
+      "caseId": "latch-transparent-D=1",
+      "status": "pass",
+      "expected": {
+        "q0": 1
+      },
+      "actual": {
+        "q0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "sequential-step-sequence",
+      "caseId": "latch-hold-after-disable",
+      "status": "pass",
+      "expected": {
+        "q0": 1
+      },
+      "actual": {
+        "q0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "hold-state",
+      "caseId": "en-inactive-Q=0",
+      "status": "pass",
+      "expected": {
+        "q0": 0
+      },
+      "actual": {
+        "q0": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "hold-state",
+      "caseId": "en-inactive-Q=1",
+      "status": "pass",
+      "expected": {
+        "q0": 1
+      },
+      "actual": {
+        "q0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "oe-tristate",
+      "caseId": "oe-inactive-hiz",
+      "status": "pass",
+      "expected": {
+        "q0": 2,
+        "q1": 2,
+        "q2": 2,
+        "q3": 2,
+        "q4": 2,
+        "q5": 2,
+        "q6": 2,
+        "q7": 2
+      },
+      "actual": {
+        "q0": 2,
+        "q1": 2,
+        "q2": 2,
+        "q3": 2,
+        "q4": 2,
+        "q5": 2,
+        "q6": 2,
+        "q7": 2
+      },
+      "errorClass": null,
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "oe-tristate",
+      "caseId": "oe-active-driven",
+      "status": "pass",
+      "expected": "all outputs driven (not Hi-Z)",
+      "actual": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "multi-driver-conflict",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC373",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC373.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-basic-edge",
+      "status": "pass",
+      "expected": "no crash",
+      "actual": "OK",
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "hold-state",
+      "caseId": "clk-no-edge-Q=0",
+      "status": "pass",
+      "expected": {
+        "q0": 0
+      },
+      "actual": {
+        "q0": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "hold-state",
+      "caseId": "clk-no-edge-Q=1",
+      "status": "pass",
+      "expected": {
+        "q0": 1
+      },
+      "actual": {
+        "q0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "oe-tristate",
+      "caseId": "oe-inactive-hiz",
+      "status": "pass",
+      "expected": {
+        "q0": 2,
+        "q1": 2,
+        "q2": 2,
+        "q3": 2,
+        "q4": 2,
+        "q5": 2,
+        "q6": 2,
+        "q7": 2
+      },
+      "actual": {
+        "q0": 2,
+        "q1": 2,
+        "q2": 2,
+        "q3": 2,
+        "q4": 2,
+        "q5": 2,
+        "q6": 2,
+        "q7": 2
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "oe-tristate",
+      "caseId": "oe-active-driven",
+      "status": "pass",
+      "expected": "all outputs driven (not Hi-Z)",
+      "actual": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "multi-driver-conflict",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "sequential-step-sequence",
+      "caseId": "shift-ds1-in",
+      "status": "pass",
+      "expected": {
+        "shift.bit0": 1
+      },
+      "actual": {
+        "shift.bit0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "sequential-step-sequence",
+      "caseId": "latch-stcp-transfer",
+      "status": "pass",
+      "expected": {
+        "q0": 1
+      },
+      "actual": {
+        "q0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "async-control-override",
+      "caseId": "mr-clear-shift",
+      "status": "pass",
+      "expected": {
+        "shift": 0
+      },
+      "actual": {
+        "shift": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "shift-sequence",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "reset-to-known-state",
+      "caseId": "mr-then-stcp-reset",
+      "status": "pass",
+      "expected": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0
+      },
+      "actual": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC595",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC595.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk1-edge-capture-D=0",
+      "status": "pass",
+      "expected": {
+        "q1": 0
+      },
+      "actual": {
+        "q1": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk1-edge-capture-D=1",
+      "status": "pass",
+      "expected": {
+        "q1": 1
+      },
+      "actual": {
+        "q1": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk2-edge-capture-D=0",
+      "status": "pass",
+      "expected": {
+        "q2": 0
+      },
+      "actual": {
+        "q2": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk2-edge-capture-D=1",
+      "status": "pass",
+      "expected": {
+        "q2": 1
+      },
+      "actual": {
+        "q2": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "async-control-override",
+      "caseId": "pre1-preset",
+      "status": "pass",
+      "expected": {
+        "q1": 1
+      },
+      "actual": {
+        "q1": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "async-control-override",
+      "caseId": "clr1-clear",
+      "status": "pass",
+      "expected": {
+        "q1": 0
+      },
+      "actual": {
+        "q1": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "async-control-override",
+      "caseId": "pre2-preset",
+      "status": "pass",
+      "expected": {
+        "q2": 1
+      },
+      "actual": {
+        "q2": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "async-control-override",
+      "caseId": "clr2-clear",
+      "status": "pass",
+      "expected": {
+        "q2": 0
+      },
+      "actual": {
+        "q2": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "forbidden-input-combination",
+      "caseId": "combo-0",
+      "status": "pass",
+      "expected": "Q1=1, Q̄1=1 (both high — undefined state)",
+      "actual": {
+        "q1": 1,
+        "qn1": 0,
+        "q2": 0,
+        "qn2": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "forbidden-input-combination",
+      "caseId": "combo-1",
+      "status": "pass",
+      "expected": "Q2=1, Q̄2=1 (both high — undefined state)",
+      "actual": {
+        "q1": 0,
+        "qn1": 1,
+        "q2": 1,
+        "qn2": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "reset-to-known-state",
+      "caseId": "async-reset",
+      "status": "pass",
+      "expected": {
+        "q1": 0,
+        "q2": 0
+      },
+      "actual": {
+        "q1": 0,
+        "q2": 0
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk1-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk1-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk1-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk1-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk2-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk2-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk2-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk2-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC74",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC74.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-edge-capture-D=0",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-edge-capture-D=1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "hold-state",
+      "caseId": "clk-no-edge-Q=0",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "hold-state",
+      "caseId": "clk-no-edge-Q=1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "reset-to-known-state",
+      "caseId": "stateInit-all-zero",
+      "status": "pass",
+      "expected": "all visible state = 0",
+      "actual": {
+        "q": 0,
+        "prevClk": 0
+      },
+      "errorClass": null,
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_FF",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "D_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_LATCH",
+      "patternId": "sequential-step-sequence",
+      "caseId": "latch-transparent-D=1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "D_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_LATCH",
+      "patternId": "sequential-step-sequence",
+      "caseId": "latch-hold-after-disable",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "D_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_LATCH",
+      "patternId": "hold-state",
+      "caseId": "en-inactive-Q=0",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "D_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_LATCH",
+      "patternId": "hold-state",
+      "caseId": "en-inactive-Q=1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "D_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_LATCH",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "D_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "D_LATCH",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "D_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-JK-set",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clk-JK-reset",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-0->1",
+      "status": "pass",
+      "expected": {
+        "capture": true
+      },
+      "actual": {
+        "capture": true
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->0",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "clock-edge-detection",
+      "caseId": "clk-1->1",
+      "status": "pass",
+      "expected": {
+        "capture": false
+      },
+      "actual": {
+        "capture": false
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "hold-state",
+      "caseId": "clk-no-edge-Q=0",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "hold-state",
+      "caseId": "clk-no-edge-Q=1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "reset-to-known-state",
+      "caseId": "stateInit-all-zero",
+      "status": "pass",
+      "expected": "all visible state = 0",
+      "actual": {
+        "q": 0,
+        "prevClk": 0
+      },
+      "errorClass": null,
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "JK_FF",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "JK_FF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "sequential-step-sequence",
+      "caseId": "set-to-1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "sequential-step-sequence",
+      "caseId": "clear-to-0",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "sequential-step-sequence",
+      "caseId": "hold-from-Q=1",
+      "status": "pass",
+      "expected": {
+        "q": 1
+      },
+      "actual": {
+        "q": 1
+      },
+      "errorClass": null,
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "forbidden-input-combination",
+      "caseId": "combo-0",
+      "status": "pass",
+      "expected": "Q=0, Q̄=0 (both outputs LOW — undefined/forbidden state)",
+      "actual": {
+        "q": 0,
+        "q_n": 0
+      },
+      "errorClass": null,
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "reset-to-known-state",
+      "caseId": "async-reset",
+      "status": "pass",
+      "expected": {
+        "q": 0
+      },
+      "actual": {
+        "q": 0
+      },
+      "errorClass": null,
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "SR_LATCH",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "SR_LATCH.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "truth-table-exhaustive",
+      "caseId": "all-rows",
+      "status": "pass",
+      "expected": "4 rows OK",
+      "actual": "4 rows checked",
+      "errorClass": null,
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "truth-table-exhaustive",
+      "caseId": "oe-active-pass-through",
+      "status": "pass",
+      "expected": {
+        "a=0": 0,
+        "a=1": 1
+      },
+      "actual": {
+        "a=0": 0,
+        "a=1": 1
+      },
+      "errorClass": null,
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "truth-table-exhaustive",
+      "caseId": "oe-inactive-hiz",
+      "status": "pass",
+      "expected": {
+        "a=0": 2,
+        "a=1": 2
+      },
+      "actual": {
+        "a=0": 2,
+        "a=1": 2
+      },
+      "errorClass": null,
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "oe-tristate",
+      "caseId": "oe-inactive-hiz",
+      "status": "pass",
+      "expected": {
+        "y": 2
+      },
+      "actual": {
+        "y": 2
+      },
+      "errorClass": null,
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "oe-tristate",
+      "caseId": "oe-active-driven",
+      "status": "pass",
+      "expected": "all outputs driven (not Hi-Z)",
+      "actual": {
+        "y": 0
+      },
+      "errorClass": null,
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "multi-driver-conflict",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "export-verilog",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "TRIBUF",
+      "patternId": "export-vhdl",
+      "caseId": "unsupported",
+      "status": "unsupported",
+      "expected": "v2+ feature",
+      "actual": "skipped",
+      "errorClass": "unsupported_contract_feature",
+      "sourceContract": "TRIBUF.json",
+      "runnerVersion": "1.0.0"
+    }
+  ]
+}

@@ -8,26 +8,27 @@ import {
 } from '../../core/simulation/tickEngine';
 import { resolveWiredValues } from '../../core/simulation/signal';
 import type { Circuit, GateInstance, SignalValue } from '../../core/types';
+import {
+  classifyInputs,
+  chooseRepresentativeStateVar,
+  collectConnectedGateIds,
+  collectStateVarsForStt,
+  collectSttFeedbackGateIds,
+  gateLabel,
+  INPUT_TYPES,
+  OUTPUT_TYPES,
+  SKIP_TYPES,
+  type StateVar,
+} from './truthTableAnalysis';
 
 // ── Gattertyp-Kategorien ─────────────────────────────────────────────────────
 
 /** Gatter die als variable Eingabe durchgezählt werden */
-const INPUT_TYPES  = new Set(['INPUT_SWITCH', 'PUSH_BTN', 'CLOCK']);
 
-/** Gatter deren Ausgabe als Ergebnis-Spalte angezeigt wird */
-const OUTPUT_TYPES = new Set(['OUTPUT_LED']);
-
-/**
- * Gatter die weder als Zwischenstufe noch als Ein-/Ausgang angezeigt werden.
- */
-const SKIP_TYPES = new Set([
-  'CONST_HIGH', 'CONST_LOW', 'ADC8', 'TEXT_NOTE', 'JUNCTION',
-]);
 
 // ── Typen ────────────────────────────────────────────────────────────────────
 
 interface IntermediateCol { gateId: string; portId: string; header: string; }
-interface StateVar        { gateId: string; portId: string; stateKey: string; label: string; }
 
 /**
  * Metadata present when the STT was computed in "reduced" mode because
@@ -75,39 +76,6 @@ type ColKind  = 'in' | 'state' | 'next' | 'out' | 'mid';
 
 interface Props { onClose: () => void; }
 
-// ── Hilfsfunktionen ───────────────────────────────────────────────────────────
-
-function gateLabel(g: GateInstance): string {
-  return g.label || g.typeId.replace(/_/g, '') + '_' + g.id.slice(0, 4);
-}
-
-/**
- * Returns true if the port ID on the *downstream* gate looks like a "data"
- * pin (D0–D31 or DS) rather than a control pin.
- */
-function isDataPortId(portId: string): boolean {
-  return /^d\d+$|^ds$/i.test(portId);
-}
-
-/**
- * Separates a list of input gates into "control" vs "data" based on what
- * port(s) each gate drives downstream.  A gate is classified as "data" when
- * every one of its downstream connections targets a data port.
- */
-function classifyInputs(
-  inputGates: GateInstance[],
-  circuit: Circuit,
-): { controls: GateInstance[]; data: GateInstance[] } {
-  const controls: GateInstance[] = [];
-  const data: GateInstance[]     = [];
-  for (const g of inputGates) {
-    const outWires = Object.values(circuit.wires).filter(w => w.from.gateId === g.id);
-    const allData  = outWires.length > 0 && outWires.every(w => isDataPortId(w.to.portId));
-    (allData ? data : controls).push(g);
-  }
-  return { controls, data };
-}
-
 // ── Komponente ────────────────────────────────────────────────────────────────
 
 export function TruthTableModal({ onClose }: Props) {
@@ -118,11 +86,7 @@ export function TruthTableModal({ onClose }: Props) {
     const allGates = Object.values(circuit.gates);
 
     // Verbundene Gate-IDs (haben mindestens einen Draht)
-    const connectedIds = new Set<string>();
-    for (const w of Object.values(circuit.wires)) {
-      connectedIds.add(w.from.gateId);
-      connectedIds.add(w.to.gateId);
-    }
+    const connectedIds = collectConnectedGateIds(circuit);
 
     // Zyklenerkennung via Topologischer Sortierung
     const { order: evalOrder, cycles } = topologicalSort(circuit);
@@ -241,52 +205,20 @@ export function TruthTableModal({ onClose }: Props) {
 
     // Zustandsgatter = Gatter in Draht-Zyklen (Feedback) ODER synchrone
     // FF/Register ODER Gatter mit stateUpdate (z.B. SR-Latch, D-Latch).
-    const feedbackGateIds = new Set(cycles.flat());
-    for (const g of allGates) {
-      if (!connectedIds.has(g.id)) continue;
-      try {
-        const def = gateRegistry.get(g.typeId);
-        if (def.isSynchronous || def.stateUpdate) feedbackGateIds.add(g.id);
-      }
-      catch { /* unbekannter Typ */ }
-    }
+    const feedbackGateIds = collectSttFeedbackGateIds(
+      circuit,
+      connectedIds,
+      cycles,
+      gateRegistry.get.bind(gateRegistry),
+    );
 
-    // Zustandsvariablen = Ausgangsports der Zustandsgatter, x-sortiert
-    const stateVars: StateVar[] = [];
-    const feedbackGatesSorted = [...feedbackGateIds]
-      .map(id => circuit.gates[id])
-      .filter(Boolean)
-      .filter(g => connectedIds.has(g.id))
-      .sort((a, b) => a.x - b.x);
-
-    for (const gate of feedbackGatesSorted) {
-      let def; try { def = gateRegistry.get(gate.typeId); } catch { continue; }
-      const lbl = gateLabel(gate);
-      if (def.isSynchronous || def.stateKeys) {
-        // Gatter mit expliziten stateKeys oder isSynchronous:
-        // stateKeys bestimmt, welche customState-Schlüssel den
-        // sichtbaren Zustand tragen. Default ['q'] für einfache D/JK/T/SR-FFs.
-        const keys = def.stateKeys ?? ['q'];
-        for (const key of keys) {
-          stateVars.push({
-            gateId:   gate.id,
-            portId:   key,
-            stateKey: key,
-            label:    keys.length === 1 ? lbl : `${lbl}.${key}`,
-          });
-        }
-      } else {
-        // Feedback-Gates ohne stateKeys (kombinatorisch): alle Ausgänge nehmen.
-        for (const p of def.outputs) {
-          stateVars.push({
-            gateId:   gate.id,
-            portId:   p.id,
-            stateKey: p.id,
-            label:    def.outputs.length === 1 ? lbl : `${lbl}.${p.label ?? p.id}`,
-          });
-        }
-      }
-    }
+    // Zustandsvariablen = sichtbare State-Carriers der Zustandsgatter, x-sortiert
+    const stateVars = collectStateVarsForStt(
+      circuit,
+      connectedIds,
+      feedbackGateIds,
+      gateRegistry.get.bind(gateRegistry),
+    );
 
     // ── Label-Deduplizierung ────────────────────────────────────────────────────
     // Falls mehrere Feedback-Gatter den gleichen auto-generierten Namen haben
@@ -336,13 +268,14 @@ export function TruthTableModal({ onClose }: Props) {
 
     if (totalVars > 8) {
       const { controls, data } = classifyInputs(inputs, circuit);
+      const representative = chooseRepresentativeStateVar(stateVars);
       // Reserve 1 slot for the representative state bit → max 7 control inputs
       const MAX_CTRL    = 7;
       const cappedCtrls = controls.length > MAX_CTRL;
       activeInputs       = cappedCtrls ? controls.slice(0, MAX_CTRL) : controls;
-      activeStateVars    = [stateVars[0]];   // one representative bit
+      activeStateVars    = [representative];
       dataInputsToZero   = data;
-      nonRepStateBits    = stateVars.slice(1);
+      nonRepStateBits    = stateVars.filter(sv => sv !== representative);
       reducedMeta = {
         fixedDataLabels: data.map(g => gateLabel(g)),
         totalStateBits:  stateVars.length,
