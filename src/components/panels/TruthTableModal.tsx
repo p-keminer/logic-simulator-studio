@@ -363,6 +363,26 @@ export function TruthTableModal({ onClose }: Props) {
       // Clocks werden eingefroren (isClockPaused = true) → nur kombinatorische Logik.
       const nextBuf = runOneTick(circuit, buf, wireMap, /* isClockPaused */ true);
 
+      // ── Synchrone Outputs nachziehen ──────────────────────────────────────
+      // runOneTick berechnet outputs via evaluate(oldState) → Q(t).
+      // stateUpdate berechnet Q(t+1) → nextBuf.customStates.
+      // Damit nachgelagerte LEDs den korrekten Q(t+1) sehen, müssen wir
+      // evaluate() für synchrone Gatter mit dem neuen customState wiederholen.
+      for (const gate of allGates) {
+        let def; try { def = gateRegistry.get(gate.typeId); } catch { continue; }
+        if (!def.isSynchronous) continue;
+        const newCs = nextBuf.customStates[gate.id];
+        if (!newCs) continue;
+        const reEval = def.evaluate(
+          {} as Record<string, SignalValue>,
+          newCs as Record<string, unknown>,
+        );
+        if (!nextBuf.outputs[gate.id]) nextBuf.outputs[gate.id] = {};
+        for (const [pid, v] of Object.entries(reEval)) {
+          nextBuf.outputs[gate.id][pid] = v as SignalValue;
+        }
+      }
+
       // Nächster Zustand Q(t+1) bestimmen:
       // - Synchrone FF: evaluate() gibt Q(t) zurück (liest alten customState).
       //   stateUpdate() berechnet Q(t+1) und speichert es in nextBuf.customStates.
@@ -379,7 +399,7 @@ export function TruthTableModal({ onClose }: Props) {
         return (nextBuf.outputs[sv.gateId]?.[sv.portId] ?? 0) as number;
       });
 
-      // Externe LED-Ausgänge
+      // Externe LED-Ausgänge — outputs bereits mit neuem Zustand aktualisiert
       const outputBits = outputGates.map(led => {
         const wire = Object.values(circuit.wires).find(w => w.to.gateId === led.id);
         if (!wire) return 0;

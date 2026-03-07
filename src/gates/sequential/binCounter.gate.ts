@@ -5,6 +5,44 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
 
+// ── Helpers: counter ↔ individual bit state keys ─────────────────────────────
+// stateKeys are individual bits (cnt0..cntN) for correct STT enumeration.
+// 'count' is kept in customState for the shape component (7-seg display).
+
+function ctr16FromState(cs: Record<string, unknown> | undefined): number {
+  if (cs && cs.cnt0 !== undefined) {
+    return (((cs.cnt0 as number) & 1))
+         | (((cs.cnt1 as number) & 1) << 1)
+         | (((cs.cnt2 as number) & 1) << 2)
+         | (((cs.cnt3 as number) & 1) << 3);
+  }
+  return Math.max(0, Math.min(15, (cs?.count as number) ?? 0));
+}
+
+function ctr16ToState(count: number): Record<string, number> {
+  return {
+    cnt0: (count >> 0) & 1,
+    cnt1: (count >> 1) & 1,
+    cnt2: (count >> 2) & 1,
+    cnt3: (count >> 3) & 1,
+  };
+}
+
+function ctr100FromState(cs: Record<string, unknown> | undefined): number {
+  if (cs && cs.cnt0 !== undefined) {
+    let v = 0;
+    for (let i = 0; i < 7; i++) v |= (((cs[`cnt${i}`] as number) ?? 0) & 1) << i;
+    return Math.min(99, v);
+  }
+  return Math.max(0, Math.min(99, (cs?.count as number) ?? 0));
+}
+
+function ctr100ToState(count: number): Record<string, number> {
+  const s: Record<string, number> = {};
+  for (let i = 0; i < 7; i++) s[`cnt${i}`] = (count >> i) & 1;
+  return s;
+}
+
 // ── 0-15 counter with hex 7-segment display ───────────────────────────────────
 const binCounterDef: GateDefinition = {
   typeId: 'BIN_CTR7S',
@@ -26,9 +64,10 @@ const binCounterDef: GateDefinition = {
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.85 },
   ],
   isSynchronous: true,
-  stateKeys: ['count'],
+  stateKeys: ['cnt0', 'cnt1', 'cnt2', 'cnt3'],
   evaluate(_inputs, customState) {
-    const count = Math.max(0, Math.min(15, (customState?.count as number) ?? 0));
+    // Reconstruct count from individual bits (STT path) or legacy 'count' key (shape/compat)
+    const count = ctr16FromState(customState);
     return {
       q0:  ((count >> 0) & 1) as SignalValue,
       q1:  ((count >> 1) & 1) as SignalValue,
@@ -38,14 +77,15 @@ const binCounterDef: GateDefinition = {
     };
   },
   stateUpdate(inputs, _outputs, customState) {
-    const count   = (customState?.count   as number) ?? 0;
+    const count   = ctr16FromState(customState);
     const prevClk = (customState?.prevClk as number) ?? 0;
     const clk = inputs['clk'] ?? 0;
     const rst = inputs['rst'] ?? 0;
     const en  = inputs['en']  ?? 1;
-    if (rst === 1) return { count: 0, prevClk: clk };
-    if (prevClk === 0 && clk === 1 && en === 1) return { count: (count + 1) % 16, prevClk: 1 };
-    return { count, prevClk: clk };
+    const next = rst === 1 ? 0
+      : (prevClk === 0 && clk === 1 && en === 1) ? (count + 1) % 16
+      : count;
+    return { ...ctr16ToState(next), count: next, prevClk: clk };
   },
   verilogExtraRegs: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
   vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 4 }],
@@ -135,9 +175,9 @@ const binCounter99Def: GateDefinition = {
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.92 },
   ],
   isSynchronous: true,
-  stateKeys: ['count'],
+  stateKeys: ['cnt0', 'cnt1', 'cnt2', 'cnt3', 'cnt4', 'cnt5', 'cnt6'],
   evaluate(_inputs, customState) {
-    const count = Math.max(0, Math.min(99, (customState?.count as number) ?? 0));
+    const count = ctr100FromState(customState);
     return {
       q0:  ((count >> 0) & 1) as SignalValue,
       q1:  ((count >> 1) & 1) as SignalValue,
@@ -150,14 +190,15 @@ const binCounter99Def: GateDefinition = {
     };
   },
   stateUpdate(inputs, _outputs, customState) {
-    const count   = (customState?.count   as number) ?? 0;
+    const count   = ctr100FromState(customState);
     const prevClk = (customState?.prevClk as number) ?? 0;
     const clk = inputs['clk'] ?? 0;
     const rst = inputs['rst'] ?? 0;
     const en  = inputs['en']  ?? 1;
-    if (rst === 1) return { count: 0, prevClk: clk };
-    if (prevClk === 0 && clk === 1 && en === 1) return { count: (count + 1) % 100, prevClk: 1 };
-    return { count, prevClk: clk };
+    const next = rst === 1 ? 0
+      : (prevClk === 0 && clk === 1 && en === 1) ? (count + 1) % 100
+      : count;
+    return { ...ctr100ToState(next), count: next, prevClk: clk };
   },
   verilogExtraRegs: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 7 }],
   vhdlExtraSignals: (g) => [{ name: `cnt_${sanitize(g.id)}`, width: 7 }],
