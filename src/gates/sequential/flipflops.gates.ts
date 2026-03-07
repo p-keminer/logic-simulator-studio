@@ -21,6 +21,7 @@ gateRegistry.register({
   label: 'SR',
   category: 'flipflop',
   width: 80, height: 70,
+  stateKeys: ['q'],
   inputs: [
     { id: 's', label: 'S', relativeX: 0, relativeY: 0.3 },
     { id: 'r', label: 'R', relativeX: 0, relativeY: 0.7 },
@@ -351,6 +352,7 @@ gateRegistry.register({
   label: 'D-Latch',
   category: 'flipflop',
   width: 80, height: 80,
+  stateKeys: ['q'],
   inputs: [
     { id: 'd',  label: 'D', relativeX: 0, relativeY: 0.3 },
     { id: 'en', label: 'EN', relativeX: 0, relativeY: 0.65 },

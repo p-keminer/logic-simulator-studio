@@ -3,6 +3,29 @@ import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
 
+// ── Helpers: packed integer ↔ individual bit state keys ──────────────────────
+// Reconstruct a packed integer from individual bit stateKeys (prefix0..prefixN-1).
+// Falls back to the legacy packed key if individual bits aren't set.
+function bitsFromState(cs: Record<string, unknown> | undefined, prefix: string, width: number, legacyKey: string): number {
+  if (cs && cs[`${prefix}0`] !== undefined) {
+    let v = 0;
+    for (let i = 0; i < width; i++) v |= (((cs[`${prefix}${i}`] as number) ?? 0) & 1) << i;
+    return v;
+  }
+  return (cs?.[legacyKey] as number) ?? 0;
+}
+
+// Decompose a packed integer into individual bit stateKeys.
+function bitsToState(value: number, prefix: string, width: number): Record<string, number> {
+  const s: Record<string, number> = {};
+  for (let i = 0; i < width; i++) s[`${prefix}${i}`] = (value >> i) & 1;
+  return s;
+}
+
+function makeStateKeys(prefix: string, width: number): string[] {
+  return Array.from({ length: width }, (_, i) => `${prefix}${i}`);
+}
+
 // 74HC00 – Quad NAND 2-input
 gateRegistry.register({
   typeId: '74HC00', label: '74HC00', category: 'ic74', width: 100, height: 120,
@@ -322,6 +345,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC74', label: '74HC74', category: 'ic74', width: 110, height: 130,
   propagationDelay: 14, isSynchronous: true,
+  stateKeys: ['q1', 'q2'],
   defaultInputValues: { pre1: 1, clr1: 1, pre2: 1, clr2: 1 },
   inputs: [
     { id: 'pre1', label: '/PRE1', relativeX: 0, relativeY: 0.08 },
@@ -432,6 +456,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC595', label: '74HC595', category: 'ic74', width: 110, height: 160,
   propagationDelay: 25, isSynchronous: true,
+  stateKeys: makeStateKeys('q', 8),
   defaultInputValues: { mr: 1 },
   inputs: [
     { id: 'ds',   label: 'DS',   relativeX: 0, relativeY: 0.08 },
@@ -451,7 +476,7 @@ gateRegistry.register({
     { id: 'q7', label: 'Q7', relativeX: 1, relativeY: 0.99 },
   ],
   evaluate: (inputs, state) => {
-    const latch = (state?.latch as number) ?? 0;
+    const latch = bitsFromState(state as Record<string, unknown>, 'q', 8, 'latch');
     const oe = (inputs as any).oe ?? 0;
     if (oe !== 0) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
     const out: Record<string,0|1> = {};
@@ -462,11 +487,11 @@ gateRegistry.register({
     const pShcp = (state?.pShcp as 0|1) ?? 0;
     const pStcp = (state?.pStcp as 0|1) ?? 0;
     let shift = (state?.shift as number) ?? 0;
-    let latch = (state?.latch as number) ?? 0;
+    let latch = bitsFromState(state as Record<string, unknown>, 'q', 8, 'latch');
     if (mr === 0) shift = 0;
     else if (shcp === 1 && pShcp === 0) shift = ((shift << 1) | (ds ?? 0)) & 0xFF;
     if (stcp === 1 && pStcp === 0) latch = shift;
-    return { shift, latch, pShcp: shcp, pStcp: stcp };
+    return { shift, latch, ...bitsToState(latch, 'q', 8), pShcp: shcp, pStcp: stcp };
   },
   toVerilog: (g, w) => {
     const sid   = sanitize(g.id);
@@ -533,6 +558,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC161', label: '74HC161', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
+  stateKeys: makeStateKeys('cnt', 4),
   defaultInputValues: { clrn: 1, ldn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
@@ -553,7 +579,7 @@ gateRegistry.register({
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.15 },
   ],
   evaluate: ({ ent }, state) => {
-    const cnt = (state?.cnt as number) ?? 0;
+    const cnt = bitsFromState(state as Record<string, unknown> | undefined, 'cnt', 4, 'cnt');
     return {
       q0: ((cnt >> 0) & 1) as 0|1,
       q1: ((cnt >> 1) & 1) as 0|1,
@@ -564,9 +590,9 @@ gateRegistry.register({
   },
   stateUpdate: ({ clk, clrn, ldn, enp, ent, d0, d1, d2, d3 }, _o, state) => {
     const prev = (state?.pClk as 0|1) ?? 0;
-    let cnt = (state?.cnt as number) ?? 0;
+    let cnt = bitsFromState(state as Record<string, unknown> | undefined, 'cnt', 4, 'cnt');
     // 74HC161: asynchronous clear (active immediately, regardless of clock)
-    if (clrn === 0) return { cnt: 0, pClk: clk };
+    if (clrn === 0) return { ...bitsToState(0, 'cnt', 4), cnt: 0, pClk: clk };
     const rising = clk === 1 && prev === 0;
     if (!rising) return { ...state, pClk: clk };
     if (ldn === 0) {
@@ -574,7 +600,7 @@ gateRegistry.register({
     } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
       cnt = (cnt + 1) & 0xF;
     }
-    return { cnt, pClk: clk };
+    return { ...bitsToState(cnt, 'cnt', 4), cnt, pClk: clk };
   },
   toVerilog: (g, w) => {
     const sid  = sanitize(g.id);
@@ -773,6 +799,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC194', label: '74HC194', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
+  stateKeys: makeStateKeys('q', 4),
   defaultInputValues: { clrn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
@@ -793,7 +820,7 @@ gateRegistry.register({
     { id: 'q3', label: 'Q3', relativeX: 1, relativeY: 0.97 },
   ],
   evaluate: (_i, state) => {
-    const reg = (state?.reg as number) ?? 0;
+    const reg = bitsFromState(state as Record<string, unknown> | undefined, 'q', 4, 'reg');
     return {
       q0: ((reg >> 0) & 1) as 0|1,
       q1: ((reg >> 1) & 1) as 0|1,
@@ -803,7 +830,7 @@ gateRegistry.register({
   },
   stateUpdate: ({ clk, clrn, s0, s1, sr, sl, d0, d1, d2, d3 }, _o, state) => {
     const prev = (state?.pClk as 0|1) ?? 0;
-    let reg = (state?.reg as number) ?? 0;
+    let reg = bitsFromState(state as Record<string, unknown> | undefined, 'q', 4, 'reg');
     const rising = clk === 1 && prev === 0;
     if (clrn === 0) { reg = 0; }
     else if (rising) {
@@ -813,7 +840,7 @@ gateRegistry.register({
       else if (mode === 3) reg = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0); // parallel load
       // mode 0 = hold
     }
-    return { reg, pClk: clk };
+    return { ...bitsToState(reg, 'q', 4), reg, pClk: clk };
   },
   toVerilog: (g, w) => {
     const sid  = sanitize(g.id);
@@ -885,6 +912,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC373', label: '74HC373', category: 'ic74', width: 110, height: 180,
   propagationDelay: 14, isSynchronous: true,
+  stateKeys: makeStateKeys('q', 8),
   inputs: [
     { id: 'oe', label: '/OE', relativeX: 0, relativeY: 0.05 },
     { id: 'le', label: 'LE',  relativeX: 0, relativeY: 0.12 },
@@ -913,18 +941,18 @@ gateRegistry.register({
       return { q0:(d0??0) as 0|1, q1:(d1??0) as 0|1, q2:(d2??0) as 0|1, q3:(d3??0) as 0|1,
                q4:(d4??0) as 0|1, q5:(d5??0) as 0|1, q6:(d6??0) as 0|1, q7:(d7??0) as 0|1 };
     }
-    const latch = (state?.latch as number) ?? 0;
+    const latch = bitsFromState(state as Record<string, unknown> | undefined, 'q', 8, 'latch');
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((latch >> i) & 1) as 0|1;
     return out;
   },
   stateUpdate: ({ le, d0, d1, d2, d3, d4, d5, d6, d7 }, _o, state) => {
-    let latch = (state?.latch as number) ?? 0;
+    let latch = bitsFromState(state as Record<string, unknown> | undefined, 'q', 8, 'latch');
     if ((le ?? 0) === 1) {
       latch = ((d7??0)<<7)|((d6??0)<<6)|((d5??0)<<5)|((d4??0)<<4)|
               ((d3??0)<<3)|((d2??0)<<2)|((d1??0)<<1)|(d0??0);
     }
-    return { latch };
+    return { ...bitsToState(latch, 'q', 8), latch };
   },
   toVerilog: (g, w) => {
     const sid   = sanitize(g.id);
@@ -969,6 +997,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC374', label: '74HC374', category: 'ic74', width: 110, height: 180,
   propagationDelay: 14, isSynchronous: true,
+  stateKeys: makeStateKeys('q', 8),
   inputs: [
     { id: 'oe',  label: '/OE', relativeX: 0, relativeY: 0.05 },
     { id: 'clk', label: 'CLK', relativeX: 0, relativeY: 0.12 },
@@ -992,7 +1021,7 @@ gateRegistry.register({
     { id: 'q7', label: 'Q7', relativeX: 1, relativeY: 0.92 },
   ],
   evaluate: ({ oe }, state) => {
-    const reg = (state?.reg as number) ?? 0;
+    const reg = bitsFromState(state as Record<string, unknown> | undefined, 'q', 8, 'reg');
     if ((oe ?? 0) === 1) return { q0:0,q1:0,q2:0,q3:0,q4:0,q5:0,q6:0,q7:0 };
     const out: Record<string,0|1> = {};
     for (let i = 0; i < 8; i++) out['q'+i] = ((reg >> i) & 1) as 0|1;
@@ -1000,12 +1029,12 @@ gateRegistry.register({
   },
   stateUpdate: ({ clk, d0, d1, d2, d3, d4, d5, d6, d7 }, _o, state) => {
     const prev = (state?.pClk as 0|1) ?? 0;
-    let reg = (state?.reg as number) ?? 0;
+    let reg = bitsFromState(state as Record<string, unknown> | undefined, 'q', 8, 'reg');
     if (clk === 1 && prev === 0) {
       reg = ((d7??0)<<7)|((d6??0)<<6)|((d5??0)<<5)|((d4??0)<<4)|
             ((d3??0)<<3)|((d2??0)<<2)|((d1??0)<<1)|(d0??0);
     }
-    return { reg, pClk: clk };
+    return { ...bitsToState(reg, 'q', 8), reg, pClk: clk };
   },
   toVerilog: (g, w) => {
     const sid = sanitize(g.id);
@@ -1145,6 +1174,7 @@ gateRegistry.register({
 gateRegistry.register({
   typeId: '74HC163', label: '74HC163', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
+  stateKeys: makeStateKeys('cnt', 4),
   defaultInputValues: { clrn: 1, ldn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
@@ -1165,7 +1195,7 @@ gateRegistry.register({
     { id: 'rco', label: 'RCO', relativeX: 1, relativeY: 0.15 },
   ],
   evaluate: ({ ent }, state) => {
-    const cnt = (state?.cnt as number) ?? 0;
+    const cnt = bitsFromState(state as Record<string, unknown> | undefined, 'cnt', 4, 'cnt');
     return {
       q0: ((cnt >> 0) & 1) as 0|1,
       q1: ((cnt >> 1) & 1) as 0|1,
@@ -1176,17 +1206,17 @@ gateRegistry.register({
   },
   stateUpdate: ({ clk, clrn, ldn, enp, ent, d0, d1, d2, d3 }, _o, state) => {
     const prev = (state?.pClk as 0|1) ?? 0;
-    let cnt = (state?.cnt as number) ?? 0;
+    let cnt = bitsFromState(state as Record<string, unknown> | undefined, 'cnt', 4, 'cnt');
     const rising = clk === 1 && prev === 0;
     if (!rising) return { ...state, pClk: clk };
     // 74HC163: synchronous clear (only on rising clock edge)
-    if (clrn === 0) return { cnt: 0, pClk: clk };
+    if (clrn === 0) return { ...bitsToState(0, 'cnt', 4), cnt: 0, pClk: clk };
     if (ldn === 0) {
       cnt = ((d3 ?? 0) << 3) | ((d2 ?? 0) << 2) | ((d1 ?? 0) << 1) | (d0 ?? 0);
     } else if ((enp ?? 0) === 1 && (ent ?? 0) === 1) {
       cnt = (cnt + 1) & 0xF;
     }
-    return { cnt, pClk: clk };
+    return { ...bitsToState(cnt, 'cnt', 4), cnt, pClk: clk };
   },
   toVerilog: (g, w) => {
     const sid  = sanitize(g.id);

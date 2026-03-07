@@ -193,12 +193,15 @@ export function TruthTableModal({ onClose }: Props) {
     // MODUS 2: Zustandsübergangstabelle (sequenzielle / rückkoppelnde Schaltung)
     // ════════════════════════════════════════════════════════════════════════
 
-    // Zustandsgatter = Gatter in Draht-Zyklen (Feedback) ODER synchrone FF/Register.
-    // Auch ohne Draht-Rückkopplung besitzen FFs internen Zustand (customState.q).
+    // Zustandsgatter = Gatter in Draht-Zyklen (Feedback) ODER synchrone
+    // FF/Register ODER Gatter mit stateUpdate (z.B. SR-Latch, D-Latch).
     const feedbackGateIds = new Set(cycles.flat());
     for (const g of allGates) {
       if (!connectedIds.has(g.id)) continue;
-      try { if (gateRegistry.get(g.typeId).isSynchronous) feedbackGateIds.add(g.id); }
+      try {
+        const def = gateRegistry.get(g.typeId);
+        if (def.isSynchronous || def.stateUpdate) feedbackGateIds.add(g.id);
+      }
       catch { /* unbekannter Typ */ }
     }
 
@@ -213,20 +216,21 @@ export function TruthTableModal({ onClose }: Props) {
     for (const gate of feedbackGatesSorted) {
       let def; try { def = gateRegistry.get(gate.typeId); } catch { continue; }
       const lbl = gateLabel(gate);
-      if (def.isSynchronous) {
-        // Synchrone Gatter: stateKeys bestimmt, welche customState-Schlüssel den
+      if (def.isSynchronous || def.stateKeys) {
+        // Gatter mit expliziten stateKeys oder isSynchronous:
+        // stateKeys bestimmt, welche customState-Schlüssel den
         // sichtbaren Zustand tragen. Default ['q'] für einfache D/JK/T/SR-FFs.
         const keys = def.stateKeys ?? ['q'];
         for (const key of keys) {
           stateVars.push({
             gateId:   gate.id,
-            portId:   key,      // wird nur für Feedback-Gates (nicht-synchron) gebraucht
+            portId:   key,
             stateKey: key,
             label:    keys.length === 1 ? lbl : `${lbl}.${key}`,
           });
         }
       } else {
-        // Feedback-Gates ohne isSynchronous (SR-Latch, kombinatorisch): alle Ausgänge nehmen.
+        // Feedback-Gates ohne stateKeys (kombinatorisch): alle Ausgänge nehmen.
         for (const p of def.outputs) {
           stateVars.push({
             gateId:   gate.id,
