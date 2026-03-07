@@ -583,3 +583,54 @@ describe('CONST_HIGH / CONST_LOW -- Verilog', () => {
     expect(vhdl).toContain('CONST_LOW');
   });
 });
+
+// ---------------------------------------------------------------------------
+// JUNCTION signal propagation — output LEDs through junctions must be driven
+// ---------------------------------------------------------------------------
+describe('JUNCTION signal propagation', () => {
+  // AND:out → JUNCTION:in, JUNCTION:y0 → LED1:in, JUNCTION:y1 → LED2:in
+  const circuit = makeCircuit('junction_test', [
+    makeGate('sw_a', 'INPUT_SWITCH', 0, 0, { label: 'a' }),
+    makeGate('sw_b', 'INPUT_SWITCH', 0, 60, { label: 'b' }),
+    makeGate('g_and', 'AND', 200, 30),
+    makeGate('junc', 'JUNCTION', 350, 30),
+    makeGate('led1', 'OUTPUT_LED', 500, 0, { label: 'y1' }),
+    makeGate('led2', 'OUTPUT_LED', 500, 60, { label: 'y2' }),
+  ], [
+    makeWire('w1', 'sw_a', 'out', 'g_and', 'a'),
+    makeWire('w2', 'sw_b', 'out', 'g_and', 'b'),
+    makeWire('w3', 'g_and', 'out', 'junc', 'in'),
+    makeWire('w4', 'junc', 'y0', 'led1', 'in'),
+    makeWire('w5', 'junc', 'y1', 'led2', 'in'),
+  ]);
+
+  it('Verilog: LED outputs share the same signal as AND output (no undriven ports)', () => {
+    const verilog = generateVerilog(circuit);
+    // Both LEDs should be declared as output ports
+    expect(verilog).toMatch(/output\s+\w+\s+\w+/);
+    // There should be NO undriven output: the AND gate drives a wire, and both
+    // LED ports should map to that same wire through the JUNCTION.
+    // Specifically: the AND primitive drives a signal, and both LED ports use it.
+    const andMatch = verilog.match(/and\s+\w+\((\w+),/);
+    expect(andMatch).toBeTruthy();
+    const andOutSignal = andMatch![1];
+    // Both LED output ports should be this same signal
+    const outputLines = verilog.match(/output\s+wire\s+(\w+)/g) ?? [];
+    const outputNames = outputLines.map(l => l.split(/\s+/).pop()!);
+    // All output names should equal the AND output signal
+    for (const name of outputNames) {
+      expect(name).toBe(andOutSignal);
+    }
+  });
+
+  it('VHDL: LED outputs share the same signal as AND output (no undriven ports)', () => {
+    const vhdl = generateVHDL(circuit);
+    // Should contain AND operator
+    expect(vhdl).toMatch(/\band\b/);
+    // Both output ports should map to the same driven signal
+    const portLines = [...vhdl.matchAll(/(\w+)\s*:\s*out\s+STD_LOGIC/g)];
+    expect(portLines.length).toBe(2);
+    // Both output port names should be identical (same signal through junction)
+    expect(portLines[0][1]).toBe(portLines[1][1]);
+  });
+});

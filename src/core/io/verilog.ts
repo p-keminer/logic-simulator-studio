@@ -71,6 +71,28 @@ function buildWireMap(circuit: Circuit): WireMap {
     byPort[`${wire.to.gateId}:${wire.to.portId}`] = byPort[fromKey];
   }
 
+  // Propagate signal names through JUNCTIONs: all outputs get the input's name.
+  // Without this, JUNCTION output ports receive new w_N names that are never
+  // driven (JUNCTION is excluded from logic generation).
+  // After updating junction output names, re-propagate through downstream wires
+  // so that targets (e.g. OUTPUT_LEDs) receive the corrected signal name.
+  for (const gate of Object.values(circuit.gates)) {
+    if (gate.typeId !== 'JUNCTION') continue;
+    const inName = byPort[`${gate.id}:in`];
+    if (!inName) continue;
+    for (const outId of ['y0', 'y1', 'y2']) {
+      byPort[`${gate.id}:${outId}`] = inName;
+    }
+  }
+  for (const wire of Object.values(circuit.wires)) {
+    if (circuit.gates[wire.from.gateId]?.typeId === 'JUNCTION') {
+      const fromKey = `${wire.from.gateId}:${wire.from.portId}`;
+      if (byPort[fromKey]) {
+        byPort[`${wire.to.gateId}:${wire.to.portId}`] = byPort[fromKey];
+      }
+    }
+  }
+
   let ledIdx = 0;
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'OUTPUT_LED') {
