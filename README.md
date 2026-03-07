@@ -191,6 +191,10 @@ A fully featured, interactive logic circuit simulator built with React, TypeScri
 > 📖 **Full user manual:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
 
 ---
+### Status: Stable (March 2026)
+**Gate-Delay mode** fully implemented and hardened: reliable race condition detection with 5 severity classes, TTL wire marking and timing diagram integration.
+
+---
 
 ## Features
 
