@@ -227,7 +227,7 @@ export class EventScheduler {
       for (const gate of Object.values(circuit.gates)) {
         if (!AUTONOMOUS_TYPES.has(gate.typeId)) continue;
 
-        // Inject pause flag for CLOCK gates, matching the ZERO_DELAY behaviour.
+        // Inject pause flag for CLOCK gates, matching the settle-phase behaviour.
         let cs: Record<string, unknown> = this.committedCustomStates[gate.id] ?? gate.customState ?? {};
         if (gate.typeId === 'CLOCK') {
           cs = { ...cs, _paused: isClockPaused };

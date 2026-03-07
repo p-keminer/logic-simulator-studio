@@ -8,7 +8,6 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { TruthTableModal } from '../panels/TruthTableModal';
 import { CustomICModal } from '../panels/CustomICModal';
 import { RacePanel } from '../panels/RacePanel';
-import { SimulationMode } from '../../store/simulationMode';
 
 interface Props {
   showTiming: boolean;
@@ -20,7 +19,6 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
   const {
     circuit, dispatch,
     isClockPaused, setIsClockPaused, stepOneClock,
-    simulationMode, setSimulationMode,
     races,
   } = useCircuitContext();
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +28,6 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
   const [showCustomIC, setShowCustomIC] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showRacePanel, setShowRacePanel] = useState(false);
-
-  const isGateDelay = simulationMode === SimulationMode.GATE_DELAY;
 
   const handleSave = () => downloadCircuit(circuit);
 
@@ -119,13 +115,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
           className="px-2.5 py-1 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded transition-colors font-mono">
           IC
         </button>
-        <button
-          onClick={() => setSimulationMode(isGateDelay ? SimulationMode.ZERO_DELAY : SimulationMode.GATE_DELAY)}
-          title={isGateDelay ? 'Gate-Delay-Modus aktiv — Klick: zu Zero-Delay wechseln' : 'Zero-Delay-Modus aktiv — Klick: zu Gate-Delay wechseln'}
-          className={"px-2.5 py-1 text-xs font-medium border rounded transition-colors font-mono " + (isGateDelay ? "text-orange-300 bg-orange-900/40 border-orange-700" : "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600")}>
-          {isGateDelay ? '⏱ Gate-Delay' : '⚡ Zero-Delay'}
-        </button>
-        {isGateDelay && races.length > 0 && (
+        {races.length > 0 && (
           <button
             onClick={() => setShowRacePanel(true)}
             title={`Race-Historie: ${races.length} Einträge — Klick für Details`}

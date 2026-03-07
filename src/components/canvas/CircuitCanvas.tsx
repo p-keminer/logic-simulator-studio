@@ -19,6 +19,7 @@ const WIRE_COLORS = ['','#22c55e','#ef4444','#f59e0b','#3b82f6','#a855f7','#ec48
 interface WireCtxMenu { wireId: string; screenX: number; screenY: number; svgX: number; svgY: number; }
 interface GateCtxMenu { gateId: string; screenX: number; screenY: number; }
 interface CanvasCtxMenu { screenX: number; screenY: number; svgX: number; svgY: number; }
+interface WpCtxMenu { wireId: string; index: number; screenX: number; screenY: number; svgX: number; svgY: number; }
 
 export function CircuitCanvas() {
   const { circuit, dispatch } = useCircuitContext();
@@ -27,6 +28,7 @@ export function CircuitCanvas() {
   const [wireCtxMenu, setWireCtxMenu] = useState<WireCtxMenu | null>(null);
   const [gateCtxMenu, setGateCtxMenu] = useState<GateCtxMenu | null>(null);
   const [canvasCtxMenu, setCanvasCtxMenu] = useState<CanvasCtxMenu | null>(null);
+  const [wpCtxMenu, setWpCtxMenu] = useState<WpCtxMenu | null>(null);
   const [wireMode, setWireMode] = useState(false);
   const [snapMode, setSnapMode] = useState(false);
   const snapTargetRef = useRef<{ gateId: string; portId: string } | null>(null);
@@ -87,7 +89,7 @@ export function CircuitCanvas() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') { cancelWire(); setWireCtxMenu(null); setGateCtxMenu(null); setCanvasCtxMenu(null); setWireMode(false); }
+      if (e.key === 'Escape') { cancelWire(); setWireCtxMenu(null); setGateCtxMenu(null); setCanvasCtxMenu(null); setWpCtxMenu(null); setWireMode(false); }
       if (e.key === 'w' || e.key === 'W') setWireMode((m) => !m);
       if (e.key === 'x' || e.key === 'X') setSnapMode((m) => !m);
       if (e.key === 'Delete' || e.key === 'Backspace') dispatch({ type: 'DELETE_SELECTED' });
@@ -137,6 +139,7 @@ export function CircuitCanvas() {
       if (wireCtxMenu) { setWireCtxMenu(null); return; }
       if (gateCtxMenu) { setGateCtxMenu(null); return; }
       if (canvasCtxMenu) { setCanvasCtxMenu(null); return; }
+      if (wpCtxMenu) { setWpCtxMenu(null); return; }
       if (wireDrawing.phase === 'drawing') {
         if (snapMode && snapTargetRef.current) {
           onCanvasClickWaypoint(e, snapTargetRef.current);
@@ -145,13 +148,13 @@ export function CircuitCanvas() {
         }
       }
     },
-    [wireDrawing.phase, onCanvasClickWaypoint, wireCtxMenu, gateCtxMenu, canvasCtxMenu, snapMode]
+    [wireDrawing.phase, onCanvasClickWaypoint, wireCtxMenu, gateCtxMenu, canvasCtxMenu, wpCtxMenu, snapMode]
   );
 
   const handleWireContextMenu = useCallback(
     (wireId: string, e: React.MouseEvent) => {
       e.preventDefault(); e.stopPropagation();
-      setGateCtxMenu(null);
+      setGateCtxMenu(null); setWpCtxMenu(null);
       const svgPos = svgRef.current ? screenToSVG(svgRef.current, e.clientX, e.clientY) : { x: 0, y: 0 };
       setWireCtxMenu({ wireId, screenX: e.clientX, screenY: e.clientY, svgX: svgPos.x, svgY: svgPos.y });
     },
@@ -161,8 +164,18 @@ export function CircuitCanvas() {
   const handleGateContextMenu = useCallback(
     (gateId: string, e: React.MouseEvent) => {
       e.preventDefault(); e.stopPropagation();
-      setWireCtxMenu(null);
+      setWireCtxMenu(null); setWpCtxMenu(null);
       setGateCtxMenu({ gateId, screenX: e.clientX, screenY: e.clientY });
+    },
+    []
+  );
+
+  const handleWaypointContextMenu = useCallback(
+    (wireId: string, index: number, e: React.MouseEvent) => {
+      e.preventDefault(); e.stopPropagation();
+      setWireCtxMenu(null); setGateCtxMenu(null); setCanvasCtxMenu(null);
+      const svgPos = svgRef.current ? screenToSVG(svgRef.current, e.clientX, e.clientY) : { x: 0, y: 0 };
+      setWpCtxMenu({ wireId, index, screenX: e.clientX, screenY: e.clientY, svgX: svgPos.x, svgY: svgPos.y });
     },
     []
   );
@@ -208,7 +221,7 @@ export function CircuitCanvas() {
         <CanvasBackground panX={viewport.panX} panY={viewport.panY} zoom={viewport.zoom} />
         <g id="wires-layer">
           {Object.values(circuit.wires).map((wire) => (
-            <CanvasWire key={wire.id} wire={wire} onContextMenu={handleWireContextMenu} />
+            <CanvasWire key={wire.id} wire={wire} onContextMenu={handleWireContextMenu} onWaypointContextMenu={handleWaypointContextMenu} />
           ))}
           {isDrawingWire && (
             <WireInProgress
@@ -289,6 +302,35 @@ export function CircuitCanvas() {
             onClick={() => { pasteClipboard(canvasCtxMenu.svgX, canvasCtxMenu.svgY); setCanvasCtxMenu(null); }}
           >
             📋 Einfügen (Strg+V)
+          </button>
+        </div>
+      )}
+
+      {wpCtxMenu && (
+        <div style={{ position:'fixed', top:wpCtxMenu.screenY, left:wpCtxMenu.screenX, background:'#0f172a', border:'1px solid #334155', borderRadius:8, padding:'4px 0', zIndex:2000, boxShadow:'0 8px 32px rgba(0,0,0,0.7)', minWidth:180 }}>
+          <div style={{ position:'fixed', inset:0, zIndex:-1 }} onMouseDown={() => setWpCtxMenu(null)} />
+          <button
+            style={{ display:'block', width:'100%', background:'none', border:'none', color:'#cbd5e1', fontSize:12, fontFamily:'monospace', textAlign:'left', padding:'5px 12px', cursor:'pointer', borderRadius:4, whiteSpace:'nowrap' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#1e293b'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+            onClick={() => {
+              const wire = circuit.wires[wpCtxMenu.wireId];
+              const wp = wire?.waypoints?.[wpCtxMenu.index];
+              if (wire && wp) {
+                dispatch({ type: 'WIRE_INSERT_JUNCTION', payload: { wireId: wpCtxMenu.wireId, x: wp.x, y: wp.y } });
+              }
+              setWpCtxMenu(null);
+            }}
+          >
+            ⬤ In Knotenpunkt umwandeln
+          </button>
+          <button
+            style={{ display:'block', width:'100%', background:'none', border:'none', color:'#fca5a5', fontSize:12, fontFamily:'monospace', textAlign:'left', padding:'5px 12px', cursor:'pointer', borderRadius:4, whiteSpace:'nowrap' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#1e293b'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}
+            onClick={() => { dispatch({ type: 'WIRE_REMOVE_WAYPOINT', payload: { wireId: wpCtxMenu.wireId, index: wpCtxMenu.index } }); setWpCtxMenu(null); }}
+          >
+            ✕ Wegpunkt entfernen
           </button>
         </div>
       )}

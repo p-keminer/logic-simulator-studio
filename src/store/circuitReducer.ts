@@ -360,6 +360,46 @@ export function circuitReducer(state: Circuit, action: CircuitAction): Circuit {
         isSelected: false,
       };
 
+      // Split waypoints: determine which waypoints come before/after the junction
+      // by finding the nearest segment along the polyline path.
+      const wps = wire.waypoints ?? [];
+      let splitIdx = wps.length; // default: all waypoints go to wire1
+      if (wps.length > 0) {
+        // Find closest segment to the junction point (x, y)
+        // The path is: [from_port] → wp[0] → wp[1] → ... → [to_port]
+        // We only need waypoint indices, not from/to port coords
+        // Segment i connects wp[i-1] to wp[i] (with virtual wp[-1]=from_port, wp[n]=to_port)
+        // Since we don't have from/to port coords in the reducer, we approximate:
+        // check each consecutive pair of waypoints and find the closest segment.
+        let bestDist = Infinity;
+        for (let i = 0; i <= wps.length; i++) {
+          // Segment from A to B
+          const A = i === 0 ? null : wps[i - 1]; // null = from_port (unknown exact pos)
+          const B = i < wps.length ? wps[i] : null; // null = to_port (unknown exact pos)
+          if (!A && !B) continue;
+          // For segments touching unknown endpoints, use simple distance to the known point
+          if (!A) {
+            const d = Math.hypot(B!.x - x, B!.y - y);
+            if (d < bestDist) { bestDist = d; splitIdx = i; }
+            continue;
+          }
+          if (!B) {
+            const d = Math.hypot(A.x - x, A.y - y);
+            if (d < bestDist) { bestDist = d; splitIdx = i; }
+            continue;
+          }
+          // Point-to-segment distance
+          const dx = B.x - A.x, dy = B.y - A.y;
+          const len2 = dx * dx + dy * dy;
+          const t = len2 > 0 ? Math.max(0, Math.min(1, ((x - A.x) * dx + (y - A.y) * dy) / len2)) : 0;
+          const px = A.x + t * dx, py = A.y + t * dy;
+          const d = Math.hypot(px - x, py - y);
+          if (d < bestDist) { bestDist = d; splitIdx = i; }
+        }
+      }
+      const waypoints1 = wps.slice(0, splitIdx);
+      const waypoints2 = wps.slice(splitIdx);
+
       // Split the wire: original → junction.in, junction.y0 → original target
       const wire1Id = generateId();
       const wire2Id = generateId();
@@ -369,6 +409,7 @@ export function circuitReducer(state: Circuit, action: CircuitAction): Circuit {
         to: { gateId: juncId, portId: 'in' },
         signal: makeInitialSignal(),
         color: wire.color,
+        waypoints: waypoints1.length > 0 ? waypoints1 : undefined,
         isSelected: false,
       };
       const wire2: Wire = {
@@ -377,6 +418,7 @@ export function circuitReducer(state: Circuit, action: CircuitAction): Circuit {
         to: wire.to,
         signal: makeInitialSignal(),
         color: wire.color,
+        waypoints: waypoints2.length > 0 ? waypoints2 : undefined,
         isSelected: false,
       };
 

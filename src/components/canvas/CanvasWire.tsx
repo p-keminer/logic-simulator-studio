@@ -9,9 +9,10 @@ import { screenToSVG } from '../../hooks/useViewport';
 interface Props {
   wire: Wire;
   onContextMenu: (wireId: string, e: React.MouseEvent) => void;
+  onWaypointContextMenu: (wireId: string, index: number, e: React.MouseEvent) => void;
 }
 
-export function CanvasWire({ wire, onContextMenu }: Props) {
+export function CanvasWire({ wire, onContextMenu, onWaypointContextMenu }: Props) {
   const { circuit, dispatch, raceNetIds } = useCircuitContext();
   const dragIndex = useRef<number | null>(null);
 
@@ -74,7 +75,7 @@ export function CanvasWire({ wire, onContextMenu }: Props) {
   const onWpContextMenu = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
     e.stopPropagation();
-    dispatch({ type: 'WIRE_REMOVE_WAYPOINT', payload: { wireId: wire.id, index } });
+    onWaypointContextMenu(wire.id, index, e);
   };
 
   return (

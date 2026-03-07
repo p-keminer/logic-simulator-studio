@@ -4,37 +4,23 @@ import type { CircuitAction } from './actions';
 import { circuitReducer, createEmptyCircuit } from './circuitReducer';
 import {
   initBuffer, syncBuffer, buildWireMap,
-  runOneTick, runUntilStable, isStable,
+  runUntilStable, isStable,
   buildSimResult, SIM_TICKS_PER_SEC,
 } from '../core/simulation/tickEngine';
 import type { SimBuffer, WireMap } from '../core/simulation/tickEngine';
 import { EventScheduler, buildFanoutMap } from '../core/simulation/eventScheduler';
 import type { FanoutMap } from '../core/simulation/eventScheduler';
-import { SimulationMode } from './simulationMode';
 
 const MAX_HISTORY  = 1000;
 const AUTOSAVE_KEY = 'lgsim_autosave';
 
 /**
- * Einen Snapshot alle N Simulations-Ticks aufnehmen.
- * Sampling ist tick-genau (dank sampleCounterRef), daher ist der zeitliche
- * Abstand zwischen je zwei aufeinander folgenden Snapshots immer exakt
- * SAMPLE_EVERY Ticks — unabhängig von der variablen RAF-Framerate.
- * → Index-basierte X-Achse im TimingDiagram ist jitter-frei.
- *
- * Bei SIM_TICKS_PER_SEC=500 und SAMPLE_EVERY=25:
- *   20 Snapshots/s → MAX_HISTORY=1000 → 50 s gespeichert
- *   Für 1 Hz-Clock: Toggle alle 250 Ticks = 10 Diagram-Steps pro Halbperiode
- *   → Bei STEP_W=3px: 30px/Halbwelle, 60px/Periode → ~11 Zyklen auf 700px ✓
- */
-const SAMPLE_EVERY = 25;
-/**
- * In GATE_DELAY mode, take one timing-diagram snapshot per N event-batches.
+ * Take one timing-diagram snapshot per N event-batches.
  * Value 1 = maximum resolution — every distinct simulation-time with a net
  * change produces one diagram step.  20-NOT chain → 20-step staircase.
  * Glitch detection (netToggleCount) still covers the full advance() window.
  */
-const GATE_DELAY_SAMPLE_EVERY = 1;
+const SAMPLE_EVERY = 1;
 
 // ── Severity helpers (single source of truth) ─────────────────────────────
 /**
@@ -91,9 +77,6 @@ interface CircuitContextValue {
   isClockPaused: boolean;
   setIsClockPaused: (v: boolean) => void;
   stepOneClock: () => void;
-  /** Current simulation mode (ZERO_DELAY | GATE_DELAY). */
-  simulationMode: SimulationMode;
-  setSimulationMode: (mode: SimulationMode) => void;
   /** Race conditions detected in the last GATE_DELAY advance. */
   races: RaceInfo[];
   /**
@@ -124,7 +107,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   );
   const [timingHistory, setTimingHistory] = useState<TimingSnapshot[]>([]);
   const [isClockPaused, setIsClockPaused] = useState(false);
-  const [simulationMode, setSimulationMode] = useState<SimulationMode>(SimulationMode.ZERO_DELAY);
   const [races, setRaces] = useState<RaceInfo[]>([]);
   const [raceNetIds, setRaceNetIds] = useState<Map<string, RaceSeverity>>(new Map());
 
@@ -134,9 +116,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
 
   const isClockPausedRef = useRef(isClockPaused);
   isClockPausedRef.current = isClockPaused;
-
-  const simulationModeRef = useRef(simulationMode);
-  simulationModeRef.current = simulationMode;
 
   // ── Tick-Engine-Zustand ───────────────────────────────────────────────────
   const simBufferRef     = useRef<SimBuffer | null>(null);
@@ -159,8 +138,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   const raceMarkRef      = useRef<Map<string, RaceMark>>(new Map());
   /** Set to true whenever raceMarkRef is mutated; cleared after state sync. */
   const raceMarkDirtyRef = useRef(false);
-  // Ref to last known mode so we can detect mode switches and re-seed.
-  const prevModeRef      = useRef<SimulationMode>(SimulationMode.ZERO_DELAY);
   /** Tracks last-seen gate / wire ID sets to distinguish structural vs switch-only settles. */
   const prevGateKeysRef  = useRef<Set<string>>(new Set());
   const prevWireKeysRef  = useRef<Set<string>>(new Set());
@@ -303,16 +280,16 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       let buf        = simBufferRef.current;
       let anyChanged = false;
 
-      // ── Settle-Phase (immer im ZERO_DELAY-Modus): ────────────────────────
+      // ── Settle-Phase: ─────────────────────────────────────────────────────
       // Schaltung nach Änderungen stabilisieren. Clocks sind dabei eingefroren.
       // Läuft auch während der Pause, damit Schalter-Änderungen sofort propagieren.
-      // Im GATE_DELAY-Modus dient dies als Ausgangs-Seed für den Scheduler.
+      // Dient als Ausgangs-Seed für den Scheduler.
       if (needsSettleRef.current) {
         needsSettleRef.current = false;
 
         // Determine whether this settle was triggered by a structural change
         // (gate / wire added or removed) or by a user switch-only toggle.
-        // Only switch-only settles in GATE_DELAY mode use a special re-seed path.
+        // Only switch-only settles use a special re-seed path.
         // Set-based O(n) comparison — avoids sort() + string allocation per settle.
         const gateIds = Object.keys(c.gates);
         const wireIds = Object.keys(c.wires);
@@ -332,17 +309,16 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         prevGateKeysRef.current = new Set(gateIds);
         prevWireKeysRef.current = new Set(wireIds);
 
-        // For switch-only changes in GATE_DELAY mode: capture the scheduler's
-        // current committed state BEFORE runUntilStable propagates the change
-        // instantly.  After settle we re-seed from this snapshot while injecting
-        // the new switch customStates, so seed() detects the output transition
-        // and schedules a proper timed propagation event.
+        // For switch-only changes: capture the scheduler's current committed
+        // state BEFORE runUntilStable propagates the change instantly.  After
+        // settle we re-seed from this snapshot while injecting the new switch
+        // customStates, so seed() detects the output transition and schedules
+        // a proper timed propagation event.
         let preSettleBuf: SimBuffer | null = null;
         let switchGateIds: ReadonlySet<string> | undefined;
         if (
           !isStructuralChange &&
-          schedulerRef.current !== null &&
-          simulationModeRef.current === SimulationMode.GATE_DELAY
+          schedulerRef.current !== null
         ) {
           preSettleBuf = schedulerRef.current.buildBuffer();
           switchGateIds = new Set(
@@ -356,7 +332,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         if (result.changed) anyChanged = true;
         buf = result.buffer;
 
-        // Re-seed the GATE_DELAY scheduler.
+        // Re-seed the scheduler.
         if (schedulerRef.current) {
           if (preSettleBuf && switchGateIds) {
             // Switch-only: seed from pre-settle snapshot + live switch customStates.
@@ -370,50 +346,29 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         }
       }
 
-      const mode = simulationModeRef.current;
-
-      // ── Mode-Switch Detection: re-seed GATE_DELAY scheduler ──────────────
-      if (mode !== prevModeRef.current) {
-        prevModeRef.current = mode;
-        // Reset sampling counters to avoid stale values from the previous mode
-        // leaking into the new mode's snapshot cadence.
-        sampleCounterRef.current = 0;
-        stepRef.current = 0;
-        // Clear stale timing history from the previous mode so the diagram
-        // starts fresh after switching.
-        setTimingHistory([]);
-        if (mode === SimulationMode.GATE_DELAY) {
-          // Create or re-create the scheduler and seed from current settled state.
-          schedulerRef.current = new EventScheduler();
-          schedulerRef.current.seed(buf, c, wireMapRef.current);
-        }
-      }
-
       // ── Pause-Guard ───────────────────────────────────────────────────────
       if (isClockPausedRef.current) {
         // TTL wire-markings must expire even while the clock is paused.
         // Without this, a 400 ms glitch marking would hang indefinitely in pause.
-        if (mode === SimulationMode.GATE_DELAY) {
-          const nowMs = Date.now();
-          for (const [netId, mark] of raceMarkRef.current) {
-            if (nowMs - mark.lastSeenMs > RACE_TTL_MS) {
-              raceMarkRef.current.delete(netId);
-              raceMarkDirtyRef.current = true;
-            }
+        const nowMs = Date.now();
+        for (const [netId, mark] of raceMarkRef.current) {
+          if (nowMs - mark.lastSeenMs > RACE_TTL_MS) {
+            raceMarkRef.current.delete(netId);
+            raceMarkDirtyRef.current = true;
           }
-          if (raceMarkDirtyRef.current) {
-            raceMarkDirtyRef.current = false;
-            const next = new Map<string, RaceSeverity>();
-            for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
-            setRaceNetIds(next);
-          }
+        }
+        if (raceMarkDirtyRef.current) {
+          raceMarkDirtyRef.current = false;
+          const next = new Map<string, RaceSeverity>();
+          for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
+          setRaceNetIds(next);
         }
         simBufferRef.current = buf;
         if (anyChanged) {
           const result = buildSimResult(buf, c);
           dispatch({ type: 'SIMULATION_APPLY', payload: result });
         }
-        if (anyChanged && mode === SimulationMode.GATE_DELAY) {
+        if (anyChanged) {
           const snap = buildTimingSnapshot(buf.outputs, c, buf.tick);
           setTimingHistory(prev => {
             const next = [...prev, snap];
@@ -427,53 +382,14 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       const ticksToRun = Math.max(1, Math.round(SIM_TICKS_PER_SEC * delta / 1000));
 
       // ─────────────────────────────────────────────────────────────────────
-      // ZERO_DELAY MODE (default — exact original behaviour)
-      // ─────────────────────────────────────────────────────────────────────
-      if (mode === SimulationMode.ZERO_DELAY) {
-        const preTickBuf = buf;
-        const newSnaps: TimingSnapshot[] = [];
-
-        for (let i = 0; i < ticksToRun; i++) {
-          const next = runOneTick(c, buf, wireMapRef.current, false);
-          if (!isStable(buf, next)) anyChanged = true;
-          buf = next;
-
-          sampleCounterRef.current++;
-          if (sampleCounterRef.current >= SAMPLE_EVERY) {
-            sampleCounterRef.current = 0;
-            newSnaps.push(buildTimingSnapshot(buf.outputs, c, buf.tick));
-          }
-        }
-
-        // Geradzahliger Oszillator-Fix
-        if (anyChanged && isStable(preTickBuf, buf)) {
-          buf = runOneTick(c, buf, wireMapRef.current, false);
-        }
-
-        simBufferRef.current = buf;
-
-        if (anyChanged) {
-          const result = buildSimResult(buf, c);
-          dispatch({ type: 'SIMULATION_APPLY', payload: result });
-        }
-
-        if (newSnaps.length > 0) {
-          setTimingHistory(prev => {
-            const next = [...prev, ...newSnaps];
-            return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
-          });
-        }
-      }
-
-      // ─────────────────────────────────────────────────────────────────────
       // GATE_DELAY MODE — discrete-event scheduler
       // ─────────────────────────────────────────────────────────────────────
-      else {
-        // Lazily create scheduler if not yet seeded (e.g. first frame after mode switch).
-        if (!schedulerRef.current) {
-          schedulerRef.current = new EventScheduler();
-          schedulerRef.current.seed(buf, c, wireMapRef.current);
-        }
+
+      // Lazily create scheduler if not yet seeded (e.g. first frame).
+      if (!schedulerRef.current) {
+        schedulerRef.current = new EventScheduler();
+        schedulerRef.current.seed(buf, c, wireMapRef.current);
+      }
 
         const scheduler = schedulerRef.current;
         const targetTime = scheduler.time + ticksToRun;
@@ -522,7 +438,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           if (isClockPausedRef.current) return;
 
           sampleCounterRef.current++;
-          if (sampleCounterRef.current < GATE_DELAY_SAMPLE_EVERY) return;
+          if (sampleCounterRef.current < SAMPLE_EVERY) return;
           sampleCounterRef.current = 0;
           // buildBuffer() deep-copies — no aliasing of scheduler internals.
           const s = scheduler.buildBuffer();
@@ -581,7 +497,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           }
         }
 
-        // Keep the ZERO_DELAY simBuffer in sync so settle still works correctly.
+        // Keep simBuffer in sync so settle still works correctly.
         simBufferRef.current = {
           outputs:      newBuf.outputs,
           customStates: newBuf.customStates,
@@ -611,7 +527,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
             return next.length > MAX_HISTORY ? next.slice(next.length - MAX_HISTORY) : next;
           });
         }
-      }
 
       rafRef.current = requestAnimationFrame(frame);
     };
@@ -619,18 +534,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     rafRef.current = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(rafRef.current);
   }, []); // Nur einmal starten — alle Werte kommen aus Refs
-
-  // ── Mode change side effects ──────────────────────────────────────────────
-  // When switching GATE_DELAY → ZERO_DELAY, clear races, TTL map, and scheduler.
-  useEffect(() => {
-    if (simulationMode === SimulationMode.ZERO_DELAY) {
-      setRaces([]);
-      setRaceNetIds(new Map());
-      raceMarkRef.current.clear();
-      raceMarkDirtyRef.current = false;
-      schedulerRef.current = null;
-    }
-  }, [simulationMode]);
 
   // ── Circuit-ID change: clear race state on CIRCUIT_LOAD / CIRCUIT_RESET ──
   // circuit.id changes whenever a new circuit is loaded or the canvas is reset.
@@ -649,7 +552,6 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       timingHistory, clearTimingHistory,
       isClockPaused, setIsClockPaused,
       stepOneClock,
-      simulationMode, setSimulationMode,
       races,
       raceNetIds,
       portToWireIdMap,

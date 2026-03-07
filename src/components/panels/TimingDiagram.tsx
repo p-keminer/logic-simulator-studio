@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
-import { SimulationMode } from '../../store/simulationMode';
 import type { TimingSnapshot } from '../../core/types';
 
 interface Props { history: TimingSnapshot[]; onClose: () => void; }
@@ -46,7 +45,7 @@ const SKIP_TYPES   = new Set(['TEXT_NOTE', 'JUNCTION', 'ADC8']);
 // ── Hauptkomponente ──────────────────────────────────────────────────────────
 
 export function TimingDiagram({ history, onClose }: Props) {
-  const { circuit, simulationMode }   = useCircuitContext();
+  const { circuit }   = useCircuitContext();
   const scrollRef                       = useRef<HTMLDivElement>(null);
   const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(new Set());
   // true = Nutzer hat zurückgescrollt → Auto-Scroll pausieren
@@ -135,14 +134,13 @@ export function TimingDiagram({ history, onClose }: Props) {
 
   // ── X-Positionsberechnung ──────────────────────────────────────────────
   // Zero-Delay: index-basiert (STEP_W pro Snapshot, gleichmaessig).
-  // Gate-Delay: tick-basiert (TICK_PX pro Tick, proportional zur Simulationszeit).
-  //   → sorgt fuer symmetrischen Takt, da CLK HIGH und LOW gleich viele Ticks dauern,
-  //     auch wenn unterschiedlich viele Event-Batches (Snapshots) pro Halbperiode anfallen.
-  const isGateDelay = simulationMode === SimulationMode.GATE_DELAY;
+  // Tick-basierte X-Achse (proportional zur Simulationszeit).
+  // Sorgt fuer symmetrischen Takt, da CLK HIGH und LOW gleich viele Ticks dauern,
+  // auch wenn unterschiedlich viele Event-Batches (Snapshots) pro Halbperiode anfallen.
   const firstTick = displayHistory.length > 0 ? displayHistory[0].tick : 0;
 
   function xOf(si: number): number {
-    if (isGateDelay && displayHistory.length > 0) {
+    if (displayHistory.length > 0) {
       return LBL_W + (displayHistory[si].tick - firstTick) * TICK_PX;
     }
     return LBL_W + si * STEP_W;
