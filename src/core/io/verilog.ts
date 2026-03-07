@@ -123,6 +123,15 @@ export function generateVerilog(circuit: Circuit): string {
     }
   }
 
+  // ── Build constant map: track which input ports are driven by CONST_HIGH/LOW ──
+  const constMap: Record<string, 0 | 1> = {};
+  for (const wire of Object.values(circuit.wires)) {
+    const srcGate = circuit.gates[wire.from.gateId];
+    if (!srcGate) continue;
+    if (srcGate.typeId === 'CONST_HIGH') constMap[`${wire.to.gateId}:${wire.to.portId}`] = 1;
+    else if (srcGate.typeId === 'CONST_LOW') constMap[`${wire.to.gateId}:${wire.to.portId}`] = 0;
+  }
+
   const inputs:  string[] = [];
   const outputs: string[] = [];
 
@@ -197,7 +206,7 @@ export function generateVerilog(circuit: Circuit): string {
       const s = byPort[`${gate.id}:out`];
       line = s ? `assign ${s} = 1'b0; // CONST_LOW` : `// CONST_LOW (unconnected)`;
     } else if (def.toVerilog) {
-      line = def.toVerilog(gate, byPort);
+      line = def.toVerilog(gate, byPort, constMap);
     } else {
       line = defaultGateVerilog(gate, byPort);
     }

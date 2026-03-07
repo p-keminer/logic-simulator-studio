@@ -118,6 +118,15 @@ export function generateVHDL(circuit: Circuit): string {
     }
   }
 
+  // ── Build constant map: track which input ports are driven by CONST_HIGH/LOW ──
+  const constMap: Record<string, 0 | 1> = {};
+  for (const wire of Object.values(circuit.wires)) {
+    const srcGate = circuit.gates[wire.from.gateId];
+    if (!srcGate) continue;
+    if (srcGate.typeId === 'CONST_HIGH') constMap[`${wire.to.gateId}:${wire.to.portId}`] = 1;
+    else if (srcGate.typeId === 'CONST_LOW') constMap[`${wire.to.gateId}:${wire.to.portId}`] = 0;
+  }
+
   const inputs: string[]  = [];
   const outputs: string[] = [];
   const signals = new Set<string>();
@@ -234,7 +243,7 @@ export function generateVHDL(circuit: Circuit): string {
       const s = portMap[`${gate.id}:out`];
       line = s ? `${s} <= '0'; -- CONST_LOW` : '-- CONST_LOW (unconnected)';
     } else if (def.toVHDL) {
-      line = def.toVHDL(gate, portMap);
+      line = def.toVHDL(gate, portMap, constMap);
     } else {
       line = defaultGateVHDL(gate, portMap);
     }

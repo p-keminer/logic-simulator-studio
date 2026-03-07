@@ -3,6 +3,7 @@
  */
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
+import { jkSimplifiedVerilog, jkSimplifiedVHDL, srSimplifiedVerilog, srSimplifiedVHDL, portConst } from '../../core/io/hdlSimplify';
 
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
 
@@ -50,7 +51,7 @@ gateRegistry.register({
 
     return { qM: newQM, qS: newQS, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "1'b0";
@@ -60,14 +61,12 @@ gateRegistry.register({
     return [
       `// MS-JK FF ${sid}: Q captures on falling CLK edge`,
       `always @(negedge ${clk}) begin`,
-      `  if      (${j} && !${k})  ${q} <= 1'b1;`,
-      `  else if (!${j} && ${k})  ${q} <= 1'b0;`,
-      `  else if (${j} && ${k})   ${q} <= ~${q};`,
+      ...jkSimplifiedVerilog(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '  '),
       `end // MS-JK ${sid}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "'0'";
@@ -79,10 +78,7 @@ gateRegistry.register({
       `process(${clk})`,
       `begin`,
       `  if falling_edge(${clk}) then`,
-      `    if    ${j} = '1' and ${k} = '0' then ${q} <= '1';`,
-      `    elsif ${j} = '0' and ${k} = '1' then ${q} <= '0';`,
-      `    elsif ${j} = '1' and ${k} = '1' then ${q} <= not ${q};`,
-      `    end if;`,
+      ...jkSimplifiedVHDL(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '    '),
       `  end if;`,
       `end process; -- MS-JK ${sid}`,
       `${qn} <= not ${q};`,
@@ -126,7 +122,7 @@ gateRegistry.register({
     }
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const s   = w[`${g.id}:s`]   ?? "1'b0";
@@ -135,14 +131,12 @@ gateRegistry.register({
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
     return [
       `always @(posedge ${clk}) begin`,
-      `  if      (${s} && !${r})  ${q} <= 1'b1;`,
-      `  else if (!${s} && ${r})  ${q} <= 1'b0;`,
-      `  else if (${s} && ${r})   ${q} <= 1'b0; // forbidden → 0`,
+      ...srSimplifiedVerilog(s, r, portConst(g.id, 's', cm), portConst(g.id, 'r', cm), q, '  '),
       `end // SR-FF-Edge ${sid}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const s   = w[`${g.id}:s`]   ?? "'0'";
@@ -153,10 +147,7 @@ gateRegistry.register({
       `process(${clk})`,
       `begin`,
       `  if rising_edge(${clk}) then`,
-      `    if    ${s} = '1' and ${r} = '0' then ${q} <= '1';`,
-      `    elsif ${s} = '0' and ${r} = '1' then ${q} <= '0';`,
-      `    elsif ${s} = '1' and ${r} = '1' then ${q} <= '0'; -- forbidden`,
-      `    end if;`,
+      ...srSimplifiedVHDL(s, r, portConst(g.id, 's', cm), portConst(g.id, 'r', cm), q, '    '),
       `  end if;`,
       `end process; -- SR-FF-Edge ${sid}`,
       `${qn} <= not ${q};`,

@@ -4,6 +4,7 @@
  * S=1, R=1 is an invalid/undefined state (treated as Q=0).
  */
 import { gateRegistry } from '../../core/registry/GateRegistry';
+import { jkSimplifiedVerilog, jkSimplifiedVHDL, asyncSRWrapVerilog, asyncSRWrapVHDL, portConst } from '../../core/io/hdlSimplify';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
@@ -46,7 +47,7 @@ gateRegistry.register({
     const newQ = (clk === 1 && prevClk === 0) ? d as 0 | 1 : q;
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const d   = w[`${g.id}:d`]   ?? "1'b0";
@@ -54,16 +55,14 @@ gateRegistry.register({
     const r   = w[`${g.id}:r`]   ?? "1'b0";
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    const sc = portConst(g.id, 's', cm), rc = portConst(g.id, 'r', cm);
     return [
-      `always @(posedge ${clk} or posedge ${r} or posedge ${s}) begin`,
-      `  if      (${r})  ${q} <= 1'b0;`,
-      `  else if (${s})  ${q} <= 1'b1;`,
-      `  else            ${q} <= ${d};`,
+      ...asyncSRWrapVerilog(clk, s, r, sc, rc, q, [`${q} <= ${d};`]),
       `end // D-FF/ASSR ${sid}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const d   = w[`${g.id}:d`]   ?? "'0'";
@@ -71,13 +70,9 @@ gateRegistry.register({
     const r   = w[`${g.id}:r`]   ?? "'0'";
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    const sc = portConst(g.id, 's', cm), rc = portConst(g.id, 'r', cm);
     return [
-      `process(${clk}, ${r}, ${s})`,
-      `begin`,
-      `  if    ${r} = '1'           then ${q} <= '0';`,
-      `  elsif ${s} = '1'           then ${q} <= '1';`,
-      `  elsif rising_edge(${clk})  then ${q} <= ${d};`,
-      `  end if;`,
+      ...asyncSRWrapVHDL(clk, s, r, sc, rc, q, [`  ${q} <= ${d};`]),
       `end process; -- D-FF/ASSR ${sid}`,
       `${qn} <= not ${q};`,
     ].join('\n');
@@ -120,7 +115,7 @@ gateRegistry.register({
     }
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "1'b0";
@@ -129,20 +124,15 @@ gateRegistry.register({
     const r   = w[`${g.id}:r`]   ?? "1'b0";
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    const sc = portConst(g.id, 's', cm), rc = portConst(g.id, 'r', cm);
+    const jkBody = jkSimplifiedVerilog(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '  ');
     return [
-      `always @(posedge ${clk} or posedge ${r} or posedge ${s}) begin`,
-      `  if      (${r})  ${q} <= 1'b0;`,
-      `  else if (${s})  ${q} <= 1'b1;`,
-      `  else begin`,
-      `    if      (${j} && !${k})  ${q} <= 1'b1;`,
-      `    else if (!${j} && ${k})  ${q} <= 1'b0;`,
-      `    else if (${j} && ${k})   ${q} <= ~${q};`,
-      `  end`,
+      ...asyncSRWrapVerilog(clk, s, r, sc, rc, q, jkBody),
       `end // JK-FF/ASSR ${sid}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "'0'";
@@ -151,17 +141,10 @@ gateRegistry.register({
     const r   = w[`${g.id}:r`]   ?? "'0'";
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    const sc = portConst(g.id, 's', cm), rc = portConst(g.id, 'r', cm);
+    const jkBody = jkSimplifiedVHDL(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '  ');
     return [
-      `process(${clk}, ${r}, ${s})`,
-      `begin`,
-      `  if    ${r} = '1'           then ${q} <= '0';`,
-      `  elsif ${s} = '1'           then ${q} <= '1';`,
-      `  elsif rising_edge(${clk}) then`,
-      `    if    ${j} = '1' and ${k} = '0' then ${q} <= '1';`,
-      `    elsif ${j} = '0' and ${k} = '1' then ${q} <= '0';`,
-      `    elsif ${j} = '1' and ${k} = '1' then ${q} <= not ${q};`,
-      `    end if;`,
-      `  end if;`,
+      ...asyncSRWrapVHDL(clk, s, r, sc, rc, q, jkBody),
       `end process; -- JK-FF/ASSR ${sid}`,
       `${qn} <= not ${q};`,
     ].join('\n');
@@ -198,7 +181,7 @@ gateRegistry.register({
     const newQ = (clk === 1 && prevClk === 0 && t === 1) ? (q ^ 1) as 0 | 1 : q;
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "1'b0";
@@ -206,16 +189,18 @@ gateRegistry.register({
     const r   = w[`${g.id}:r`]   ?? "1'b0";
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    const sc = portConst(g.id, 's', cm), rc = portConst(g.id, 'r', cm);
+    const tc = portConst(g.id, 't', cm);
+    const tBody = tc === 1 ? [`  ${q} <= ~${q};`]
+                : tc === 0 ? [`  // T=0: hold`]
+                :            [`  if (${t})  ${q} <= ~${q};`];
     return [
-      `always @(posedge ${clk} or posedge ${r} or posedge ${s}) begin`,
-      `  if      (${r})  ${q} <= 1'b0;`,
-      `  else if (${s})  ${q} <= 1'b1;`,
-      `  else if (${t})  ${q} <= ~${q};`,
+      ...asyncSRWrapVerilog(clk, s, r, sc, rc, q, tBody),
       `end // T-FF/ASSR ${sid}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const sid = sanitize(g.id);
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "'0'";
@@ -223,15 +208,13 @@ gateRegistry.register({
     const r   = w[`${g.id}:r`]   ?? "'0'";
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
+    const sc = portConst(g.id, 's', cm), rc = portConst(g.id, 'r', cm);
+    const tc = portConst(g.id, 't', cm);
+    const tBody = tc === 1 ? [`  ${q} <= not ${q};`]
+                : tc === 0 ? [`  -- T=0: hold`]
+                :            [`  if ${t} = '1' then ${q} <= not ${q};`, `  end if;`];
     return [
-      `process(${clk}, ${r}, ${s})`,
-      `begin`,
-      `  if    ${r} = '1'           then ${q} <= '0';`,
-      `  elsif ${s} = '1'           then ${q} <= '1';`,
-      `  elsif rising_edge(${clk}) then`,
-      `    if ${t} = '1' then ${q} <= not ${q};`,
-      `    end if;`,
-      `  end if;`,
+      ...asyncSRWrapVHDL(clk, s, r, sc, rc, q, tBody),
       `end process; -- T-FF/ASSR ${sid}`,
       `${qn} <= not ${q};`,
     ].join('\n');

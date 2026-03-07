@@ -4,6 +4,7 @@
  */
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
+import { jkSimplifiedVerilog, jkSimplifiedVHDL, portConst } from '../../core/io/hdlSimplify';
 
 /** Ersetzt alle in HDL-Bezeichnern ungültigen Zeichen durch Unterstriche. */
 function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
@@ -147,37 +148,65 @@ gateRegistry.register({
     const newQ = (clk === 1 && prevClk === 0) ? d as 0 | 1 : q;
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const rst = w[`${g.id}:rst`] ?? "1'b0";
     const d   = w[`${g.id}:d`]   ?? "1'b0";
     const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
-    return [
-      `always @(posedge ${clk} or posedge ${rst}) begin`,
-      `  if (${rst}) ${q} <= 1'b0;`,
-      `  else        ${q} <= ${d};`,
-      `end // D-FF/R ${g.id}`,
-      `assign ${qn} = ~${q};`,
-    ].join('\n');
+    const rc = portConst(g.id, 'rst', cm);
+    if (rc === 1) {
+      return [
+        `always @(posedge ${clk}) begin`,
+        `  ${q} <= 1'b0; // RST=const 1`,
+        `end // D-FF/R ${g.id}`,
+        `assign ${qn} = ~${q};`,
+      ].join('\n');
+    }
+    const sens = rc === 0 ? `posedge ${clk}` : `posedge ${clk} or posedge ${rst}`;
+    const lines = [`always @(${sens}) begin`];
+    if (rc !== 0) {
+      lines.push(`  if (${rst}) ${q} <= 1'b0;`);
+      lines.push(`  else        ${q} <= ${d};`);
+    } else {
+      lines.push(`  ${q} <= ${d};`);
+    }
+    lines.push(`end // D-FF/R ${g.id}`, `assign ${qn} = ~${q};`);
+    return lines.join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const rst = w[`${g.id}:rst`] ?? "'0'";
     const d   = w[`${g.id}:d`]   ?? "'0'";
     const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
-    return [
-      `process(${clk}, ${rst})`,
-      `begin`,
-      `  if ${rst} = '1' then`,
-      `    ${q} <= '0';`,
-      `  elsif rising_edge(${clk}) then`,
-      `    ${q} <= ${d};`,
-      `  end if;`,
-      `end process; -- D-FF/R ${g.id}`,
-      `${qn} <= not ${q};`,
-    ].join('\n');
+    const rc = portConst(g.id, 'rst', cm);
+    if (rc === 1) {
+      return [
+        `process(${clk})`,
+        `begin`,
+        `  if rising_edge(${clk}) then`,
+        `    ${q} <= '0'; -- RST=const 1`,
+        `  end if;`,
+        `end process; -- D-FF/R ${g.id}`,
+        `${qn} <= not ${q};`,
+      ].join('\n');
+    }
+    const sens = rc === 0 ? clk : `${clk}, ${rst}`;
+    const lines = [`process(${sens})`, `begin`];
+    if (rc !== 0) {
+      lines.push(`  if ${rst} = '1' then`);
+      lines.push(`    ${q} <= '0';`);
+      lines.push(`  elsif rising_edge(${clk}) then`);
+      lines.push(`    ${q} <= ${d};`);
+      lines.push(`  end if;`);
+    } else {
+      lines.push(`  if rising_edge(${clk}) then`);
+      lines.push(`    ${q} <= ${d};`);
+      lines.push(`  end if;`);
+    }
+    lines.push(`end process; -- D-FF/R ${g.id}`, `${qn} <= not ${q};`);
+    return lines.join('\n');
   },
   shapeComponent: FlipFlopShape,
   description: 'D Flip-Flop mit asynchronem Reset',
@@ -215,7 +244,7 @@ gateRegistry.register({
     }
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "1'b0";
     const k   = w[`${g.id}:k`]   ?? "1'b0";
@@ -223,14 +252,12 @@ gateRegistry.register({
     const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
     return [
       `always @(posedge ${clk}) begin`,
-      `  if      (${j} && !${k}) ${q} <= 1'b1;`,
-      `  else if (!${j} && ${k}) ${q} <= 1'b0;`,
-      `  else if (${j} && ${k})  ${q} <= ~${q};`,
+      ...jkSimplifiedVerilog(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '  '),
       `end // JK-FF ${g.id}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const j   = w[`${g.id}:j`]   ?? "'0'";
     const k   = w[`${g.id}:k`]   ?? "'0'";
@@ -240,10 +267,7 @@ gateRegistry.register({
       `process(${clk})`,
       `begin`,
       `  if rising_edge(${clk}) then`,
-      `    if    ${j} = '1' and ${k} = '0' then ${q} <= '1';`,
-      `    elsif ${j} = '0' and ${k} = '1' then ${q} <= '0';`,
-      `    elsif ${j} = '1' and ${k} = '1' then ${q} <= not ${q};`,
-      `    end if;`,
+      ...jkSimplifiedVHDL(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '    '),
       `  end if;`,
       `end process; -- JK-FF ${g.id}`,
       `${qn} <= not ${q};`,
@@ -278,28 +302,36 @@ gateRegistry.register({
     const newQ = (clk === 1 && prevClk === 0 && t === 1) ? (q ^ 1) as 0 | 1 : q;
     return { q: newQ, prevClk: clk };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "1'b0";
     const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
+    const tc = portConst(g.id, 't', cm);
+    const body = tc === 1 ? `  ${q} <= ~${q};`
+               : tc === 0 ? `  // T=0: hold`
+               :            `  if (${t}) ${q} <= ~${q};`;
     return [
       `always @(posedge ${clk}) begin`,
-      `  if (${t}) ${q} <= ~${q};`,
+      body,
       `end // T-FF ${g.id}`,
       `assign ${qn} = ~${q};`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const clk = w[`${g.id}:clk`] ?? 'clk';
     const t   = w[`${g.id}:t`]   ?? "'0'";
     const q   = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
+    const tc = portConst(g.id, 't', cm);
+    const body = tc === 1 ? `    ${q} <= not ${q};`
+               : tc === 0 ? `    -- T=0: hold`
+               :            `    if ${t} = '1' then ${q} <= not ${q}; end if;`;
     return [
       `process(${clk})`,
       `begin`,
       `  if rising_edge(${clk}) then`,
-      `    if ${t} = '1' then ${q} <= not ${q}; end if;`,
+      body,
       `  end if;`,
       `end process; -- T-FF ${g.id}`,
       `${qn} <= not ${q};`,
@@ -332,11 +364,24 @@ gateRegistry.register({
     const q = en === 1 ? d : (state?.q ?? 0);
     return { q };
   },
-  toVerilog: (g, w) => {
+  toVerilog: (g, w, cm) => {
     const en = w[`${g.id}:en`] ?? "1'b0";
     const d  = w[`${g.id}:d`]  ?? "1'b0";
     const q  = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
+    const ec = portConst(g.id, 'en', cm);
+    if (ec === 1) {
+      // Permanently transparent — combinational assign
+      return [
+        `assign ${q}  = ${d}; // D-Latch ${g.id} — EN=const 1 (transparent)`,
+        `assign ${qn} = ~${d};`,
+      ].join('\n');
+    }
+    if (ec === 0) {
+      return [
+        `// D-Latch ${g.id} — EN=const 0 (holds initial value)`,
+      ].join('\n');
+    }
     // Blocking assignments (=) required in always @(*); <= would infer wrong behavior
     return [
       `always @(*) begin // D-Latch ${g.id} — intentional latch inference`,
@@ -347,11 +392,21 @@ gateRegistry.register({
       `end`,
     ].join('\n');
   },
-  toVHDL: (g, w) => {
+  toVHDL: (g, w, cm) => {
     const en = w[`${g.id}:en`] ?? "'0'";
     const d  = w[`${g.id}:d`]  ?? "'0'";
     const q  = w[`${g.id}:q`]   ?? `w_${sanitize(g.id)}_q`;
     const qn = w[`${g.id}:q_n`] ?? `w_${sanitize(g.id)}_q_n`;
+    const ec = portConst(g.id, 'en', cm);
+    if (ec === 1) {
+      return [
+        `${q}  <= ${d}; -- D-Latch ${g.id} — EN=const 1 (transparent)`,
+        `${qn} <= not ${d};`,
+      ].join('\n');
+    }
+    if (ec === 0) {
+      return `-- D-Latch ${g.id} — EN=const 0 (holds initial value)`;
+    }
     const sens = [en, d].filter(s => !s.startsWith("'")).join(', ') || 'en, d';
     return [
       `process(${sens}) -- D-Latch ${g.id} — intentional latch inference`,

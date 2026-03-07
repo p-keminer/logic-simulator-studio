@@ -78,8 +78,8 @@ export interface GateDefinition {
     outputs: Record<string, SignalValue>,
     customState?: Record<string, unknown>
   ) => Record<string, unknown>;
-  toVerilog?: (gate: GateInstance, wireNames: Record<string, string>) => string;
-  toVHDL?: (gate: GateInstance, wireNames: Record<string, string>) => string;
+  toVerilog?: (gate: GateInstance, wireNames: Record<string, string>, constMap?: Record<string, 0 | 1>) => string;
+  toVHDL?: (gate: GateInstance, wireNames: Record<string, string>, constMap?: Record<string, 0 | 1>) => string;
   /**
    * Optional: extra internal VHDL signals/constants that must be declared in the
    * architecture declarative region.
