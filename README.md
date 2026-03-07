@@ -29,18 +29,11 @@ Ein vollständiger, interaktiver Logikschaltkreis-Simulator, gebaut mit React, T
 ## Funktionen
 
 
-Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
-
-#### Zero-Delay-Modus (Vorgabe)
-- **Tick-basierte Discrete-Event-Simulation**
+- **Discrete-Event-Scheduler** mit konfigurierbarer Propagationsverzögerung pro Gatter
+- **Race-Condition-Erkennung** mit 5 Schweregrad-Klassen (kritisch, Glitch, Timing, Warnung, Schleife)
+- **TTL-Leitungsmarkierung** — kurzlebige Glitches bleiben 400 ms farblich sichtbar
+- **Race-Panel** mit Klick-to-Focus auf betroffene Netze
 - **Vollständige Rückkopplungsunterstützung**
-- **Manuelles Takt-Stepping**
-
-#### Gate-Delay-Modus
-- **Discrete-Event-Scheduler**
-- **Race-Condition-Erkennung** 
-- **TTL-Leitungsmarkierung**
-- **Race-Panel**
 
 ### Analyse-Werkzeuge
 
@@ -49,7 +42,7 @@ Zwei umschaltbare Modis (**⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | **Wahrheitstabelle** | ✅ Alle Eingangskombinationen, Zwischenwerte | – |
 | **Zustandsübergangstabelle** | – | ✅ Bei Rückkopplungen oder sequenziellen Zustandsbausteinen; Einzel-Tick Q(t) → Q(t+1) |
 | **Timing-Diagramm** | ✅ | ✅ |
-| **Race-Condition-Panel** | – | ✅ Nur im Gate-Delay-Modus; Klick-to-Focus auf betroffene Netze |
+| **Race-Condition-Panel** | – | ✅ Klick-to-Focus auf betroffene Netze |
 
 ### Export
 | Format | Hinweise |
@@ -176,6 +169,7 @@ Kein Backend, keine externen Dienste – alles läuft clientseitig.
 | Ziehen auf leerem Canvas | Lasso-Auswahl → Pfeiltasten zum Verschieben |
 | Rechtsklick auf Gatter | Kontextmenü (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) |
 | Rechtsklick auf Kabel | Kontextmenü (Farbe, Knotenpunkt, Löschen) |
+| Rechtsklick auf Wegpunkt | Kontextmenü (Wegpunkt entfernen, In Knotenpunkt umwandeln) |
 | Rechtsklick auf Canvas | Einfügen an Mausposition (wenn Zwischenablage gefüllt) |
 
 ---
@@ -200,18 +194,11 @@ A fully featured, interactive logic circuit simulator built with React, TypeScri
 
 ## Features
 
-Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
-
-#### Zero-Delay Mode (default)
-- **Tick-based discrete-event simulation** 
-- **Full feedback-loop support** 
-- **Manual clock stepping** 
-
-#### Gate-Delay Mode
-- **Discrete-event scheduler**
-- **Race condition detection** 
-- **TTL wire marking**
-- **Race panel** 
+- **Discrete-event scheduler** with configurable per-gate propagation delay
+- **Race condition detection** with 5 severity classes (critical, glitch, timing, warning, loop)
+- **TTL wire marking** — short-lived glitches remain colour-highlighted for 400 ms
+- **Race panel** with click-to-focus on affected nets
+- **Full feedback-loop support**
 
 ### Analysis Tools
 
@@ -220,7 +207,7 @@ Two switchable modes (toolbar button **⚡ Zero-Delay** / **⏱ Gate-Delay**):
 | **Truth Table** | ✅ All input combinations, intermediate values | – |
 | **State Transition Table** | – | ✅ With feedback loops or sequential state elements; single-tick Q(t) → Q(t+1) |
 | **Timing Diagram** | ✅ | ✅ |
-| **Race Condition Panel** | – | ✅ Gate-Delay mode only; click-to-focus on affected nets |
+| **Race Condition Panel** | – | ✅ Click-to-focus on affected nets |
 
 ### Export
 | Format | Notes |
@@ -346,6 +333,7 @@ No backend, no external services – everything runs client-side.
 | Drag on empty canvas | Lasso selection → use arrow keys to move |
 | Right-click gate | Context menu (copy, rotate, label, colour, delete, …) |
 | Right-click wire | Context menu (colour, junction, delete) |
+| Right-click waypoint | Context menu (remove waypoint, convert to junction) |
 | Right-click empty canvas | Paste at cursor (if clipboard non-empty) |
 
 ---
@@ -357,12 +345,11 @@ The `requestAnimationFrame` loop in `CircuitContext.tsx`:
 
 1. **`syncBuffer`** – Copies user-controlled inputs (switches, buttons) from React state into the `SimBuffer`
 2. **Settle phase** – After structural changes, `runUntilStable` propagates signals with clocks frozen (max 64 ticks)
-3. **Normal ticks** – `runOneTick` × `⌊500 × Δt / 1000⌋` per frame
-4. **Even-period fix** – One extra tick if signals changed mid-frame but the final buffer matches the pre-tick buffer
-5. **`SIMULATION_APPLY`** dispatch – Only when any signal actually changed, preventing unnecessary re-renders
+3. **`EventScheduler.advance()`** – Processes all pending events up to the target time; downstream gates are re-evaluated and new events are enqueued at `triggerTime + gate.propagationDelay`
+4. **`SIMULATION_APPLY`** dispatch – Only when any signal actually changed, preventing unnecessary re-renders
 
 ### Feedback Loop Handling
-The double-buffer model separates **read** (current tick) from **write** (next tick). Every gate reads from a frozen snapshot and writes to a fresh buffer – any cyclic topology is structurally correct with no special-casing.
+The main simulation uses the `EventScheduler` (discrete-event model). The double-buffer model (separate **read** / **write** buffers per tick) is still used internally for the **settle phase** (`runUntilStable`) and for the **State Transition Table** algorithm (`runOneTick`), where it guarantees structurally correct evaluation of cyclic topologies.
 
 ### State Transition Table Algorithm
 1. `topologicalSort` identifies which gates are in cycles (feedback gates = state holders)

@@ -302,21 +302,18 @@ Rechtsklick auf ein Gatter öffnet das Kontextmenü:
 
 Maximal **1000 Snapshots** im Speicher (ältere werden verworfen).
 
-### Gate-Delay-Modus
+### Propagationsverzögerung
 
-Im Gate-Delay-Modus werden Gatterausgaben erst nach der konfigurierten
-Propagationsverzögerung (`propagationDelay`) wirksam — im Gegensatz zum
-Zero-Delay-Modus, in dem alle Änderungen sofort propagieren.
+Gatterausgaben werden erst nach der konfigurierten
+Propagationsverzögerung (`propagationDelay`) wirksam.
 
-**Modus wechseln:** Toolbar-Button **⚡ Zero-Delay** / **⏱ Gate-Delay** klicken.
-
-Das Timing-Diagramm im Gate-Delay-Modus nimmt pro Ereignis-Batch einen Snapshot auf.
+Das Timing-Diagramm nimmt pro Ereignis-Batch einen Snapshot auf.
 Eine Kette aus 20 NOT-Gattern erzeugt damit eine 20-stufige Verzögerungstreppe —
 jede Stufe entspricht einer Gate-Ebene.
 
 ### Race-Condition-Panel
 
-Im Gate-Delay-Modus erkennt der Simulator automatisch Hazards und Race Conditions.
+Der Simulator erkennt automatisch Hazards und Race Conditions.
 Wenn Races erkannt wurden, erscheint ein **⚠-Button** in der Toolbar.
 Klick darauf öffnet das Race-Panel mit der Race-Historie (bis zu 50 Einträge).
 
@@ -432,6 +429,7 @@ Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
 | Ziehen auf leerem Canvas | Lasso-Auswahl → Pfeiltasten zum Verschieben |
 | Rechtsklick auf Gatter | Kontextmenü (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) |
 | Rechtsklick auf Kabel | Kontextmenü (Farbe, Knotenpunkt, Löschen) |
+| Rechtsklick auf Wegpunkt | Kontextmenü (Wegpunkt entfernen, In Knotenpunkt umwandeln) |
 | Rechtsklick auf leeren Canvas | Einfügen (wenn Zwischenablage gefüllt) |
 
 ---
@@ -800,20 +798,18 @@ Open via **Toolbar → "W-Table"**.
 
 Maximum **1000 snapshots** kept in memory (older ones are discarded).
 
-### Gate-Delay Mode
+### Propagation Delay
 
-In Gate-Delay mode, gate outputs are committed only after the configured propagation delay
-(`propagationDelay`) — unlike Zero-Delay mode where all changes propagate instantly.
+Gate outputs are committed only after the configured propagation delay
+(`propagationDelay`).
 
-**Switching modes:** Click the **⚡ Zero-Delay** / **⏱ Gate-Delay** toolbar button.
-
-The timing diagram in Gate-Delay mode records one snapshot per event batch.
+The timing diagram records one snapshot per event batch.
 A chain of 20 NOT gates produces a 20-step delay staircase —
 each step corresponds to one gate level.
 
 ### Race Condition Panel
 
-In Gate-Delay mode the simulator automatically detects hazards and race conditions.
+The simulator automatically detects hazards and race conditions.
 When races are detected, a **⚠ button** appears in the toolbar.
 Clicking it opens the Race Panel with the race history (up to 50 entries).
 
@@ -929,6 +925,7 @@ Open via **Toolbar → "Export"**.
 | Drag on empty canvas | Lasso selection → use arrow keys to move |
 | Right-click gate | Context menu (copy, rotate, rename, colour, delete, …) |
 | Right-click wire | Context menu (colour, junction, delete) |
+| Right-click waypoint | Context menu (remove waypoint, convert to junction) |
 | Right-click empty canvas | Paste at cursor (if clipboard non-empty) |
 
 ---
