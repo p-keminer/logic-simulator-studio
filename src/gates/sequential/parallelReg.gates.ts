@@ -90,6 +90,8 @@ gateRegistry.register({
   isSynchronous: true,
   clockInputId: 'clk',
   stateKeys: ['bit0', 'bit1', 'bit2', 'bit3'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { bit0: 0, bit1: 0, bit2: 0, bit3: 0, prevClk: 0 },
   // sr reg is driven by always @(posedge) → reg; q driven by assign q=sr[3] → wire
   verilogWireOutputs: ['q'],
 });
@@ -161,6 +163,8 @@ gateRegistry.register({
   isSynchronous: true,
   clockInputId: 'clk',
   stateKeys: ['bit0', 'bit1', 'bit2', 'bit3'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { bit0: 0, bit1: 0, bit2: 0, bit3: 0, prevClk: 0 },
 });
 
 // ─── PIPO8 ───────────────────────────────────────────────────────────────────
@@ -239,4 +243,6 @@ gateRegistry.register({
   isSynchronous: true,
   clockInputId: 'clk',
   stateKeys: ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { b0: 0, b1: 0, b2: 0, b3: 0, b4: 0, b5: 0, b6: 0, b7: 0, prevClk: 0 },
 });

@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-03-07T23:55:22.709Z",
+  "generatedAt": "2026-03-08T00:20:54.813Z",
   "runnerVersion": "1.0.0",
   "contractsLoaded": 12,
-  "totalCases": 123,
-  "executedCases": 89,
-  "passed": 89,
+  "totalCases": 125,
+  "executedCases": 91,
+  "passed": 91,
   "failed": 0,
   "unsupported": 34,
   "verdict": "PASS",
@@ -16,10 +16,10 @@
       "total": 11
     },
     "74HC163": {
-      "pass": 5,
+      "pass": 6,
       "fail": 0,
       "unsupported": 4,
-      "total": 9
+      "total": 10
     },
     "74HC194": {
       "pass": 7,
@@ -34,10 +34,10 @@
       "total": 9
     },
     "74HC374": {
-      "pass": 9,
+      "pass": 10,
       "fail": 0,
       "unsupported": 3,
-      "total": 12
+      "total": 13
     },
     "74HC595": {
       "pass": 4,
@@ -248,6 +248,24 @@
       },
       "actual": {
         "cnt0": 1
+      },
+      "errorClass": null,
+      "sourceContract": "74HC163.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC163",
+      "patternId": "reset-to-known-state",
+      "caseId": "stateInit-all-zero",
+      "status": "pass",
+      "expected": "all visible state = 0",
+      "actual": {
+        "cnt0": 0,
+        "cnt1": 0,
+        "cnt2": 0,
+        "cnt3": 0,
+        "cnt": 0,
+        "pClk": 0
       },
       "errorClass": null,
       "sourceContract": "74HC163.json",
@@ -808,6 +826,28 @@
       "expected": "v2+ feature",
       "actual": "skipped",
       "errorClass": "unsupported_contract_feature",
+      "sourceContract": "74HC374.json",
+      "runnerVersion": "1.0.0"
+    },
+    {
+      "gateTypeId": "74HC374",
+      "patternId": "reset-to-known-state",
+      "caseId": "stateInit-all-zero",
+      "status": "pass",
+      "expected": "all visible state = 0",
+      "actual": {
+        "q0": 0,
+        "q1": 0,
+        "q2": 0,
+        "q3": 0,
+        "q4": 0,
+        "q5": 0,
+        "q6": 0,
+        "q7": 0,
+        "reg": 0,
+        "pClk": 0
+      },
+      "errorClass": null,
       "sourceContract": "74HC374.json",
       "runnerVersion": "1.0.0"
     },

@@ -1,6 +1,6 @@
 # Contract Runner v1 Report
 
-Generated: 2026-03-07T23:55:22.710Z
+Generated: 2026-03-08T00:20:54.814Z
 Runner version: 1.0.0
 
 ## Summary
@@ -8,9 +8,9 @@ Runner version: 1.0.0
 | Metric | Value |
 |---|---|
 | Contracts loaded | 12 |
-| Total cases | 123 |
-| Executed (pass + fail) | 89 |
-| Passed | 89 |
+| Total cases | 125 |
+| Executed (pass + fail) | 91 |
+| Passed | 91 |
 | Failed | 0 |
 | Unsupported (skipped) | 34 |
 
@@ -39,6 +39,7 @@ pass: 7, fail: 0, unsupported: 4, total: 11
 | Pattern | Case | Status | Error Class |
 |---|---|---|---|
 | sequential-step-sequence | clk-parallel-load | PASS | - |
+| reset-to-known-state | stateInit-all-zero | PASS | - |
 | counter-rollover | unsupported | UNSUPPORTED | unsupported_contract_feature |
 | clock-edge-detection | clk-0->0 | PASS | - |
 | clock-edge-detection | clk-0->1 | PASS | - |
@@ -48,7 +49,7 @@ pass: 7, fail: 0, unsupported: 4, total: 11
 | export-verilog | unsupported | UNSUPPORTED | unsupported_contract_feature |
 | export-vhdl | unsupported | UNSUPPORTED | unsupported_contract_feature |
 
-pass: 5, fail: 0, unsupported: 4, total: 9
+pass: 6, fail: 0, unsupported: 4, total: 10
 
 ### 74HC194 — PASS
 
@@ -98,10 +99,11 @@ pass: 6, fail: 0, unsupported: 3, total: 9
 | oe-tristate | oe-inactive-hiz | PASS | - |
 | oe-tristate | oe-active-driven | PASS | - |
 | multi-driver-conflict | unsupported | UNSUPPORTED | unsupported_contract_feature |
+| reset-to-known-state | stateInit-all-zero | PASS | - |
 | export-verilog | unsupported | UNSUPPORTED | unsupported_contract_feature |
 | export-vhdl | unsupported | UNSUPPORTED | unsupported_contract_feature |
 
-pass: 9, fail: 0, unsupported: 3, total: 12
+pass: 10, fail: 0, unsupported: 3, total: 13
 
 ### 74HC595 — PASS
 

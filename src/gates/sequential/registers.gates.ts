@@ -97,6 +97,8 @@ gateRegistry.register({
   isSynchronous: true,
   clockInputId: 'clk',
   stateKeys: ['q0', 'q1', 'q2', 'q3'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q0: 0, q1: 0, q2: 0, q3: 0, prevClk: 0 },
 });
 
 // ─── 8-bit Register ──────────────────────────────────────────────────────────
@@ -170,6 +172,8 @@ gateRegistry.register({
   isSynchronous: true,
   clockInputId: 'clk',
   stateKeys: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q0: 0, q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6: 0, q7: 0, prevClk: 0 },
 });
 
 // ─── Shift Register (4-bit SIPO) ─────────────────────────────────────────────
@@ -246,4 +250,6 @@ gateRegistry.register({
   isSynchronous: true,
   clockInputId: 'clk',
   stateKeys: ['q0', 'q1', 'q2', 'q3'],
+  hiddenStateKeys: ['prevClk'],
+  stateInit: { q0: 0, q1: 0, q2: 0, q3: 0, prevClk: 0 },
 });

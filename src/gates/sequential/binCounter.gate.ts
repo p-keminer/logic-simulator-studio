@@ -147,6 +147,8 @@ const binCounterDef: GateDefinition = {
   clockInputId: 'clk',
   shapeComponent: BinCounter7SegShape,
   description: 'Binärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.',
+  hiddenStateKeys: ['count', 'prevClk'],
+  stateInit: { cnt0: 0, cnt1: 0, cnt2: 0, cnt3: 0, count: 0, prevClk: 0 },
 };
 
 gateRegistry.register(binCounterDef);
@@ -279,6 +281,8 @@ const binCounter99Def: GateDefinition = {
   clockInputId: 'clk',
   shapeComponent: BinCounter7Seg2Shape,
   description: 'Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.',
+  hiddenStateKeys: ['count', 'prevClk'],
+  stateInit: { cnt0: 0, cnt1: 0, cnt2: 0, cnt3: 0, cnt4: 0, cnt5: 0, cnt6: 0, count: 0, prevClk: 0 },
 };
 
 gateRegistry.register(binCounter99Def);

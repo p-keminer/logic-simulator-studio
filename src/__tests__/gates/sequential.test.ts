@@ -1493,3 +1493,59 @@ describe('P1-3: no false rising edge after init/reset', () => {
     expect(outputs.q).toBe(0);
   });
 });
+
+describe('P1-3 follow-up: register/counter hidden state metadata consistency', () => {
+  const gates: Array<{ typeId: string; hidden: string[]; visible: string[] }> = [
+    { typeId: 'REG4', hidden: ['prevClk'], visible: ['q0', 'q1', 'q2', 'q3'] },
+    { typeId: 'REG8', hidden: ['prevClk'], visible: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'] },
+    { typeId: 'SHIFT4', hidden: ['prevClk'], visible: ['q0', 'q1', 'q2', 'q3'] },
+    { typeId: 'PISO4', hidden: ['prevClk'], visible: ['bit0', 'bit1', 'bit2', 'bit3'] },
+    { typeId: 'PIPO4', hidden: ['prevClk'], visible: ['bit0', 'bit1', 'bit2', 'bit3'] },
+    { typeId: 'PIPO8', hidden: ['prevClk'], visible: ['b0', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7'] },
+    { typeId: 'BIN_CTR7S', hidden: ['count', 'prevClk'], visible: ['cnt0', 'cnt1', 'cnt2', 'cnt3'] },
+    { typeId: 'BIN_CTR_99', hidden: ['count', 'prevClk'], visible: ['cnt0', 'cnt1', 'cnt2', 'cnt3', 'cnt4', 'cnt5', 'cnt6'] },
+    { typeId: '74HC74', hidden: ['pc1', 'pc2'], visible: ['q1', 'q2'] },
+    { typeId: '74HC161', hidden: ['cnt', 'pClk'], visible: ['cnt0', 'cnt1', 'cnt2', 'cnt3'] },
+    { typeId: '74HC163', hidden: ['cnt', 'pClk'], visible: ['cnt0', 'cnt1', 'cnt2', 'cnt3'] },
+    { typeId: '74HC194', hidden: ['reg', 'pClk'], visible: ['q0', 'q1', 'q2', 'q3'] },
+    { typeId: '74HC374', hidden: ['reg', 'pClk'], visible: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'] },
+    { typeId: '74HC595', hidden: ['shift', 'latch', 'pShcp', 'pStcp'], visible: ['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7'] },
+  ];
+
+  for (const { typeId, hidden, visible } of gates) {
+    describe(typeId, () => {
+      it('defines stateKeys, hiddenStateKeys and stateInit', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.stateKeys).toBeDefined();
+        expect(def.hiddenStateKeys).toBeDefined();
+        expect(def.stateInit).toBeDefined();
+      });
+
+      it('contains the expected visible state keys', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.stateKeys).toEqual(visible);
+      });
+
+      it('contains the expected hidden state keys', () => {
+        const def = gateRegistry.get(typeId)!;
+        expect(def.hiddenStateKeys).toEqual(hidden);
+      });
+
+      it('covers visible and hidden keys in stateInit', () => {
+        const def = gateRegistry.get(typeId)!;
+        const init = def.stateInit!;
+        for (const key of [...visible, ...hidden]) {
+          expect(init).toHaveProperty(key);
+        }
+      });
+
+      it('keeps visible and hidden state disjoint', () => {
+        const def = gateRegistry.get(typeId)!;
+        const visibleSet = new Set(def.stateKeys!);
+        for (const key of def.hiddenStateKeys!) {
+          expect(visibleSet.has(key)).toBe(false);
+        }
+      });
+    });
+  }
+});

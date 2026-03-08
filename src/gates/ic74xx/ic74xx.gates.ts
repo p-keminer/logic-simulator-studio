@@ -346,6 +346,8 @@ gateRegistry.register({
   typeId: '74HC74', label: '74HC74', category: 'ic74', width: 110, height: 130,
   propagationDelay: 14, isSynchronous: true,
   stateKeys: ['q1', 'q2'],
+  hiddenStateKeys: ['pc1', 'pc2'],
+  stateInit: { q1: 0, q2: 0, pc1: 0, pc2: 0 },
   defaultInputValues: { pre1: 1, clr1: 1, pre2: 1, clr2: 1 },
   inputs: [
     { id: 'pre1', label: '/PRE1', relativeX: 0, relativeY: 0.08 },
@@ -457,6 +459,8 @@ gateRegistry.register({
   typeId: '74HC595', label: '74HC595', category: 'ic74', width: 110, height: 160,
   propagationDelay: 25, isSynchronous: true,
   stateKeys: makeStateKeys('q', 8),
+  hiddenStateKeys: ['shift', 'latch', 'pShcp', 'pStcp'],
+  stateInit: { q0: 0, q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6: 0, q7: 0, shift: 0, latch: 0, pShcp: 0, pStcp: 0 },
   defaultInputValues: { mr: 1, oe: 1 },
   inputs: [
     { id: 'ds',   label: 'DS',   relativeX: 0, relativeY: 0.08 },
@@ -559,6 +563,8 @@ gateRegistry.register({
   typeId: '74HC161', label: '74HC161', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
   stateKeys: makeStateKeys('cnt', 4),
+  hiddenStateKeys: ['cnt', 'pClk'],
+  stateInit: { cnt0: 0, cnt1: 0, cnt2: 0, cnt3: 0, cnt: 0, pClk: 0 },
   defaultInputValues: { clrn: 1, ldn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
@@ -800,6 +806,8 @@ gateRegistry.register({
   typeId: '74HC194', label: '74HC194', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
   stateKeys: makeStateKeys('q', 4),
+  hiddenStateKeys: ['reg', 'pClk'],
+  stateInit: { q0: 0, q1: 0, q2: 0, q3: 0, reg: 0, pClk: 0 },
   defaultInputValues: { clrn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
@@ -1000,6 +1008,8 @@ gateRegistry.register({
   typeId: '74HC374', label: '74HC374', category: 'ic74', width: 110, height: 180,
   propagationDelay: 14, isSynchronous: true,
   stateKeys: makeStateKeys('q', 8),
+  hiddenStateKeys: ['reg', 'pClk'],
+  stateInit: { q0: 0, q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6: 0, q7: 0, reg: 0, pClk: 0 },
   defaultInputValues: { oe: 1 },
   inputs: [
     { id: 'oe',  label: '/OE', relativeX: 0, relativeY: 0.05 },
@@ -1178,6 +1188,8 @@ gateRegistry.register({
   typeId: '74HC163', label: '74HC163', category: 'ic74', width: 110, height: 160,
   propagationDelay: 20, isSynchronous: true,
   stateKeys: makeStateKeys('cnt', 4),
+  hiddenStateKeys: ['cnt', 'pClk'],
+  stateInit: { cnt0: 0, cnt1: 0, cnt2: 0, cnt3: 0, cnt: 0, pClk: 0 },
   defaultInputValues: { clrn: 1, ldn: 1 },
   inputs: [
     { id: 'clk',  label: 'CLK',  relativeX: 0, relativeY: 0.07 },
