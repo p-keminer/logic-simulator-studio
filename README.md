@@ -8,11 +8,23 @@
 
 <a id="deutsch"></a>
 
-# LogicSim – Browser-basierter Logikgatter-Simulator
+# Logic Simulator Studio
 
-Ein vollständiger, interaktiver Logikschaltkreis-Simulator, gebaut mit React, TypeScript und Vite.
+Browserbasierter Simulator für digitale Logikschaltungen zum Lernen, Testen und Validieren digitaler Schaltungen mit Timing-Analyse, Race-Condition-Erkennung, FSM-Workflows sowie Verilog-/VHDL-Export. 
 
-> 📖 **Vollständige Bedienungsanleitung:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
+Ein mit KI entwickeltes Tool zur Unterstützung von Studierenden beim Einstieg in die Digitaltechnik – Unterstützung für Praktika, Übungsaufgaben und Prüfungsvorbereitung
+
+Entwickelt mit React, TypeScript und Vite.
+
+## Kernfunktionen
+
+- Simulation kombinatorischer und sequentieller Schaltungen
+- Timing-Analyse und Race-Condition-Erkennung
+- FSM-Workflows und Zustandsmodellierung
+- Verilog-/VHDL-Export
+- Fokus auf Lehre, Übungsaufgaben und Prüfungsvorbereitung
+
+> Dieses Projekt wurde maßgeblich mit KI entwickelt und wird fachlich sowie funktional iterativ getestet und weiterentwickelt.
 
 ---
 
@@ -21,12 +33,14 @@ Ein vollständiger, interaktiver Logikschaltkreis-Simulator, gebaut mit React, T
 </div>
 
 ---
-### Status: Stabil (März 2026)
+### Status: Aktive Entwicklung (März 2026)
 **Gate-Delay-Modus** vollständig implementiert und gehärtet: zuverlässige Race-Condition-Erkennung mit 5 Schweregradklassen, TTL-Leitungsmarkierung und Timing-Diagramm-Integration.
 
 ---
 
-## Funktionen
+> 📖 **Vollständige Bedienungsanleitung:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
+
+## Funktionsübersicht
 
 
 - **Discrete-Event-Scheduler** mit konfigurierbarer Propagationsverzögerung pro Gatter
@@ -204,22 +218,43 @@ Kein Backend, keine externen Dienste – alles läuft clientseitig.
 
 <a id="english"></a>
 
-# LogicSim – Browser-based Logic Gate Simulator
+# Logic Simulator Studio
 
-A fully featured, interactive logic circuit simulator built with React, TypeScript and Vite.
+Browser-based simulator for digital logic circuits for learning, testing, and validating digital circuits, with timing analysis, race-condition detection, FSM workflows, and Verilog/VHDL export.
+
+A tool developed with AI to support students getting started with digital logic – for lab work, practice exercises, and exam preparation.
+
+Built with React, TypeScript, and Vite.
+
+## Core Features
+
+- Simulation of combinational and sequential circuits
+- Timing analysis and race-condition detection
+- FSM workflows and state modelling
+- Verilog/VHDL export
+- Support for lab work, practice exercises, and exam preparation
+
+> This project was developed primarily with AI and is being iteratively tested and refined from both a technical and functional perspective.
+
+---
+
+<div align="center">
+<img src="media/screen_mirror_small.gif" alt="LogicSim Demo" width="960" />
+</div>
+
+---
+
+### Status: Active Development (March 2026)
+**Gate-delay mode** fully implemented and hardened: reliable race-condition detection with 5 severity levels, TTL wire marking, and timing-diagram integration.
+
+---
 
 > 📖 **Full user manual:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
 
----
-### Status: Stable (March 2026)
-**Gate-Delay mode** fully implemented and hardened: reliable race condition detection with 5 severity classes, TTL wire marking and timing diagram integration.
-
----
-
-## Features
+## Feature Overview
 
 - **Discrete-event scheduler** with configurable per-gate propagation delay
-- **Race condition detection** with 5 severity classes (critical, glitch, timing, warning, loop)
+- **Race-condition detection** with 5 severity levels (critical, glitch, timing, warning, loop)
 - **TTL wire marking** — short-lived glitches remain colour-highlighted for 400 ms
 - **Race panel** with click-to-focus on affected nets
 - **Full feedback-loop support**
