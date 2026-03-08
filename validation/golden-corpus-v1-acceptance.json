@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "verifiedOn": "2026-03-07",
+  "verifiedOn": "2026-03-08",
   "status": {
     "exists": true,
-    "executed": false,
-    "inCi": false
+    "executed": true,
+    "inCi": true
   },
   "counts": {
     "indexEntries": 12,
@@ -47,7 +47,7 @@
     "classify_expected_limit_explicitly",
     "keep_gc_t2_bus_mux_out_of_clean_pass_if_limitation_remains",
     "produce_deterministic_summary",
-    "do_not_claim_ci_coverage_before_ci_wiring"
+    "preserve_expected_limit_in_ci_and_local_runs"
   ],
   "canonicalDocs": [
     "validation/README.md",

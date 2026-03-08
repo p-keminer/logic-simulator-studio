@@ -12,7 +12,7 @@ This dashboard consolidates maturity evidence across seven criteria. Each criter
 
 **Overall maturity level: BETA / APPROACHING-PRODUCTION**
 
-**Last updated 2026-03-08 (post-P1-5/P1-6 + UI-timing follow-up):** All P0 blockers, P1-1 through P1-6 resolved. P1-5 (Contract Runner v1): 91 pass, 0 fail, 34 unsupported - in CI. P1-6 (Golden Corpus v1 Runner): 11 pass, 0 fail, 1 expected_limit - in CI. CI now has 5 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-core, hdl-toolchain. Test suite: **845/845**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Focused-nine UI: **12/12 smoke PASS, 5 semantic PASS, 0 semantic WARN**. Remaining P1 item is UI-audit CI integration.
+**Last updated 2026-03-08 (post-P1-5/P1-7):** All P0 blockers and P1-1 through P1-7 resolved. P1-5 (Contract Runner v1): 91 pass, 0 fail, 34 unsupported - in CI. P1-6 (Golden Corpus v1 Runner): 11 pass, 0 fail, 1 expected_limit - in CI. P1-7 (Focused-Nine UI Audit): 12 smoke PASS, 5 semantic PASS, 0 semantic WARN - in CI. CI now has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **845/845**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P2: export determinism, unsupported contract patterns, Golden Corpus v2, branch protection, and CI performance.
 
 ---
 
@@ -40,7 +40,6 @@ The simulator now uses a four-valued signal algebra: `SignalValue = 0 | 1 | 2 | 
 |---|---|---|
 | ~~**HI_Z (Z=2) is sanitized to 0 before downstream evaluate()**~~ | **RESOLVED P0 2026-03-07**  `tri_not_sanitized` PASS, triY=2, invOut=3 | ~~P0 blocker~~ done |
 | No setup/hold violation modeling  metastability produces 0 not X | [INFERRED from type definition] | model-limit |
-| `prevClk` stored in customState but absent from `stateKeys`  hidden simulator state | gate-gap-analysis.md 6 | core-risk |
 | MS_JK_FF: master state `qM` not in stateKeys  partially observable only | gate-gap-analysis.md 6 | core-risk |
 | BIN_CTR7S/BIN_CTR_99: dual-write of `count` + `cnt0..cnt3`  inconsistency risk | gate-gap-analysis.md 6 | core-risk |
 
@@ -50,11 +49,11 @@ The simulator now uses a four-valued signal algebra: `SignalValue = 0 | 1 | 2 | 
 
 ### Next Steps
 
-1. Add `prevClk` to stateKeys for all edge-triggered FFs (or document as intentionally hidden)
-2. Add `qM` to MS_JK_FF stateKeys
-3. Document all model-limit items (no X for metastability) in user-facing docs
+1. Document all model-limit items (no X for metastability, no setup/hold modeling) in user-facing docs
+2. Decide whether `qM` in MS_JK_FF should remain hidden or become user-visible metadata
+3. Audit remaining non-FF sequential gates for dual-write / hidden-state clarity
 
-**Priority: P1** (hidden state keys  P0 Z sanitization resolved 2026-03-07)
+**Priority: P2** (model-limit documentation and residual sequential metadata hygiene)
 
 ---
 
@@ -121,8 +120,7 @@ Verification covers 845/845 vitest tests, 12/12 focused-nine simulation + toolch
 
 | Issue | Evidence | Severity |
 |---|---|---|
-| No automated truth-table-exhaustive test runner for any combinational gate | [INFERRED  no test directory found] | P2 |
-| No automated sequential-step-sequence runner for flip-flops or registers | [INFERRED] | P2 |
+| Truth-table / step-sequence automation exists only for contracted gates and golden-corpus structure checks, not for the full gate inventory | contract-runner-summary.json, golden-corpus-v1-summary.json | P2 |
 | Forbidden-input-combination not tested for SR_LATCH S=R=1 | testability-mapping.json | P2 |
 | 34 contract-runner patterns unsupported (step-sequence, forbidden-input, async-set/reset, output-enable) | contract-runner-summary.json | P2 |
 | 26 documentation-gap entries  gate behavior partially undocumented | gate-gap-analysis.md 10 | P2 |
@@ -226,47 +224,49 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 
 ### Current State
 
-A CI pipeline exists (`.github/workflows/quality-gates.yml`) with five jobs:
+A CI pipeline exists (`.github/workflows/quality-gates.yml`) with six jobs:
 - `quality-gates`  test/build/lint via `run_quality_gates.sh`
 - `contract-runner`  Contract Runner v1 (91 pass, 0 fail, 34 unsupported) via `run_contract_runner.sh`
 - `golden-corpus`  Golden Corpus v1 Runner (11 pass, 0 fail, 1 expected_limit) via `run_golden_corpus.sh`
+- `focused-nine-ui`  12-case browser/UI regression via `run_focused_nine_ui.sh`
 - `focused-nine-core`  12-case simulation + HDL-regression via `run_focused_nine_core.sh`
 - `hdl-toolchain`  iverilog/ghdl/yosys/verilator presence check via `check_hdl_toolchain.sh`
 
-Contract Runner and Golden Corpus Runner are real blocking CI gates: exit code != 0 fails the job. Both CI scripts validate the invariant (totalCases = sum of all status categories) and reject any `failed > 0` result. `expected_limit` in the Golden Corpus (gc_t2_bus_mux) does NOT cause CI failure  it documents a known model boundary. All three fachliche jobs upload their reports as CI artifacts.
+Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real blocking CI gates: exit code != 0 fails the job. The contract and corpus scripts validate summary invariants and reject any `failed > 0` result. `expected_limit` in the Golden Corpus (`gc_t2_bus_mux`) does NOT cause CI failure  it documents a known model boundary. All four fachliche jobs upload their reports as CI artifacts.
 
 ### Confirmed Strengths
 
 - Focused-nine audit is structured and machine-readable (JSON format)
 - Contract Runner v1 provides automated behavioral verification for 12 gate contracts [CONFIRMED: contract-runner-summary.json  91 pass, CI gate]
 - Golden Corpus v1 Runner provides structural regression for 12 reference circuits [CONFIRMED: golden-corpus-v1-summary.json  11 pass, 1 expected_limit, CI gate]
+- Focused-Nine UI audit is now a CI gate with 12 smoke PASS and 5 semantic PASS [CONFIRMED: focused-nine-ui-summary.json]
 - Gap analysis assigns risk classes to all findings
 - Testability mapping defines a prioritized test plan (P0/P1/P2/P3)
 - Gate contracts provide specification-level acceptance criteria
 - vitest: 845/845 pass  test suite is comprehensive for simulation correctness
-- CI uploads reports as artifacts for contract-runner, golden-corpus, and focused-nine-core
+- CI uploads reports as artifacts for contract-runner, golden-corpus, focused-nine-core, and focused-nine-ui
 
 ### Confirmed Weaknesses
 
 | Issue | Evidence | Severity |
 |---|---|---|
-| UI timing audit is not yet in CI | `.github/workflows/quality-gates.yml`  no UI audit job | P1 |
 | Branch protection / required status checks not configured in GitHub Settings | External manual step needed | P2 |
 | No export-determinism check (re-export + diff against golden artifacts) | golden-corpus-v1-report.md: listed as v2 gap | P2 |
 | No external HDL functional simulation in golden corpus (iverilog/ghdl run against golden exports) | golden-corpus-v1-report.md: listed as v2 gap | P2 |
 | Known issues not linked to issue tracker | gate-gap-analysis.md, focused-nine-summary.json | P2 |
 | ~~4 defaultInputValues unsafe /OE defaults~~ | **RESOLVED P1b 2026-03-07** | ~~P1~~ done |
 | ~~Golden-Corpus v1 exists as artifacts, but no executable runner or CI gate~~ | **RESOLVED P1-6 2026-03-08**  Golden Corpus v1 Runner built and wired into CI | ~~P1~~ done |
-| ~~Only focused-nine core in CI; no contract or corpus regression~~ | **RESOLVED P1-6 2026-03-08**  5 CI jobs active | ~~P1~~ done |
+| ~~Only focused-nine core in CI; no contract or corpus regression~~ | **RESOLVED P1-6 2026-03-08**  core/contract/corpus regression gates established (later expanded to 6 CI jobs total) | ~~P1~~ done |
+| ~~UI timing audit is not yet in CI~~ | **RESOLVED P1-7 2026-03-08**  focused-nine-ui job added; 12 smoke PASS, 5 semantic PASS | ~~P1~~ done |
 
 ### Next Steps
 
-1. Add UI timing audit as a CI job (once headless timing rendering is deterministic)
-2. Add export-determinism check to Golden Corpus (re-export + diff against golden artifacts)
-3. Configure branch protection rules in GitHub Settings to enforce required status checks
-4. Create a known-issues register (structured JSON or GitHub issues) linked from the gap analysis
+1. Add export-determinism check to Golden Corpus (re-export + diff against golden artifacts)
+2. Configure branch protection rules in GitHub Settings to enforce required status checks
+3. Create a known-issues register (structured JSON or GitHub issues) linked from the gap analysis
+4. Evaluate CI caching/containerization for HDL tool installation and browser bootstrap
 
-**Priority: P1** (UI timing audit CI), **P2** (export-determinism, branch protection, issue tracker linkage)
+**Priority: P2** (export-determinism, branch protection, issue tracker linkage, CI performance)
 
 ---
 
@@ -327,14 +327,14 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | ~~P1-1~~ | 74HC373 Verilog latch  Verilator LATCH warning-as-error | **DONE P1-1 2026-03-07** |
 | ~~P1-3~~ | prevClk hidden state not in stateKeys (edge-triggered FFs) | **DONE P1-3 2026-03-07** |
 | ~~P1-5~~ | Contract Runner v1  automated gate contract verification | **DONE P1-5 2026-03-08**  91 pass, 0 fail, 34 unsupported, in CI |
-| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE P1-6 2026-03-08**  11 pass, 1 expected_limit, 5 CI jobs |
+| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE P1-6 2026-03-08**  11 pass, 1 expected_limit, regression CI established |
+| ~~P1-7~~ | Focused-Nine UI audit as CI gate | **DONE P1-7 2026-03-08**  12 smoke PASS, 5 semantic PASS, 6 CI jobs |
 
-### P1  High Priority (fix before production use)
+### P1  High Priority (no open items)
 
 | ID | Issue | Criterion |
 |---|---|---|
 | ~~P1-4~~ | ~~STT variable limit blocks UI verification for all ICs~~ | **PARTIALLY RESOLVED (post-P0):** Reduced-view renders 8-64 rows for wide ICs  remaining gap is full enumeration |
-| P1-7 | UI timing audit is locally green but not yet a CI gate | Crit 6 |
 
 ### P2  Medium Priority (completeness and polish)
 
@@ -366,4 +366,4 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | `validation/testability-mapping.json` | 18 gate classes, 14 test patterns, 124 slots |
 | `validation/contracts/*.json` | 12 gate contracts |
 | `validation/gate-contract-schema.json` | JSON Schema for gate contracts |
-| `.github/workflows/quality-gates.yml` | CI pipeline  5 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-core, hdl-toolchain |
+| `.github/workflows/quality-gates.yml` | CI pipeline  6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain |

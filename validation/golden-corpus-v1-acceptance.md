@@ -1,17 +1,17 @@
 # Golden Corpus v1 Acceptance
 
-**Verified on:** 2026-03-07
-**Purpose:** Define the accepted baseline for Golden Corpus v1 before the executable runner is integrated.
+**Verified on:** 2026-03-08
+**Purpose:** Define the accepted baseline for Golden Corpus v1 after the executable runner and CI gate are integrated.
 
 ## Current Accepted State
 
 - `validation/golden-corpus-v1.json` is valid JSON.
 - `validation/golden-corpus-v1.md` matches the real artifact layout.
-- Golden Corpus v1 currently exists as a stored regression corpus, not yet as an executed regression gate.
+- Golden Corpus v1 now exists as an executed regression gate.
 - The canonical status in repo docs is now:
   - Golden Corpus v1 exists
-  - Golden Corpus v1 is not yet automatically executed
-  - Golden Corpus v1 is not yet wired into CI
+  - Golden Corpus v1 is automatically executed
+  - Golden Corpus v1 is wired into CI
 
 ## Completeness Checks
 
@@ -38,11 +38,11 @@
 - `gc_t2_bus_mux` is intentionally documented as an exporter limitation / expected model boundary.
 - Golden Corpus v1 is a baseline regression corpus, not a replacement for `focused-nine`.
 - `focused-nine` remains the high-risk suite.
-- Golden Corpus v1 is the basis-regression suite that still needs an executable runner.
+- Golden Corpus v1 is the basis-regression suite and now runs as a CI-backed regression gate.
 
 ## Runner Acceptance Criteria
 
-When the runner lands, it should be accepted against this corpus only if all of the following hold:
+Golden Corpus v1 is accepted against this corpus only if all of the following hold:
 
 1. All 12 corpus entries are discovered from `validation/golden-corpus-v1.json`.
 2. Every discovered slug resolves to:
@@ -56,13 +56,13 @@ When the runner lands, it should be accepted against this corpus only if all of 
    - `fail`
 4. `gc_t2_bus_mux` must not be silently reported as a normal clean pass if the known exporter limitation is still present.
 5. The runner output must be deterministic enough for CI classification.
-6. The runner must not reclassify Golden Corpus v1 as "fully CI-covered" until CI wiring exists.
+6. The runner must preserve the known `expected_limit` classification in CI and local runs.
 
 ## Non-Goals For v1 Acceptance
 
 - No requirement yet for full UI replay.
 - No requirement yet for full external HDL differential simulation on every corpus case.
-- No requirement yet for corpus execution inside CI on this acceptance step.
+- No requirement yet for full branch-protection enforcement in GitHub Settings on this acceptance step.
 
 ## Relationship To Canonical Docs
 

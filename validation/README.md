@@ -2,7 +2,7 @@
 
 **Projekt:** logic-gate-simulator
 **Stand:** 2026-03-08
-**Qualitaetsstand:** 845/845 Tests gruen - P0, P1a, P1b, P1-1 bis P1-6 verifiziert; UI-Timing-Audit lokal semantisch gruen
+**Qualitaetsstand:** 845/845 Tests gruen - P0, P1a, P1b, P1-1 bis P1-7 verifiziert; UI-Timing-Audit in CI semantisch gruen
 
 ---
 
@@ -16,10 +16,10 @@
 | Contract Runner v1 | **91 pass, 0 fail, 34 unsupported** (125 total) |
 | Golden Corpus v1 | **11 pass, 0 fail, 1 expected_limit, 0 unsupported** (12 total) |
 | Focused-Nine Core | **12/12** pass, 0 HDL-Fails, 0 Tooling-Warnungen |
-| CI-Jobs | 5 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-core, hdl-toolchain |
+| CI-Jobs | 6 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain |
 | Harte Restfehler (Simulation) | **0** |
 | Toolchain-Failures (HDL) | **0** |
-| UI-Timing-Semantik (fokussierter Lauf) | **5 PASS, 0 WARN** (lokal verifiziert; noch nicht in CI) |
+| UI-Timing-Semantik (fokussierter Lauf) | **5 PASS, 0 WARN** (verifiziert und als CI-Gate verdrahtet) |
 
 ---
 
@@ -41,7 +41,7 @@ Basis-Regressionssuite mit 12 Referenzschaltungen ueber alle 4 Klassen (combinat
 Hochrisiko-Suite fuer 12 Schaltungen. Simulationslauf + HDL-Toolchain-Verifikation (iverilog, ghdl, yosys, verilator). Laeuft als eigenes CI-Gate mit HDL-Tool-Installation.
 
 ### 6. UI-Audit -> focused-nine-ui-report.md + focused-nine-ui-summary.json
-Browser-Audit der 12 Fokusfaelle: STT-Projektion, HDL-Modal-Konsistenz, Screenshots. Aktueller Stand: **12** Smoke-Passes, **0** echte UI-Fehler, **5** semantische Timing-Passes, **0** semantische Warnungen. Noch nicht in CI.
+Browser-Audit der 12 Fokusfaelle: STT-Projektion, HDL-Modal-Konsistenz, Screenshots. Aktueller Stand: **12** Smoke-Passes, **0** echte UI-Fehler, **5** semantische Timing-Passes, **0** semantische Warnungen. Laeuft als eigenes CI-Gate.
 
 ### 7. Roadmap -> industry-lite-roadmap.md
 Drei Reifegrad-Stufen (Teaching Tool / Design Tool / Industry-Lite EDA) mit 6 Arbeitsstromen. Langfristiger Horizont.
@@ -50,13 +50,14 @@ Drei Reifegrad-Stufen (Teaching Tool / Design Tool / Industry-Lite EDA) mit 6 Ar
 
 ## CI-Struktur
 
-Die CI-Pipeline (`.github/workflows/quality-gates.yml`) hat 5 Jobs:
+Die CI-Pipeline (`.github/workflows/quality-gates.yml`) hat 6 Jobs:
 
 | Job | Inhalt | Abhaengigkeit |
 |---|---|---|
 | `quality-gates` | npm test, build, lint | - |
 | `contract-runner` | Contract Runner v1 + Invariant-Validation | quality-gates |
 | `golden-corpus` | Golden Corpus v1 Runner + Invariant-Validation | quality-gates |
+| `focused-nine-ui` | Browser-UI-Audit der 12 Fokusfaelle | quality-gates |
 | `focused-nine-core` | 12-case Simulation + HDL-Regression | quality-gates |
 | `hdl-toolchain` | iverilog/ghdl/yosys/verilator Praesenzpruefung | - |
 
@@ -147,8 +148,7 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
-- **P1:** UI-Timing-Audit als echten CI-Job verdrahten
-- **P1/P2:** Export-Determinismus / Re-Export-Diff in Golden Corpus aufnehmen
+- **P2:** Export-Determinismus / Re-Export-Diff in Golden Corpus aufnehmen
 - **P1/P2:** Funktionale Schaltungssimulation im Golden Corpus (Truth-Table-/Step-Sequence-Verifikation)
 - **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, Hierarchie, grosse Designs)
 - **P2:** Branch Protection / Required Checks in GitHub Settings konfigurieren (externer Schritt)

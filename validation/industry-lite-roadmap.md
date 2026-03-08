@@ -25,18 +25,18 @@ Zielbild:
 - Contract Runner v1: **91 pass, 0 fail, 34 unsupported** (125 total) - in CI als eigenes Gate.
 - Golden Corpus v1 Runner: **11 pass, 0 fail, 1 expected_limit** (12 total) - in CI als eigenes Gate.
 - Focused-Nine Core: **12/12** funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen - in CI als eigenes Gate.
-- CI hat 5 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-core, hdl-toolchain.
+- CI hat 6 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain.
 - Tri-State-Ausgaenge propagieren korrekt: downstream-Gates sehen `Z`, nicht `0`.
 - Multi-Treiber-Konflikte auf demselben Netz ergeben `X` (3) - kein stilles Last-Write-Wins mehr.
 - Alle logic_basic- und logic_multi-Gatter exportieren nach Verilog und VHDL.
 - `gc_t2_bus_mux` ist bewusst als `expected_limit` klassifiziert - dokumentierte Exporter-Grenze, nicht als pass verkauft.
-- Report-Artefakte (JSON + Markdown) werden von allen drei fachlichen CI-Jobs hochgeladen.
+- Report-Artefakte (JSON + Markdown) werden von allen vier fachlichen CI-Jobs hochgeladen.
 
 ### Fachlich relevante Restluecken
 
 - Es gibt noch kein `X`-Signal fuer Setup/Hold-Verletzungen oder Metastabilitaet (Modellgrenze, kein Bug).
 - Hierarchische Custom-ICs sind simulativ brauchbar, aber fuer HDL-Export noch nicht first-class abgesichert.
-- UI-Timing-Audit ist lokal semantisch gruen (5 PASS), aber noch nicht in CI eingebunden.
+- UI-Timing-Audit ist semantisch gruen (5 PASS) und jetzt als eigenes CI-Gate eingebunden; der offene Restpunkt ist ein breiterer Waveform-/Visual-Diff.
 - Export-Determinismus (Re-Export + Diff gegen goldene Artefakte) ist noch nicht implementiert.
 - Branch-Protection-Rules in GitHub Settings sind noch nicht konfiguriert (externer manueller Schritt).
 - 34 Contract-Runner-Testmuster sind noch `unsupported` (step-sequence, forbidden-input, etc.).
@@ -74,7 +74,7 @@ Abgeschlossen:
 Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
 - STT-Variablenlimit blockiert UI-Verifikation fuer breite sequenzielle Schaltungen: P2 (Reduzierte Ansicht implementiert)
-- UI-Timing-Audit ist funktional gruen, aber noch nicht als CI-Gate verdrahtet
+- UI-Timing-Audit ist funktional gruen und als CI-Gate verdrahtet; offen bleibt nur ein breiterer Waveform-/Visual-Diff
 
 ### Stufe 3: Industry-Lite EDA
 
@@ -93,13 +93,13 @@ Erreicht:
 - Golden Corpus v1 als ausfuehrbare Regression mit 12 Referenzschaltungen (W3)
 - Contract Runner v1 fuer 12 Gate-Contracts (W3)
 - Reproduzierbare JSON-/Markdown-Reports fuer alle drei fachlichen Suiten
-- CI mit 5 blockierenden Qualitaetsgates (W6)
+- CI mit 6 Jobs, davon 5 blockierende Qualitaets-/Regressionsgates (W6)
 - Report-Artefakte als CI-Uploads
 
 Noch offen:
 - Externer HDL-Diff (iverilog/ghdl Simulation gegen goldene Exporte) - noch nicht im Runner
 - Export-Determinismus (Re-Export + Byte-Diff) - noch nicht implementiert
-- UI-Timing-Semantik (W4) - nicht voll verifiziert, CI-Anbindung offen
+- UI-Timing-Semantik (W4) - fokussierte Faelle in CI verifiziert; voller Waveform-/Visual-Diff bleibt offen
 - Hierarchie-/Custom-IC-Absicherung (W5) - noch nicht angegangen
 - Branch-Protection in GitHub Settings - manueller externer Schritt
 
@@ -144,10 +144,10 @@ Noch offen:
 
 Status: **TEILWEISE ERREICHT**
 
-- UI-Audit existiert (focused-nine-ui-audit.mjs) und ist lokal semantisch gruen
+- UI-Audit existiert (focused-nine-ui-audit.mjs) und ist semantisch gruen
 - 5 Fokusfaelle liefern echte Timing-Snapshots und PASS statt WARN
-- UI-Timing-Rendering ist fuer die Fokusfaelle lokal verifiziert
-- Akzeptanzkriterien sind erst voll erfuellt, wenn der Audit in CI laeuft
+- UI-Timing-Rendering ist fuer die Fokusfaelle lokal und in CI verifiziert
+- Offene Restluecke ist jetzt nicht mehr die CI-Anbindung, sondern ein breiterer Waveform-/Visual-Diff fuer mehr als die Fokusfaelle
 
 ### W5. Hierarchie und Exportierbarkeit
 
@@ -163,18 +163,18 @@ Status: **OFFEN**
 Status: **WEITGEHEND ERREICHT** (2026-03-08)
 
 Aktueller Stand:
-- CI vorhanden: `.github/workflows/quality-gates.yml`  5 Jobs:
+- CI vorhanden: `.github/workflows/quality-gates.yml`  6 Jobs:
   - `quality-gates` (test/build/lint)
   - `contract-runner` (Contract Runner v1 + Invariant-Validation)
   - `golden-corpus` (Golden Corpus v1 Runner + Invariant-Validation)
+  - `focused-nine-ui` (12-case Browser- und Timing-Audit)
   - `focused-nine-core` (12-case Simulation + HDL-Regression)
   - `hdl-toolchain` (iverilog/ghdl/yosys/verilator Praesenzpruefung)
-- Alle drei fachlichen Jobs laden Reports als CI-Artefakte hoch
+- Alle vier fachlichen Jobs laden Reports als CI-Artefakte hoch
 - `contract-runner` und `golden-corpus` sind echte blockierende Gates
 - `expected_limit` loest keinen CI-Fehler aus
 
 Noch offen:
-- UI-Timing-Audit nicht in CI
 - Branch-Protection-Rules in GitHub Settings (externer manueller Schritt)
 - CI-Performance/Caching (HDL-Tool-Installation bei jedem Lauf)
 
@@ -185,7 +185,7 @@ Pflicht-Gates (Zielzustand):
 - Contract Runner (intern)
 - Golden Corpus (intern)
 - HDL-Differenztests extern (focused-nine)
-- UI-Timing-Audit (noch nicht in CI)
+- UI-Timing-Audit
 - Synthese-Sanity
 
 Akzeptanzkriterien:
@@ -232,7 +232,7 @@ Umfang:
 - W4 und W5
 
 Status:
-- UI-Timing-Semantik ist lokal bereinigt; naechster Schritt ist CI-Integration
+- UI-Timing-Semantik ist fokussiert in CI abgesichert; naechster Schritt ist ein breiterer Waveform-/Visual-Diff
 - Hierarchie/Custom-IC-Absicherung noch nicht begonnen
 
 ### Phase D  Teilweise erreicht
@@ -244,14 +244,15 @@ Umfang:
 - W6
 
 Erreicht:
-- 5 CI-Jobs mit Report-Artefakten
+- 6 CI-Jobs mit Report-Artefakten
 - Contract Runner + Golden Corpus als echte Gates
+- Focused-Nine UI als echtes Gate
 - focused-nine core als Hochrisiko-Gate
 
 Noch offen:
-- UI-Timing-Audit in CI
 - Branch Protection (externer Schritt)
 - CI-Performance/Caching
+- Export-Determinismus / Re-Export-Diff
 
 ## Bug-Fix-Protokoll
 
@@ -287,6 +288,6 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 7. **P2:** CI-Performance (HDL-Tool-Caching, Docker-Image)
 
 Phase B (0/1/Z/X und Mehrtreiberauflosung) ist abgeschlossen.
-Phase D (CI-Qualitaetsgates) ist weitgehend erreicht mit 5 Jobs.
+Phase D (CI-Qualitaetsgates) ist weitgehend erreicht mit 6 Jobs.
 Phase A (HDL-Differenztest-Infrastruktur) ist teilweise erreicht mit Golden Corpus v1 + Contract Runner v1.
 Naechster Schwerpunkt: Phase C (UI-Konsistenz, insb. Timing-Semantik) und Phase A Vertiefung (Export-Determinismus, funktionale Simulation).
