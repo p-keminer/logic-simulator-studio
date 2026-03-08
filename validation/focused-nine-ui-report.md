@@ -15,7 +15,7 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 - `0` Infrastruktur-/Ladefehler
 - HDL-Modal war in allen erfolgreich geladenen Faellen textuell konsistent mit den generierten Exportdateien
 - Timing-Panel hat in allen erfolgreich geladenen Faellen geoeffnet
-- Semantischer Timing-Check fuer 5 Fokusfaelle: `0` PASS, `5` WARN (steps=0, headless RAF-Limit)
+- Semantischer Timing-Check fuer 5 Fokusfaelle: `5` PASS, `0` WARN
 
 ## Echte UI-Befunde
 
@@ -52,66 +52,64 @@ Fuer `tri_not_sanitized`, `dff_led`, `jkff_led`, `tff_led` und `multi_driver_sam
 - Z-farbige Pfade (amber, #f59e0b) bei Tri-State-Faellen
 - X-farbige Pfade (rot, #ef4444) bei Konflikten
 
-### `tri_not_sanitized` — WARN
+### `tri_not_sanitized` - PASS
 
-TRIBUF(a=1, oe=1) → Z; NOT(Z) → X. Z and X colored paths expected.
+TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Z and X colored paths expected.
 
-Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
+Schritte: 8 Schritte
 
 Befunde:
   - Labels OK: [a, oe, y] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
-  - Z-path (amber): present — HI_Z signal visible in timing waveform
-  - X-path (red): present — conflict/X signal visible in timing waveform
+  - Steps > 0: 8 snapshots recorded (simulation settled and produced history)
+  - Z-path (amber): present -- HI_Z signal visible in timing waveform
+  - X-path (red): present -- conflict/X signal visible in timing waveform
 
-### `dff_led` — WARN
+### `dff_led` - PASS
 
 D_FF initial settle: labels and step count confirm timing tracks correctly.
 
-Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
+Schritte: 3 Schritte
 
 Befunde:
   - Labels OK: [d, clk, q] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
+  - Steps > 0: 3 snapshots recorded (simulation settled and produced history)
 
-### `jkff_led` — WARN
+### `jkff_led` - PASS
 
 JK_FF initial settle: four input/output labels confirm channel presence.
 
-Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
+Schritte: 3 Schritte
 
 Befunde:
   - Labels OK: [j, k, clk, q] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
+  - Steps > 0: 3 snapshots recorded (simulation settled and produced history)
 
-### `tff_led` — WARN
+### `tff_led` - PASS
 
 T_FF initial settle: three labels confirm sequential gate channels.
 
-Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
+Schritte: 3 Schritte
 
 Befunde:
   - Labels OK: [t, clk, q] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
+  - Steps > 0: 3 snapshots recorded (simulation settled and produced history)
 
-### `multi_driver_same_input` — WARN
+### `multi_driver_same_input` - PASS
 
 Dual drivers (1 vs 0) resolve to X. Red X-conflict path expected in timing.
 
-Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
+Schritte: 4 Schritte
 
 Befunde:
   - Labels OK: [a, b, y] all visible in timing SVG
-  - Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)
-  - X-path (red): not present — requires steps > 0 (timing history empty)
+  - Steps > 0: 4 snapshots recorded (simulation settled and produced history)
+  - X-path (red): present -- conflict/X signal visible in timing waveform
 
-
-**Bekannte Grenze:** Bei 5 Faellen wurden 0 Schritte aufgezeichnet. Das Timing-Diagramm der App zeichnet nur bei tatsaechlichen Signalaenderungen (batchChangedNets > 0) auf. In headless Puppeteer kann der requestAnimationFrame-Tick ausbleiben bevor der Audit liest. Signal-Labels sind trotzdem pruefbar (SVG text-Elemente). Fuer Z/X-Pfad-Pruefung wird steps > 0 benoetigt.
 ## Wichtige Grenze dieses UI-Laufs
 
 Der semantische Timing-Check ist ein erster Schritt ueber den reinen Smoke-Test hinaus.
 Signal-Label-Pruefung funktioniert zuverlaessig (SVG text-Elemente sind immer vorhanden).
-Z/X-Pfad-Pruefung setzt steps > 0 voraus — das haengt davon ab, ob der headless-Browser
+Z/X-Pfad-Pruefung setzt steps > 0 voraus -- das haengt davon ab, ob der headless-Browser
 einen requestAnimationFrame-Tick zwischen Circuit-Load und Timing-Lesen ausfuehrt.
 
 Was noch fehlt fuer einen vollen Waveform-Diff:

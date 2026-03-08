@@ -1,6 +1,6 @@
 # Industry-Lite EDA Roadmap
 
-Datum: 2026-03-07
+Datum: 2026-03-08
 Repo: `<repo-root>`
 
 ## Zweck
@@ -19,20 +19,27 @@ Zielbild:
 
 ### Positiv bestaetigt
 
-- `npm test` ist gruen: `713` Tests bestanden.
+- `npm test` ist gruen: **845** Tests bestanden.
 - `npm run build` ist gruen.
 - `npm run lint` ist gruen.
+- Contract Runner v1: **91 pass, 0 fail, 34 unsupported** (125 total) - in CI als eigenes Gate.
+- Golden Corpus v1 Runner: **11 pass, 0 fail, 1 expected_limit** (12 total) - in CI als eigenes Gate.
+- Focused-Nine Core: **12/12** funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen - in CI als eigenes Gate.
+- CI hat 5 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-core, hdl-toolchain.
 - Tri-State-Ausgaenge propagieren korrekt: downstream-Gates sehen `Z`, nicht `0`.
-- Multi-Treiber-Konflikte auf demselben Netz ergeben `X` (3) — kein stilles Last-Write-Wins mehr.
+- Multi-Treiber-Konflikte auf demselben Netz ergeben `X` (3) - kein stilles Last-Write-Wins mehr.
 - Alle logic_basic- und logic_multi-Gatter exportieren nach Verilog und VHDL.
-- `tri_not_sanitized` und `multi_driver_same_input` sind im P0-Stand nicht mehr reproduzierbar.
-- Focused-nine-Audit: 12/12 funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen (hc373_oe_z Verilator-LATCH via Verilog-2001 + lint_off/lint_on geloest, P1-1 2026-03-07).
+- `gc_t2_bus_mux` ist bewusst als `expected_limit` klassifiziert - dokumentierte Exporter-Grenze, nicht als pass verkauft.
+- Report-Artefakte (JSON + Markdown) werden von allen drei fachlichen CI-Jobs hochgeladen.
 
 ### Fachlich relevante Restluecken
 
 - Es gibt noch kein `X`-Signal fuer Setup/Hold-Verletzungen oder Metastabilitaet (Modellgrenze, kein Bug).
 - Hierarchische Custom-ICs sind simulativ brauchbar, aber fuer HDL-Export noch nicht first-class abgesichert.
-- ~~`74HC373` Verilog-Export Verilator-LATCH-Warnung~~ — RESOLVED P1-1 2026-03-07 (Verilog-2001 + `/* verilator lint_off LATCH */`…`/* verilator lint_on LATCH */`, nicht `always_latch`).
+- UI-Timing-Audit ist lokal semantisch gruen (5 PASS), aber noch nicht in CI eingebunden.
+- Export-Determinismus (Re-Export + Diff gegen goldene Artefakte) ist noch nicht implementiert.
+- Branch-Protection-Rules in GitHub Settings sind noch nicht konfiguriert (externer manueller Schritt).
+- 34 Contract-Runner-Testmuster sind noch `unsupported` (step-sequence, forbidden-input, etc.).
 
 ## Maturitaetsziel
 
@@ -44,7 +51,7 @@ Definition:
 - bekannte Grenzen dokumentiert
 
 Status:
-- weitgehend erreicht
+- **erreicht**
 
 ### Stufe 2: Consistent Design Tool
 
@@ -54,17 +61,20 @@ Definition:
 - bekannte Modellgrenzen sind bewusst und testbar, nicht zufaellig
 
 Status:
-- weitgehend erreicht (P0-Fortschritt 2026-03-07)
+- **weitgehend erreicht** (P0/P1-Fortschritte 2026-03-07/08)
 
 Abgeschlossen:
-- ~~`Z -> 0`-Sanitization~~ — RESOLVED P0 2026-03-07
-- ~~fehlende Mehrtreiberauflosung~~ — RESOLVED P0 2026-03-07 (Konflikte ergeben `X`)
-- ~~fehlende HDL-Export-Abdeckung fuer Basigatter~~ — RESOLVED P0 2026-03-07
+- ~~`Z -> 0`-Sanitization~~ - RESOLVED P0 2026-03-07
+- ~~fehlende Mehrtreiberauflosung~~ - RESOLVED P0 2026-03-07 (Konflikte ergeben `X`)
+- ~~fehlende HDL-Export-Abdeckung fuer Basisgatter~~ - RESOLVED P0 2026-03-07
+- ~~Verilator-LATCH-Warnung bei `74HC373`~~ - RESOLVED P1-1 2026-03-07
+- ~~Kein automatisierter Contract-Runner~~ - RESOLVED P1-5 2026-03-08 (91 pass, 34 unsupported)
+- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED P1-6 2026-03-08 (11 pass, 1 expected_limit)
 
 Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
-- ~~Verilator-LATCH-Warnung bei `74HC373`~~ — RESOLVED P1-1 2026-03-07
 - STT-Variablenlimit blockiert UI-Verifikation fuer breite sequenzielle Schaltungen: P2 (Reduzierte Ansicht implementiert)
+- UI-Timing-Audit ist funktional gruen, aber noch nicht als CI-Gate verdrahtet
 
 ### Stufe 3: Industry-Lite EDA
 
@@ -76,143 +86,132 @@ Definition:
 - CI-Qualitaetsgates
 
 Status:
-- begonnen, aber noch nicht erreicht
+- **teilweise erreicht**
+
+Erreicht:
+- Formales 0/1/Z/X-Signalmodell (W1, W2)
+- Golden Corpus v1 als ausfuehrbare Regression mit 12 Referenzschaltungen (W3)
+- Contract Runner v1 fuer 12 Gate-Contracts (W3)
+- Reproduzierbare JSON-/Markdown-Reports fuer alle drei fachlichen Suiten
+- CI mit 5 blockierenden Qualitaetsgates (W6)
+- Report-Artefakte als CI-Uploads
+
+Noch offen:
+- Externer HDL-Diff (iverilog/ghdl Simulation gegen goldene Exporte) - noch nicht im Runner
+- Export-Determinismus (Re-Export + Byte-Diff) - noch nicht implementiert
+- UI-Timing-Semantik (W4) - nicht voll verifiziert, CI-Anbindung offen
+- Hierarchie-/Custom-IC-Absicherung (W5) - noch nicht angegangen
+- Branch-Protection in GitHub Settings - manueller externer Schritt
 
 ## Arbeitsstroeme
 
 ### W1. Formales Signalmodell
 
-Ziel:
-- von implizitem `0/1/Z`-Hybrid auf explizites `0/1/Z/X`
+Status: **ABGESCHLOSSEN** (P0 2026-03-07)
 
-Arbeit:
-- `SignalValue` klar definieren
-- `HI_Z` und `UNKNOWN` sauber benennen
-- zentrale Aufloesungsfunktion fuer Treiber einfuehren
-- `Z -> 0`-Sanitization aus dem Kernpfad entfernen
-- Konfliktfaelle als `X` modellieren
-
-Akzeptanzkriterien:
-- `TRIBUF -> NOT` ergibt intern denselben Befund wie externes HDL
-- Konflikt `0` gegen `1` auf demselben Netz ergibt `X`
-- nur `Z`-Treiber ergibt `Z`
-- bestehende 0/1-Schaltungen regressieren nicht
-
-Risiko:
-- hohes Regressionspotenzial im Kern
-
-Empfohlene Reihenfolge:
-1. Aufloesungsfunktion einfuehren
-2. Downstream-Sanitization entfernen
-3. `X` im Modell aktivieren
-4. Golden-Corpus dagegen laufen lassen
+- `SignalValue = 0 | 1 | 2 | 3` (0/1/Z/X)
+- Z propagiert korrekt
+- Konflikte ergeben X
+- Sanitization aus dem Kernpfad entfernt
+- Akzeptanzkriterien erfuellt
 
 ### W2. Mehrtreiber- und Bus-Semantik
 
-Ziel:
-- echte Netze statt impliziter Einzeltreiber pro Zielport
+Status: **ABGESCHLOSSEN** (P0 2026-03-07)
 
-Arbeit:
-- Eingangszuordnung so umbauen, dass mehrere Drivereintraege erhalten bleiben
-- Net-Resolution zentral anwenden
-- Bus-Konflikte sichtbar machen
-- Tri-State-Faelle formal richtig behandeln
-
-Akzeptanzkriterien:
-- Multi-Driver-Schaltungen sind intern modellierbar
-- Export und Simulator verwenden dieselbe Netzsemantik
-- keine stillschweigende Auswahl des "letzten Drahts"
+- Mehrere Treiber auf demselben Netz loesen zu X auf
+- Keine stille Last-Write-Wins-Semantik mehr
+- Akzeptanzkriterien erfuellt
 
 ### W3. HDL-Differenztests
 
-Ziel:
-- internen Simulator gegen externe Referenztools pruefen
+Status: **TEILWEISE ERREICHT**
 
-Arbeit:
-- Golden-Corpus aufbauen
-- Stimulus-Definitionen maschinenlesbar ablegen
-- Runner fuer internen Simulator
-- Runner fuer Verilog (`iverilog`)
-- Runner fuer VHDL (`ghdl`)
-- Synthese-Sanity (`yosys`)
+Erreicht:
+- Golden Corpus v1 mit 12 Referenzschaltungen
+- Ausfuehrbarer Runner (`validation/run-golden-corpus-v1.mjs`) mit 11 check-Kategorien pro Fall
+- Contract Runner v1 (`validation/run-contract-runner.mjs`) fuer 12 Gate-Contracts
+- Checkpoint-Verifikation gegen Verilog/VHDL-Quelltext
+- Beide als CI-Gate verdrahtet
+- `gc_t2_bus_mux` bewusst als `expected_limit` klassifiziert
 
-Akzeptanzkriterien:
-- pro Schaltung maschinenlesbarer Pass/Fail-Befund
-- Mismatch pro Schritt und Signal sichtbar
-- Reports reproduzierbar
-
-Aktueller Parallelblock:
-- dieser Arbeitsstrom kann unabhaengig von W1 teilweise vorgezogen werden
-- Golden-Corpus v1 ist inzwischen als 12er-Basissuite vorhanden (`golden-corpus-v1.md`, `golden-corpus-v1.json`, generierte `.lgsc.json`/`.v`/`.vhd` Artefakte), aber noch nicht an einen Runner oder CI gebunden
+Noch offen:
+- Funktionale HDL-Simulation (iverilog/ghdl gegen goldene Exporte)
+- Export-Determinismus (Re-Export + Diff)
+- Erweiterung auf v2 (mehr Schaltungen, Hierarchie)
 
 ### W4. UI als Projektion des Kerns
 
-Ziel:
-- UI darf keine eigene Logik "erfinden"
+Status: **TEILWEISE ERREICHT**
 
-Arbeit:
-- Wahrheitstabelle/STT nur aus denselben Kernzustandsdaten ableiten
-- Timing-Diagramm gegen Kern-Snapshots pruefen
-- UI-Audits fuer bekannte kritische Schaltungsklassen aufbauen
-
-Akzeptanzkriterien:
-- keine UI-only-Abweichung gegen Kernsimulation
-- jeder UI-Befund laesst sich auf denselben Snapshot zurueckfuehren
+- UI-Audit existiert (focused-nine-ui-audit.mjs) und ist lokal semantisch gruen
+- 5 Fokusfaelle liefern echte Timing-Snapshots und PASS statt WARN
+- UI-Timing-Rendering ist fuer die Fokusfaelle lokal verifiziert
+- Akzeptanzkriterien sind erst voll erfuellt, wenn der Audit in CI laeuft
 
 ### W5. Hierarchie und Exportierbarkeit
 
-Ziel:
-- Custom-ICs fachlich belastbar machen
+Status: **OFFEN**
 
-Arbeit:
-- klar festlegen: voll exportierbar oder bewusst nur simulativ
-- falls exportierbar:
-  `toVerilog()` und `toVHDL()` fuer Hierarchie einfuehren
-- falls nicht:
-  UI, Doku und Reports muessen das explizit markieren
-
-Akzeptanzkriterien:
-- keine versteckte Teilunterstuetzung
-- Hierarchiegrenzen sind dokumentiert und testbar
+- Custom ICs sind simulativ nutzbar
+- Kein HDL-Export fuer Custom ICs
+- Keine Contracts oder Tests fuer Custom ICs
+- Muss bewusst entschieden werden: voll exportierbar oder nur simulativ
 
 ### W6. Qualitaetsgates und CI
 
-Ziel:
-- jede Aenderung laeuft durch dieselben reproduzierbaren Gates
+Status: **WEITGEHEND ERREICHT** (2026-03-08)
 
-Aktueller Stand (2026-03-07):
-- CI vorhanden: `.github/workflows/quality-gates.yml` — Job `quality-gates` (test/build/lint), Job `focused-nine-core` (12-case Simulation + HDL-Regression), Job `hdl-toolchain` (iverilog/ghdl/yosys/verilator Pruefung)
-- focused-nine UI-Audit und Golden-Corpus-v1-Ausfuehrung: noch nicht in CI, laufen weiter manuell bzw. nur als Artefaktsatz
+Aktueller Stand:
+- CI vorhanden: `.github/workflows/quality-gates.yml`  5 Jobs:
+  - `quality-gates` (test/build/lint)
+  - `contract-runner` (Contract Runner v1 + Invariant-Validation)
+  - `golden-corpus` (Golden Corpus v1 Runner + Invariant-Validation)
+  - `focused-nine-core` (12-case Simulation + HDL-Regression)
+  - `hdl-toolchain` (iverilog/ghdl/yosys/verilator Praesenzpruefung)
+- Alle drei fachlichen Jobs laden Reports als CI-Artefakte hoch
+- `contract-runner` und `golden-corpus` sind echte blockierende Gates
+- `expected_limit` loest keinen CI-Fehler aus
 
-Pflicht-Gates (vollstaendiges Ziel):
+Noch offen:
+- UI-Timing-Audit nicht in CI
+- Branch-Protection-Rules in GitHub Settings (externer manueller Schritt)
+- CI-Performance/Caching (HDL-Tool-Installation bei jedem Lauf)
+
+Pflicht-Gates (Zielzustand):
 - `npm test -- --run`
 - `npm run build`
 - `npm run lint`
-- Golden-Corpus intern
+- Contract Runner (intern)
+- Golden Corpus (intern)
 - HDL-Differenztests extern (focused-nine)
+- UI-Timing-Audit (noch nicht in CI)
 - Synthese-Sanity
 
 Akzeptanzkriterien:
-- keine Verhaltensaenderung ohne Regressionstest
-- Reports werden als Artefakte erzeugt
+- keine Verhaltensaenderung ohne Regressionstest  **weitgehend erreicht**
+- Reports werden als Artefakte erzeugt  **erreicht**
+- Branch-Protection erzwingt gruene Gates  **noch offen** (GitHub Settings)
 
 ## Priorisierte Reihenfolge
 
-### Phase A
+### Phase A  Teilweise abgeschlossen
 
 Ziel:
 - semantische Hauptblocker sichtbar und reproduzierbar machen
 
 Umfang:
 - W3 Grundgeruest fertig
-- Golden-Corpus v1
-- Mismatch-Reports
 
-Definition of Done:
-- 15 bis 25 Referenzschaltungen
-- interner Simulator vs Verilog/VHDL laeuft automatisch
+Erreicht:
+- Golden Corpus v1 mit 12 Referenzschaltungen  ausfuehrbar + CI
+- Contract Runner v1 mit 12 Gate-Contracts  ausfuehrbar + CI
 
-### Phase B — Abgeschlossen 2026-03-07
+Noch offen:
+- v2-Erweiterung: 15-25 Referenzschaltungen (Hierarchie, grosse Designs)
+- Funktionale HDL-Simulation (interner Simulator vs Verilog/VHDL)
+
+### Phase B  Abgeschlossen 2026-03-07
 
 Ziel:
 - Kernsemantik fuer Tri-State/Bus fachlich korrekt machen
@@ -221,10 +220,10 @@ Umfang:
 - W1 und W2
 
 Definition of Done:
-- kein bekannter `Z`-Downstream-Mismatch mehr — ERREICHT
-- echte Mehrtreiberfaelle modelliert — ERREICHT (Konflikte loesen zu `X` auf)
+- kein bekannter `Z`-Downstream-Mismatch mehr  ERREICHT
+- echte Mehrtreiberfaelle modelliert  ERREICHT (Konflikte loesen zu `X` auf)
 
-### Phase C
+### Phase C  In Arbeit
 
 Ziel:
 - UI und Export auf die neue Semantik hart ausrichten
@@ -232,11 +231,11 @@ Ziel:
 Umfang:
 - W4 und W5
 
-Definition of Done:
-- UI-Projektion ist konsistent
-- Hierarchiegrenzen sind sauber geregelt
+Status:
+- UI-Timing-Semantik ist lokal bereinigt; naechster Schritt ist CI-Integration
+- Hierarchie/Custom-IC-Absicherung noch nicht begonnen
 
-### Phase D
+### Phase D  Teilweise erreicht
 
 Ziel:
 - repo-weite Qualitaetsautomation
@@ -244,9 +243,15 @@ Ziel:
 Umfang:
 - W6
 
-Definition of Done:
-- CI-Gates laufen reproduzierbar
-- Reports sind Standardbestandteil der Entwicklung
+Erreicht:
+- 5 CI-Jobs mit Report-Artefakten
+- Contract Runner + Golden Corpus als echte Gates
+- focused-nine core als Hochrisiko-Gate
+
+Noch offen:
+- UI-Timing-Audit in CI
+- Branch Protection (externer Schritt)
+- CI-Performance/Caching
 
 ## Bug-Fix-Protokoll
 
@@ -271,15 +276,17 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 - UI und HDL keinen Widerspruch dazu zeigen
 - die bekannte Modellgrenze nicht einfach nur unerkannt geblieben ist
 
-## Naechster empfohlener Fokus (Post-P0/P1-1-Stand 2026-03-07)
+## Naechster empfohlener Fokus (Stand 2026-03-08)
 
-1. ~~**P1:** Verilator-LATCH-Warnung fuer `74HC373`~~ — RESOLVED P1-1 2026-03-07
-2. **P1:** `prevClk/stateKeys` fuer edge-getriggerte FFs sauber modellieren oder bewusst dokumentieren
-3. **P1/P2:** Automatischen Truth-Table- und Step-Sequence-Runner implementieren (W3-Grundgeruest)
-4. **P1/P2:** Golden-Corpus v1 zuerst ausführbar machen und in CI bringen; danach v2 fuer sequentielle, Tri-State- und Hierarchiefaelle ausbauen
-5. **P2:** Timing-Waveform-Diff im UI-Audit semantisch vertiefen (5 Faelle WARN wegen headless RAF-Limit — steps=0)
+1. **P1:** UI-Timing-Audit als CI-Job integrieren
+2. **P2:** Export-Determinismus / Re-Export-Diff in Golden Corpus aufnehmen
+3. **P2:** Funktionale Schaltungssimulation im Golden Corpus (iverilog/ghdl gegen goldene Exporte)
+4. **P2:** 34 unsupported Contract-Runner-Muster implementieren (step-sequence, forbidden-input, etc.)
+5. **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, Hierarchie, grosse Designs)
+6. **P2:** Branch Protection / Required Checks in GitHub Settings konfigurieren (externer Schritt)
+7. **P2:** CI-Performance (HDL-Tool-Caching, Docker-Image)
 
-Phasen A und B (HDL-Differenztest-Infrastruktur, `0/1/Z/X` und Mehrtreiberauflosung) sind abgeschlossen.
-W6 hat jetzt eine erste fachliche Regression in CI. Golden-Corpus v1 ist als Basissuite vorhanden, aber noch nicht ausführbar.
-Naechster Schwerpunkt: breitere Verifikationsautomatisierung (Truth-Table-/Step-Runner, Golden-Corpus-Ausfuehrung)
-und UI-Konsistenz (Phase C Vorbereitung).
+Phase B (0/1/Z/X und Mehrtreiberauflosung) ist abgeschlossen.
+Phase D (CI-Qualitaetsgates) ist weitgehend erreicht mit 5 Jobs.
+Phase A (HDL-Differenztest-Infrastruktur) ist teilweise erreicht mit Golden Corpus v1 + Contract Runner v1.
+Naechster Schwerpunkt: Phase C (UI-Konsistenz, insb. Timing-Semantik) und Phase A Vertiefung (Export-Determinismus, funktionale Simulation).

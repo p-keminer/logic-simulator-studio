@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-07T21:26:27.495Z",
+  "generatedAt": "2026-03-08T01:02:35.154Z",
   "baseUrl": "<dev-server>",
   "results": [
     {
@@ -30,7 +30,7 @@
       },
       "timing": {
         "titlePresent": true,
-        "steps": 0,
+        "steps": 8,
         "textNodeCount": 20,
         "signalLabels": [
           "HIGH",
@@ -58,15 +58,15 @@
         "hasXPath": true
       },
       "timingSemantic": {
-        "semanticPass": false,
-        "note": "TRIBUF(a=1, oe=1) → Z; NOT(Z) → X. Z and X colored paths expected.",
+        "semanticPass": true,
+        "note": "TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Z and X colored paths expected.",
         "findings": [
           "Labels OK: [a, oe, y] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)",
-          "Z-path (amber): present — HI_Z signal visible in timing waveform",
-          "X-path (red): present — conflict/X signal visible in timing waveform"
+          "Steps > 0: 8 snapshots recorded (simulation settled and produced history)",
+          "Z-path (amber): present -- HI_Z signal visible in timing waveform",
+          "X-path (red): present -- conflict/X signal visible in timing waveform"
         ],
-        "stepsRecorded": 0,
+        "stepsRecorded": 8,
         "labelsFound": [
           "HIGH",
           "Q",
@@ -121,13 +121,13 @@
       },
       "timing": {
         "titlePresent": true,
-        "steps": 0,
+        "steps": 3,
         "textNodeCount": 17,
         "signalLabels": [
           "HIGH",
           "Q",
           "d",
-          "LOW",
+          "HIGH",
           "Q",
           "clk",
           "D",
@@ -142,22 +142,22 @@
           "dff_dut.Q̄",
           "q"
         ],
-        "hasZPath": false,
+        "hasZPath": true,
         "hasXPath": false
       },
       "timingSemantic": {
-        "semanticPass": false,
+        "semanticPass": true,
         "note": "D_FF initial settle: labels and step count confirm timing tracks correctly.",
         "findings": [
           "Labels OK: [d, clk, q] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)"
+          "Steps > 0: 3 snapshots recorded (simulation settled and produced history)"
         ],
-        "stepsRecorded": 0,
+        "stepsRecorded": 3,
         "labelsFound": [
           "HIGH",
           "Q",
           "d",
-          "LOW",
+          "HIGH",
           "Q",
           "clk",
           "D",
@@ -204,7 +204,7 @@
       },
       "timing": {
         "titlePresent": true,
-        "steps": 0,
+        "steps": 3,
         "textNodeCount": 22,
         "signalLabels": [
           "HIGH",
@@ -213,7 +213,7 @@
           "LOW",
           "Q",
           "k",
-          "LOW",
+          "HIGH",
           "Q",
           "clk",
           "J",
@@ -230,17 +230,17 @@
           "jkff_dut.Q̄",
           "q"
         ],
-        "hasZPath": false,
+        "hasZPath": true,
         "hasXPath": false
       },
       "timingSemantic": {
-        "semanticPass": false,
+        "semanticPass": true,
         "note": "JK_FF initial settle: four input/output labels confirm channel presence.",
         "findings": [
           "Labels OK: [j, k, clk, q] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)"
+          "Steps > 0: 3 snapshots recorded (simulation settled and produced history)"
         ],
-        "stepsRecorded": 0,
+        "stepsRecorded": 3,
         "labelsFound": [
           "HIGH",
           "Q",
@@ -248,7 +248,7 @@
           "LOW",
           "Q",
           "k",
-          "LOW",
+          "HIGH",
           "Q",
           "clk",
           "J",
@@ -297,13 +297,13 @@
       },
       "timing": {
         "titlePresent": true,
-        "steps": 0,
+        "steps": 3,
         "textNodeCount": 17,
         "signalLabels": [
           "HIGH",
           "Q",
           "t",
-          "LOW",
+          "HIGH",
           "Q",
           "clk",
           "T",
@@ -318,22 +318,22 @@
           "tff_dut.Q̄",
           "q"
         ],
-        "hasZPath": false,
+        "hasZPath": true,
         "hasXPath": false
       },
       "timingSemantic": {
-        "semanticPass": false,
+        "semanticPass": true,
         "note": "T_FF initial settle: three labels confirm sequential gate channels.",
         "findings": [
           "Labels OK: [t, clk, q] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)"
+          "Steps > 0: 3 snapshots recorded (simulation settled and produced history)"
         ],
-        "stepsRecorded": 0,
+        "stepsRecorded": 3,
         "labelsFound": [
           "HIGH",
           "Q",
           "t",
-          "LOW",
+          "HIGH",
           "Q",
           "clk",
           "T",
@@ -582,7 +582,7 @@
       },
       "timing": {
         "titlePresent": true,
-        "steps": 0,
+        "steps": 4,
         "textNodeCount": 11,
         "signalLabels": [
           "HIGH",
@@ -598,17 +598,17 @@
           "y"
         ],
         "hasZPath": false,
-        "hasXPath": false
+        "hasXPath": true
       },
       "timingSemantic": {
-        "semanticPass": false,
+        "semanticPass": true,
         "note": "Dual drivers (1 vs 0) resolve to X. Red X-conflict path expected in timing.",
         "findings": [
           "Labels OK: [a, b, y] all visible in timing SVG",
-          "Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)",
-          "X-path (red): not present — requires steps > 0 (timing history empty)"
+          "Steps > 0: 4 snapshots recorded (simulation settled and produced history)",
+          "X-path (red): present -- conflict/X signal visible in timing waveform"
         ],
-        "stepsRecorded": 0,
+        "stepsRecorded": 4,
         "labelsFound": [
           "HIGH",
           "Q",

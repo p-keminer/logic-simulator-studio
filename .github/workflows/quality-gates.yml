@@ -33,6 +33,70 @@ jobs:
       - name: Run quality gates
         run: ./scripts/ci/run_quality_gates.sh
 
+  contract-runner:
+    name: Contract Runner v1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - quality-gates
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run contract runner
+        run: ./scripts/ci/run_contract_runner.sh
+
+      - name: Upload contract-runner artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-runner
+          path: |
+            validation/contract-runner-summary.json
+            validation/contract-runner-report.md
+
+  golden-corpus:
+    name: Golden Corpus v1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - quality-gates
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run golden corpus runner
+        run: ./scripts/ci/run_golden_corpus.sh
+
+      - name: Upload golden-corpus artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-corpus
+          path: |
+            validation/golden-corpus-v1-summary.json
+            validation/golden-corpus-v1-report.md
+
   focused-nine-core:
     name: Focused-Nine Core Regression
     runs-on: ubuntu-latest

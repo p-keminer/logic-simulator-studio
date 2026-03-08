@@ -54,7 +54,11 @@ const TIMING_SEMANTIC = {
     expectStepsGt0: true,
     expectZPath: true,   // amber dashed path: TRIBUF drives Z
     expectXPath: true,   // red dashed path: NOT(Z) → X at LED
-    note: 'TRIBUF(a=1, oe=1) → Z; NOT(Z) → X. Z and X colored paths expected.',
+    note: 'TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Z and X colored paths expected.',
+    stimulus: [
+      { gateId: 'sw_oe', mode: 'double', waitMs: 150 },
+      { gateId: 'sw_oe', mode: 'double', waitMs: 200 },
+    ],
   },
   dff_led: {
     // sw_d=1, sw_clk=0 → D_FF holds at q=0 initially
@@ -63,6 +67,9 @@ const TIMING_SEMANTIC = {
     expectZPath: false,
     expectXPath: false,
     note: 'D_FF initial settle: labels and step count confirm timing tracks correctly.',
+    stimulus: [
+      { gateId: 'sw_clk', mode: 'double', waitMs: 1200 },
+    ],
   },
   jkff_led: {
     // sw_j=1, sw_k=0, sw_clk=0 → JK_FF holds at q=0
@@ -71,6 +78,9 @@ const TIMING_SEMANTIC = {
     expectZPath: false,
     expectXPath: false,
     note: 'JK_FF initial settle: four input/output labels confirm channel presence.',
+    stimulus: [
+      { gateId: 'sw_clk', mode: 'double', waitMs: 1200 },
+    ],
   },
   tff_led: {
     // sw_t=1, sw_clk=0 → T_FF holds at q=0
@@ -79,6 +89,9 @@ const TIMING_SEMANTIC = {
     expectZPath: false,
     expectXPath: false,
     note: 'T_FF initial settle: three labels confirm sequential gate channels.',
+    stimulus: [
+      { gateId: 'sw_clk', mode: 'double', waitMs: 1200 },
+    ],
   },
   multi_driver_same_input: {
     // sw_a=1 and sw_b=0 both drive led → conflict → X (3)
@@ -87,8 +100,41 @@ const TIMING_SEMANTIC = {
     expectZPath: false,
     expectXPath: true,   // red dashed path: conflict between 1 and 0 → X
     note: 'Dual drivers (1 vs 0) resolve to X. Red X-conflict path expected in timing.',
+    stimulus: [
+      { gateId: 'sw_b', mode: 'double', waitMs: 150 },
+      { gateId: 'sw_b', mode: 'double', waitMs: 200 },
+    ],
   },
 };
+
+async function stimulateTiming(page, slug) {
+  const expectations = TIMING_SEMANTIC[slug];
+  const stimulus = expectations?.stimulus ?? [];
+  for (const step of stimulus) {
+    const selector = `g[data-gate-id="${step.gateId}"]`;
+    await page.waitForSelector(selector, { timeout: 10000 });
+    if (step.mode === 'double') {
+      await page.evaluate((sel) => {
+        const gate = document.querySelector(sel);
+        if (!gate) throw new Error(`gate not found for semantic timing stimulus: ${sel}`);
+        gate.dispatchEvent(new MouseEvent('dblclick', {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: 2,
+        }));
+      }, selector);
+    } else {
+      await page.click(selector, { delay: 40 });
+    }
+    await sleep(step.waitMs ?? 150);
+  }
+  // Give React + RAF one more turn after the final stimulus.
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() =>
+    requestAnimationFrame(() => resolve(true))
+  )));
+  await sleep(200);
+}
 
 async function clickButton(page, label) {
   await page.evaluate((wanted) => {
@@ -160,14 +206,12 @@ async function extractTiming(page) {
 //  - hasXPath: red SVG path present (X/conflict=3 signal in history)
 //  - steps: number of recorded timing snapshots
 
-async function extractTimingSemantic(page) {
-  // Give the simulation time to complete its initial settle and produce snapshots.
-  // batchChangedNets > 0 on first evaluation → SAMPLE_EVERY=1 → at least 1 snapshot.
-  await sleep(1200);
+async function extractTimingSemantic(page, slug) {
+  await stimulateTiming(page, slug);
   await clickButton(page, 'Timing');
   await page.waitForFunction(() => document.body.textContent?.includes('ZEITDIAGRAMM'), { timeout: 10000 });
-  // Small additional wait in case RAF hasn't committed the snapshot yet.
-  await sleep(400);
+  // Small additional wait in case a final RAF commit is still pending.
+  await sleep(250);
 
   const timing = await page.evaluate(() => {
     const text = document.body.textContent ?? '';
@@ -226,7 +270,7 @@ function checkTimingSemantic(slug, timingSem) {
     if (timingSem.steps > 0) {
       findings.push(`Steps > 0: ${timingSem.steps} snapshots recorded (simulation settled and produced history)`);
     } else {
-      findings.push(`Steps = 0: simulation produced no timing history (headless RAF scheduling — expectStepsGt0 not met)`);
+      findings.push(`Steps = 0: simulation produced no timing history (headless RAF scheduling -- expectStepsGt0 not met)`);
       semanticPass = false;
     }
   }
@@ -234,12 +278,12 @@ function checkTimingSemantic(slug, timingSem) {
   // Check 3: Z-colored path (HI_Z signal in timing)
   if (expectations.expectZPath) {
     if (timingSem.hasZPath) {
-      findings.push(`Z-path (amber): present — HI_Z signal visible in timing waveform`);
+      findings.push(`Z-path (amber): present -- HI_Z signal visible in timing waveform`);
     } else {
       if (timingSem.steps === 0) {
-        findings.push(`Z-path (amber): not present — requires steps > 0 (timing history empty)`);
+        findings.push(`Z-path (amber): not present -- requires steps > 0 (timing history empty)`);
       } else {
-        findings.push(`Z-path (amber): MISSING — expected HI_Z signal not visible`);
+        findings.push(`Z-path (amber): MISSING -- expected HI_Z signal not visible`);
         semanticPass = false;
       }
     }
@@ -248,12 +292,12 @@ function checkTimingSemantic(slug, timingSem) {
   // Check 4: X-colored path (conflict signal in timing)
   if (expectations.expectXPath) {
     if (timingSem.hasXPath) {
-      findings.push(`X-path (red): present — conflict/X signal visible in timing waveform`);
+      findings.push(`X-path (red): present -- conflict/X signal visible in timing waveform`);
     } else {
       if (timingSem.steps === 0) {
-        findings.push(`X-path (red): not present — requires steps > 0 (timing history empty)`);
+        findings.push(`X-path (red): not present -- requires steps > 0 (timing history empty)`);
       } else {
-        findings.push(`X-path (red): MISSING — expected conflict/X signal not visible`);
+        findings.push(`X-path (red): MISSING -- expected conflict/X signal not visible`);
         semanticPass = false;
       }
     }
@@ -316,7 +360,7 @@ function renderReport(summary) {
       ? `${s.stepsRecorded} Schritte`
       : `0 Schritte (Simulation lief nicht oder kein RAF-Tick)`;
     const findingsText = s.findings.map((f) => `  - ${f}`).join('\n');
-    return `### \`${item.slug}\` — ${statusIcon}\n\n${s.note}\n\nSchritte: ${stepsInfo}\n\nBefunde:\n${findingsText}`;
+    return `### \`${item.slug}\` - ${statusIcon}\n\n${s.note}\n\nSchritte: ${stepsInfo}\n\nBefunde:\n${findingsText}`;
   }).join('\n\n');
 
   // Limitations section
@@ -371,7 +415,7 @@ function renderReport(summary) {
     `## Wichtige Grenze dieses UI-Laufs\n\n` +
     `Der semantische Timing-Check ist ein erster Schritt ueber den reinen Smoke-Test hinaus.\n` +
     `Signal-Label-Pruefung funktioniert zuverlaessig (SVG text-Elemente sind immer vorhanden).\n` +
-    `Z/X-Pfad-Pruefung setzt steps > 0 voraus — das haengt davon ab, ob der headless-Browser\n` +
+    `Z/X-Pfad-Pruefung setzt steps > 0 voraus -- das haengt davon ab, ob der headless-Browser\n` +
     `einen requestAnimationFrame-Tick zwischen Circuit-Load und Timing-Lesen ausfuehrt.\n\n` +
     `Was noch fehlt fuer einen vollen Waveform-Diff:\n` +
     `- Genaue Signalwerte pro Schritt (erfordert Zugriff auf React-State oder App-API)\n` +
@@ -408,7 +452,7 @@ for (const item of SUMMARY.cases) {
     let timingSemanticResult = null;
 
     if (SEMANTIC_SLUGS.has(item.slug)) {
-      timing = await extractTimingSemantic(page);
+      timing = await extractTimingSemantic(page, item.slug);
       timingSemanticResult = checkTimingSemantic(item.slug, timing);
     } else {
       timing = await extractTiming(page);
