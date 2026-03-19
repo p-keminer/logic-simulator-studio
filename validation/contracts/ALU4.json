@@ -1,0 +1,79 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "ALU4",
+  "label": "ALU",
+  "category": "arith",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit arithmetic logic unit. Operations: 000=ADD, 001=SUB, 010=AND, 011=OR, 100=XOR, 101=NOT_A, 110=SHL (A<<1), 111=SHR (A>>1). CIN is carry-in for ADD/SUB."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a0",  "label": "A0",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a1",  "label": "A1",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2",  "label": "A2",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a3",  "label": "A3",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b0",  "label": "B0",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b1",  "label": "B1",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b2",  "label": "B2",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b3",  "label": "B3",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "op0", "label": "OP0", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "op1", "label": "OP1", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "op2", "label": "OP2", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "cin", "label": "CIN", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "s0",   "label": "S0",   "role": "data",   "canBeTriState": false },
+      { "id": "s1",   "label": "S1",   "role": "data",   "canBeTriState": false },
+      { "id": "s2",   "label": "S2",   "role": "data",   "canBeTriState": false },
+      { "id": "s3",   "label": "S3",   "role": "data",   "canBeTriState": false },
+      { "id": "cout", "label": "COUT", "role": "carry",  "canBeTriState": false },
+      { "id": "zero", "label": "ZERO", "role": "zero",   "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "case(op) 3'b000: {cout,s}=a+b+cin; 3'b001: {cout,s}=a-b-cin; default: logical ops; endcase",
+    "vhdlNotes": "process(a,b,op,cin) uses unsigned variable; std_logic_vector cast on concatenation for & operator.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test ADD/SUB with carry propagation, logical ops, and shift ops for representative patterns."
+  },
+
+  "risks": [
+    {
+      "class": "export-risk",
+      "description": "VHDL & operator on STD_LOGIC is type-ambiguous — fixed with std_logic_vector'(...) cast in ALU4 VHDL exporter.",
+      "confirmed": true
+    }
+  ],
+  "modelLimits": [
+    "No carry-look-ahead modelling — ripple carry only.",
+    "Shift operations are logical shifts, not arithmetic."
+  ]
+}

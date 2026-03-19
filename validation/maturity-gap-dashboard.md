@@ -1,8 +1,8 @@
 # Logic Gate Simulator - Maturity Gap Dashboard
 
 **Project:** logic-gate-simulator
-**Generated:** 2026-03-08
-**Basis:** focused-nine-summary.json, focused-nine-ui-summary.json, contract-runner-summary.json, golden-corpus-v1-summary.json, gate-gap-analysis.md, gate-inventory.json, testability-mapping.json, all 12 gate contracts
+**Generated:** 2026-03-19
+**Basis:** focused-nine-summary.json, focused-nine-ui-summary.json, contract-runner-summary.json, golden-corpus-v1-summary.json, gate-gap-analysis.md, gate-inventory.json, testability-mapping.json, all 86 gate contracts
 
 ---
 
@@ -12,7 +12,7 @@ This dashboard consolidates maturity evidence across seven criteria. Each criter
 
 **Overall maturity level: BETA / APPROACHING-PRODUCTION**
 
-**Last updated 2026-03-08 (post-P1-5/P1-7):** All P0 blockers and P1-1 through P1-7 resolved. P1-5 (Contract Runner v1): 91 pass, 0 fail, 34 unsupported - in CI. P1-6 (Golden Corpus v1 Runner): 11 pass, 0 fail, 1 expected_limit - in CI. P1-7 (Focused-Nine UI Audit): 12 smoke PASS, 5 semantic PASS, 0 semantic WARN - in CI. CI now has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **845/845**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P2: export determinism, unsupported contract patterns, Golden Corpus v2, branch protection, and CI performance.
+**Last updated 2026-03-19:** All P0 blockers and P1-1 through P1-7 remain resolved. Contract Runner v1 now stands at 447 pass, 0 fail, 0 unsupported and is green in CI. Golden Corpus v1 stands at 23 pass, 0 fail, 1 expected_limit across 24 circuits and now runs live export-determinism plus external HDL syntax/lint and scenario-based simulation, including the nine v2 pilot seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`. Two one-level hierarchical/custom-IC HDL paths are now verified via structural flattening, and the sequential-feedback seed adds a longer multi-cycle regression path. P1-7 (Focused-Nine UI Audit) remains green at 12 smoke PASS, 5 semantic PASS, 0 semantic WARN. CI still has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **853/853**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P2: Golden Corpus v2 breadth, branch protection, CI performance, deeper hierarchy coverage, and broader custom-IC verification.
 
 ---
 
@@ -63,11 +63,11 @@ The simulator now uses a four-valued signal algebra: `SignalValue = 0 | 1 | 2 | 
 
 ### Current State
 
-The four-value signal model (0/1/Z/X) is now consistent across simulation and HDL export for all focused-nine test cases. Basic gate HDL export (AND/OR/NOT etc.) was added in the P0 phase. No automated cross-layer consistency check exists yet, but all 12 focused-nine HDL exports pass toolchain validation.
+The four-value signal model (0/1/Z/X) is now consistent across simulation and HDL export for all focused-nine test cases, and Golden Corpus v1 now adds external HDL syntax/lint plus scenario-based simulation across all non-boundary corpus cases. Basic gate HDL export (AND/OR/NOT etc.) was added in the P0 phase. No exhaustive cross-layer equivalence proof exists yet, but the highest-risk focused-nine and golden-corpus slices now execute against external HDL tools.
 
 ### Confirmed Strengths
 
-- Gate contracts (12 files in `validation/contracts/`) document expected behavior independent of implementation
+- Gate contracts (86 files in `validation/contracts/`) document expected behavior independent of implementation
 - Contract schema (`gate-contract-schema.json`) provides a machine-readable reference for consistency checking
 - 74HC74 contract documents the /PRE=/CLR=0 forbidden state and the Q=1, Qn=1 output  consistent with source
 - All 12 focused-nine Verilog and VHDL exports match the UI HDL modal textually [CONFIRMED: focused-nine-ui-summary.json]
@@ -104,15 +104,15 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 
 ### Current State
 
-Verification covers 845/845 vitest tests, 12/12 focused-nine simulation + toolchain cases, 91/125 contract runner cases (34 unsupported patterns), and 11/12 golden corpus cases (1 expected_limit). Multi-driver behavior is now formally defined and tested. The testability mapping (`testability-mapping.json`) defines 14 test patterns across 18 gate classes (124 required pattern slots). Contract Runner v1 provides automated behavioral verification against 12 gate contracts. Golden Corpus v1 Runner provides structural regression across 12 reference circuits.
+Verification covers 853/853 vitest tests, 12/12 focused-nine simulation + toolchain cases, 447/447 contract runner cases (0 unsupported cases), and 22/23 golden corpus cases (1 expected_limit). Multi-driver behavior is now formally defined and tested. The testability mapping (`testability-mapping.json`) defines 14 test patterns across 18 gate classes (124 required pattern slots). Contract Runner v1 now provides automated behavioral verification across 86 gate contracts. Golden Corpus v1 Runner provides structural, syntax, and scenario-based HDL regression across 23 reference circuits.
 
 ### Confirmed Strengths
 
 - Testability mapping is comprehensive and machine-readable
 - Gate contracts define precise behavioral expectations with input/output tables
 - Focused-nine audit covers 12 high-risk cases  all now pass [CONFIRMED: focused-nine-summary.json]
-- Contract Runner v1 verifies 12 gate contracts (125 cases)  91 pass, 34 unsupported [CONFIRMED: contract-runner-summary.json]
-- Golden Corpus v1 Runner verifies 12 reference circuits  11 pass, 1 expected_limit [CONFIRMED: golden-corpus-v1-summary.json]
+- Contract Runner v1 verifies 86 gate contracts (447 cases)  447 pass, 0 unsupported [CONFIRMED: contract-runner-summary.json]
+- Golden Corpus v1 Runner verifies 24 reference circuits  23 pass, 1 expected_limit [CONFIRMED: golden-corpus-v1-summary.json]
 - Risk classes are assigned per-gate, enabling risk-weighted test prioritization
 - Multi-driver conflict behavior is now defined and verified: conflicting drivers -> X (3) [CONFIRMED]
 
@@ -122,20 +122,19 @@ Verification covers 845/845 vitest tests, 12/12 focused-nine simulation + toolch
 |---|---|---|
 | Truth-table / step-sequence automation exists only for contracted gates and golden-corpus structure checks, not for the full gate inventory | contract-runner-summary.json, golden-corpus-v1-summary.json | P2 |
 | Forbidden-input-combination not tested for SR_LATCH S=R=1 | testability-mapping.json | P2 |
-| 34 contract-runner patterns unsupported (step-sequence, forbidden-input, async-set/reset, output-enable) | contract-runner-summary.json | P2 |
 | 26 documentation-gap entries  gate behavior partially undocumented | gate-gap-analysis.md 10 | P2 |
-| Only 12 of 71+ gates have formal contracts | gate-inventory.json | P2 |
+| Custom ICs remain outside the static contract model | gate-gap-analysis.md 8 | P2 |
 
 ### Resolved Blockers
 
 - **RESOLVED P0 2026-03-07:** Multi-driver simulation behavior is now defined: conflicting drivers on the same net resolve to X (3). The `multi_driver_same_input` test confirms conflict detection and X resolution.
-- **RESOLVED P1-5 2026-03-08:** Contract Runner v1 now executes automatically and runs as a CI gate. 91 pass, 0 fail, 34 unsupported.
+- **RESOLVED / EXPANDED 2026-03-19:** Contract Runner v1 executes automatically, runs as a CI gate, and now covers 86 contracts with 447 pass, 0 fail, 0 unsupported. Shared-bus multi-driver conflict cases are now executed for TRIBUF, 74HC373, 74HC374, and RAM256.
 
 ### Next Steps
 
-1. Implement truth-table and step-sequence test patterns to close the 34 unsupported contract-runner slots
-2. Add forbidden-input-combination assertions to SR_LATCH, JK_FF_ASSR, 74HC74 tests
-3. Expand contracts to cover remaining 60 gates (prioritize by risk class)
+1. Add forbidden-input-combination assertions to SR_LATCH, JK_FF_ASSR, 74HC74 tests
+2. Extend the contract model for dynamic custom-IC verification instead of adding more static duplicate specs
+3. Broaden multi-driver verification from representative shared-bus fixtures to larger composed circuit scenarios in Golden Corpus v2
 
 **Priority: P2** (further test pattern expansion  Contract Runner v1 and Golden Corpus v1 now operational and in CI)
 
@@ -147,7 +146,7 @@ Verification covers 845/845 vitest tests, 12/12 focused-nine simulation + toolch
 
 ### Current State
 
-All 12 focused-nine cases pass all tools without errors or warnings. 74HC373 Verilog latch warning resolved via Verilog-2001 export with `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */` inline pragmas (P1-1, 2026-03-07).
+All 12 focused-nine cases pass all tools without errors or warnings. Golden Corpus v1 now adds external HDL syntax/lint checks (iverilog, verilator, yosys, ghdl) and scenario-based iverilog/vvp + ghdl simulation for all non-boundary cases. 74HC373 Verilog latch warning resolved via Verilog-2001 export with `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */` inline pragmas (P1-1, 2026-03-07), and 74HC283 VHDL arithmetic export now compiles cleanly under GHDL.
 
 ### Confirmed Failures
 
@@ -175,7 +174,7 @@ None.
 
 1. ~~Fix 74HC373 Verilog latch~~  **RESOLVED P1-1 2026-03-07** (Verilog-2001 + `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */`)
 2. ~~Extend CI beyond focused-nine core~~  **RESOLVED P1-6 2026-03-08** (contract-runner + golden-corpus jobs added)
-3. Add external HDL functional simulation (iverilog/ghdl) against golden corpus exports as a v2 gap
+3. Expand the current golden-corpus HDL scenarios toward larger traces and hierarchical designs
 
 **Priority: P2** (broader regression automation  all tooling warnings resolved 2026-03-07)
 
@@ -187,7 +186,7 @@ None.
 
 ### Current State
 
-Custom ICs exist (`category=custom`) but were explicitly excluded from the gate contract analysis  they are dynamically registered at runtime and cannot be statically verified. No evidence of hierarchy-specific test coverage exists. Multi-driver bus conflict behavior is now correctly modeled.
+Custom ICs exist (`category=custom`) but were explicitly excluded from the gate contract analysis  they are dynamically registered at runtime and cannot be statically verified. Two hierarchy-specific regression paths now exist via `gc_v2_6_custom_halfadder` and `gc_v2_9_custom_reg4_pipeline`, which verify one-level custom-IC HDL flattening in both combinational and sequential reuse patterns, but broader hierarchy coverage and static contract strategy remain open. Multi-driver bus conflict behavior is now correctly modeled.
 
 ### Confirmed Strengths
 
@@ -200,7 +199,7 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 | Issue | Evidence | Severity |
 |---|---|---|
 | Custom ICs: no contracts, no static analysis possible | gate-gap-analysis.md 8 | P2 |
-| Golden Corpus v1 covers 12 circuits but none are large (>20 gates) or hierarchical | `golden-corpus-v1.json`  12 reference circuits, none large/hierarchical; custom ICs still uncovered | P2 |
+| Golden Corpus v1 covers 24 circuits and now includes nine broader v2 pilot seeds, but hierarchy/custom-IC coverage is still only one-level and still narrow | `golden-corpus-v1.json`  24 reference circuits including `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`; two custom-IC HDL paths are covered via flattening and longer sequential traces have begun, but deeper hierarchy remains open | P2 |
 | ~~STT variable limit (max 8) blocks state inspection for all ICs with >8 inputs+state~~ | **PARTIALLY RESOLVED (post-P0):** STT now renders a "Reduzierte Ansicht" (reduced view) for wide sequentials  8-64 rows of meaningful data instead of error message | P2 (residual) |
 
 ### Resolved Blockers
@@ -226,8 +225,8 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 
 A CI pipeline exists (`.github/workflows/quality-gates.yml`) with six jobs:
 - `quality-gates`  test/build/lint via `run_quality_gates.sh`
-- `contract-runner`  Contract Runner v1 (91 pass, 0 fail, 34 unsupported) via `run_contract_runner.sh`
-- `golden-corpus`  Golden Corpus v1 Runner (11 pass, 0 fail, 1 expected_limit) via `run_golden_corpus.sh`
+- `contract-runner`  Contract Runner v1 (447 pass, 0 fail, 0 unsupported) via `run_contract_runner.sh`
+- `golden-corpus`  Golden Corpus v1 Runner (23 pass, 0 fail, 1 expected_limit) via `run_golden_corpus.sh`
 - `focused-nine-ui`  12-case browser/UI regression via `run_focused_nine_ui.sh`
 - `focused-nine-core`  12-case simulation + HDL-regression via `run_focused_nine_core.sh`
 - `hdl-toolchain`  iverilog/ghdl/yosys/verilator presence check via `check_hdl_toolchain.sh`
@@ -237,13 +236,13 @@ Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real 
 ### Confirmed Strengths
 
 - Focused-nine audit is structured and machine-readable (JSON format)
-- Contract Runner v1 provides automated behavioral verification for 12 gate contracts [CONFIRMED: contract-runner-summary.json  91 pass, CI gate]
-- Golden Corpus v1 Runner provides structural regression for 12 reference circuits [CONFIRMED: golden-corpus-v1-summary.json  11 pass, 1 expected_limit, CI gate]
+- Contract Runner v1 provides automated behavioral verification for 86 gate contracts [CONFIRMED: contract-runner-summary.json  447 pass, CI gate]
+- Golden Corpus v1 Runner provides structural plus external HDL regression for 24 reference circuits [CONFIRMED: golden-corpus-v1-summary.json  23 pass, 1 expected_limit, CI gate]
 - Focused-Nine UI audit is now a CI gate with 12 smoke PASS and 5 semantic PASS [CONFIRMED: focused-nine-ui-summary.json]
 - Gap analysis assigns risk classes to all findings
 - Testability mapping defines a prioritized test plan (P0/P1/P2/P3)
 - Gate contracts provide specification-level acceptance criteria
-- vitest: 845/845 pass  test suite is comprehensive for simulation correctness
+- vitest: 853/853 pass  test suite is comprehensive for simulation correctness
 - CI uploads reports as artifacts for contract-runner, golden-corpus, focused-nine-core, and focused-nine-ui
 
 ### Confirmed Weaknesses
@@ -251,8 +250,7 @@ Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real 
 | Issue | Evidence | Severity |
 |---|---|---|
 | Branch protection / required status checks not configured in GitHub Settings | External manual step needed | P2 |
-| No export-determinism check (re-export + diff against golden artifacts) | golden-corpus-v1-report.md: listed as v2 gap | P2 |
-| No external HDL functional simulation in golden corpus (iverilog/ghdl run against golden exports) | golden-corpus-v1-report.md: listed as v2 gap | P2 |
+| Golden Corpus HDL verification is scenario-based, not exhaustive across arbitrary traces or large designs | golden-corpus-v1-report.md | P2 |
 | Known issues not linked to issue tracker | gate-gap-analysis.md, focused-nine-summary.json | P2 |
 | ~~4 defaultInputValues unsafe /OE defaults~~ | **RESOLVED P1b 2026-03-07** | ~~P1~~ done |
 | ~~Golden-Corpus v1 exists as artifacts, but no executable runner or CI gate~~ | **RESOLVED P1-6 2026-03-08**  Golden Corpus v1 Runner built and wired into CI | ~~P1~~ done |
@@ -261,9 +259,9 @@ Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real 
 
 ### Next Steps
 
-1. Add export-determinism check to Golden Corpus (re-export + diff against golden artifacts)
-2. Configure branch protection rules in GitHub Settings to enforce required status checks
-3. Create a known-issues register (structured JSON or GitHub issues) linked from the gap analysis
+1. Configure branch protection rules in GitHub Settings to enforce required status checks
+2. Create a known-issues register (structured JSON or GitHub issues) linked from the gap analysis
+3. Expand Golden Corpus v2 with larger/hierarchical cases and deeper HDL traces
 4. Evaluate CI caching/containerization for HDL tool installation and browser bootstrap
 
 **Priority: P2** (export-determinism, branch protection, issue tracker linkage, CI performance)
@@ -326,8 +324,8 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | ~~P1-2~~ | Unsafe /OE defaultInputValues on TRIBUF, 74HC373, 74HC374, 74HC595 | **DONE P1b 2026-03-07** |
 | ~~P1-1~~ | 74HC373 Verilog latch  Verilator LATCH warning-as-error | **DONE P1-1 2026-03-07** |
 | ~~P1-3~~ | prevClk hidden state not in stateKeys (edge-triggered FFs) | **DONE P1-3 2026-03-07** |
-| ~~P1-5~~ | Contract Runner v1  automated gate contract verification | **DONE P1-5 2026-03-08**  91 pass, 0 fail, 34 unsupported, in CI |
-| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE P1-6 2026-03-08**  11 pass, 1 expected_limit, regression CI established |
+| ~~P1-5~~ | Contract Runner v1  automated gate contract verification | **DONE / EXPANDED P1-5 2026-03-19**  447 pass, 0 fail, 0 unsupported, in CI |
+| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE / EXPANDED P1-6 2026-03-19**  23 pass, 1 expected_limit, live exporter diff + external HDL checks established |
 | ~~P1-7~~ | Focused-Nine UI audit as CI gate | **DONE P1-7 2026-03-08**  12 smoke PASS, 5 semantic PASS, 6 CI jobs |
 
 ### P1  High Priority (no open items)
@@ -341,13 +339,10 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | ID | Issue | Criterion |
 |---|---|---|
 | P2-1 | MS_JK_FF HDL export approximates master-slave as negedge-only | Crit 2 |
-| P2-2 | Gate contracts exist for only 12/71 gates | Crit 3 |
 | P2-3 | Custom IC (category=custom) contracts  no static verification strategy | Crit 5 |
-| P2-4 | Export-determinism / re-export diff not yet in golden corpus or CI | Crit 4, Crit 6 |
 | P2-5 | 26 documentation-gap items in gate inventory | Crit 7 |
 | P2-6 | Branch protection / required status checks not configured (GitHub Settings) | Crit 6 |
-| P2-7 | Golden Corpus v2 expansion  large/hierarchical circuits, external HDL simulation | Crit 5 |
-| P2-8 | 34 unsupported contract-runner patterns (step-sequence, forbidden-input, etc.) | Crit 3 |
+| P2-7 | Golden Corpus v2 expansion  large/hierarchical circuits, broader HDL coverage | Crit 5 |
 
 ---
 
@@ -357,13 +352,13 @@ The simulator now has strong technical depth for combinational, sequential, and 
 |---|---|
 | `validation/focused-nine-summary.json` | 12 simulation+toolchain test results (12/12 PASS, 0 tooling warnings) |
 | `validation/focused-nine-ui-summary.json` | UI and STT audit results (12/12 smoke PASS, 5 semantic PASS, 0 semantic WARN) |
-| `validation/contract-runner-summary.json` | Contract Runner v1 results (91 pass, 0 fail, 34 unsupported, 125 total) |
-| `validation/golden-corpus-v1-summary.json` | Golden Corpus v1 results (11 pass, 0 fail, 1 expected_limit, 12 total) |
-| `validation/golden-corpus-v1.json` | 12 Golden-Corpus-v1 reference circuits with class, checkpoints, rationale |
-| `validation/golden-corpus-v1.md` | Human-readable description of the 12 Golden-Corpus-v1 circuits |
+| `validation/contract-runner-summary.json` | Contract Runner v1 results (447 pass, 0 fail, 0 unsupported, 447 total) |
+| `validation/golden-corpus-v1-summary.json` | Golden Corpus v1 results (23 pass, 0 fail, 1 expected_limit, 24 total) |
+| `validation/golden-corpus-v1.json` | 24 Golden-Corpus-v1 reference circuits with class, checkpoints, rationale |
+| `validation/golden-corpus-v1.md` | Human-readable description of the 24 Golden-Corpus-v1 circuits |
 | `validation/gate-gap-analysis.md` | Full gap analysis (11 sections, 323 lines) |
 | `validation/gate-inventory.json` | All 83 gate entries with metadata |
 | `validation/testability-mapping.json` | 18 gate classes, 14 test patterns, 124 slots |
-| `validation/contracts/*.json` | 12 gate contracts |
+| `validation/contracts/*.json` | 86 gate contracts |
 | `validation/gate-contract-schema.json` | JSON Schema for gate contracts |
 | `.github/workflows/quality-gates.yml` | CI pipeline  6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain |

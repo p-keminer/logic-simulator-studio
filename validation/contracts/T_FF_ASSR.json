@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "T_FF_ASSR",
+  "label": "T-FF/SR",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "s", "effect": "preset", "activeLevel": 1, "activeLow": false },
+      { "portId": "r", "effect": "reset", "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "Toggle flip-flop with asynchronous set and reset. Async S/R override clock. T=1 → toggle at rising edge (when no async active). T=0 → hold."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "t",   "label": "T",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock",       "activeLow": false, "defaultValue": 0 },
+      { "id": "s",   "label": "S",   "role": "async-set",   "activeLow": false, "defaultValue": 0 },
+      { "id": "r",   "label": "R",   "role": "async-reset", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "asyncSRWrapVerilog: async S/R override. T=1 → q<=~q when no async active.",
+    "vhdlNotes": "asyncSRWrapVHDL: similar.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "async-control-override",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify async S/R override toggle. Initial Q=0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No metastability modelling.",
+    "prevClk hidden state not exposed to STT."
+  ]
+}

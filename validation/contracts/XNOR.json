@@ -1,0 +1,58 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "XNOR",
+  "label": "XNOR",
+  "category": "logic_basic",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "2-input XNOR. Output is 1 when inputs are the same."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "out", "label": "Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign out = ~(a ^ b);",
+    "vhdlNotes": "out <= a xnor b;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Truth table: 00→1, 01→0, 10→0, 11→1."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No propagation delay (combinational, instantaneous).",
+    "No Hi-Z handling — floating input treated as 0."
+  ]
+}

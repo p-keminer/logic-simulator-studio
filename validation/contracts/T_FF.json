@@ -1,0 +1,62 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "T_FF",
+  "label": "T-FF",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "Toggle flip-flop. T=1 → Q toggles at rising clock edge. T=0 → Q holds. Q̄ always = ~Q."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "t",   "label": "T",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) if (t) q <= ~q; assign q_n = ~q; verilogWireOutputs=['q_n']",
+    "vhdlNotes": "process(clk) if rising_edge(clk) then if t='1' then q<=not q; end if; end if; q_n <= not q;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "sequential-step-sequence",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Initial Q=0. T=1: Q toggles (0→1→0→1...) at each rising edge. T=0: Q holds."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No metastability modelling.",
+    "prevClk hidden state not exposed to STT."
+  ]
+}

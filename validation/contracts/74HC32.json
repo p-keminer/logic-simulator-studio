@@ -1,0 +1,64 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC32",
+  "label": "74HC32",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Quad 2-input OR gate (4 independent gates). Each Y = A | B. propagationDelay=7."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a1", "label": "A1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b1", "label": "B1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2", "label": "A2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b2", "label": "B2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a3", "label": "A3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b3", "label": "B3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a4", "label": "A4", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b4", "label": "B4", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y1", "label": "Y1", "role": "data", "canBeTriState": false },
+      { "id": "y2", "label": "Y2", "role": "data", "canBeTriState": false },
+      { "id": "y3", "label": "Y3", "role": "data", "canBeTriState": false },
+      { "id": "y4", "label": "Y4", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign y1 = a1 | b1; etc. (4 independent OR gates)",
+    "vhdlNotes": "y1 <= a1 or b1; etc.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test at least one gate exhaustively. propagationDelay=7."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

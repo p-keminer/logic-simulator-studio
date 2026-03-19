@@ -47,8 +47,10 @@ gateRegistry.register({
     const qn = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
     return [
       `// SR-Latch ${sid} (cross-coupled NOR)`,
+      `/* verilator lint_off UNOPTFLAT */`,
       `nor g_${sid}_q (${q},  ${r}, ${qn});`,
       `nor g_${sid}_qn(${qn}, ${s}, ${q});`,
+      `/* verilator lint_on UNOPTFLAT */`,
     ].join('\n');
   },
   toVHDL: (g, w) => {

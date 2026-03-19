@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
+  "version": "1.8.0",
   "createdAt": "2026-03-07",
-  "description": "Golden Corpus v1 — first regression suite for LogicSim HDL export and simulation correctness",
+  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, now including nine Golden Corpus v2 pilot seeds",
   "circuits": [
     {
       "slug": "gc_c1_basic_gates",
@@ -81,7 +81,7 @@
       "slug": "gc_s3_74hc74",
       "class": "sequential",
       "title": "74HC74 Dual D-FF with Preset/Clear",
-      "gates": ["IC_74HC74"],
+      "gates": ["74HC74"],
       "inputs": ["pre1", "clr1", "d1", "clk1", "pre2", "clr2", "d2", "clk2"],
       "outputs": ["w_0", "w_1"],
       "checkPoints": {
@@ -155,7 +155,7 @@
       "slug": "gc_m2_283_adder",
       "class": "mixed",
       "title": "74HC283 4-bit adder (A=7, B=8 → S=15)",
-      "gates": ["IC_74HC283"],
+      "gates": ["74HC283"],
       "inputs": ["a1", "a2", "a3", "a4", "b1", "b2", "b3", "b4", "c0"],
       "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4"],
       "initialState": {"a1": 1, "a2": 1, "a3": 1, "a4": 0, "b1": 0, "b2": 0, "b3": 0, "b4": 1, "c0": 0},
@@ -171,7 +171,7 @@
       "slug": "gc_m3_counter_gate",
       "class": "mixed",
       "title": "74HC161 counter + AND gate (detect state 3)",
-      "gates": ["IC_74HC161", "AND"],
+      "gates": ["74HC161", "AND"],
       "inputs": ["clk", "clrn", "ldn", "enp", "ent", "d0", "d1", "d2", "d3"],
       "outputs": ["w_2"],
       "checkPoints": {
@@ -181,6 +181,391 @@
         "mixedGateFF": "AND in gateLines + 74HC161 in ffLines — tests mixed combinational/sequential emit order"
       },
       "rationale": "Counter feeding combinational logic: covers verilogExtraRegs, mixed gateLines+ffLines ordering, IC+primitive composition. Not in focused-nine."
+    },
+    {
+      "slug": "gc_s5_dff_basic",
+      "class": "sequential",
+      "title": "D-FF basic clocking (both Q and Qn outputs)",
+      "gates": ["D_FF"],
+      "inputs": ["d", "clk"],
+      "outputs": ["w_0", "w_1"],
+      "checkPoints": {
+        "semantics": "D sampled on posedge CLK only; w_0=Q (reg), w_1=Qn (assign ~Q)",
+        "verilogPorts": ["input wire d", "input wire clk", "output reg  w_0", "output wire w_1"],
+        "shadowSignals": ["w_0_q", "w_1_q"],
+        "ffBlock": "always @(posedge clk) begin w_0 <= d; end"
+      },
+      "rationale": "D_FF with both Q and Qn as output ports: covers procDriven vs wire output classification, shadow signal pair generation in VHDL. GC-S1 from plan."
+    },
+    {
+      "slug": "gc_s7_hc161_vs_hc163",
+      "class": "sequential",
+      "title": "74HC161 (async clear) vs 74HC163 (sync clear) side-by-side",
+      "gates": ["74HC161", "74HC163"],
+      "inputs": ["clk", "clrn", "enp", "ent", "ldn", "d0", "d1", "d2", "d3"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7"],
+      "checkPoints": {
+        "semantics": "161: async clear via negedge clrn sensitivity; 163: sync clear inside rising_edge block only",
+        "verilogDiff": "161: always @(posedge clk or negedge clrn); 163: always @(posedge clk)",
+        "vhdlDiff": "161: process(clk, clrn) with if clrn='0' outside rising_edge; 163: process(clk) with clrn check inside rising_edge",
+        "extraRegs": ["cnt_ctr161", "cnt_ctr163"],
+        "internalWires": ["w_ctr161_rco", "w_ctr163_rco"]
+      },
+      "rationale": "Key distinguishing test: async vs sync clear in two counter variants. 16 shared signals plus separate cnt extra-regs. GC-S7 from plan (highest diagnostic value)."
+    },
+    {
+      "slug": "gc_s8_hc194_modes",
+      "class": "sequential",
+      "title": "74HC194 universal shift register — all 4 S1/S0 modes",
+      "gates": ["74HC194"],
+      "inputs": ["clk", "clrn", "s0", "s1", "sr", "sl", "d0", "d1", "d2", "d3"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3"],
+      "checkPoints": {
+        "semantics": "S1S0=00 hold, 01 shift-right (sr in), 10 shift-left (sl in), 11 parallel load",
+        "verilogFFBlock": "always @(posedge clk or negedge clrn) with case({s1,s0})",
+        "vhdlFFBlock": "process(clk, clrn) with case STD_LOGIC_VECTOR'(s1 & s0)",
+        "extraReg": "reg_dut — verilogExtraRegs/vhdlExtraSignals mechanism",
+        "shadowSignals": ["w_0_q", "w_1_q", "w_2_q", "w_3_q"]
+      },
+      "rationale": "74HC194 universal shift register: covers all 4 operating modes, STD_LOGIC_VECTOR cast in VHDL case selector, verilogExtraRegs for shift register state. GC-S8 from plan."
+    },
+    {
+      "slug": "gc_v2_1_mux_fabric",
+      "class": "combinational",
+      "title": "16-input selector fabric (dual 74HC151 banks + 74HC153 merge)",
+      "gates": ["74HC151", "74HC151", "74HC153"],
+      "inputs": [
+        "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7",
+        "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
+        "s0", "s1", "s2", "m0", "m1"
+      ],
+      "outputs": ["w_8", "w_9"],
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire d0", "input wire d1", "input wire d2", "input wire d3",
+          "input wire d4", "input wire d5", "input wire d6", "input wire d7",
+          "input wire d8", "input wire d9", "input wire d10", "input wire d11",
+          "input wire d12", "input wire d13", "input wire d14", "input wire d15",
+          "input wire s0", "input wire s1", "input wire s2", "input wire m0", "input wire m1",
+          "output wire w_8", "output wire w_9"
+        ],
+        "internalWires": ["w_4", "w_5", "w_6", "w_7"],
+        "verilog": "assign w_8 = w_2 ? 1'b0 : ({m1,m0}==2'd0 ? w_4 :"
+      },
+      "rationale": "First v2 pilot seed: a larger combinational selector fabric that composes two 74HC151 banks with a 74HC153 merge stage. It stretches mux hierarchy and export determinism beyond the small v1 combinational cases."
+    },
+    {
+      "slug": "gc_v2_2_datapath_slice",
+      "class": "mixed",
+      "title": "ALU4 accumulator with phase counter",
+      "gates": ["ALU4", "REG4", "BIN_CTR7S"],
+      "inputs": ["clk", "rst", "en", "b0", "b1", "b2", "b3", "cin"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_11", "w_12"],
+      "initialState": {
+        "clk": 0,
+        "rst": 0,
+        "en": 1,
+        "b0": 1,
+        "b1": 1,
+        "b2": 0,
+        "b3": 0,
+        "cin": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire clk",
+          "input wire rst",
+          "input wire en",
+          "input wire b0",
+          "input wire b1",
+          "input wire b2",
+          "input wire b3",
+          "input wire cin",
+          "output reg w_0",
+          "output reg w_1",
+          "output reg w_2",
+          "output reg w_3",
+          "output wire w_4",
+          "output wire w_5",
+          "output wire w_6",
+          "output wire w_11",
+          "output wire w_12"
+        ],
+        "internalWires": ["w_7", "w_8", "w_9", "w_10", "cnt_phase"],
+        "verilogPattern": "always @(posedge clk or posedge rst)",
+        "verilog": "case ({w_6, w_5, w_4})"
+      },
+      "rationale": "Second v2 pilot seed: a small datapath slice where a counter rotates the ALU opcode and a register captures the ALU output on each enabled clock edge. This adds multi-block composition and deeper temporal behavior beyond v1."
+    },
+    {
+      "slug": "gc_v2_3_shift_pipeline",
+      "class": "mixed",
+      "title": "74HC194 -> 74HC595 shift/latch pipeline",
+      "gates": ["74HC194", "74HC595"],
+      "inputs": ["clk", "clrn", "s0", "s1", "sr", "sl", "d0", "d1", "d2", "d3", "stcp", "mr", "oe"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7", "w_8", "w_9", "w_10", "w_11"],
+      "initialState": {
+        "clk": 0,
+        "clrn": 1,
+        "s0": 0,
+        "s1": 0,
+        "sr": 0,
+        "sl": 0,
+        "d0": 1,
+        "d1": 0,
+        "d2": 1,
+        "d3": 1,
+        "stcp": 0,
+        "mr": 1,
+        "oe": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire clk",
+          "input wire clrn",
+          "input wire stcp",
+          "input wire mr",
+          "input wire oe",
+          "output wire w_0",
+          "output wire w_4",
+          "output wire w_11"
+        ],
+        "verilogPattern": "always @(posedge clk or negedge clrn)",
+        "verilog": "assign w_4 = oe ? 1'bz : latch_dut_595[0]",
+        "verilogExtraReg": "reg [7:0] shift_dut_595",
+        "vhdl": "w_4 <= 'Z' when oe = '1' else latch_dut_595(0)",
+        "vhdlExtraSignal": "signal shift_dut_595 : STD_LOGIC_VECTOR(7 downto 0)"
+      },
+      "rationale": "Fifth v2 pilot seed: a multi-IC sequential pipeline that parallel-loads a 74HC194, shifts shared-clock data into a 74HC595, and exposes latch plus tri-state behavior at the output stage. It extends the existing shift-register coverage into a longer trace with reset-to-known-state, latch isolation, and output-enable checks."
+    },
+    {
+      "slug": "gc_v2_4_ram_readback",
+      "class": "mixed",
+      "title": "RAM256 readback path with REG8 capture",
+      "gates": ["RAM256", "REG8"],
+      "inputs": ["a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "di0", "di1", "di2", "di3", "di4", "di5", "di6", "di7", "we", "cs", "oe", "clk", "rst"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7", "w_8"],
+      "initialState": {
+        "a0": 1,
+        "a1": 0,
+        "a2": 1,
+        "a3": 0,
+        "a4": 0,
+        "a5": 0,
+        "a6": 0,
+        "a7": 0,
+        "di0": 1,
+        "di1": 0,
+        "di2": 1,
+        "di3": 0,
+        "di4": 0,
+        "di5": 1,
+        "di6": 0,
+        "di7": 1,
+        "we": 1,
+        "cs": 1,
+        "oe": 1,
+        "clk": 0,
+        "rst": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire a0",
+          "input wire a7",
+          "input wire di0",
+          "input wire di7",
+          "input wire we",
+          "input wire cs",
+          "input wire oe",
+          "input wire clk",
+          "input wire rst",
+          "output reg w_0",
+          "output reg w_7",
+          "output reg w_8"
+        ],
+        "internalWires": ["w_9", "w_10", "w_11", "w_12", "w_13", "w_14", "w_15", "ram_ram"],
+        "verilog": "ram_ram[{a7, a6, a5, a4, a3, a2, a1, a0}] = {di7, di6, di5, di4, di3, di2, di1, di0}",
+        "vhdl": "unsigned std_logic_vector a7 a6 a5 a4 a3 a2 a1 a0",
+        "verilogPattern": "always @(posedge clk or posedge rst)"
+      },
+      "rationale": "Third v2 pilot seed: RAM256 feeds a REG8 through an observable live bus tap. It exercises async memory write/read, live tri-state bus behavior, and registered readback capture in one exportable circuit."
+    },
+    {
+      "slug": "gc_v2_5_decode_tree",
+      "class": "mixed",
+      "title": "74HC138 decode tree with 74HC373 hold tap and 74HC374 capture",
+      "gates": ["74HC138", "74HC148", "74HC373", "74HC374"],
+      "inputs": ["a", "b", "c", "g1", "g2a", "g2b", "ein", "le373", "oe373", "clk374", "oe374"],
+      "outputs": ["w_9", "w_10", "w_11", "w_12", "w_13", "w_14", "w_15", "w_16", "w_22", "w_23", "w_24", "w_25", "w_26"],
+      "initialState": {
+        "a": 0,
+        "b": 1,
+        "c": 0,
+        "g1": 1,
+        "g2a": 0,
+        "g2b": 0,
+        "ein": 0,
+        "le373": 1,
+        "oe373": 1,
+        "clk374": 0,
+        "oe374": 1
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire g1",
+          "input wire g2a",
+          "input wire g2b",
+          "input wire ein",
+          "output wire w_9",
+          "output wire w_16",
+          "output wire w_22",
+          "output wire w_26"
+        ],
+        "internalWires": ["w_1", "w_8", "w_17", "w_21", "latch_lat373", "reg_reg374"],
+        "verilogPattern": "always @(posedge clk374)",
+        "verilog": "assign w_9 = oe373 ? 1'bz : latch_lat373[0]",
+        "verilogExtraReg": "reg [7:0] reg_reg374",
+        "vhdl": "w_9_q <= 'Z' when oe373 = '1' else latch_lat373(0)",
+        "vhdlExtraSignal": "signal reg_reg374 : STD_LOGIC_VECTOR(7 downto 0)"
+      },
+      "rationale": "Sixth v2 pilot seed: a decode tree where a 74HC138 fans out into both a 74HC373 hold path and a 74HC148 -> 74HC374 encoded capture path. This closes the gap around enable gating, hierarchical fanout, latch-vs-register behavior, and independent output-enable visibility in one composed reference circuit."
+    },
+    {
+      "slug": "gc_v2_6_custom_halfadder",
+      "class": "combinational",
+      "title": "Custom half-adder hierarchy with raw full-adder oracle",
+      "gates": ["CIC_HALF_ADDER", "CIC_HALF_ADDER", "OR", "XOR", "XOR", "AND", "AND", "OR", "XOR", "XOR"],
+      "inputs": ["a", "b", "cin"],
+      "outputs": ["w_6", "w_8", "w_7", "w_9", "w_10", "w_11"],
+      "initialState": {
+        "a": 0,
+        "b": 0,
+        "cin": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire a",
+          "input wire b",
+          "input wire cin",
+          "output wire w_6",
+          "output wire w_11"
+        ],
+        "internalWires": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5"],
+        "verilogPattern": "xor g_ha0__xor1(w_0, a, b)",
+        "verilog": "xor g_xor_sum_diff(w_10, w_6, w_7)",
+        "vhdl": "w_0 <= a xor b; -- ha0__xor1",
+        "outputShadows": true
+      },
+      "rationale": "Seventh v2 pilot seed and first hierarchical/custom-IC corpus case: the proven gc_c2_half_adder subcircuit is registered as a reusable custom IC, instantiated twice to form a full-adder path, and compared against a flat raw-gate oracle. This verifies one-level custom-IC registration, port mapping, repeated reuse, structural HDL flattening, and exact custom-vs-raw agreement."
+    },
+    {
+      "slug": "gc_v2_7_bus_conflict_system",
+      "class": "mixed",
+      "title": "Dual 74HC374 shared-bus conflict monitor",
+      "gates": ["74HC374", "74HC374", "REG4", "REG4", "NOT", "NOT", "AND", "AND", "XOR"],
+      "inputs": ["a_clk", "a_oe", "a_d0", "a_d1", "b_clk", "b_oe", "b_d0", "b_d1"],
+      "outputs": ["w_3", "w_4", "w_5", "w_6", "w_7", "w_10", "w_12"],
+      "initialState": {
+        "a_clk": 0,
+        "a_oe": 1,
+        "a_d0": 1,
+        "a_d1": 0,
+        "b_clk": 0,
+        "b_oe": 1,
+        "b_d0": 0,
+        "b_d1": 1
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire a_clk",
+          "input wire a_oe",
+          "input wire a_d0",
+          "input wire a_d1",
+          "input wire b_clk",
+          "input wire b_oe",
+          "input wire b_d0",
+          "input wire b_d1",
+          "output wire w_3",
+          "output reg w_4",
+          "output reg w_5",
+          "output reg w_6",
+          "output reg w_7",
+          "output wire w_10",
+          "output wire w_12"
+        ],
+        "internalWires": ["w_2", "w_8", "w_9", "w_11", "reg_master_a", "reg_master_b"],
+        "verilog": "and g_conflict0_gate(w_12, w_11, w_10)",
+        "verilogPattern": "always @(posedge a_clk)",
+        "vhdl": "w_12_q <= w_11 and w_10_q"
+      },
+      "rationale": "Fourth v2 pilot seed: two 74HC374 bus masters share a contested raw probe while paired REG4 shadows and decode logic expose stable conflict indicators. It documents the multi-driver boundary without making the portable HDL checks depend on raw X-resolution."
+    },
+    {
+      "slug": "gc_v2_8_sequential_feedback",
+      "class": "sequential",
+      "title": "Three-stage feedback mesh with seed load and XOR feedback",
+      "gates": ["MUX2", "XOR", "D_FF_R"],
+      "inputs": ["clk", "rst", "en", "d", "d2", "d3"],
+      "outputs": ["w_2", "w_0", "w_1", "w_3"],
+      "initialState": {
+        "clk": 0,
+        "rst": 0,
+        "en": 0,
+        "d": 1,
+        "d2": 0,
+        "d3": 1
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire clk",
+          "input wire rst",
+          "input wire en",
+          "input wire d",
+          "input wire d2",
+          "input wire d3",
+          "output reg w_2",
+          "output reg w_0",
+          "output reg w_1",
+          "output wire w_3"
+        ],
+        "internalWires": ["w_4", "w_5", "w_6", "w_ff1_q_n", "w_ff2_q_n", "w_ff3_q_n"],
+        "verilogPattern": "assign w_4 = en ? w_0 : d;",
+        "verilog": "xor g_g_xor_fb(w_3, w_2, w_0);",
+        "vhdl": "w_3_q <= w_2_q xor w_0_q;"
+      },
+      "rationale": "Ninth v2 pilot seed: a three-stage sequential feedback mesh with an explicit seed-load phase, deterministic XOR feedback, and async reset. It stretches the corpus beyond pure pipeline/register cases by verifying a small state machine that can be seeded and then driven purely by its own previous outputs."
+    },
+    {
+      "slug": "gc_v2_9_custom_reg4_pipeline",
+      "class": "mixed",
+      "title": "Dual REG4 custom-IC pipeline with one-cycle lag",
+      "gates": ["CIC_REG4_STAGE", "CIC_REG4_STAGE", "XOR"],
+      "inputs": ["d0", "d1", "d2", "d3", "en", "clk", "rst"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5", "w_6", "w_7", "w_8"],
+      "initialState": {
+        "d0": 1,
+        "d1": 0,
+        "d2": 1,
+        "d3": 0,
+        "en": 1,
+        "clk": 0,
+        "rst": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire d0",
+          "input wire d3",
+          "input wire en",
+          "input wire clk",
+          "input wire rst",
+          "output reg w_0",
+          "output reg w_4",
+          "output wire w_8"
+        ],
+        "verilogPattern": "xor g_cmp_xor(w_8, w_0, w_4)",
+        "vhdl": "w_8_q <= w_0 xor w_4;"
+      },
+      "rationale": "Second v2 hierarchical/custom-IC seed: a reusable REG4 custom IC is instantiated twice as a pipeline pair, with a raw XOR tap comparing the delayed copies. This exercises custom-IC registration, flattening, enable/reset propagation, and staged state transfer without duplicating the half-adder case."
     }
   ]
 }

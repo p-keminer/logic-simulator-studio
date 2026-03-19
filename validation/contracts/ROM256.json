@@ -1,0 +1,74 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "ROM256",
+  "label": "ROM",
+  "category": "memory",
+
+  "semantics": {
+    "timingModel": "memory-async",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": ["data"],
+    "hasStableUndefinedState": false,
+    "notes": "256×8 asynchronous ROM. Read: /CS=0 & /OE=0 → d←mem[addr]; else outputs are Hi-Z. Data content initialized at creation from customState. defaultInputValues: cs=1, oe=1."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a0", "label": "A0", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a1", "label": "A1", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2", "label": "A2", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a3", "label": "A3", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a4", "label": "A4", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a5", "label": "A5", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a6", "label": "A6", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a7", "label": "A7", "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "cs", "label": "/CS", "role": "chip-select", "activeLow": true, "defaultValue": 1 },
+      { "id": "oe", "label": "/OE", "role": "output-enable", "activeLow": true, "defaultValue": 1 }
+    ],
+    "outputs": [
+      { "id": "d0", "label": "D0", "role": "data", "canBeTriState": true },
+      { "id": "d1", "label": "D1", "role": "data", "canBeTriState": true },
+      { "id": "d2", "label": "D2", "role": "data", "canBeTriState": true },
+      { "id": "d3", "label": "D3", "role": "data", "canBeTriState": true },
+      { "id": "d4", "label": "D4", "role": "data", "canBeTriState": true },
+      { "id": "d5", "label": "D5", "role": "data", "canBeTriState": true },
+      { "id": "d6", "label": "D6", "role": "data", "canBeTriState": true },
+      { "id": "d7", "label": "D7", "role": "data", "canBeTriState": true }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1, 2],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": true
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "verilogExtraRegs: rom_{sid}[255:0] (8-bit × 256) initialized from initData. always @(*) for async read. tri-state with 8'hzz when not selected.",
+    "vhdlNotes": "vhdlExtraSignals: rom_{sid}[255:0] signal initialized from initData. process for async read with tri-state Z.",
+    "verilogExtraRegs": true,
+    "vhdlExtraSignals": true
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "oe-tristate",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify read: /CS=0 & /OE=0 outputs ROM data at address. Verify tri-state: /CS=1 or /OE=1 → D=Z. Test multiple addresses."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "Read-only — no write capability.",
+    "Async read (no clock).",
+    "Initial content is all-zero unless customState.data is set by the user."
+  ]
+}

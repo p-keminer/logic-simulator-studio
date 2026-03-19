@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC138",
+  "label": "74HC138",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "3-to-8 line decoder/demultiplexer. Active when G1=1, /G2A=0, /G2B=0. Selected output Yn = 0 (active low); all others = 1. {C,B,A} = address 0–7. propagationDelay=14."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a",   "label": "A",   "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "b",   "label": "B",   "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "c",   "label": "C",   "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "g1",  "label": "G1",  "role": "enable", "activeLow": false, "defaultValue": 0 },
+      { "id": "g2a", "label": "/G2A","role": "enable", "activeLow": true, "defaultValue": 1 },
+      { "id": "g2b", "label": "/G2B","role": "enable", "activeLow": true, "defaultValue": 1 }
+    ],
+    "outputs": [
+      { "id": "y0", "label": "/Y0", "role": "data", "canBeTriState": false },
+      { "id": "y1", "label": "/Y1", "role": "data", "canBeTriState": false },
+      { "id": "y2", "label": "/Y2", "role": "data", "canBeTriState": false },
+      { "id": "y3", "label": "/Y3", "role": "data", "canBeTriState": false },
+      { "id": "y4", "label": "/Y4", "role": "data", "canBeTriState": false },
+      { "id": "y5", "label": "/Y5", "role": "data", "canBeTriState": false },
+      { "id": "y6", "label": "/Y6", "role": "data", "canBeTriState": false },
+      { "id": "y7", "label": "/Y7", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "3-to-8 active-low decoder. All Y=1 when disabled. Enabled: Y[addr]=0, others=1.",
+    "vhdlNotes": "decoder behavior.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify all 8 addresses, verify all enable combinations (G1=0 or /G2A=1 or /G2B=1 → all outputs=1)."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "Outputs are active-low only."
+  ]
+}

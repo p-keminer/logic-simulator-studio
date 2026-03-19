@@ -1,0 +1,52 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "STEPPER_VIZ",
+  "label": "Stepper",
+  "category": "output",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": ["angle", "prevABCD"],
+    "hasStableUndefinedState": false,
+    "notes": "Stepper motor visualization. Recognizes full-step sequences (A→B→C→D) applied to coil inputs {A,B,C,D}. CW sequence (1000→0100→0010→0001→1000) increments angle by 45°. CCW sequence decrements by 45°. stateUpdate drives the angle."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "c", "label": "C", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d", "label": "D", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": []
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI visualization — no HDL export.",
+    "vhdlNotes": "UI visualization — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Apply CW sequence: verify angle increments by 45° each step. Apply CCW: verify decrement. Apply invalid transitions: verify no change."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export.",
+    "No electrical output to drive other gates."
+  ]
+}

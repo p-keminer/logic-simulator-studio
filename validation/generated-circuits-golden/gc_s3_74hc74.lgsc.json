@@ -69,7 +69,7 @@
     },
     "dut": {
       "id": "dut",
-      "typeId": "IC_74HC74",
+      "typeId": "74HC74",
       "x": 300, "y": 240,
       "customState": { "q1": 0, "q2": 0, "prevClk1": 0, "prevClk2": 0 },
       "outputSignals": {}, "isSelected": false

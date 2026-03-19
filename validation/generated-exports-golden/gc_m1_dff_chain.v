@@ -9,6 +9,7 @@ module gc_m1_dff_chain (
 );
 
   wire w_dff1_q_n, w_dff2_q_n;
+
   reg  w_0;
 
   // Sequential logic

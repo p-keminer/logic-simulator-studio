@@ -1,0 +1,56 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "ADC8",
+  "label": "ADC 8-bit",
+  "category": "input",
+
+  "semantics": {
+    "timingModel": "io",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": ["value"],
+    "hasStableUndefinedState": false,
+    "notes": "ADC mockup with slider control (0–255). Outputs 8-bit binary representation of slider value. B0=LSB, B7=MSB. Evaluates on every step and outputs binary."
+  },
+
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      { "id": "b0", "label": "B0", "role": "data", "canBeTriState": false },
+      { "id": "b1", "label": "B1", "role": "data", "canBeTriState": false },
+      { "id": "b2", "label": "B2", "role": "data", "canBeTriState": false },
+      { "id": "b3", "label": "B3", "role": "data", "canBeTriState": false },
+      { "id": "b4", "label": "B4", "role": "data", "canBeTriState": false },
+      { "id": "b5", "label": "B5", "role": "data", "canBeTriState": false },
+      { "id": "b6", "label": "B6", "role": "data", "canBeTriState": false },
+      { "id": "b7", "label": "B7", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI input element — no HDL export.",
+    "vhdlNotes": "UI input element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Verify output bits represent slider value correctly. Test min (0), max (255), and mid values."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export.",
+    "Mockup only — no real ADC conversion."
+  ]
+}

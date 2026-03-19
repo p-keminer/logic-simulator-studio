@@ -1,0 +1,63 @@
+{
+  "id": "gc_v2_6_custom_halfadder",
+  "name": "gc_v2_6_custom_halfadder",
+  "version": "1.0.0",
+  "gates": {
+    "sw_a": { "id": "sw_a", "typeId": "INPUT_SWITCH", "x": 40, "y": 80, "label": "a", "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
+    "sw_b": { "id": "sw_b", "typeId": "INPUT_SWITCH", "x": 40, "y": 160, "label": "b", "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
+    "sw_cin": { "id": "sw_cin", "typeId": "INPUT_SWITCH", "x": 40, "y": 240, "label": "cin", "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
+
+    "ha0": { "id": "ha0", "typeId": "CIC_HALF_ADDER", "x": 280, "y": 110, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "ha1": { "id": "ha1", "typeId": "CIC_HALF_ADDER", "x": 560, "y": 110, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "or_custom": { "id": "or_custom", "typeId": "OR", "x": 830, "y": 200, "customState": {}, "outputSignals": {}, "isSelected": false },
+
+    "raw_xor_ab": { "id": "raw_xor_ab", "typeId": "XOR", "x": 280, "y": 390, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "raw_sum": { "id": "raw_sum", "typeId": "XOR", "x": 560, "y": 390, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "raw_and_ab": { "id": "raw_and_ab", "typeId": "AND", "x": 280, "y": 520, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "raw_and_cin": { "id": "raw_and_cin", "typeId": "AND", "x": 560, "y": 520, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "raw_or": { "id": "raw_or", "typeId": "OR", "x": 830, "y": 470, "customState": {}, "outputSignals": {}, "isSelected": false },
+
+    "xor_sum_diff": { "id": "xor_sum_diff", "typeId": "XOR", "x": 1080, "y": 300, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "xor_cout_diff": { "id": "xor_cout_diff", "typeId": "XOR", "x": 1080, "y": 470, "customState": {}, "outputSignals": {}, "isSelected": false },
+
+    "led_sum_custom": { "id": "led_sum_custom", "typeId": "OUTPUT_LED", "x": 1310, "y": 110, "label": "sum_custom", "customState": {}, "outputSignals": {}, "isSelected": false },
+    "led_cout_custom": { "id": "led_cout_custom", "typeId": "OUTPUT_LED", "x": 1310, "y": 180, "label": "cout_custom", "customState": {}, "outputSignals": {}, "isSelected": false },
+    "led_sum_raw": { "id": "led_sum_raw", "typeId": "OUTPUT_LED", "x": 1310, "y": 320, "label": "sum_raw", "customState": {}, "outputSignals": {}, "isSelected": false },
+    "led_cout_raw": { "id": "led_cout_raw", "typeId": "OUTPUT_LED", "x": 1310, "y": 390, "label": "cout_raw", "customState": {}, "outputSignals": {}, "isSelected": false },
+    "led_sum_diff": { "id": "led_sum_diff", "typeId": "OUTPUT_LED", "x": 1310, "y": 530, "label": "sum_diff", "customState": {}, "outputSignals": {}, "isSelected": false },
+    "led_cout_diff": { "id": "led_cout_diff", "typeId": "OUTPUT_LED", "x": 1310, "y": 600, "label": "cout_diff", "customState": {}, "outputSignals": {}, "isSelected": false }
+  },
+  "wires": {
+    "w1": { "id": "w1", "from": { "gateId": "sw_a", "portId": "out" }, "to": { "gateId": "ha0", "portId": "i0" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w2": { "id": "w2", "from": { "gateId": "sw_b", "portId": "out" }, "to": { "gateId": "ha0", "portId": "i1" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w3": { "id": "w3", "from": { "gateId": "ha0", "portId": "o0" }, "to": { "gateId": "ha1", "portId": "i0" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w4": { "id": "w4", "from": { "gateId": "sw_cin", "portId": "out" }, "to": { "gateId": "ha1", "portId": "i1" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w5": { "id": "w5", "from": { "gateId": "ha0", "portId": "o1" }, "to": { "gateId": "or_custom", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w6": { "id": "w6", "from": { "gateId": "ha1", "portId": "o1" }, "to": { "gateId": "or_custom", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+
+    "w7": { "id": "w7", "from": { "gateId": "sw_a", "portId": "out" }, "to": { "gateId": "raw_xor_ab", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w8": { "id": "w8", "from": { "gateId": "sw_b", "portId": "out" }, "to": { "gateId": "raw_xor_ab", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w9": { "id": "w9", "from": { "gateId": "raw_xor_ab", "portId": "out" }, "to": { "gateId": "raw_sum", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w10": { "id": "w10", "from": { "gateId": "sw_cin", "portId": "out" }, "to": { "gateId": "raw_sum", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w11": { "id": "w11", "from": { "gateId": "sw_a", "portId": "out" }, "to": { "gateId": "raw_and_ab", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w12": { "id": "w12", "from": { "gateId": "sw_b", "portId": "out" }, "to": { "gateId": "raw_and_ab", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w13": { "id": "w13", "from": { "gateId": "raw_xor_ab", "portId": "out" }, "to": { "gateId": "raw_and_cin", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w14": { "id": "w14", "from": { "gateId": "sw_cin", "portId": "out" }, "to": { "gateId": "raw_and_cin", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w15": { "id": "w15", "from": { "gateId": "raw_and_ab", "portId": "out" }, "to": { "gateId": "raw_or", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w16": { "id": "w16", "from": { "gateId": "raw_and_cin", "portId": "out" }, "to": { "gateId": "raw_or", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+
+    "w17": { "id": "w17", "from": { "gateId": "ha1", "portId": "o0" }, "to": { "gateId": "xor_sum_diff", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w18": { "id": "w18", "from": { "gateId": "raw_sum", "portId": "out" }, "to": { "gateId": "xor_sum_diff", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w19": { "id": "w19", "from": { "gateId": "or_custom", "portId": "out" }, "to": { "gateId": "xor_cout_diff", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w20": { "id": "w20", "from": { "gateId": "raw_or", "portId": "out" }, "to": { "gateId": "xor_cout_diff", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+
+    "w21": { "id": "w21", "from": { "gateId": "ha1", "portId": "o0" }, "to": { "gateId": "led_sum_custom", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w22": { "id": "w22", "from": { "gateId": "or_custom", "portId": "out" }, "to": { "gateId": "led_cout_custom", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w23": { "id": "w23", "from": { "gateId": "raw_sum", "portId": "out" }, "to": { "gateId": "led_sum_raw", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w24": { "id": "w24", "from": { "gateId": "raw_or", "portId": "out" }, "to": { "gateId": "led_cout_raw", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w25": { "id": "w25", "from": { "gateId": "xor_sum_diff", "portId": "out" }, "to": { "gateId": "led_sum_diff", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w26": { "id": "w26", "from": { "gateId": "xor_cout_diff", "portId": "out" }, "to": { "gateId": "led_cout_diff", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-19", "updatedAt": "2026-03-19" }
+}

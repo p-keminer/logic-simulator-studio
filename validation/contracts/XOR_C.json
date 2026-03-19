@@ -1,0 +1,58 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "XOR_C",
+  "label": "XOR_C",
+  "category": "logic_comp_out",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "2-input XOR with complementary outputs Q and Q̄. Q = A^B; Q̄ = ~(A^B)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "data",   "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "dualVerilog style: assign q = a ^ b; assign q_n = ~q;",
+    "vhdlNotes": "dualVHDL style: q <= a xor b; q_n <= not q;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify: Q follows XOR truth table, Q̄ = inverse of Q."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No propagation delay (combinational, instantaneous)."
+  ]
+}

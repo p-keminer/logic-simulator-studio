@@ -1,0 +1,49 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "OUTPUT_LED",
+  "label": "LED",
+  "category": "output",
+
+  "semantics": {
+    "timingModel": "io",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "LED indicator. Evaluates input and renders display state. _display output drives the UI. No electrical output."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "in", "label": "D", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": []
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI display element — no HDL export.",
+    "vhdlNotes": "UI display element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Manual UI observation. LED illuminates when input=1."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export.",
+    "No electrical output that drives other gates."
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "MS_JK_FF",
+  "label": "MS-JK",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "master-slave",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["qS", "qM", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "Master-slave JK flip-flop. Master is transparent when CLK=1 (level-sensitive), slave samples master output on CLK falling edge. Overall effect: data is captured on CLK rising edge and output changes on CLK falling edge. J=K=1 → toggle on next full clock cycle."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "j",   "label": "J",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 },
+      { "id": "k",   "label": "K",   "role": "data",  "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "partial",
+    "vhdl": "partial",
+    "verilogNotes": "HDL export approximates as negedge-triggered only. Master-slave two-phase clocking not modelled. Pulse-width sensitivity and ones-catching not exported. Synthesis-approximation warning comment added.",
+    "vhdlNotes": "VHDL export uses negedge approximation. Two-phase master-slave behavior not modelled in HDL.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Master-slave: output changes on falling clock edge (slave samples master). Toggle, hold, set, reset all apply at the next falling edge. Initial Q=0."
+  },
+
+  "risks": [
+    {
+      "class": "synthesis-risk",
+      "description": "HDL export loses master-slave behavior. Synthesized circuit has different pulse-width sensitivity than simulation model.",
+      "confirmed": true
+    }
+  ],
+  "modelLimits": [
+    "HDL export is a functional approximation only.",
+    "Pulse-width sensitivity not modelled.",
+    "Ones-catching not modelled.",
+    "prevClk, qM hidden states not exposed to STT."
+  ]
+}

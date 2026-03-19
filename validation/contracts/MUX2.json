@@ -1,0 +1,58 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "MUX2",
+  "label": "MUX2",
+  "category": "mux",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "2-to-1 multiplexer. S=0 selects D0; S=1 selects D1."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d0", "label": "D0", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d1", "label": "D1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "s",  "label": "S",  "role": "select", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y", "label": "Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign y = s ? d1 : d0; or always @(*) begin if (s) y=d1; else y=d0; end",
+    "vhdlNotes": "y <= d0 when s='0' else d1;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify: S=0→Y=D0, S=1→Y=D1. Propagation delay=2."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No propagation delay beyond the stated propagationDelay: 2."
+  ]
+}

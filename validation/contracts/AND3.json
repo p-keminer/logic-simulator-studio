@@ -1,0 +1,58 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "AND3",
+  "label": "AND3",
+  "category": "logic_multi",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "3-input AND. Output is 1 only when all three inputs are 1."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "c", "label": "C", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "out", "label": "Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign out = a & b & c;",
+    "vhdlNotes": "out <= a and b and c;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "3-input truth table. Only 111→1, all others→0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No propagation delay (combinational, instantaneous)."
+  ]
+}

@@ -59,7 +59,12 @@ gateRegistry.register({
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
     return [
-      `// MS-JK FF ${sid}: Q captures on falling CLK edge`,
+      `// MS-JK FF ${sid} -- SYNTHESIS APPROXIMATION`,
+      `// The simulation model is a true master-slave: master is level-transparent`,
+      `// while CLK=1; slave transfers on the falling edge. This HDL export`,
+      `// approximates that behaviour as a single negedge-triggered flip-flop.`,
+      `// Difference: pulse-width sensitivity ("ones catching") is NOT modelled.`,
+      `// Do not rely on this export where CLK pulse-width constraints matter.`,
       `always @(negedge ${clk}) begin`,
       ...jkSimplifiedVerilog(j, k, portConst(g.id, 'j', cm), portConst(g.id, 'k', cm), q, '  '),
       `end // MS-JK ${sid}`,
@@ -74,7 +79,12 @@ gateRegistry.register({
     const q   = w[`${g.id}:q`]   ?? `w_${sid}_q`;
     const qn  = w[`${g.id}:q_n`] ?? `w_${sid}_q_n`;
     return [
-      `-- MS-JK FF ${sid}: Q captures on falling CLK edge`,
+      `-- MS-JK FF ${sid} -- SYNTHESIS APPROXIMATION`,
+      `-- The simulation model is a true master-slave: master is level-transparent`,
+      `-- while CLK='1'; slave transfers on the falling edge. This HDL export`,
+      `-- approximates that behaviour as a single falling-edge-triggered flip-flop.`,
+      `-- Difference: pulse-width sensitivity ("ones catching") is NOT modelled.`,
+      `-- Do not rely on this export where CLK pulse-width constraints matter.`,
       `process(${clk})`,
       `begin`,
       `  if falling_edge(${clk}) then`,

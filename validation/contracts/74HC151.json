@@ -1,0 +1,66 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC151",
+  "label": "74HC151",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "8-to-1 data selector/multiplexer. EN=1 → Y=0, /Y=1 (disabled). EN=0: {S2,S1,S0} selects one of D0–D7. Y = selected input; /Y = complement of Y. propagationDelay=12."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "s0", "label": "S0", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "s1", "label": "S1", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "s2", "label": "S2", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "en", "label": "/E",  "role": "enable", "activeLow": true, "defaultValue": 0 },
+      { "id": "d0", "label": "D0", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d1", "label": "D1", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d2", "label": "D2", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d3", "label": "D3", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d4", "label": "D4", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d5", "label": "D5", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d6", "label": "D6", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "d7", "label": "D7", "role": "data",   "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y",  "label": "Y",  "role": "data", "canBeTriState": false },
+      { "id": "yn", "label": "/Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "case({s2,s1,s0}) 3'b000: y=d0; ... 3'b111: y=d7; endcase. /Y is complement.",
+    "vhdlNotes": "with s2s1s0 select y <= d0 when '000', d1 when '001', ... d7 when '111'; yn <= not y;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify all 8 data inputs selectable. Verify /E=1 disables (Y=0). Verify YN = ~Y."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

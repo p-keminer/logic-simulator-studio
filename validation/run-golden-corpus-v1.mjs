@@ -1,7 +1,7 @@
 /**
  * Golden Corpus v1 Runner — automated regression suite for circuit artifacts.
  *
- * Reads validation/golden-corpus-v1.json, verifies that all 12 reference circuits
+ * Reads validation/golden-corpus-v1.json, verifies that all listed reference circuits
  * and their HDL exports exist, are structurally sound, and match documented
  * checkpoints.  Produces:
  *   - validation/golden-corpus-v1-summary.json  (machine-readable)
@@ -19,6 +19,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  compileVerilogWithSyntax,
+  compileVhdlWithSyntax,
+  runVerilogSimulation,
+  runVhdlSimulation,
+} from './hdl-tooling.mjs';
+import { registerGoldenCustomICsForSlugs } from './custom-ic-golden.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORPUS_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1.json');
@@ -26,7 +33,15 @@ const CIRCUITS_DIR = path.join(ROOT, 'validation', 'generated-circuits-golden');
 const EXPORTS_DIR = path.join(ROOT, 'validation', 'generated-exports-golden');
 const SUMMARY_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-summary.json');
 const REPORT_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-report.md');
-const RUNNER_VERSION = '1.0.0';
+const RUNNER_VERSION = '1.8.0';
+
+// ── Export-determinism: loaded dynamically before the run loop ───────────────
+// When loaded successfully (vite-node), generateVerilog / generateVHDL are set.
+// When running without vite-node or if the import fails, they remain null and
+// the diff checks are classified as 'unsupported' rather than 'fail'.
+let generateVerilog = null;
+let generateVHDL = null;
+let exporterLoadError = null;
 
 // ── Known boundaries ────────────────────────────────────────────────────────
 // Slugs where a documented exporter/model limitation exists. These are
@@ -34,6 +49,322 @@ const RUNNER_VERSION = '1.0.0';
 const KNOWN_BOUNDARIES = new Map([
   ['gc_t2_bus_mux', 'Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary.'],
 ]);
+
+function buildCustomHalfAdderScenario() {
+  const steps = [];
+  for (let mask = 0; mask < 8; mask++) {
+    const a = mask & 1 ? 1 : 0;
+    const b = mask & 2 ? 1 : 0;
+    const cin = mask & 4 ? 1 : 0;
+    const sum = a ^ b ^ cin;
+    const cout = (a & b) | ((a ^ b) & cin);
+    steps.push({
+      name: `combo-${a}${b}${cin}`,
+      set: { a, b, cin },
+      expect: {
+        w_6: sum,
+        w_8: cout,
+        w_7: sum,
+        w_9: cout,
+        w_10: 0,
+        w_11: 0,
+      },
+    });
+  }
+  return { steps };
+}
+
+function buildSequentialFeedbackScenario() {
+  return {
+    steps: [
+      {
+        name: 'assert-reset',
+        set: { clk: 0, rst: 1, en: 0, d: 1, d2: 0, d3: 1 },
+        expect: { w_2: 0, w_0: 0, w_1: 0, w_3: 0 },
+      },
+      {
+        name: 'release-reset',
+        set: { clk: 0, rst: 0, en: 0, d: 1, d2: 0, d3: 1 },
+        expect: { w_2: 0, w_0: 0, w_1: 0, w_3: 0 },
+      },
+      {
+        name: 'seed-load',
+        set: { clk: 0, rst: 0, en: 0, d: 1, d2: 0, d3: 1 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 0, w_1: 1, w_3: 1 },
+      },
+      {
+        name: 'feedback-1',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 0, w_0: 1, w_1: 1, w_3: 1 },
+      },
+      {
+        name: 'feedback-2',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 1, w_1: 1, w_3: 0 },
+      },
+      {
+        name: 'feedback-3',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 1, w_1: 0, w_3: 0 },
+      },
+      {
+        name: 'feedback-4',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 0, w_1: 0, w_3: 1 },
+      },
+      {
+        name: 'feedback-5',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 0, w_0: 0, w_1: 1, w_3: 0 },
+      },
+    ],
+  };
+}
+
+function buildCustomReg4PipelineScenario() {
+  return {
+    steps: [
+      {
+        name: 'assert-reset',
+        set: { d0: 1, d1: 0, d2: 1, d3: 0, en: 1, clk: 0, rst: 1 },
+        expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0 },
+      },
+      {
+        name: 'load-stage-a',
+        set: { d0: 1, d1: 0, d2: 1, d3: 0, en: 1, clk: 0, rst: 0 },
+        pulse: ['clk'],
+        expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 1 },
+      },
+      {
+        name: 'load-stage-b',
+        set: { d0: 1, d1: 1, d2: 1, d3: 1, en: 1, clk: 0, rst: 0 },
+        pulse: ['clk'],
+        expect: { w_0: 1, w_1: 1, w_2: 1, w_3: 1, w_4: 1, w_5: 0, w_6: 1, w_7: 0, w_8: 0 },
+      },
+      {
+        name: 'hold-disabled',
+        set: { d0: 0, d1: 0, d2: 0, d3: 0, en: 0, clk: 0, rst: 0 },
+        pulse: ['clk'],
+        expect: { w_0: 1, w_1: 1, w_2: 1, w_3: 1, w_4: 1, w_5: 0, w_6: 1, w_7: 0, w_8: 0 },
+      },
+    ],
+  };
+}
+
+const HDL_SIM_SCENARIOS = new Map([
+  ['gc_c1_basic_gates', {
+    steps: [
+      { name: 'all-low', set: { a: 0, b: 0, c: 0 }, expect: { w_2: 1 } },
+      { name: 'and-path-high', set: { a: 1, b: 1, c: 0 }, expect: { w_2: 0 } },
+      { name: 'c-forces-low', set: { a: 1, b: 0, c: 1 }, expect: { w_2: 0 } },
+    ],
+  }],
+  ['gc_c2_half_adder', {
+    steps: [
+      { name: 'zero-plus-zero', set: { a: 0, b: 0 }, expect: { w_0: 0, w_1: 0 } },
+      { name: 'one-plus-zero', set: { a: 1, b: 0 }, expect: { w_0: 1, w_1: 0 } },
+      { name: 'one-plus-one', set: { a: 1, b: 1 }, expect: { w_0: 0, w_1: 1 } },
+    ],
+  }],
+  ['gc_c3_sr_latch', {
+    steps: [
+      { name: 'set', set: { s: 1, r: 0 }, expect: { w_0: 1, w_1: 0 } },
+      { name: 'hold', set: { s: 0, r: 0 }, expect: { w_0: 1, w_1: 0 } },
+      { name: 'reset', set: { s: 0, r: 1 }, expect: { w_0: 0, w_1: 1 } },
+    ],
+  }],
+  ['gc_s1_dff_assr', {
+    steps: [
+      { name: 'assert-reset', set: { d: 1, clk: 0, s: 0, r: 1 }, expect: { w_0: 0 } },
+      { name: 'release-controls', set: { d: 1, clk: 0, s: 0, r: 0 } },
+      { name: 'assert-set', set: { d: 0, clk: 0, s: 1, r: 0 }, expect: { w_0: 1 } },
+      { name: 'capture-low', set: { d: 0, clk: 0, s: 0, r: 0 }, pulse: ['clk'], expect: { w_0: 0 } },
+    ],
+  }],
+  ['gc_s2_jkff_toggle', {
+    steps: [
+      { name: 'force-known-one', set: { j: 1, k: 0, clk: 0 }, pulse: ['clk'], expect: { w_0: 1 } },
+      { name: 'toggle-low', set: { j: 1, k: 1, clk: 0 }, pulse: ['clk'], expect: { w_0: 0 } },
+      { name: 'toggle-high', set: { j: 1, k: 1, clk: 0 }, pulse: ['clk'], expect: { w_0: 1 } },
+    ],
+  }],
+  ['gc_s3_74hc74', {
+    steps: [
+      { name: 'prepare-controls', set: { pre1: 1, clr1: 1, d1: 0, clk1: 0, pre2: 1, clr2: 1, d2: 0, clk2: 0 } },
+      { name: 'assert-preset-ff1', set: { pre1: 0, clr1: 1, d1: 0, clk1: 0, pre2: 1, clr2: 1, d2: 0, clk2: 0 }, expect: { w_0: 1 } },
+      { name: 'release-ff1-controls', set: { pre1: 1, clr1: 1, d1: 0, clk1: 0, pre2: 1, clr2: 1, d2: 0, clk2: 0 } },
+      { name: 'assert-clear-ff1', set: { pre1: 1, clr1: 0, d1: 0, clk1: 0, pre2: 1, clr2: 1, d2: 0, clk2: 0 }, expect: { w_0: 0 } },
+      { name: 'clock-ff2-data', set: { pre1: 1, clr1: 1, d1: 0, clk1: 0, pre2: 1, clr2: 1, d2: 1, clk2: 0 }, pulse: ['clk2'], expect: { w_0: 0, w_1: 1 } },
+    ],
+  }],
+  ['gc_s4_reg4_enable', {
+    steps: [
+      { name: 'assert-reset', set: { d0: 0, d1: 0, d2: 0, d3: 0, en: 0, clk: 0, rst: 1 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0 } },
+      { name: 'release-reset', set: { d0: 0, d1: 0, d2: 0, d3: 0, en: 0, clk: 0, rst: 0 } },
+      { name: 'load-1010', set: { d0: 1, d1: 0, d2: 1, d3: 0, en: 1, clk: 0, rst: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 0 } },
+      { name: 'hold-when-disabled', set: { d0: 0, d1: 1, d2: 0, d3: 1, en: 0, clk: 0, rst: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 0 } },
+    ],
+  }],
+  ['gc_t1_tribuf_direct', {
+    steps: [
+      { name: 'drive-one', set: { a: 1, oe: 0 }, expect: { w_0: 1 } },
+      { name: 'drive-zero', set: { a: 0, oe: 0 }, expect: { w_0: 0 } },
+      { name: 'high-z', set: { a: 1, oe: 1 }, expect: { w_0: 'Z' } },
+    ],
+  }],
+  ['gc_m1_dff_chain', {
+    steps: [
+      { name: 'prime-stage-one', set: { d: 0, clk: 0 }, pulse: ['clk'] },
+      { name: 'prime-stage-two', set: { d: 0, clk: 0 }, pulse: ['clk'], expect: { w_1: 0 } },
+      { name: 'load-first-stage', set: { d: 1, clk: 0 }, pulse: ['clk'], expect: { w_1: 0 } },
+      { name: 'transfer-second-stage', set: { d: 1, clk: 0 }, pulse: ['clk'], expect: { w_1: 1 } },
+      { name: 'clear-first-stage', set: { d: 0, clk: 0 }, pulse: ['clk'], expect: { w_1: 1 } },
+      { name: 'clear-second-stage', set: { d: 0, clk: 0 }, pulse: ['clk'], expect: { w_1: 0 } },
+    ],
+  }],
+  ['gc_m2_283_adder', {
+    steps: [
+      { name: 'seven-plus-eight', set: { a1: 1, a2: 1, a3: 1, a4: 0, b1: 0, b2: 0, b3: 0, b4: 1, c0: 0 }, expect: { w_0: 1, w_1: 1, w_2: 1, w_3: 1, w_4: 0 } },
+      { name: 'fifteen-plus-one', set: { a1: 1, a2: 1, a3: 1, a4: 1, b1: 1, b2: 0, b3: 0, b4: 0, c0: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1 } },
+    ],
+  }],
+  ['gc_m3_counter_gate', {
+    steps: [
+      { name: 'prepare-clear-edge', set: { clk: 0, clrn: 1, ldn: 1, enp: 0, ent: 0, d0: 0, d1: 0, d2: 0, d3: 0 } },
+      { name: 'async-clear', set: { clk: 0, clrn: 0, ldn: 1, enp: 0, ent: 0, d0: 0, d1: 0, d2: 0, d3: 0 }, expect: { w_2: 0 } },
+      { name: 'count-one', set: { clk: 0, clrn: 1, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_2: 0 } },
+      { name: 'count-two', set: { clk: 0, clrn: 1, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_2: 0 } },
+      { name: 'count-three-detect', set: { clk: 0, clrn: 1, ldn: 1, enp: 1, ent: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_2: 1 } },
+    ],
+  }],
+  ['gc_s5_dff_basic', {
+    steps: [
+      { name: 'capture-high', set: { d: 1, clk: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0 } },
+      { name: 'hold-without-edge', set: { d: 0, clk: 0 }, expect: { w_0: 1, w_1: 0 } },
+      { name: 'capture-low', set: { d: 0, clk: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1 } },
+    ],
+  }],
+  ['gc_s7_hc161_vs_hc163', {
+    steps: [
+      { name: 'sync-clear-both', set: { clk: 0, clrn: 0, enp: 0, ent: 0, ldn: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0 } },
+      { name: 'count-once', set: { clk: 0, clrn: 1, enp: 1, ent: 1, ldn: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 0, w_7: 0 } },
+      { name: 'async-clear-difference', set: { clk: 0, clrn: 0, enp: 1, ent: 1, ldn: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 0, w_7: 0 } },
+    ],
+  }],
+  ['gc_s8_hc194_modes', {
+    steps: [
+      { name: 'prepare-clear-edge', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 } },
+      { name: 'async-clear', set: { clk: 0, clrn: 0, s0: 0, s1: 0, sr: 0, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0 } },
+      { name: 'parallel-load-1010', set: { clk: 0, clrn: 1, s0: 1, s1: 1, sr: 0, sl: 0, d0: 0, d1: 1, d2: 0, d3: 1 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1 } },
+      { name: 'hold', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 1, d2: 1, d3: 1 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1 } },
+      { name: 'shift-right', set: { clk: 0, clrn: 1, s0: 1, s1: 0, sr: 1, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 1 } },
+      { name: 'shift-left', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 0, w_3: 1 } },
+    ],
+  }],
+  ['gc_v2_1_mux_fabric', {
+    steps: [
+      { name: 'lower-bank-hit', set: { d0: 1, s0: 0, s1: 0, s2: 0, m0: 0, m1: 0 }, expect: { w_8: 1, w_9: 1 } },
+      { name: 'upper-bank-hit', set: { d15: 1, s0: 1, s1: 1, s2: 1, m0: 1, m1: 0 }, expect: { w_8: 1, w_9: 0 } },
+      { name: 'complement-bank-and-tap', set: { d2: 1, d8: 1, s0: 0, s1: 1, s2: 0, m0: 0, m1: 1 }, expect: { w_8: 0, w_9: 1 } },
+    ],
+  }],
+  ['gc_v2_2_datapath_slice', {
+    steps: [
+      { name: 'assert-reset', set: { clk: 0, rst: 1, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_11: 0, w_12: 0 } },
+      { name: 'release-reset', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_11: 0, w_12: 0 } },
+      { name: 'add-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 0, w_11: 0, w_12: 0 } },
+      { name: 'sub-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 1, w_6: 0, w_11: 0, w_12: 0 } },
+      { name: 'and-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 1, w_6: 0, w_11: 0, w_12: 0 } },
+      { name: 'or-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 1, w_11: 0, w_12: 0 } },
+    ],
+  }],
+  ['gc_v2_3_shift_pipeline', {
+    steps: [
+      { name: 'prepare-clear-edge', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 1 } },
+      { name: 'assert-clears', set: { clk: 0, clrn: 0, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 1 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 'Z', w_5: 'Z', w_6: 'Z', w_7: 'Z', w_8: 'Z', w_9: 'Z', w_10: 'Z', w_11: 'Z' } },
+      { name: 'latch-cleared-stage', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 1 }, pulse: ['stcp'], expect: { w_4: 'Z', w_11: 'Z' } },
+      { name: 'enable-zero-outputs', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'parallel-load-1101', set: { clk: 0, clrn: 1, s0: 1, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 1, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'shift-left-1', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'shift-left-2', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 1, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'shift-left-3', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 1, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'shift-left-4', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'latch-shifted-word', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['stcp'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'oe-tristate', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 1 }, expect: { w_4: 'Z', w_5: 'Z', w_6: 'Z', w_7: 'Z', w_8: 'Z', w_9: 'Z', w_10: 'Z', w_11: 'Z' } },
+      { name: 'oe-restore', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, expect: { w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'mr-clears-hidden-shift-only', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'stcp-makes-mr-visible', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 0 }, pulse: ['stcp'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+    ],
+  }],
+  ['gc_v2_4_ram_readback', {
+    steps: [
+      { name: 'reset-and-idle', set: { a0: 1, a1: 0, a2: 1, a3: 0, a4: 0, a5: 0, a6: 0, a7: 0, di0: 1, di1: 0, di2: 1, di3: 0, di4: 0, di5: 1, di6: 0, di7: 1, we: 1, cs: 1, oe: 1, clk: 0, rst: 1 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 'Z' } },
+      { name: 'release-reset', set: { rst: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 'Z' } },
+      { name: 'write-a5-into-addr5', set: { we: 0, cs: 0, oe: 1 }, expect: { w_8: 'Z' } },
+      { name: 'read-live-bus', set: { we: 1, cs: 0, oe: 0 }, expect: { w_8: 1 } },
+      { name: 'capture-a5', set: { clk: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 0, w_4: 0, w_5: 1, w_6: 0, w_7: 1, w_8: 1 } },
+      { name: 'switch-to-empty-addr0', set: { a0: 0, a1: 0, a2: 0, a3: 0, a4: 0, a5: 0, a6: 0, a7: 0, we: 1, cs: 0, oe: 0 }, expect: { w_8: 0 } },
+      { name: 'capture-empty-read', set: { clk: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0 } },
+      { name: 'reassert-reset', set: { a0: 0, a1: 0, a2: 0, a3: 0, a4: 0, a5: 0, a6: 0, a7: 0, di0: 1, di1: 0, di2: 1, di3: 0, di4: 0, di5: 1, di6: 0, di7: 1, we: 1, cs: 1, oe: 1, clk: 0, rst: 1 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 'Z' } },
+    ],
+  }],
+  ['gc_v2_5_decode_tree', {
+    steps: [
+      { name: 'prime-373-hidden-addr2', set: { a: 0, b: 1, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 1, oe373: 1, clk374: 0, oe374: 1 }, expect: { w_9: 'Z', w_10: 'Z', w_11: 'Z', w_12: 'Z', w_13: 'Z', w_14: 'Z', w_15: 'Z', w_16: 'Z', w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
+      { name: 'reveal-373-addr2', set: { a: 0, b: 1, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 1, oe373: 0, clk374: 0, oe374: 1 }, expect: { w_9: 1, w_10: 1, w_11: 0, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
+      { name: 'transparent-follow-addr5', set: { a: 1, b: 0, c: 1, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 1, oe373: 0, clk374: 0, oe374: 1 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 0, w_15: 1, w_16: 1, w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
+      { name: 'hold-373-while-addr3-live', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 1 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 0, w_15: 1, w_16: 1, w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
+      { name: 'capture-374-hidden-addr3', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 1 }, pulse: ['clk374'], expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 0, w_15: 1, w_16: 1, w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
+      { name: 'reveal-374-addr3', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 0, w_15: 1, w_16: 1, w_22: 0, w_23: 0, w_24: 1, w_25: 0, w_26: 1 } },
+      { name: 'encoder-disable-capture', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 1, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, pulse: ['clk374'], expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 0, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 1 } },
+      { name: 'prime-disabled-decode-hidden', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 1, oe373: 1, clk374: 0, oe374: 0 }, expect: { w_9: 'Z', w_10: 'Z', w_11: 'Z', w_12: 'Z', w_13: 'Z', w_14: 'Z', w_15: 'Z', w_16: 'Z', w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 1 } },
+      { name: 'reveal-disabled-decode', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 1 } },
+      { name: 'capture-no-active-status', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, pulse: ['clk374'], expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 0 } },
+      { name: '374-high-z', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 1 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
+      { name: '374-restore-held-status', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 0 } },
+    ],
+  }],
+  ['gc_v2_6_custom_halfadder', buildCustomHalfAdderScenario()],
+  ['gc_v2_7_bus_conflict_system', {
+    steps: [
+      { name: 'all-disabled', set: { a_clk: 0, a_oe: 1, a_d0: 1, a_d1: 0, b_clk: 0, b_oe: 1, b_d0: 0, b_d1: 1 }, expect: { w_3: 'Z', w_10: 0, w_12: 0 } },
+      { name: 'load-a-shadow', set: { a_clk: 0, a_oe: 1, a_d0: 1, a_d1: 0 }, pulse: ['a_clk'], expect: { w_3: 'Z', w_4: 1, w_5: 0, w_10: 0, w_12: 0 } },
+      { name: 'load-b-shadow', set: { b_clk: 0, b_oe: 1, b_d0: 0, b_d1: 1 }, pulse: ['b_clk'], expect: { w_3: 'Z', w_4: 1, w_5: 0, w_6: 0, w_7: 1, w_10: 0, w_12: 0 } },
+      { name: 'enable-a-only', set: { a_oe: 0, b_oe: 1 }, expect: { w_3: 'Z', w_4: 1, w_5: 0, w_6: 0, w_7: 1, w_10: 0, w_12: 0 } },
+      { name: 'overlap-conflict', set: { a_oe: 0, b_oe: 0 }, expect: { w_3: 0, w_4: 1, w_5: 0, w_6: 0, w_7: 1, w_10: 1, w_12: 1 } },
+      { name: 'reload-b-align-bit0', set: { b_oe: 1, b_d0: 1, b_d1: 1, b_clk: 0 }, pulse: ['b_clk'], expect: { w_3: 'Z', w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_10: 0, w_12: 0 } },
+      { name: 'overlap-no-conflict', set: { a_oe: 0, b_oe: 0 }, expect: { w_3: 1, w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_10: 1, w_12: 0 } },
+    ],
+  }],
+  ['gc_v2_8_sequential_feedback', buildSequentialFeedbackScenario()],
+  ['gc_v2_9_custom_reg4_pipeline', buildCustomReg4PipelineScenario()],
+]);
+
+function parseRunnerArgs(argv) {
+  let slug = null;
+  let writeArtifacts = true;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--no-write') {
+      writeArtifacts = false;
+      continue;
+    }
+    if (arg === '--slug' && i + 1 < argv.length) {
+      slug = argv[++i];
+      continue;
+    }
+    if (arg.startsWith('--slug=')) {
+      slug = arg.slice('--slug='.length);
+    }
+  }
+  return { slug, writeArtifacts };
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -74,6 +405,186 @@ function sanitizeText(text) {
     .split(ROOT.replace(/\\/g, '/')).join('<repo>')
     .replace(/\/home\/p-keminer\/projects\/uni\/logic-gate-simulator/g, '<repo>')
     .replace(/C:\\Users\\pkemi\\logic-simulator-studio/gi, '<repo>');
+}
+
+function logicToken(value) {
+  if (value === 0 || value === '0') return '0';
+  if (value === 1 || value === '1') return '1';
+  if (value === 2 || String(value).toUpperCase() === 'Z') return 'Z';
+  if (value === 3 || String(value).toUpperCase() === 'X') return 'X';
+  throw new Error(`Unsupported HDL logic value: ${value}`);
+}
+
+function toVerilogLiteral(value) {
+  return `1'b${logicToken(value).toLowerCase()}`;
+}
+
+function toVhdlLiteral(value) {
+  return `'${logicToken(value)}'`;
+}
+
+function formatToolDetail(successDetail, result) {
+  if (result.status === 'pass') return successDetail;
+  return result.error || result.output || 'No tool detail available';
+}
+
+function normalizeToolCheck(slug, checkId, result) {
+  if (
+    slug === 'gc_c3_sr_latch'
+    && checkId === 'verilog-verilator-lint'
+    && result.status === 'fail'
+    && /UNOPTFLAT/.test(result.error || '')
+  ) {
+    return {
+      ...result,
+      status: 'pass',
+      detailOverride: 'Verilator UNOPTFLAT waived for intentional cross-coupled NOR latch.',
+    };
+  }
+
+  return result;
+}
+
+function pushToolCheck(checks, slug, checkId, successDetail, result) {
+  const normalized = normalizeToolCheck(slug, checkId, result);
+  checks.push({
+    checkId,
+    status: normalized.status,
+    detail: normalized.detailOverride ?? formatToolDetail(successDetail, normalized),
+  });
+}
+
+function buildVerilogTestbench(slug, entry, scenario) {
+  const inputs = entry.inputs ?? [];
+  const outputs = entry.outputs ?? [];
+  const allPorts = [...inputs, ...outputs];
+  const lines = [
+    '`timescale 1ns/1ps',
+    '',
+    'module tb;',
+    ...inputs.map(id => `  reg ${id} = 1'b0;`),
+    ...outputs.map(id => `  wire ${id};`),
+    '',
+    `  ${slug} dut (`,
+    allPorts.map((id, idx) => `    .${id}(${id})${idx < allPorts.length - 1 ? ',' : ''}`).join('\n'),
+    '  );',
+    '',
+    '  initial begin',
+  ];
+
+  for (const step of scenario.steps) {
+    lines.push(`    // ${step.name}`);
+    for (const [signal, value] of Object.entries(step.set ?? {})) {
+      lines.push(`    ${signal} = ${toVerilogLiteral(value)};`);
+    }
+    lines.push('    #1;');
+    for (const signal of step.pulse ?? []) {
+      lines.push(`    ${signal} = 1'b0;`);
+      lines.push('    #1;');
+      lines.push(`    ${signal} = 1'b1;`);
+      lines.push('    #1;');
+      lines.push(`    ${signal} = 1'b0;`);
+      lines.push('    #1;');
+    }
+    for (const [signal, value] of Object.entries(step.expect ?? {})) {
+      lines.push(`    if (${signal} !== ${toVerilogLiteral(value)}) begin`);
+      lines.push(`      $display("FAIL ${slug}/${step.name}/${signal}: expected ${logicToken(value)} got=%b", ${signal});`);
+      lines.push('      $fatal(1);');
+      lines.push('    end');
+    }
+  }
+
+  lines.push(`    $display("PASS ${slug}");`);
+  lines.push('    $finish;');
+  lines.push('  end');
+  lines.push('endmodule');
+
+  return lines.join('\n');
+}
+
+function buildVhdlTestbench(slug, entry, scenario) {
+  const inputs = entry.inputs ?? [];
+  const outputs = entry.outputs ?? [];
+  const allPorts = [...inputs, ...outputs];
+  const lines = [
+    'library ieee;',
+    'use ieee.std_logic_1164.all;',
+    '',
+    'entity tb is',
+    'end entity tb;',
+    '',
+    'architecture sim of tb is',
+    ...inputs.map(id => `  signal ${id} : std_logic := '0';`),
+    ...outputs.map(id => `  signal ${id} : std_logic;`),
+    'begin',
+    '  dut: entity work.' + slug,
+    '    port map (',
+    allPorts.map((id, idx) => `      ${id} => ${id}${idx < allPorts.length - 1 ? ',' : ''}`).join('\n'),
+    '    );',
+    '',
+    '  process',
+    '  begin',
+  ];
+
+  for (const step of scenario.steps) {
+    lines.push(`    -- ${step.name}`);
+    for (const [signal, value] of Object.entries(step.set ?? {})) {
+      lines.push(`    ${signal} <= ${toVhdlLiteral(value)};`);
+    }
+    lines.push('    wait for 1 ns;');
+    for (const signal of step.pulse ?? []) {
+      lines.push(`    ${signal} <= '0';`);
+      lines.push('    wait for 1 ns;');
+      lines.push(`    ${signal} <= '1';`);
+      lines.push('    wait for 1 ns;');
+      lines.push(`    ${signal} <= '0';`);
+      lines.push('    wait for 1 ns;');
+    }
+    for (const [signal, value] of Object.entries(step.expect ?? {})) {
+      lines.push(`    assert ${signal} = ${toVhdlLiteral(value)} report "FAIL ${slug}/${step.name}/${signal}: expected ${logicToken(value)}" severity failure;`);
+    }
+  }
+
+  lines.push(`    report "PASS ${slug}" severity note;`);
+  lines.push('    wait;');
+  lines.push('  end process;');
+  lines.push('end architecture sim;');
+
+  return lines.join('\n');
+}
+
+/**
+ * Compare two strings line-by-line and return info about the first difference.
+ * Returns null when the strings are identical (after trailing-newline normalization).
+ *
+ * Normalization: trailing blank lines are stripped so that a file saved with or
+ * without a final `\n` does not cause a spurious mismatch. Real content changes
+ * are still caught.
+ *
+ * @param {string} golden  The stored reference text.
+ * @param {string} actual  The freshly-generated text.
+ */
+function findFirstDiff(golden, actual) {
+  // Normalize: ignore trailing blank lines and final-newline differences.
+  const norm = (s) => s.replace(/\n+$/, '');
+  const g = norm(golden);
+  const a = norm(actual);
+  if (g === a) return null;
+  const goldenLines = g.split('\n');
+  const actualLines = a.split('\n');
+  const max = Math.max(goldenLines.length, actualLines.length);
+  for (let i = 0; i < max; i++) {
+    const gl = goldenLines[i] ?? '<line missing>';
+    const al = actualLines[i] ?? '<line missing>';
+    if (gl !== al) {
+      return {
+        lineNo: i + 1,
+        golden: gl.slice(0, 120),
+        actual: al.slice(0, 120),
+      };
+    }
+  }
+  return null;
 }
 
 // ── Per-case checks ─────────────────────────────────────────────────────────
@@ -214,11 +725,17 @@ async function runCase(entry) {
   }
 
   // ── Check 9: Verilog structural sanity ──────────────────────────────────
+  let goldenVerilog = null;
   if (verilogExists) {
     const vResult = await readTextSafe(verilogPath);
     if (vResult.ok) {
-      const vChecks = checkVerilogStructure(vResult.raw, slug, entry);
+      goldenVerilog = vResult.raw;
+      const vChecks = checkVerilogStructure(goldenVerilog, slug, entry);
       checks.push(...vChecks);
+      const syntaxResults = compileVerilogWithSyntax(verilogPath, sanitizeText);
+      pushToolCheck(checks, slug, 'verilog-iverilog-syntax', `iverilog accepted ${displayPath(verilogPath)}`, syntaxResults.iverilog);
+      pushToolCheck(checks, slug, 'verilog-verilator-lint', `verilator accepted ${displayPath(verilogPath)}`, syntaxResults.verilator);
+      pushToolCheck(checks, slug, 'verilog-yosys-read', `yosys accepted ${displayPath(verilogPath)}`, syntaxResults.yosys);
     } else {
       checks.push({
         checkId: 'verilog-readable',
@@ -229,16 +746,108 @@ async function runCase(entry) {
   }
 
   // ── Check 10: VHDL structural sanity ────────────────────────────────────
+  let goldenVhdl = null;
   if (vhdlExists) {
     const vResult = await readTextSafe(vhdlPath);
     if (vResult.ok) {
-      const vChecks = checkVhdlStructure(vResult.raw, slug, entry);
+      goldenVhdl = vResult.raw;
+      const vChecks = checkVhdlStructure(goldenVhdl, slug, entry);
       checks.push(...vChecks);
+      const syntaxResults = compileVhdlWithSyntax(vhdlPath, sanitizeText);
+      pushToolCheck(checks, slug, 'vhdl-ghdl-analyze', `ghdl accepted ${displayPath(vhdlPath)}`, syntaxResults.ghdl);
     } else {
       checks.push({
         checkId: 'vhdl-readable',
         status: 'fail',
         detail: vResult.error,
+      });
+    }
+  }
+
+  const hdlScenario = HDL_SIM_SCENARIOS.get(slug);
+  if (hdlScenario) {
+    if (verilogExists) {
+      const simResult = await runVerilogSimulation({
+        designFile: verilogPath,
+        testbenchSource: buildVerilogTestbench(slug, entry, hdlScenario),
+      }, sanitizeText);
+      pushToolCheck(checks, slug, 'verilog-external-sim', `${hdlScenario.steps.length} scenario step(s) passed with iverilog/vvp`, simResult);
+    }
+    if (vhdlExists) {
+      const simResult = await runVhdlSimulation({
+        designFile: vhdlPath,
+        testbenchSource: buildVhdlTestbench(slug, entry, hdlScenario),
+      }, sanitizeText);
+      pushToolCheck(checks, slug, 'vhdl-external-sim', `${hdlScenario.steps.length} scenario step(s) passed with ghdl`, simResult);
+    }
+  } else if (KNOWN_BOUNDARIES.has(slug)) {
+    checks.push({
+      checkId: 'external-hdl-sim-scenario',
+      status: 'expected_limit',
+      detail: 'Skipped external HDL simulation for documented multi-driver boundary.',
+    });
+  } else {
+    checks.push({
+      checkId: 'external-hdl-sim-scenario',
+      status: 'unsupported',
+      detail: `No external HDL simulation scenario defined in runner ${RUNNER_VERSION}.`,
+    });
+  }
+
+  // ── Check 12: Verilog re-export diff (export-determinism) ───────────────
+  if (!generateVerilog) {
+    checks.push({
+      checkId: 'verilog-reexport-diff',
+      status: 'unsupported',
+      detail: exporterLoadError
+        ? `Exporter not loaded: ${exporterLoadError.slice(0, 150)}`
+        : 'Exporter not available (run via: npx vite-node validation/run-golden-corpus-v1.mjs)',
+    });
+  } else if (circuitData && goldenVerilog !== null) {
+    try {
+      const generated = generateVerilog(circuitData);
+      const diff = findFirstDiff(goldenVerilog, generated);
+      checks.push({
+        checkId: 'verilog-reexport-diff',
+        status: diff === null ? 'pass' : 'fail',
+        detail: diff === null
+          ? 'Re-exported Verilog matches golden artifact exactly'
+          : `First diff at line ${diff.lineNo} — golden: "${diff.golden}" | actual: "${diff.actual}"`,
+      });
+    } catch (e) {
+      checks.push({
+        checkId: 'verilog-reexport-diff',
+        status: 'fail',
+        detail: `generateVerilog() threw: ${String(e).slice(0, 200)}`,
+      });
+    }
+  }
+
+  // ── Check 13: VHDL re-export diff (export-determinism) ──────────────────
+  if (!generateVHDL) {
+    checks.push({
+      checkId: 'vhdl-reexport-diff',
+      status: 'unsupported',
+      detail: exporterLoadError
+        ? `Exporter not loaded: ${exporterLoadError.slice(0, 150)}`
+        : 'Exporter not available (run via: npx vite-node validation/run-golden-corpus-v1.mjs)',
+    });
+  } else if (circuitData && goldenVhdl !== null) {
+    try {
+      const generated = generateVHDL(circuitData);
+      const diff = findFirstDiff(goldenVhdl, generated);
+      checks.push({
+        checkId: 'vhdl-reexport-diff',
+        status: diff === null ? 'pass' : 'fail',
+        detail: diff === null
+          ? 'Re-exported VHDL matches golden artifact exactly'
+          : `First diff at line ${diff.lineNo} — golden: "${diff.golden}" | actual: "${diff.actual}"`,
+      });
+    } catch (e) {
+      checks.push({
+        checkId: 'vhdl-reexport-diff',
+        status: 'fail',
+        detail: `generateVHDL() threw: ${String(e).slice(0, 200)}`,
       });
     }
   }
@@ -691,16 +1300,22 @@ function generateReport(corpusVersion, caseResults) {
   md += `- Gate type presence in circuit files\n`;
   md += `- Input/output port consistency between corpus index and artifacts\n`;
   md += `- Checkpoint string matching against Verilog/VHDL sources\n`;
+  md += `- External HDL syntax/lint compilation (iverilog, verilator, yosys, ghdl) when toolchain is present\n`;
+  md += `- Scenario-based external HDL simulation for all non-boundary cases (iverilog/vvp and ghdl)\n`;
+  md += `- **Re-export + byte-accurate diff against golden .v/.vhd artifacts** (export-determinism, v1.1)\n`;
   md += `- Known boundary classification (gc_t2_bus_mux)\n\n`;
+
+  const exporterStatus = generateVerilog
+    ? `Exporters loaded — diff checks ran live`
+    : `Exporters not loaded — diff checks classified as unsupported`;
+  md += `**Export-determinism status:** ${exporterStatus}\n\n`;
 
   // What v1 does NOT check
   md += `## What v1 Does NOT Check (Gaps for v2)\n\n`;
-  md += `- Functional simulation / truth-table verification of circuits\n`;
-  md += `- Re-export and diff against golden exports (export-determinism)\n`;
-  md += `- External HDL tool compilation (iverilog, ghdl)\n`;
-  md += `- Multi-cycle sequential simulation\n`;
+  md += `- Exhaustive external HDL verification beyond the curated scenario traces\n`;
+  md += `- Formal or property-based equivalence between runtime model and exported HDL\n`;
+  md += `- Multi-driver bus behavior beyond the documented gc_t2_bus_mux boundary\n`;
   md += `- UI replay / visual regression\n`;
-  md += `- CI integration (runner is local-only for now)\n`;
 
   // Known Boundaries section
   md += `\n## Known Boundaries\n\n`;
@@ -757,7 +1372,7 @@ function generateSummary(corpusVersion, caseResults) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
-async function main() {
+async function main({ slug = null, writeArtifacts = true } = {}) {
   // Load corpus index
   const corpusResult = await readJsonSafe(CORPUS_FILE);
   if (!corpusResult.ok) {
@@ -766,7 +1381,30 @@ async function main() {
   }
   const corpus = corpusResult.data;
   const corpusVersion = corpus.version ?? 'unknown';
-  const entries = corpus.circuits ?? [];
+  const entries = slug
+    ? (corpus.circuits ?? []).filter((entry) => entry.slug === slug)
+    : (corpus.circuits ?? []);
+  if (slug && entries.length === 0) {
+    console.error(`No corpus entry found for slug: ${slug}`);
+    process.exit(2);
+  }
+
+  // ── Load TypeScript exporters (requires vite-node) ──────────────────────
+  try {
+    // Gate registry must be bootstrapped before calling generateVerilog/generateVHDL.
+    // The registry uses side-effect imports; importing index.ts triggers all of them.
+    await import(new URL('../src/core/registry/index.ts', import.meta.url).href);
+    await registerGoldenCustomICsForSlugs(entries.map((entry) => entry.slug));
+    const vMod = await import(new URL('../src/core/io/verilog.ts', import.meta.url).href);
+    const hMod = await import(new URL('../src/core/io/vhdl.ts', import.meta.url).href);
+    generateVerilog = vMod.generateVerilog;
+    generateVHDL = hMod.generateVHDL;
+    console.log('Export-determinism: exporters loaded — re-export diff checks ACTIVE');
+  } catch (e) {
+    exporterLoadError = String(e);
+    console.warn(`Export-determinism: exporters NOT loaded (${exporterLoadError.slice(0, 120)})`);
+    console.warn('Re-export diff checks will be classified as unsupported.');
+  }
 
   console.log(`Golden Corpus v1 Runner v${RUNNER_VERSION}`);
   console.log(`Corpus version: ${corpusVersion}`);
@@ -781,22 +1419,28 @@ async function main() {
     console.log(`  ${entry.slug}: ${statusLabel} (${checksSummary})`);
   }
 
-  // Write artifacts
   const summary = generateSummary(corpusVersion, caseResults);
   const report = generateReport(corpusVersion, caseResults);
 
-  await fs.writeFile(SUMMARY_FILE, JSON.stringify(summary, null, 2) + '\n');
-  await fs.writeFile(REPORT_FILE, report);
+  if (writeArtifacts) {
+    await fs.writeFile(SUMMARY_FILE, JSON.stringify(summary, null, 2) + '\n');
+    await fs.writeFile(REPORT_FILE, report);
+  } else {
+    console.log('Artifact writes skipped (--no-write).');
+  }
 
   console.log(`\nVerdict: ${summary.verdict}`);
   console.log(`  ${summary.passed} pass, ${summary.failed} fail, ${summary.expectedLimit} expected_limit, ${summary.unsupported} unsupported`);
-  console.log(`Summary: ${displayPath(SUMMARY_FILE)}`);
-  console.log(`Report:  ${displayPath(REPORT_FILE)}`);
+  if (writeArtifacts) {
+    console.log(`Summary: ${displayPath(SUMMARY_FILE)}`);
+    console.log(`Report:  ${displayPath(REPORT_FILE)}`);
+  }
 
   // CI-consumable JSON
   console.log(JSON.stringify({
-    summaryFile: displayPath(SUMMARY_FILE),
-    reportFile: displayPath(REPORT_FILE),
+    summaryFile: writeArtifacts ? displayPath(SUMMARY_FILE) : null,
+    reportFile: writeArtifacts ? displayPath(REPORT_FILE) : null,
+    slug: slug ?? null,
     verdict: summary.verdict,
     passed: summary.passed,
     failed: summary.failed,
@@ -807,7 +1451,7 @@ async function main() {
   process.exit(summary.failed > 0 ? 1 : 0);
 }
 
-main().catch(e => {
+main(parseRunnerArgs(process.argv.slice(2))).catch(e => {
   console.error('Golden Corpus runner failed:', e);
   process.exit(2);
 });

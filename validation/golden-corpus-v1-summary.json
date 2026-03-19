@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-03-08T02:15:09.998Z",
-  "runnerVersion": "1.0.0",
-  "corpusVersion": "1.0.0",
-  "totalCases": 12,
-  "passed": 11,
+  "generatedAt": "2026-03-19T19:48:53.275Z",
+  "runnerVersion": "1.8.0",
+  "corpusVersion": "1.8.0",
+  "totalCases": 24,
+  "passed": 23,
   "failed": 0,
   "expectedLimit": 1,
   "unsupported": 0,
   "verdict": "PASS",
   "perClass": {
     "combinational": {
-      "pass": 3,
+      "pass": 5,
       "fail": 0,
       "expected_limit": 0,
       "unsupported": 0,
-      "total": 3
+      "total": 5
     },
     "sequential": {
-      "pass": 4,
+      "pass": 8,
       "fail": 0,
       "expected_limit": 0,
       "unsupported": 0,
-      "total": 4
+      "total": 8
     },
     "tristate": {
       "pass": 1,
@@ -31,11 +31,11 @@
       "total": 2
     },
     "mixed": {
-      "pass": 3,
+      "pass": 9,
       "fail": 0,
       "expected_limit": 0,
       "unsupported": 0,
-      "total": 3
+      "total": 9
     }
   },
   "perCase": [
@@ -44,120 +44,240 @@
       "class": "combinational",
       "title": "AND + OR + NOT chain",
       "status": "pass",
-      "checksRun": 19,
-      "checksPassed": 19,
+      "checksRun": 27,
+      "checksPassed": 27,
       "checksFailed": 0,
-      "reason": "19 checks passed"
+      "reason": "27 checks passed"
     },
     {
       "slug": "gc_c2_half_adder",
       "class": "combinational",
       "title": "Half Adder (XOR + AND fan-out)",
       "status": "pass",
-      "checksRun": 18,
-      "checksPassed": 18,
+      "checksRun": 26,
+      "checksPassed": 26,
       "checksFailed": 0,
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_c3_sr_latch",
       "class": "combinational",
       "title": "SR-Latch (cross-coupled NOR)",
       "status": "pass",
-      "checksRun": 18,
-      "checksPassed": 18,
+      "checksRun": 26,
+      "checksPassed": 26,
       "checksFailed": 0,
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_s1_dff_assr",
       "class": "sequential",
       "title": "D-FF with async Set + Reset",
       "status": "pass",
-      "checksRun": 18,
-      "checksPassed": 18,
+      "checksRun": 26,
+      "checksPassed": 26,
       "checksFailed": 0,
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_s2_jkff_toggle",
       "class": "sequential",
       "title": "JK-FF toggle mode (J=K=1 static)",
       "status": "pass",
-      "checksRun": 18,
-      "checksPassed": 18,
+      "checksRun": 26,
+      "checksPassed": 26,
       "checksFailed": 0,
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_s3_74hc74",
       "class": "sequential",
       "title": "74HC74 Dual D-FF with Preset/Clear",
       "status": "pass",
-      "checksRun": 17,
-      "checksPassed": 17,
+      "checksRun": 25,
+      "checksPassed": 25,
       "checksFailed": 0,
-      "reason": "17 checks passed"
+      "reason": "25 checks passed"
     },
     {
       "slug": "gc_s4_reg4_enable",
       "class": "sequential",
       "title": "REG4 with clock enable",
       "status": "pass",
-      "checksRun": 17,
-      "checksPassed": 17,
+      "checksRun": 25,
+      "checksPassed": 25,
       "checksFailed": 0,
-      "reason": "17 checks passed"
+      "reason": "25 checks passed"
     },
     {
       "slug": "gc_t1_tribuf_direct",
       "class": "tristate",
       "title": "Single TRIBUF — OE control",
       "status": "pass",
-      "checksRun": 18,
-      "checksPassed": 18,
+      "checksRun": 26,
+      "checksPassed": 26,
       "checksFailed": 0,
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_t2_bus_mux",
       "class": "tristate",
       "title": "Two-driver wired-OR bus (TRIBUF × 2)",
       "status": "expected_limit",
-      "checksRun": 18,
-      "checksPassed": 16,
+      "checksRun": 25,
+      "checksPassed": 22,
       "checksFailed": 1,
-      "reason": "Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary."
+      "reason": "Skipped external HDL simulation for documented multi-driver boundary."
     },
     {
       "slug": "gc_m1_dff_chain",
       "class": "mixed",
       "title": "Two D-FFs in series (pipeline stage)",
       "status": "pass",
-      "checksRun": 16,
-      "checksPassed": 16,
+      "checksRun": 24,
+      "checksPassed": 24,
       "checksFailed": 0,
-      "reason": "16 checks passed"
+      "reason": "24 checks passed"
     },
     {
       "slug": "gc_m2_283_adder",
       "class": "mixed",
       "title": "74HC283 4-bit adder (A=7, B=8 → S=15)",
       "status": "pass",
-      "checksRun": 19,
-      "checksPassed": 19,
+      "checksRun": 27,
+      "checksPassed": 27,
       "checksFailed": 0,
-      "reason": "19 checks passed"
+      "reason": "27 checks passed"
     },
     {
       "slug": "gc_m3_counter_gate",
       "class": "mixed",
       "title": "74HC161 counter + AND gate (detect state 3)",
       "status": "pass",
-      "checksRun": 18,
-      "checksPassed": 18,
+      "checksRun": 26,
+      "checksPassed": 26,
       "checksFailed": 0,
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
+    },
+    {
+      "slug": "gc_s5_dff_basic",
+      "class": "sequential",
+      "title": "D-FF basic clocking (both Q and Qn outputs)",
+      "status": "pass",
+      "checksRun": 25,
+      "checksPassed": 25,
+      "checksFailed": 0,
+      "reason": "25 checks passed"
+    },
+    {
+      "slug": "gc_s7_hc161_vs_hc163",
+      "class": "sequential",
+      "title": "74HC161 (async clear) vs 74HC163 (sync clear) side-by-side",
+      "status": "pass",
+      "checksRun": 25,
+      "checksPassed": 25,
+      "checksFailed": 0,
+      "reason": "25 checks passed"
+    },
+    {
+      "slug": "gc_s8_hc194_modes",
+      "class": "sequential",
+      "title": "74HC194 universal shift register — all 4 S1/S0 modes",
+      "status": "pass",
+      "checksRun": 24,
+      "checksPassed": 24,
+      "checksFailed": 0,
+      "reason": "24 checks passed"
+    },
+    {
+      "slug": "gc_v2_1_mux_fabric",
+      "class": "combinational",
+      "title": "16-input selector fabric (dual 74HC151 banks + 74HC153 merge)",
+      "status": "pass",
+      "checksRun": 27,
+      "checksPassed": 27,
+      "checksFailed": 0,
+      "reason": "27 checks passed"
+    },
+    {
+      "slug": "gc_v2_2_datapath_slice",
+      "class": "mixed",
+      "title": "ALU4 accumulator with phase counter",
+      "status": "pass",
+      "checksRun": 28,
+      "checksPassed": 28,
+      "checksFailed": 0,
+      "reason": "28 checks passed"
+    },
+    {
+      "slug": "gc_v2_3_shift_pipeline",
+      "class": "mixed",
+      "title": "74HC194 -> 74HC595 shift/latch pipeline",
+      "status": "pass",
+      "checksRun": 30,
+      "checksPassed": 30,
+      "checksFailed": 0,
+      "reason": "30 checks passed"
+    },
+    {
+      "slug": "gc_v2_4_ram_readback",
+      "class": "mixed",
+      "title": "RAM256 readback path with REG8 capture",
+      "status": "pass",
+      "checksRun": 29,
+      "checksPassed": 29,
+      "checksFailed": 0,
+      "reason": "29 checks passed"
+    },
+    {
+      "slug": "gc_v2_5_decode_tree",
+      "class": "mixed",
+      "title": "74HC138 decode tree with 74HC373 hold tap and 74HC374 capture",
+      "status": "pass",
+      "checksRun": 31,
+      "checksPassed": 31,
+      "checksFailed": 0,
+      "reason": "31 checks passed"
+    },
+    {
+      "slug": "gc_v2_6_custom_halfadder",
+      "class": "combinational",
+      "title": "Custom half-adder hierarchy with raw full-adder oracle",
+      "status": "pass",
+      "checksRun": 30,
+      "checksPassed": 30,
+      "checksFailed": 0,
+      "reason": "30 checks passed"
+    },
+    {
+      "slug": "gc_v2_7_bus_conflict_system",
+      "class": "mixed",
+      "title": "Dual 74HC374 shared-bus conflict monitor",
+      "status": "pass",
+      "checksRun": 29,
+      "checksPassed": 29,
+      "checksFailed": 0,
+      "reason": "29 checks passed"
+    },
+    {
+      "slug": "gc_v2_8_sequential_feedback",
+      "class": "sequential",
+      "title": "Three-stage feedback mesh with seed load and XOR feedback",
+      "status": "pass",
+      "checksRun": 29,
+      "checksPassed": 29,
+      "checksFailed": 0,
+      "reason": "29 checks passed"
+    },
+    {
+      "slug": "gc_v2_9_custom_reg4_pipeline",
+      "class": "mixed",
+      "title": "Dual REG4 custom-IC pipeline with one-cycle lag",
+      "status": "pass",
+      "checksRun": 27,
+      "checksPassed": 27,
+      "checksFailed": 0,
+      "reason": "27 checks passed"
     }
   ],
   "results": [
@@ -243,6 +363,21 @@
           "detail": "All 3 primitives found"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_c1_basic_gates.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_c1_basic_gates.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_c1_basic_gates.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_c1_basic_gates found"
@@ -261,9 +396,34 @@
           "checkId": "vhdl-output-ports",
           "status": "pass",
           "detail": "All 1 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_c1_basic_gates.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "19 checks passed"
+      "reason": "27 checks passed"
     },
     {
       "slug": "gc_c2_half_adder",
@@ -342,6 +502,21 @@
           "detail": "All 2 primitives found"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_c2_half_adder.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_c2_half_adder.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_c2_half_adder.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_c2_half_adder found"
@@ -360,9 +535,34 @@
           "checkId": "vhdl-output-ports",
           "status": "pass",
           "detail": "All 2 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_c2_half_adder.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_c3_sr_latch",
@@ -436,6 +636,21 @@
           "detail": "All 2 gate primitives found"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_c3_sr_latch.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "Verilator UNOPTFLAT waived for intentional cross-coupled NOR latch."
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_c3_sr_latch.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_c3_sr_latch found"
@@ -459,9 +674,34 @@
           "checkId": "vhdl-checkpoint-shadow",
           "status": "pass",
           "detail": "Shadow signal pattern (_q) found in VHDL"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_c3_sr_latch.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_s1_dff_assr",
@@ -540,6 +780,21 @@
           "detail": "All 3 branch patterns verified"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s1_dff_assr.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s1_dff_assr.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s1_dff_assr.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_s1_dff_assr found"
@@ -558,9 +813,34 @@
           "checkId": "vhdl-output-ports",
           "status": "pass",
           "detail": "All 1 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s1_dff_assr.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "4 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "4 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_s2_jkff_toggle",
@@ -634,6 +914,21 @@
           "detail": "All 3 branch patterns verified"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s2_jkff_toggle.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s2_jkff_toggle.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s2_jkff_toggle.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_s2_jkff_toggle found"
@@ -657,9 +952,34 @@
           "checkId": "vhdl-checkpoint-branches",
           "status": "pass",
           "detail": "All 3 VHDL branch patterns verified"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s2_jkff_toggle.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_s3_74hc74",
@@ -695,7 +1015,7 @@
         {
           "checkId": "circuit-gate-types",
           "status": "pass",
-          "detail": "All expected gates found: IC_74HC74"
+          "detail": "All expected gates found: 74HC74"
         },
         {
           "checkId": "circuit-inputs",
@@ -733,6 +1053,21 @@
           "detail": "Sensitivity list found: posedge clk1 or negedge pre1 or negedge clr1"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s3_74hc74.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s3_74hc74.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s3_74hc74.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_s3_74hc74 found"
@@ -751,9 +1086,34 @@
           "checkId": "vhdl-output-ports",
           "status": "pass",
           "detail": "All 2 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s3_74hc74.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "5 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "5 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "17 checks passed"
+      "reason": "25 checks passed"
     },
     {
       "slug": "gc_s4_reg4_enable",
@@ -827,6 +1187,21 @@
           "detail": "Always-block pattern found: always @(posedge clk or posedge rst)"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s4_reg4_enable.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s4_reg4_enable.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s4_reg4_enable.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_s4_reg4_enable found"
@@ -845,9 +1220,34 @@
           "checkId": "vhdl-output-ports",
           "status": "pass",
           "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s4_reg4_enable.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "4 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "4 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "17 checks passed"
+      "reason": "25 checks passed"
     },
     {
       "slug": "gc_t1_tribuf_direct",
@@ -921,6 +1321,21 @@
           "detail": "Checkpoint pattern found: assign w_0 = (~oe) ? a : 1'bz"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_t1_tribuf_direct.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_t1_tribuf_direct.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_t1_tribuf_direct.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_t1_tribuf_direct found"
@@ -944,9 +1359,34 @@
           "checkId": "vhdl-checkpoint-pattern",
           "status": "pass",
           "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_t1_tribuf_direct.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
     },
     {
       "slug": "gc_t2_bus_mux",
@@ -1020,6 +1460,21 @@
           "detail": "Checkpoint pattern NOT found: assign w_0 = (~oe1) ? a1 : 1'bz; assign w_1 = (~oe2) ? a2 : "
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_t2_bus_mux.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_t2_bus_mux.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_t2_bus_mux.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_t2_bus_mux found"
@@ -1040,12 +1495,32 @@
           "detail": "All 1 output port(s) declared"
         },
         {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_t2_bus_mux.vhd"
+        },
+        {
+          "checkId": "external-hdl-sim-scenario",
+          "status": "expected_limit",
+          "detail": "Skipped external HDL simulation for documented multi-driver boundary."
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        },
+        {
           "checkId": "known-boundary",
           "status": "expected_limit",
           "detail": "Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary."
         }
       ],
-      "reason": "Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary."
+      "reason": "Skipped external HDL simulation for documented multi-driver boundary."
     },
     {
       "slug": "gc_m1_dff_chain",
@@ -1114,6 +1589,21 @@
           "detail": "All 1 output port(s) declared"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_m1_dff_chain.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_m1_dff_chain.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_m1_dff_chain.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_m1_dff_chain found"
@@ -1132,9 +1622,34 @@
           "checkId": "vhdl-output-ports",
           "status": "pass",
           "detail": "All 1 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_m1_dff_chain.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "6 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "6 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "16 checks passed"
+      "reason": "24 checks passed"
     },
     {
       "slug": "gc_m2_283_adder",
@@ -1170,7 +1685,7 @@
         {
           "checkId": "circuit-gate-types",
           "status": "pass",
-          "detail": "All expected gates found: IC_74HC283"
+          "detail": "All expected gates found: 74HC283"
         },
         {
           "checkId": "circuit-inputs",
@@ -1208,6 +1723,21 @@
           "detail": "Checkpoint pattern found: wire [4:0] sum_dut = {1'b0,a4,a3,a2,a1} + {1'b0,b4,b3,b2,b1}"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_m2_283_adder.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_m2_283_adder.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_m2_283_adder.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_m2_283_adder found"
@@ -1236,9 +1766,34 @@
           "checkId": "vhdl-checkpoint-output-shadows",
           "status": "pass",
           "detail": "Output shadow signals (_q) found in VHDL"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_m2_283_adder.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "2 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "2 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "19 checks passed"
+      "reason": "27 checks passed"
     },
     {
       "slug": "gc_m3_counter_gate",
@@ -1274,7 +1829,7 @@
         {
           "checkId": "circuit-gate-types",
           "status": "pass",
-          "detail": "All expected gates found: IC_74HC161, AND"
+          "detail": "All expected gates found: 74HC161, AND"
         },
         {
           "checkId": "circuit-inputs",
@@ -1312,6 +1867,21 @@
           "detail": "Extra reg 'cnt_ctr' found"
         },
         {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_m3_counter_gate.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_m3_counter_gate.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_m3_counter_gate.v"
+        },
+        {
           "checkId": "vhdl-entity-name",
           "status": "pass",
           "detail": "entity gc_m3_counter_gate found"
@@ -1335,9 +1905,1812 @@
           "checkId": "vhdl-checkpoint-extra-signal",
           "status": "pass",
           "detail": "Extra signal 'cnt_ctr' found"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_m3_counter_gate.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "5 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "5 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
         }
       ],
-      "reason": "18 checks passed"
+      "reason": "26 checks passed"
+    },
+    {
+      "slug": "gc_s5_dff_basic",
+      "class": "sequential",
+      "title": "D-FF basic clocking (both Q and Qn outputs)",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_s5_dff_basic.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_s5_dff_basic.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_s5_dff_basic.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_s5_dff_basic, name=gc_s5_dff_basic"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: D_FF"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 2 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 2 output(s), found 2 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_s5_dff_basic found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 2 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 2 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 4 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s5_dff_basic.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s5_dff_basic.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s5_dff_basic.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_s5_dff_basic found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 2 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 2 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s5_dff_basic.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "25 checks passed"
+    },
+    {
+      "slug": "gc_s7_hc161_vs_hc163",
+      "class": "sequential",
+      "title": "74HC161 (async clear) vs 74HC163 (sync clear) side-by-side",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_s7_hc161_vs_hc163.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_s7_hc161_vs_hc163.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_s7_hc161_vs_hc163.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_s7_hc161_vs_hc163, name=gc_s7_hc161_vs_hc163"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: 74HC161, 74HC163"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 9 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 8 output(s), found 8 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_s7_hc161_vs_hc163 found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 9 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 8 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 2 internal wires found"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s7_hc161_vs_hc163.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s7_hc161_vs_hc163.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s7_hc161_vs_hc163.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_s7_hc161_vs_hc163 found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 9 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 8 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s7_hc161_vs_hc163.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "25 checks passed"
+    },
+    {
+      "slug": "gc_s8_hc194_modes",
+      "class": "sequential",
+      "title": "74HC194 universal shift register — all 4 S1/S0 modes",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_s8_hc194_modes.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_s8_hc194_modes.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_s8_hc194_modes.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_s8_hc194_modes, name=gc_s8_hc194_modes"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: 74HC194"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 10 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 4 output(s), found 4 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_s8_hc194_modes found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 10 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_s8_hc194_modes.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_s8_hc194_modes.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_s8_hc194_modes.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_s8_hc194_modes found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 10 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_s8_hc194_modes.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "6 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "6 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "24 checks passed"
+    },
+    {
+      "slug": "gc_v2_1_mux_fabric",
+      "class": "combinational",
+      "title": "16-input selector fabric (dual 74HC151 banks + 74HC153 merge)",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_1_mux_fabric.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_1_mux_fabric.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_1_mux_fabric.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_1_mux_fabric, name=gc_v2_1_mux_fabric"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: 74HC151, 74HC151, 74HC153"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 21 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 2 output(s), found 2 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_1_mux_fabric found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 21 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 2 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 23 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 4 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: assign w_8 = w_2 ? 1'b0 : ({m1,m0}==2'd0 ? w_4 :"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_1_mux_fabric.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_1_mux_fabric.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_1_mux_fabric.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_1_mux_fabric found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 21 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 2 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_1_mux_fabric.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "27 checks passed"
+    },
+    {
+      "slug": "gc_v2_2_datapath_slice",
+      "class": "mixed",
+      "title": "ALU4 accumulator with phase counter",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_2_datapath_slice.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_2_datapath_slice.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_2_datapath_slice.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_2_datapath_slice, name=gc_v2_2_datapath_slice"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: ALU4, REG4, BIN_CTR7S"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 8 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 9 output(s), found 9 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_2_datapath_slice found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 8 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 9 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 17 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 5 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: case ({w_6, w_5, w_4})"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: always @(posedge clk or posedge rst)"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_2_datapath_slice.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_2_datapath_slice.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_2_datapath_slice.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_2_datapath_slice found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 8 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 9 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_2_datapath_slice.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "6 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "6 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "28 checks passed"
+    },
+    {
+      "slug": "gc_v2_3_shift_pipeline",
+      "class": "mixed",
+      "title": "74HC194 -> 74HC595 shift/latch pipeline",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_3_shift_pipeline.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_3_shift_pipeline.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_3_shift_pipeline.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_3_shift_pipeline, name=gc_v2_3_shift_pipeline"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: 74HC194, 74HC595"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 13 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 12 output(s), found 12 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_3_shift_pipeline found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 13 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 12 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 8 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: assign w_4 = oe ? 1'bz : latch_dut_595[0]"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: always @(posedge clk or negedge clrn)"
+        },
+        {
+          "checkId": "verilog-checkpoint-extra-reg",
+          "status": "pass",
+          "detail": "Extra reg 'shift_dut_595' found"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_3_shift_pipeline.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_3_shift_pipeline.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_3_shift_pipeline.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_3_shift_pipeline found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 13 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 12 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-checkpoint-extra-signal",
+          "status": "pass",
+          "detail": "Extra signal 'shift_dut_595' found"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_3_shift_pipeline.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "14 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "14 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "30 checks passed"
+    },
+    {
+      "slug": "gc_v2_4_ram_readback",
+      "class": "mixed",
+      "title": "RAM256 readback path with REG8 capture",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_4_ram_readback.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_4_ram_readback.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_4_ram_readback.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_4_ram_readback, name=gc_v2_4_ram_readback"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: RAM256, REG8"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 21 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 9 output(s), found 9 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_4_ram_readback found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 21 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 9 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 12 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 8 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: ram_ram[{a7, a6, a5, a4, a3, a2, a1, a0}] = {di7, di6, di5, "
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: always @(posedge clk or posedge rst)"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_4_ram_readback.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_4_ram_readback.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_4_ram_readback.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_4_ram_readback found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 21 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 9 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_4_ram_readback.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "8 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "8 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "29 checks passed"
+    },
+    {
+      "slug": "gc_v2_5_decode_tree",
+      "class": "mixed",
+      "title": "74HC138 decode tree with 74HC373 hold tap and 74HC374 capture",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_5_decode_tree.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_5_decode_tree.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_5_decode_tree.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_5_decode_tree, name=gc_v2_5_decode_tree"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: 74HC138, 74HC148, 74HC373, 74HC374"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 11 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 13 output(s), found 13 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_5_decode_tree found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 11 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 13 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 8 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 6 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: assign w_9 = oe373 ? 1'bz : latch_lat373[0]"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: always @(posedge clk374)"
+        },
+        {
+          "checkId": "verilog-checkpoint-extra-reg",
+          "status": "pass",
+          "detail": "Extra reg 'reg_reg374' found"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_5_decode_tree.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_5_decode_tree.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_5_decode_tree.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_5_decode_tree found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 11 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 13 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-checkpoint-extra-signal",
+          "status": "pass",
+          "detail": "Extra signal 'reg_reg374' found"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_5_decode_tree.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "12 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "12 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "31 checks passed"
+    },
+    {
+      "slug": "gc_v2_6_custom_halfadder",
+      "class": "combinational",
+      "title": "Custom half-adder hierarchy with raw full-adder oracle",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_6_custom_halfadder.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_6_custom_halfadder.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_6_custom_halfadder.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_6_custom_halfadder, name=gc_v2_6_custom_halfadder"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: CIC_HALF_ADDER, CIC_HALF_ADDER, OR, XOR, XOR, AND, AND, OR, XOR, XOR"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 3 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 6 output(s), found 6 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_6_custom_halfadder found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 3 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 6 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 5 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 6 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: xor g_xor_sum_diff(w_10, w_6, w_7)"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: xor g_ha0__xor1(w_0, a, b)"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_6_custom_halfadder found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 3 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 6 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-checkpoint-output-shadows",
+          "status": "pass",
+          "detail": "Output shadow signals (_q) found in VHDL"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "8 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "8 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "30 checks passed"
+    },
+    {
+      "slug": "gc_v2_7_bus_conflict_system",
+      "class": "mixed",
+      "title": "Dual 74HC374 shared-bus conflict monitor",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_7_bus_conflict_system.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_7_bus_conflict_system.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_7_bus_conflict_system.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_7_bus_conflict_system, name=gc_v2_7_bus_conflict_system"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: 74HC374, 74HC374, REG4, REG4, NOT, NOT, AND, AND, XOR"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 8 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 7 output(s), found 7 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_7_bus_conflict_system found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 8 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 7 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 15 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 6 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: and g_conflict0_gate(w_12, w_11, w_10)"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: always @(posedge a_clk)"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_7_bus_conflict_system.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_7_bus_conflict_system.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_7_bus_conflict_system.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_7_bus_conflict_system found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 8 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 7 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_7_bus_conflict_system.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "7 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "7 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "29 checks passed"
+    },
+    {
+      "slug": "gc_v2_8_sequential_feedback",
+      "class": "sequential",
+      "title": "Three-stage feedback mesh with seed load and XOR feedback",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_8_sequential_feedback.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_8_sequential_feedback.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_8_sequential_feedback.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_8_sequential_feedback, name=gc_v2_8_sequential_feedback"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: MUX2, XOR, D_FF_R"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 6 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 4 output(s), found 4 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_8_sequential_feedback found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 6 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 10 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-wires",
+          "status": "pass",
+          "detail": "All 6 internal wires found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: xor g_g_xor_fb(w_3, w_2, w_0);"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: assign w_4 = en ? w_0 : d;"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_8_sequential_feedback.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_8_sequential_feedback.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_8_sequential_feedback.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_8_sequential_feedback found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 6 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_8_sequential_feedback.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "8 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "8 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "29 checks passed"
+    },
+    {
+      "slug": "gc_v2_9_custom_reg4_pipeline",
+      "class": "mixed",
+      "title": "Dual REG4 custom-IC pipeline with one-cycle lag",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_9_custom_reg4_pipeline.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_9_custom_reg4_pipeline, name=gc_v2_9_custom_reg4_pipeline"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: CIC_REG4_STAGE, CIC_REG4_STAGE, XOR"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 7 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 9 output(s), found 9 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_9_custom_reg4_pipeline found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 7 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 9 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 8 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: xor g_cmp_xor(w_8, w_0, w_4)"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_9_custom_reg4_pipeline found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 7 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 9 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "4 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "4 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "27 checks passed"
     }
   ]
 }

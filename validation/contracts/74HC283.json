@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC283",
+  "label": "74HC283",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit binary full adder. A[3:0] + B[3:0] + C0 → S[3:0] + C4. A1/A2/A3/A4 are LSB→MSB. B1/B2/B3/B4 are LSB→MSB. C0 is carry-in. S1–S4 are sum bits. C4 is carry-out. propagationDelay=19."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a1", "label": "A1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b1", "label": "B1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2", "label": "A2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b2", "label": "B2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a3", "label": "A3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b3", "label": "B3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a4", "label": "A4", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b4", "label": "B4", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "c0", "label": "C0", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "s1", "label": "S1", "role": "data",   "canBeTriState": false },
+      { "id": "s2", "label": "S2", "role": "data",   "canBeTriState": false },
+      { "id": "s3", "label": "S3", "role": "data",   "canBeTriState": false },
+      { "id": "s4", "label": "S4", "role": "data",   "canBeTriState": false },
+      { "id": "c4", "label": "C4", "role": "carry", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "ripple-carry adder: {c4,s4,s3,s2,s1} = a + b + c0;",
+    "vhdlNotes": "process uses unsigned variable for addition. No type-ambiguity issue since 74HC283 uses arithmetic +, not & concatenation.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test: 0+0+C0, max+max+C0, carry propagation through all bits. propagationDelay=19."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "Ripple-carry adder — no carry look-ahead. Propagation delay accumulates."
+  ]
+}

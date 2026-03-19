@@ -1,462 +1,473 @@
 {
-    "_meta": {
-        "generated": "2026-03-08",
-        "description": "Machine-readable prioritized action list derived from maturity-gap-dashboard.md. Each item corresponds to a confirmed or strongly-inferred gap with evidence links.",
-        "schemaVersion": "1.0",
-        "priorityLevels": {
-            "P0": "Blocker - simulator produces wrong results or HDL export is unparseable. Fix before any non-trivial use.",
-            "P1": "High - correctness risk or missing safety net. Fix before production or teaching use.",
-            "P2": "Medium - completeness, coverage, or documentation. Address incrementally."
-        }
-    },
-    "items": [
-        {
-            "id": "P0-1",
-            "title": "HI_Z (Z=2) sanitized to 0 in simulation engine",
-            "priority": "P0",
-            "area": "simulation-engine",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "P0 fix applied: Z sanitization removed from signal propagation path. tri_not_sanitized now PASS - triY=2 (Z), invOut=3 (X). Downstream gates see Z correctly; NOT(Z)->X as expected.",
-            "evidence": [
-                "focused-nine-summary.json: test case tri_not_sanitized - PASS (post-P0), triY=2, invOut=3",
-                "maturity-gap-dashboard.md Criterion 1"
-            ],
-            "symptom": "Any circuit using TRIBUF, 74HC373, 74HC374, 74HC595, RAM256, or ROM256 in a bus topology will produce incorrect simulation results. Floating nets appear as logic-0 to downstream gates.",
-            "affectedGates": [
-                "TRIBUF",
-                "74HC373",
-                "74HC374",
-                "74HC595",
-                "RAM256",
-                "ROM256"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P0-2",
-            "title": "Multi-driver: silent winner selection in simulation + duplicate port declarations in HDL export",
-            "priority": "P0",
-            "area": "simulation-engine, hdl-export",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "P0 fix applied: conflicting drivers on the same net now resolve to X (3). multi_driver_same_input PASS - resolvedLedValue=3. HDL serializer fixed: duplicate port declarations eliminated, all tools (iverilog, verilator, ghdl) now PASS.",
-            "evidence": [
-                "focused-nine-summary.json: test case multi_driver_same_input - PASS (post-P0), resolvedLedValue=3, all tools PASS",
-                "maturity-gap-dashboard.md Criterion 2, Criterion 3"
-            ],
-            "symptom": "When multiple gate outputs drive the same net: (1) simulation silently picks one value with no race/conflict event; (2) HDL export generates duplicate port declarations that cause parse errors in all three reference tools.",
-            "affectedGates": [
-                "JUNCTION",
-                "any circuit with shared nets"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P0-3",
-            "title": "VHDL & operator on STD_LOGIC is type-ambiguous - GHDL parse/elaborate failure",
-            "priority": "P0",
-            "area": "hdl-export",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "P1a fix applied: std_logic_vector'(...) casts added to 74HC194 and ALU4 VHDL exporters. hc194_modes and mixed_datapath GHDL now pass.",
-            "evidence": [
-                "focused-nine-summary.json: test case hc194_modes - GHDL FAIL on case s1 & s0 is (pre-fix)",
-                "focused-nine-summary.json: test case mixed_datapath - GHDL FAIL (ALU4 same issue, pre-fix)",
-                "maturity-gap-dashboard.md Criterion 2, Criterion 4"
-            ],
-            "symptom": "VHDL exports for 74HC194 and ALU4 that concatenate STD_LOGIC signals with & fail GHDL elaboration with an ambiguous overload error.",
-            "affectedGates": [
-                "74HC194",
-                "ALU4"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P0-4",
-            "title": "17 basic gates missing toVerilog / toVHDL - no real circuit can be exported",
-            "priority": "P0",
-            "area": "hdl-export",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "P0 fix applied: toVerilog and toVHDL added to all logic_basic and logic_multi gate definitions. codeAudit.hardBlockers=[] in focused-nine-summary.json confirms no remaining HDL export blockers.",
-            "evidence": [
-                "focused-nine-summary.json: codeAudit.hardBlockers=[] (post-P0)",
-                "maturity-gap-dashboard.md Criterion 2, Criterion 7"
-            ],
-            "symptom": "Any circuit that uses basic logic gates - which is effectively every circuit - cannot be exported to HDL.",
-            "affectedGates": [
-                "AND",
-                "OR",
-                "NOT",
-                "NAND",
-                "NOR",
-                "XOR",
-                "XNOR",
-                "BUFFER",
-                "AND3",
-                "AND4",
-                "NAND3",
-                "NAND4",
-                "OR3",
-                "OR4",
-                "NOR3",
-                "NOR4",
-                "XOR3"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P1-1",
-            "title": "74HC373 Verilog always@(*) latch triggers Verilator LATCH warning-as-error",
-            "priority": "P1",
-            "area": "hdl-export",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "P1-1 fix applied: 74HC373 Verilog export switched to Verilog-2001 compatible style with /* verilator lint_off LATCH */ ... /* verilator lint_on LATCH */ inline pragmas around the latch block. hc373_oe_z Verilator now PASS.",
-            "evidence": [
-                "focused-nine-summary.json: test case hc373_oe_z - all tools PASS (post-P1-1)",
-                "maturity-gap-dashboard.md Criterion 4"
-            ],
-            "symptom": "74HC373 Verilog export used always @(*) without a complete else branch, which inferred a latch. Verilator rejected with %Warning-LATCH.",
-            "affectedGates": [
-                "74HC373"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P1-2",
-            "title": "Unsafe /OE defaultInputValues on TRIBUF, 74HC373, 74HC374, 74HC595",
-            "priority": "P1",
-            "area": "gate-definition",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "P1b fix applied: defaultInputValues with oe:1 added to TRIBUF, 74HC373, 74HC374, 74HC595.",
-            "evidence": [
-                "gate-gap-analysis.md: /OE defaults to 0 (active) when unconnected - outputs always driven (pre-fix)",
-                "maturity-gap-dashboard.md Criterion 1, Criterion 7"
-            ],
-            "symptom": "When /OE pin is left unconnected, these gates defaulted to output-enabled.",
-            "affectedGates": [
-                "TRIBUF",
-                "74HC373",
-                "74HC374",
-                "74HC595"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P1-3",
-            "title": "prevClk hidden state not in stateKeys for any edge-triggered flip-flop",
-            "priority": "P1",
-            "area": "gate-definition, ui",
-            "status": "done",
-            "resolvedAt": "2026-03-07",
-            "resolutionNote": "Architecture decision: prevClk stays intentionally hidden (not in stateKeys). Added explicit stateKeys, hiddenStateKeys, and stateInit to all 9 edge-triggered FFs. STT now uses stateInit for hidden state initialization. 57 new P1-3 regression tests added (sequential.test.ts: 133 -> 190 tests).",
-            "evidence": [
-                "gate-gap-analysis.md: prevClk stored in customState but absent from stateKeys",
-                "maturity-gap-dashboard.md: Criterion 1",
-                "src/core/types.ts: hiddenStateKeys and stateInit fields added to GateDefinition",
-                "src/__tests__/gates/sequential.test.ts: 57 new P1-3 regression tests (133 -> 190 total)"
-            ],
-            "symptom": "The STT (State Transition Table) cannot see or force the clock state. Sequential test tools relying on stateKeys will miss a critical state dimension.",
-            "affectedGates": [
-                "D_FF",
-                "D_FF_R",
-                "JK_FF",
-                "T_FF",
-                "SR_FF_EDGE",
-                "D_FF_ASSR",
-                "JK_FF_ASSR",
-                "T_FF_ASSR",
-                "MS_JK_FF"
-            ],
-            "recommendedNextStep": "RESOLVED. No further action needed.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P1-4",
-            "title": "STT variable limit (max 8) blocks UI state verification for all ICs",
-            "priority": "P2",
-            "area": "ui",
-            "status": "partial",
-            "partialResolutionNote": "Post-P0: STT now renders a 'Reduzierte Ansicht' (reduced view) for wide sequentials - shows 8-64 rows of meaningful partial data instead of an error message. Confirmed in focused-nine UI audit 2026-03-07.",
-            "evidence": [
-                "focused-nine-ui-summary.json (2026-03-07): wide ICs show 'Reduzierte Ansicht' with 8-64 rows - PASS",
-                "maturity-gap-dashboard.md Criterion 5"
-            ],
-            "symptom": "The STT UI component has a hard cap of 8 variables. All 74xx ICs have more than 8 combined inputs + state bits and therefore show a limited STT.",
-            "affectedGates": [
-                "74HC74",
-                "74HC161",
-                "74HC163",
-                "74HC194",
-                "74HC373",
-                "74HC374",
-                "74HC595",
-                "REG4",
-                "REG8"
-            ],
-            "recommendedNextStep": "Extend the reduced-view to allow users to select which inputs/states to enumerate.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Full exhaustive enumeration of wide ICs remains impossible. Reduced view provides practical utility but not complete coverage."
-        },
-        {
-            "id": "P1-5",
-            "title": "Contract Runner v1 - automated gate contract verification",
-            "priority": "P1",
-            "area": "testing-infrastructure",
-            "status": "done",
-            "resolvedAt": "2026-03-08",
-            "resolutionNote": "Contract Runner v1 built (validation/run-contract-runner.mjs). Verifies 12 gate contracts with 125 individual test cases. 91 pass, 0 fail, 34 unsupported (step-sequence, forbidden-input, async-set/reset, output-enable patterns not yet implemented). Status model: pass/fail/unsupported with clean metric separation. Wired into CI as blocking gate (scripts/ci/run_contract_runner.sh). Reports uploaded as CI artifacts.",
-            "evidence": [
-                "contract-runner-summary.json: 91 pass, 0 fail, 34 unsupported, 125 total, verdict PASS",
-                "contract-runner-report.md: per-gate breakdown",
-                ".github/workflows/quality-gates.yml: contract-runner job",
-                "scripts/ci/run_contract_runner.sh: invariant validation"
-            ],
-            "symptom": "Previously: all test coverage for simulation correctness was manual or limited to vitest unit tests and focused-nine audit. No repeatable automated verification against gate contracts existed.",
-            "affectedGates": [
-                "all"
-            ],
-            "recommendedNextStep": "Implement remaining 34 unsupported test patterns (step-sequence, forbidden-input, async-set/reset, output-enable) to close the gap.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - operational. 34 unsupported patterns tracked as P2-8."
-        },
-        {
-            "id": "P1-6",
-            "title": "CI expansion - contract-runner and golden-corpus as blocking gates",
-            "priority": "P1",
-            "area": "ci, hdl-export",
-            "status": "done",
-            "resolvedAt": "2026-03-08",
-            "resolutionNote": "CI first expanded from 3 to 5 jobs with contract-runner and golden-corpus as blocking gates, then to 6 total jobs after the focused-nine-ui gate was added. Contract-runner and golden-corpus remain real blocking gates: exit code != 0 fails the job. expected_limit in golden corpus does NOT cause CI failure. Reports are uploaded as CI artifacts. Branch protection rules remain an external manual GitHub Settings step.",
-            "evidence": [
-                ".github/workflows/quality-gates.yml: 6 jobs total, including contract-runner, golden-corpus, and focused-nine-ui",
-                "scripts/ci/run_contract_runner.sh: invariant check + fail-on-failure",
-                "scripts/ci/run_golden_corpus.sh: invariant check + fail-on-failure, expected_limit not a failure",
-                "contract-runner-summary.json, golden-corpus-v1-summary.json: both verdict PASS"
-            ],
-            "symptom": "Previously: only focused-nine core was in CI. Contract verification and golden corpus regression ran manually only.",
-            "affectedGates": [
-                "all gates with toVerilog/toVHDL"
-            ],
-            "recommendedNextStep": "Configure branch protection rules in GitHub Settings to enforce required status checks. Add UI timing audit as future CI job.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - operational. Branch protection is a separate GitHub Settings task."
-        },
-        {
-            "id": "P1-7",
-            "title": "UI timing audit not yet integrated as a CI gate",
-            "priority": "P1",
-            "area": "ui, testing",
-            "status": "done",
-            "resolvedAt": "2026-03-08",
-            "resolutionNote": "Focused-Nine UI audit wired into CI via scripts/ci/run_focused_nine_ui.sh and the focused-nine-ui workflow job. Wrapper now hard-fails on occupied ports, starts a dedicated Vite server on 127.0.0.1:4173, uploads UI reports/screenshots as artifacts, and treats smoke WARN, semantic WARN, infra errors, and HDL mismatches as blocking failures. Local verified baseline: 12 smoke PASS, 5 semantic PASS, 0 WARN.",
-            "evidence": [
-                "focused-nine-ui-summary.json: 12 smoke PASS, 5 semantic PASS, 0 semantic WARN",
-                ".github/workflows/quality-gates.yml: focused-nine-ui job",
-                "scripts/ci/run_focused_nine_ui.sh: dedicated CI wrapper with bootstrap and summary validation"
-            ],
-            "symptom": "Previously the focused-nine UI audit was only local. Timing rendering regressions could slip through unless the audit was executed manually.",
-            "affectedGates": [
-                "all sequential/timing-sensitive gates"
-            ],
-            "recommendedNextStep": "RESOLVED. Next related step is a broader waveform/visual diff beyond the current focused-nine UI audit.",
-            "dependsOn": [],
-            "riskIfUnfixed": "N/A - fixed."
-        },
-        {
-            "id": "P2-1",
-            "title": "MS_JK_FF HDL export approximates master-slave as negedge-triggered only",
-            "priority": "P2",
-            "area": "hdl-export",
-            "status": "open",
-            "evidence": [
-                "gate-gap-analysis.md: MS_JK_FF Verilog uses negedge clk only - does not model two-phase clocking",
-                "maturity-gap-dashboard.md Criterion 2"
-            ],
-            "symptom": "The HDL export for MS_JK_FF loses the master-slave behavior. Synthesized circuits will have different pulse-width sensitivity than the simulation model.",
-            "affectedGates": [
-                "MS_JK_FF"
-            ],
-            "recommendedNextStep": "Add a synthesis comment in the exported HDL warning that the output is a functional approximation. Document as synthesis-risk in the gate contract.",
-            "dependsOn": [],
-            "riskIfUnfixed": "synthesis-risk for circuits using MS_JK_FF - acceptable if documented."
-        },
-        {
-            "id": "P2-2",
-            "title": "Gate contracts exist for only 12 of 71+ gates",
-            "priority": "P2",
-            "area": "documentation, testing",
-            "status": "open",
-            "evidence": [
-                "validation/contracts/ contains 12 files",
-                "gate-inventory.json: 71 registered gates (83 with corrected count)",
-                "maturity-gap-dashboard.md Criterion 3"
-            ],
-            "symptom": "The Contract Runner can only validate the 12 gates with contracts. The remaining 60+ gates have no machine-readable behavioral specification.",
-            "affectedGates": [
-                "all gates without contracts"
-            ],
-            "recommendedNextStep": "Prioritize by risk class: add contracts for core-risk gates first (remaining sequential + tri-state), then combinational ICs, then combinational basic.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Test coverage will plateau at 12 gates regardless of how many test runners are built."
-        },
-        {
-            "id": "P2-3",
-            "title": "Custom IC (category=custom) contracts - no static verification strategy",
-            "priority": "P2",
-            "area": "architecture, testing",
-            "status": "open",
-            "evidence": [
-                "gate-gap-analysis.md: custom ICs excluded from analysis",
-                "maturity-gap-dashboard.md Criterion 5"
-            ],
-            "symptom": "Custom ICs are dynamically composed and registered at runtime. No static contract can be pre-written.",
-            "affectedGates": [
-                "all custom-category ICs"
-            ],
-            "recommendedNextStep": "Design a runtime contract verification approach: when a custom IC is instantiated, automatically derive its truth table by simulation, then compare to user-provided behavioral spec.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Custom IC behavior is unverifiable. Composite designs may silently accumulate errors."
-        },
-        {
-            "id": "P2-4",
-            "title": "Export-determinism / re-export diff not yet in golden corpus or CI",
-            "priority": "P2",
-            "area": "testing, ci",
-            "status": "open",
-            "evidence": [
-                "golden-corpus-v1-report.md: listed under 'What v1 Does NOT Check (Gaps for v2)'",
-                "maturity-gap-dashboard.md Criterion 4, Criterion 6"
-            ],
-            "symptom": "No automated check verifies that re-exporting a golden corpus circuit produces identical Verilog/VHDL output. Export non-determinism could silently introduce diffs.",
-            "affectedGates": [
-                "all gates with toVerilog/toVHDL"
-            ],
-            "recommendedNextStep": "Add a re-export + diff step to the golden corpus runner: load circuit, export, compare byte-for-byte against golden artifacts.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Export changes may go undetected. Golden artifacts may drift from the actual exporter output."
-        },
-        {
-            "id": "P2-5",
-            "title": "26 documentation-gap items across gate inventory",
-            "priority": "P2",
-            "area": "documentation",
-            "status": "open",
-            "evidence": [
-                "gate-gap-analysis.md: documentation-gap count = 26",
-                "gate-gap-analysis.md: missing isSynchronous, missing stateKeys, missing descriptions"
-            ],
-            "symptom": "Several gates are missing isSynchronous declarations, stateKeys, or accurate descriptions.",
-            "affectedGates": [
-                "D_LATCH",
-                "74HC373",
-                "RAM256",
-                "ROM256",
-                "SCHMITT",
-                "SPLIT4",
-                "SPLIT8",
-                "NAND_C",
-                "NOR_C"
-            ],
-            "recommendedNextStep": "Add isSynchronous: false to D_LATCH and 74HC373. Add stateKeys to RAM256 and ROM256. Clarify SPLIT4/SPLIT8 directionality.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Metadata-dependent tools (contract validators, test runners) will produce incorrect results for these gates."
-        },
-        {
-            "id": "P2-6",
-            "title": "Branch protection / required status checks not configured in GitHub Settings",
-            "priority": "P2",
-            "area": "ci",
-            "status": "open",
-            "evidence": [
-                ".github/workflows/quality-gates.yml: 6 CI jobs exist and run on PRs",
-                "GitHub Settings: branch protection rules are a manual external configuration step"
-            ],
-            "symptom": "CI jobs run and report status, but PRs can still be merged even if jobs fail because branch protection rules are not configured.",
-            "affectedGates": [],
-            "recommendedNextStep": "In GitHub repository Settings > Branches > Branch protection rules: add a rule for main requiring quality-gates, contract-runner, golden-corpus, focused-nine-ui, and focused-nine-core as required status checks.",
-            "dependsOn": [],
-            "riskIfUnfixed": "CI gates can be bypassed by merging without waiting for green status."
-        },
-        {
-            "id": "P2-7",
-            "title": "Golden Corpus v2 expansion - large/hierarchical circuits, external HDL simulation",
-            "priority": "P2",
-            "area": "testing",
-            "status": "open",
-            "evidence": [
-                "golden-corpus-v1.json: 12 circuits, none >20 gates, none hierarchical",
-                "golden-corpus-v1-report.md: functional simulation and external HDL compilation listed as v2 gaps"
-            ],
-            "symptom": "The current golden corpus covers basic to medium circuits. No large or hierarchical designs are tested, and no external HDL tool compiles or simulates the golden exports.",
-            "affectedGates": [
-                "all"
-            ],
-            "recommendedNextStep": "Add large (>20 gates) and hierarchical (custom IC) circuits to corpus v2. Add iverilog/ghdl compilation and functional simulation steps to the runner.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Scaling and hierarchy regressions may go undetected."
-        },
-        {
-            "id": "P2-8",
-            "title": "34 unsupported contract-runner test patterns",
-            "priority": "P2",
-            "area": "testing-infrastructure",
-            "status": "open",
-            "evidence": [
-                "contract-runner-summary.json: 34 unsupported patterns across 12 contracts",
-                "contract-runner-report.md: per-gate unsupported breakdown"
-            ],
-            "symptom": "The Contract Runner v1 does not yet implement step-sequence, forbidden-input-combination, async-set/reset, or output-enable test patterns. These are classified as unsupported, not failed.",
-            "affectedGates": [
-                "all contracted gates"
-            ],
-            "recommendedNextStep": "Implement step-sequence runner (clock + evaluate loop) and forbidden-input-combination assertions. Then async-set/reset and output-enable patterns.",
-            "dependsOn": [],
-            "riskIfUnfixed": "Sequential gate behavior and edge cases are not verified by the contract runner. These patterns are covered by vitest but not by contract-level verification."
-        }
-    ],
-    "summary": {
-        "totalItems": 19,
-        "byPriority": {
-            "P0": 0,
-            "P1": 0,
-            "P2": 9
-        },
-        "resolved": 10,
-        "resolvedItems": [
-            "P0-1",
-            "P0-2",
-            "P0-3",
-            "P0-4",
-            "P1-1",
-            "P1-2",
-            "P1-3",
-            "P1-5",
-            "P1-6",
-            "P1-7"
-        ],
-        "lastUpdated": "2026-03-08",
-        "criticalPath": [
-            "P2-4",
-            "P2-8",
-            "P2-7"
-        ],
-        "note": "All P0 blockers and P1-1 through P1-7 resolved. Contract Runner v1 operational (91 pass, 34 unsupported). Golden Corpus v1 Runner operational (11 pass, 1 expected_limit). Focused-Nine UI audit is now a CI gate (12 smoke PASS, 5 semantic PASS). CI has 6 jobs. Next investments: export-determinism, contract-runner pattern expansion, Golden Corpus v2, branch protection, and CI performance."
+  "_meta": {
+    "generated": "2026-03-19",
+    "description": "Machine-readable prioritized action list derived from maturity-gap-dashboard.md. Each item corresponds to a confirmed or strongly-inferred gap with evidence links.",
+    "schemaVersion": "1.0",
+    "priorityLevels": {
+      "P0": "Blocker - simulator produces wrong results or HDL export is unparseable. Fix before any non-trivial use.",
+      "P1": "High - correctness risk or missing safety net. Fix before production or teaching use.",
+      "P2": "Medium - completeness, coverage, or documentation. Address incrementally."
     }
+  },
+  "items": [
+    {
+      "id": "P0-1",
+      "title": "HI_Z (Z=2) sanitized to 0 in simulation engine",
+      "priority": "P0",
+      "area": "simulation-engine",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "P0 fix applied: Z sanitization removed from signal propagation path. tri_not_sanitized now PASS - triY=2 (Z), invOut=3 (X). Downstream gates see Z correctly; NOT(Z)->X as expected.",
+      "evidence": [
+        "focused-nine-summary.json: test case tri_not_sanitized - PASS (post-P0), triY=2, invOut=3",
+        "maturity-gap-dashboard.md Criterion 1"
+      ],
+      "symptom": "Any circuit using TRIBUF, 74HC373, 74HC374, 74HC595, RAM256, or ROM256 in a bus topology will produce incorrect simulation results. Floating nets appear as logic-0 to downstream gates.",
+      "affectedGates": [
+        "TRIBUF",
+        "74HC373",
+        "74HC374",
+        "74HC595",
+        "RAM256",
+        "ROM256"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P0-2",
+      "title": "Multi-driver: silent winner selection in simulation + duplicate port declarations in HDL export",
+      "priority": "P0",
+      "area": "simulation-engine, hdl-export",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "P0 fix applied: conflicting drivers on the same net now resolve to X (3). multi_driver_same_input PASS - resolvedLedValue=3. HDL serializer fixed: duplicate port declarations eliminated, all tools (iverilog, verilator, ghdl) now PASS.",
+      "evidence": [
+        "focused-nine-summary.json: test case multi_driver_same_input - PASS (post-P0), resolvedLedValue=3, all tools PASS",
+        "maturity-gap-dashboard.md Criterion 2, Criterion 3"
+      ],
+      "symptom": "When multiple gate outputs drive the same net: (1) simulation silently picks one value with no race/conflict event; (2) HDL export generates duplicate port declarations that cause parse errors in all three reference tools.",
+      "affectedGates": [
+        "JUNCTION",
+        "any circuit with shared nets"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P0-3",
+      "title": "VHDL & operator on STD_LOGIC is type-ambiguous - GHDL parse/elaborate failure",
+      "priority": "P0",
+      "area": "hdl-export",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "P1a fix applied: std_logic_vector'(...) casts added to 74HC194 and ALU4 VHDL exporters. hc194_modes and mixed_datapath GHDL now pass.",
+      "evidence": [
+        "focused-nine-summary.json: test case hc194_modes - GHDL FAIL on case s1 & s0 is (pre-fix)",
+        "focused-nine-summary.json: test case mixed_datapath - GHDL FAIL (ALU4 same issue, pre-fix)",
+        "maturity-gap-dashboard.md Criterion 2, Criterion 4"
+      ],
+      "symptom": "VHDL exports for 74HC194 and ALU4 that concatenate STD_LOGIC signals with & fail GHDL elaboration with an ambiguous overload error.",
+      "affectedGates": [
+        "74HC194",
+        "ALU4"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P0-4",
+      "title": "17 basic gates missing toVerilog / toVHDL - no real circuit can be exported",
+      "priority": "P0",
+      "area": "hdl-export",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "P0 fix applied: toVerilog and toVHDL added to all logic_basic and logic_multi gate definitions. codeAudit.hardBlockers=[] in focused-nine-summary.json confirms no remaining HDL export blockers.",
+      "evidence": [
+        "focused-nine-summary.json: codeAudit.hardBlockers=[] (post-P0)",
+        "maturity-gap-dashboard.md Criterion 2, Criterion 7"
+      ],
+      "symptom": "Any circuit that uses basic logic gates - which is effectively every circuit - cannot be exported to HDL.",
+      "affectedGates": [
+        "AND",
+        "OR",
+        "NOT",
+        "NAND",
+        "NOR",
+        "XOR",
+        "XNOR",
+        "BUFFER",
+        "AND3",
+        "AND4",
+        "NAND3",
+        "NAND4",
+        "OR3",
+        "OR4",
+        "NOR3",
+        "NOR4",
+        "XOR3"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P1-1",
+      "title": "74HC373 Verilog always@(*) latch triggers Verilator LATCH warning-as-error",
+      "priority": "P1",
+      "area": "hdl-export",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "P1-1 fix applied: 74HC373 Verilog export switched to Verilog-2001 compatible style with /* verilator lint_off LATCH */ ... /* verilator lint_on LATCH */ inline pragmas around the latch block. hc373_oe_z Verilator now PASS.",
+      "evidence": [
+        "focused-nine-summary.json: test case hc373_oe_z - all tools PASS (post-P1-1)",
+        "maturity-gap-dashboard.md Criterion 4"
+      ],
+      "symptom": "74HC373 Verilog export used always @(*) without a complete else branch, which inferred a latch. Verilator rejected with %Warning-LATCH.",
+      "affectedGates": [
+        "74HC373"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P1-2",
+      "title": "Unsafe /OE defaultInputValues on TRIBUF, 74HC373, 74HC374, 74HC595",
+      "priority": "P1",
+      "area": "gate-definition",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "P1b fix applied: defaultInputValues with oe:1 added to TRIBUF, 74HC373, 74HC374, 74HC595.",
+      "evidence": [
+        "gate-gap-analysis.md: /OE defaults to 0 (active) when unconnected - outputs always driven (pre-fix)",
+        "maturity-gap-dashboard.md Criterion 1, Criterion 7"
+      ],
+      "symptom": "When /OE pin is left unconnected, these gates defaulted to output-enabled.",
+      "affectedGates": [
+        "TRIBUF",
+        "74HC373",
+        "74HC374",
+        "74HC595"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P1-3",
+      "title": "prevClk hidden state not in stateKeys for any edge-triggered flip-flop",
+      "priority": "P1",
+      "area": "gate-definition, ui",
+      "status": "done",
+      "resolvedAt": "2026-03-07",
+      "resolutionNote": "Architecture decision: prevClk stays intentionally hidden (not in stateKeys). Added explicit stateKeys, hiddenStateKeys, and stateInit to all 9 edge-triggered FFs. STT now uses stateInit for hidden state initialization. 57 new P1-3 regression tests added (sequential.test.ts: 133 -> 190 tests).",
+      "evidence": [
+        "gate-gap-analysis.md: prevClk stored in customState but absent from stateKeys",
+        "maturity-gap-dashboard.md: Criterion 1",
+        "src/core/types.ts: hiddenStateKeys and stateInit fields added to GateDefinition",
+        "src/__tests__/gates/sequential.test.ts: 57 new P1-3 regression tests (133 -> 190 total)"
+      ],
+      "symptom": "The STT (State Transition Table) cannot see or force the clock state. Sequential test tools relying on stateKeys will miss a critical state dimension.",
+      "affectedGates": [
+        "D_FF",
+        "D_FF_R",
+        "JK_FF",
+        "T_FF",
+        "SR_FF_EDGE",
+        "D_FF_ASSR",
+        "JK_FF_ASSR",
+        "T_FF_ASSR",
+        "MS_JK_FF"
+      ],
+      "recommendedNextStep": "RESOLVED. No further action needed.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P1-4",
+      "title": "STT variable limit (max 8) blocks UI state verification for all ICs",
+      "priority": "P2",
+      "area": "ui",
+      "status": "partial",
+      "partialResolutionNote": "Post-P0: STT now renders a 'Reduzierte Ansicht' (reduced view) for wide sequentials - shows 8-64 rows of meaningful partial data instead of an error message. Confirmed in focused-nine UI audit 2026-03-07.",
+      "evidence": [
+        "focused-nine-ui-summary.json (2026-03-07): wide ICs show 'Reduzierte Ansicht' with 8-64 rows - PASS",
+        "maturity-gap-dashboard.md Criterion 5"
+      ],
+      "symptom": "The STT UI component has a hard cap of 8 variables. All 74xx ICs have more than 8 combined inputs + state bits and therefore show a limited STT.",
+      "affectedGates": [
+        "74HC74",
+        "74HC161",
+        "74HC163",
+        "74HC194",
+        "74HC373",
+        "74HC374",
+        "74HC595",
+        "REG4",
+        "REG8"
+      ],
+      "recommendedNextStep": "Extend the reduced-view to allow users to select which inputs/states to enumerate.",
+      "dependsOn": [],
+      "riskIfUnfixed": "Full exhaustive enumeration of wide ICs remains impossible. Reduced view provides practical utility but not complete coverage."
+    },
+    {
+      "id": "P1-5",
+      "title": "Contract Runner v1 - automated gate contract verification",
+      "priority": "P1",
+      "area": "testing-infrastructure",
+      "status": "done",
+      "resolvedAt": "2026-03-19",
+      "resolutionNote": "Contract Runner v1 is now materially expanded and re-verified. It currently loads 86 contracts and executes 447 cases with 447 pass, 0 fail, 0 unsupported. The formerly failing sequential/contract issues (SR_FF_EDGE, T_FF, T_FF_ASSR, REG4/REG8, SHIFT4, PISO4, counter-rollover, shift-sequence, load-shift-mode, MS_JK_FF sequencing) were fixed in the runner and in the affected contracts, and the remaining multi-driver-conflict cases now execute against shared-bus resolution fixtures for TRIBUF, 74HC373, 74HC374, and RAM256. Status model remains pass/fail/unsupported and the CI gate stays blocking on real failures.",
+      "evidence": [
+        "contract-runner-summary.json: 447 pass, 0 fail, 0 unsupported, 447 total, verdict PASS",
+        "contract-runner-report.md: per-gate breakdown",
+        ".github/workflows/quality-gates.yml: contract-runner job",
+        "scripts/ci/run_contract_runner.sh: invariant validation"
+      ],
+      "symptom": "Previously: all test coverage for simulation correctness was manual or limited to vitest unit tests and focused-nine audit. No repeatable automated verification against gate contracts existed.",
+      "affectedGates": [
+        "all"
+      ],
+      "recommendedNextStep": "Use the now-complete Contract Runner as the stable base, then keep expanding gate-specific handlers and larger composed verification scenarios where they add real coverage.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - operational. Remaining unsupported cases are tracked as P2-8."
+    },
+    {
+      "id": "P1-6",
+      "title": "CI expansion - contract-runner and golden-corpus as blocking gates",
+      "priority": "P1",
+      "area": "ci, hdl-export",
+      "status": "done",
+      "resolvedAt": "2026-03-08",
+      "resolutionNote": "CI first expanded from 3 to 5 jobs with contract-runner and golden-corpus as blocking gates, then to 6 total jobs after the focused-nine-ui gate was added. Contract-runner and golden-corpus remain real blocking gates: exit code != 0 fails the job. expected_limit in golden corpus does NOT cause CI failure. Reports are uploaded as CI artifacts. Branch protection rules remain an external manual GitHub Settings step.",
+      "evidence": [
+        ".github/workflows/quality-gates.yml: 6 jobs total, including contract-runner, golden-corpus, and focused-nine-ui",
+        "scripts/ci/run_contract_runner.sh: invariant check + fail-on-failure",
+        "scripts/ci/run_golden_corpus.sh: invariant check + fail-on-failure, expected_limit not a failure",
+        "contract-runner-summary.json, golden-corpus-v1-summary.json: both verdict PASS"
+      ],
+      "symptom": "Previously: only focused-nine core was in CI. Contract verification and golden corpus regression ran manually only.",
+      "affectedGates": [
+        "all gates with toVerilog/toVHDL"
+      ],
+      "recommendedNextStep": "Configure branch protection rules in GitHub Settings to enforce required status checks.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - operational. Branch protection is a separate GitHub Settings task."
+    },
+    {
+      "id": "P1-7",
+      "title": "UI timing audit not yet integrated as a CI gate",
+      "priority": "P1",
+      "area": "ui, testing",
+      "status": "done",
+      "resolvedAt": "2026-03-08",
+      "resolutionNote": "Focused-Nine UI audit wired into CI via scripts/ci/run_focused_nine_ui.sh and the focused-nine-ui workflow job. Wrapper now hard-fails on occupied ports, starts a dedicated Vite server on 127.0.0.1:4173, uploads UI reports/screenshots as artifacts, and treats smoke WARN, semantic WARN, infra errors, and HDL mismatches as blocking failures. Local verified baseline: 12 smoke PASS, 5 semantic PASS, 0 WARN.",
+      "evidence": [
+        "focused-nine-ui-summary.json: 12 smoke PASS, 5 semantic PASS, 0 semantic WARN",
+        ".github/workflows/quality-gates.yml: focused-nine-ui job",
+        "scripts/ci/run_focused_nine_ui.sh: dedicated CI wrapper with bootstrap and summary validation"
+      ],
+      "symptom": "Previously the focused-nine UI audit was only local. Timing rendering regressions could slip through unless the audit was executed manually.",
+      "affectedGates": [
+        "all sequential/timing-sensitive gates"
+      ],
+      "recommendedNextStep": "RESOLVED. Next related step is a broader waveform/visual diff beyond the current focused-nine UI audit.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - fixed."
+    },
+    {
+      "id": "P2-1",
+      "title": "MS_JK_FF HDL export approximates master-slave as negedge-triggered only",
+      "priority": "P2",
+      "area": "hdl-export",
+      "status": "done",
+      "resolvedAt": "2026-03-18",
+      "resolutionNote": "Synthesis-approximation warning added to both Verilog and VHDL exports (6-line comment block). Explains that pulse-width sensitivity / ones-catching is not modelled. Functional negedge approximation retained as intended; no logic change. All 60 HDL export tests pass.",
+      "evidence": [
+        "gate-gap-analysis.md: MS_JK_FF Verilog uses negedge clk only - does not model two-phase clocking",
+        "maturity-gap-dashboard.md Criterion 2"
+      ],
+      "symptom": "The HDL export for MS_JK_FF loses the master-slave behavior. Synthesized circuits will have different pulse-width sensitivity than the simulation model.",
+      "affectedGates": [
+        "MS_JK_FF"
+      ],
+      "recommendedNextStep": "Add a synthesis comment in the exported HDL warning that the output is a functional approximation. Document as synthesis-risk in the gate contract.",
+      "dependsOn": [],
+      "riskIfUnfixed": "synthesis-risk for circuits using MS_JK_FF - acceptable if documented."
+    },
+    {
+      "id": "P2-2",
+      "title": "Gate contracts exist for only 12 of 71+ gates",
+      "priority": "P2",
+      "area": "documentation, testing",
+      "status": "done",
+      "evidence": [
+        "validation/contracts/ — 86 JSON files",
+        "Schema validation: 86 PASS, 0 FAIL (Ajv strict=false, $schema meta-field stripped)"
+      ],
+      "symptom": "The Contract Runner can only validate the 12 gates with contracts. The remaining 60+ gates have no machine-readable behavioral specification.",
+      "affectedGates": [
+        "all gates without contracts"
+      ],
+      "recommendedNextStep": "RESOLVED. The natural follow-up is the remaining contract-runner unsupported backlog tracked as P2-8.",
+      "dependsOn": [],
+      "riskIfUnfixed": "Test coverage will plateau at 12 gates regardless of how many test runners are built.",
+      "resolvedAt": "2026-03-18",
+      "resolutionNote": "All 86 gate contracts written and schema-validated (86/86 PASS)."
+    },
+    {
+      "id": "P2-3",
+      "title": "Custom IC (category=custom) contracts - no static verification strategy",
+      "priority": "P2",
+      "area": "architecture, testing",
+      "status": "open",
+      "evidence": [
+        "gate-gap-analysis.md: custom ICs excluded from analysis",
+        "maturity-gap-dashboard.md Criterion 5"
+      ],
+      "symptom": "Custom ICs are dynamically composed and registered at runtime. No static contract can be pre-written.",
+      "affectedGates": [
+        "all custom-category ICs"
+      ],
+      "recommendedNextStep": "Design a runtime contract verification approach: when a custom IC is instantiated, automatically derive its truth table by simulation, then compare to user-provided behavioral spec.",
+      "dependsOn": [],
+      "riskIfUnfixed": "Custom IC behavior is unverifiable. Composite designs may silently accumulate errors."
+    },
+    {
+      "id": "P2-4",
+      "title": "Export-determinism / re-export diff activation in golden corpus and CI",
+      "priority": "P2",
+      "area": "testing, ci",
+      "status": "done",
+      "resolvedAt": "2026-03-18",
+      "resolutionNote": "Runner v1.1.0 activated verilog-reexport-diff + vhdl-reexport-diff checks; as of 2026-03-19 the live byte-diff gate is re-verified on corpus v1.8.0 with 23 PASS, 0 FAIL, 1 EXPECTED LIMIT across 24 circuits. TypeID bug (IC_74HC74/283/161 → 74HC74/283/161) was fixed during the initial activation, and the expanded 48 golden HDL exports are now byte-exact against the current exporter baseline.",
+      "evidence": [
+        "golden-corpus-v1-report.md: Export-determinism status = exporters loaded, diff checks ran live",
+        "golden-corpus-v1-summary.json: 23 pass, 0 fail, 1 expected_limit, 0 unsupported",
+        "package.json: golden:test now runs via vite-node"
+      ],
+      "symptom": "No automated check verifies that re-exporting a golden corpus circuit produces identical Verilog/VHDL output. Export non-determinism could silently introduce diffs.",
+      "affectedGates": [
+        "all gates with toVerilog/toVHDL"
+      ],
+      "recommendedNextStep": "RESOLVED. Next related step is functional HDL simulation and broader corpus growth, not export activation itself.",
+      "dependsOn": [],
+      "riskIfUnfixed": "Export changes may go undetected. Golden artifacts may drift from the actual exporter output."
+    },
+    {
+      "id": "P2-5",
+      "title": "26 documentation-gap items across gate inventory",
+      "priority": "P2",
+      "area": "documentation",
+      "status": "open",
+      "evidence": [
+        "gate-gap-analysis.md: documentation-gap count = 26",
+        "gate-gap-analysis.md: missing isSynchronous, missing stateKeys, missing descriptions"
+      ],
+      "symptom": "Several gates are missing isSynchronous declarations, stateKeys, or accurate descriptions.",
+      "affectedGates": [
+        "D_LATCH",
+        "74HC373",
+        "RAM256",
+        "ROM256",
+        "SCHMITT",
+        "SPLIT4",
+        "SPLIT8",
+        "NAND_C",
+        "NOR_C"
+      ],
+      "recommendedNextStep": "Add isSynchronous: false to D_LATCH and 74HC373. Add stateKeys to RAM256 and ROM256. Clarify SPLIT4/SPLIT8 directionality.",
+      "dependsOn": [],
+      "riskIfUnfixed": "Metadata-dependent tools (contract validators, test runners) will produce incorrect results for these gates."
+    },
+    {
+      "id": "P2-6",
+      "title": "Branch protection / required status checks not configured in GitHub Settings",
+      "priority": "P2",
+      "area": "ci",
+      "status": "open",
+      "evidence": [
+        ".github/workflows/quality-gates.yml: 6 CI jobs exist and run on PRs",
+        "GitHub Settings: branch protection rules are a manual external configuration step"
+      ],
+      "symptom": "CI jobs run and report status, but PRs can still be merged even if jobs fail because branch protection rules are not configured.",
+      "affectedGates": [],
+      "recommendedNextStep": "In GitHub repository Settings > Branches > Branch protection rules: add a rule for main requiring quality-gates, contract-runner, golden-corpus, focused-nine-ui, and focused-nine-core as required status checks.",
+      "dependsOn": [],
+      "riskIfUnfixed": "CI gates can be bypassed by merging without waiting for green status."
+    },
+    {
+      "id": "P2-7",
+      "title": "Golden Corpus v2 expansion - large/hierarchical circuits, broader external HDL coverage",
+      "priority": "P2",
+      "area": "testing",
+      "status": "partial",
+      "evidence": [
+        "golden-corpus-v1.json: 24 circuits including gc_v2_1_mux_fabric, gc_v2_2_datapath_slice, gc_v2_3_shift_pipeline, gc_v2_4_ram_readback, gc_v2_5_decode_tree, gc_v2_6_custom_halfadder, gc_v2_7_bus_conflict_system, gc_v2_8_sequential_feedback, and gc_v2_9_custom_reg4_pipeline; two one-level hierarchical/custom-IC cases are now covered",
+        "golden-corpus-v1-report.md: external HDL syntax/lint and scenario-based simulation are active for all non-boundary v1 cases"
+      ],
+      "partialResolutionNote": "Nine Golden Corpus v2 pilot seeds are now integrated into the executable corpus: GC-V2-1 (wider mux/selector fabric), GC-V2-2 (small datapath slice), GC-V2-3 (74HC194 -> 74HC595 shift/latch pipeline), GC-V2-4 (RAM256 readback chain), GC-V2-5 (74HC138/148/373/374 decode tree), GC-V2-6 (custom half-adder hierarchy flattened into HDL), GC-V2-7 (larger shared-bus conflict monitor), GC-V2-8 (sequential feedback mesh with seed-load mode and XOR feedback), and GC-V2-9 (custom REG4 hierarchy flattened into a sequential pipeline). All nine pass the live exporter diff gate plus external Verilog/VHDL simulation. The remaining gap is breadth beyond these pilots, especially broader/deeper traces and hierarchy beyond the current one-level custom-IC paths.",
+      "symptom": "The current golden corpus now reaches beyond the original medium-sized v1 baseline and now includes both combinational and sequential hierarchical/custom-IC slices, but it still only samples a few larger system classes. External HDL verification remains scenario-based rather than exhaustive across broader traces and deeper composed hierarchies.",
+      "affectedGates": [
+        "all"
+      ],
+      "recommendedNextStep": "Deepen HDL traces on the landed seeds and move from the two landed one-level hierarchy/custom-IC paths toward deeper or nested hierarchy cases.",
+      "dependsOn": [],
+      "riskIfUnfixed": "Scaling and hierarchy regressions may go undetected."
+    },
+    {
+      "id": "P2-8",
+      "title": "Unsupported contract-runner cases remain after v1.2 expansion",
+      "priority": "P2",
+      "area": "testing-infrastructure",
+      "status": "done",
+      "resolvedAt": "2026-03-19",
+      "evidence": [
+        "contract-runner-summary.json: 447 pass, 0 fail, 0 unsupported, 447 total",
+        "contract-runner-report.md: shared-bus multi-driver cases now executed for TRIBUF, 74HC373, 74HC374, and RAM256"
+      ],
+      "symptom": "The Contract Runner previously left the circuit-level multi-driver conflict cases as unsupported because they needed bus-resolution aware runner support.",
+      "affectedGates": [
+        "all contracted gates"
+      ],
+      "recommendedNextStep": "Broaden the new shared-bus fixture checks into larger composed Golden-Corpus-v2 scenarios so the same semantics are verified beyond representative two-driver cases.",
+      "dependsOn": [],
+      "riskIfUnfixed": "N/A - resolved. Remaining follow-up is breadth, not a missing runner capability."
+    }
+  ],
+  "summary": {
+    "totalItems": 19,
+    "byPriority": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 8
+    },
+    "resolved": 13,
+    "resolvedItems": [
+      "P0-1",
+      "P0-2",
+      "P0-3",
+      "P0-4",
+      "P1-1",
+      "P1-2",
+      "P1-3",
+      "P1-5",
+      "P1-6",
+      "P1-7",
+      "P2-2",
+      "P2-4",
+      "P2-8"
+    ],
+    "lastUpdated": "2026-03-19",
+    "criticalPath": [
+      "P2-7",
+      "P2-6",
+      "P2-3"
+    ],
+      "note": "All P0 blockers and P1-1 through P1-7 remain resolved. As of 2026-03-19, Contract Runner v1 is operational at 447 pass, 0 fail, 0 unsupported; Golden Corpus v1 is operational at 23 pass, 0 fail, 1 expected_limit across 24 circuits with live export-determinism plus external HDL syntax/lint and scenario-based simulation enabled. Focused-Nine UI audit remains a CI gate (12 smoke PASS, 5 semantic PASS). CI has 6 jobs. Current investment areas: Golden Corpus v2 breadth, deeper traces, branch protection, CI performance, and deeper hierarchy/custom-IC verification."
+  }
 }

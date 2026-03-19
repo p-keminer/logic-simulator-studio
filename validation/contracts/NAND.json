@@ -1,0 +1,58 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "NAND",
+  "label": "NAND",
+  "category": "logic_basic",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "2-input NAND. Output is 0 only when both inputs are 1; otherwise 1."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "out", "label": "Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign out = ~(a & b);",
+    "vhdlNotes": "out <= a nand b;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Truth table: 00→1, 01→1, 10→1, 11→0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No propagation delay (combinational, instantaneous).",
+    "No Hi-Z handling — floating input treated as 0."
+  ]
+}

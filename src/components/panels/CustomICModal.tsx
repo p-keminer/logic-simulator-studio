@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
-import { FlipFlopShape } from '../../gates/shapes/FlipFlopShape';
-import { runSimulation } from '../../core/simulation/engine';
-import type { Circuit, SignalValue } from '../../core/types';
+import { registerCustomIC } from '../../core/customIc/registerCustomIC';
+import type { Circuit } from '../../core/types';
 
 interface Props { onClose: () => void; }
 
@@ -17,92 +16,6 @@ function loadCustomICs(): Array<{ name: string; circuit: Circuit; portNames?: st
 
 function saveCustomICs(ics: Array<{ name: string; circuit: Circuit; portNames?: string[] }>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ics));
-}
-
-/**
- * Build a copy of the subcircuit with input values and persisted inner gate
- * states applied.  Used by both evaluate() and stateUpdate() of custom ICs.
- */
-function buildSubcircuitCopy(
-  subcircuit: Circuit,
-  inputGates: { id: string }[],
-  inputs: Record<string, SignalValue>,
-  innerStates: Record<string, Record<string, unknown>>,
-): Circuit {
-  return {
-    ...subcircuit,
-    gates: Object.fromEntries(
-      Object.entries(subcircuit.gates).map(([id, g]) => {
-        const idx = inputGates.findIndex((ig) => ig.id === id);
-        if (idx >= 0) {
-          // Input gate: inject the current external input value
-          const val = (inputs['i' + idx] ?? 0) as 0 | 1;
-          return [id, { ...g, customState: { ...g.customState, value: val } }];
-        }
-        if (innerStates[id]) {
-          // Stateful inner gate: restore persisted state from previous cycle
-          return [id, { ...g, customState: { ...innerStates[id] } }];
-        }
-        return [id, g];
-      }),
-    ),
-  };
-}
-
-/** Register a saved custom IC into the gate registry */
-// eslint-disable-next-line react-refresh/only-export-components
-export function registerCustomIC(name: string, subcircuit: Circuit, portNames?: string[]) {
-  const typeId = 'CIC_' + name.toUpperCase().replace(/[^A-Z0-9]/g, '_');
-  if (gateRegistry.has(typeId)) return; // already registered
-
-  const inputGates  = Object.values(subcircuit.gates).filter((g) => g.typeId === 'INPUT_SWITCH');
-  const outputGates = Object.values(subcircuit.gates).filter((g) => g.typeId === 'OUTPUT_LED');
-  const nIn  = inputGates.length;
-  const nOut = outputGates.length;
-  const H = Math.max(60, Math.max(nIn, nOut) * 20 + 20);
-
-  // portNames order: inputs first, then outputs
-  const getInputLabel  = (g: typeof inputGates[0], i: number) =>
-    portNames?.[i] ?? g.label ?? ('I' + i);
-  const getOutputLabel = (g: typeof outputGates[0], i: number) =>
-    portNames?.[nIn + i] ?? g.label ?? ('O' + i);
-
-  gateRegistry.register({
-    typeId,
-    label: name,
-    category: 'custom',
-    width: 100,
-    height: H,
-    inputs:  inputGates.map((g, i) => ({ id: 'i' + i, label: getInputLabel(g, i), relativeX: 0, relativeY: (i + 0.5) / Math.max(nIn, 1) })),
-    outputs: outputGates.map((g, i) => ({ id: 'o' + i, label: getOutputLabel(g, i), relativeX: 1, relativeY: (i + 0.5) / Math.max(nOut, 1) })),
-    evaluate: (inputs, customState) => {
-      // Restore persisted inner gate states (empty on first evaluation)
-      const innerStates = (customState?.innerStates as Record<string, Record<string, unknown>>) ?? {};
-      const copy = buildSubcircuitCopy(subcircuit, inputGates, inputs, innerStates);
-      const result = runSimulation(copy);
-      const out: Record<string, 0|1> = {};
-      outputGates.forEach((led, i) => {
-        const wire = Object.values(copy.wires).find((w) => w.to.gateId === led.id && w.to.portId === 'in');
-        if (!wire) { out['o' + i] = 0; return; }
-        out['o' + i] = (result.gateSignals[wire.from.gateId]?.[wire.from.portId]?.value ?? 0) as 0|1;
-      });
-      return out;
-    },
-    stateUpdate: (inputs, _outputs, customState) => {
-      // Restore persisted inner gate states (empty on first evaluation)
-      const innerStates = (customState?.innerStates as Record<string, Record<string, unknown>>) ?? {};
-      const copy = buildSubcircuitCopy(subcircuit, inputGates, inputs, innerStates);
-      const result = runSimulation(copy);
-      // Merge: keep states from previous cycle, overwrite with any updates
-      const mergedStates: Record<string, Record<string, unknown>> = { ...innerStates };
-      for (const [gateId, stateUpd] of Object.entries(result.customStateUpdates ?? {})) {
-        mergedStates[gateId] = stateUpd;
-      }
-      return { ...customState, innerStates: mergedStates };
-    },
-    shapeComponent: FlipFlopShape,
-    description: 'Benutzerdefiniertes IC: ' + name,
-  });
 }
 
 /** Call on app start to reload all saved custom ICs */

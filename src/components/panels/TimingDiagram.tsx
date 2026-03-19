@@ -48,6 +48,8 @@ export function TimingDiagram({ history, onClose }: Props) {
   const { circuit }   = useCircuitContext();
   const scrollRef                       = useRef<HTMLDivElement>(null);
   const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(new Set());
+  const [rowOrder, setRowOrder]         = useState<string[]>([]); // channel keys in user-chosen order
+  const [hoveredRowKey, setHoveredRowKey] = useState<string | null>(null);
   // true = Nutzer hat zurückgescrollt → Auto-Scroll pausieren
   const userScrolledBackRef             = useRef(false);
 
@@ -72,6 +74,20 @@ export function TimingDiagram({ history, onClose }: Props) {
     setHiddenKeys(prev => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }, []);
+
+  // Zeile nach oben/unten verschieben
+  const moveRow = useCallback((key: string, direction: -1 | 1) => {
+    setRowOrder(prev => {
+      const fromIdx = prev.indexOf(key);
+      if (fromIdx === -1) return prev;
+      const toIdx = fromIdx + direction;
+      if (toIdx < 0 || toIdx >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
       return next;
     });
   }, []);
@@ -124,6 +140,39 @@ export function TimingDiagram({ history, onClose }: Props) {
 
     return chs;
   }, [circuit, connectedIds]);
+
+  // rowOrder bei Kanaländerungen konsistent halten:
+  // bestehende Reihenfolge bewahren, verschwundene Keys entfernen, neue Keys anhängen.
+  useEffect(() => {
+    const keys = channels.map(c => c.key);
+    setRowOrder(prev => {
+      if (keys.length === 0) return prev.length === 0 ? prev : [];
+      if (prev.length === 0) return keys;
+
+      const next = prev.filter(key => keys.includes(key));
+      for (const key of keys) {
+        if (!next.includes(key)) next.push(key);
+      }
+
+      if (next.length === prev.length && next.every((key, idx) => key === prev[idx])) {
+        return prev;
+      }
+      return next;
+    });
+  }, [channels]);
+
+  // Kanäle in user-chosen Reihenfolge (rowOrder), mit Fallback auf Default-Sort
+  const orderedChannels = useMemo(() => {
+    if (rowOrder.length === 0) return channels;
+    // rowOrder enthält die keys in gewünschter Reihenfolge
+    const byKey = new Map(channels.map(c => [c.key, c]));
+    const ordered = rowOrder.map(k => byKey.get(k)).filter((c): c is typeof channels[0] => c !== undefined);
+    // Nicht in rowOrder enthaltene Channels (z.B. neuer Gate nach Änderung) hinten anfügen
+    for (const c of channels) {
+      if (!rowOrder.includes(c.key)) ordered.push(c);
+    }
+    return ordered;
+  }, [channels, rowOrder]);
 
   // ── Geometrie ─────────────────────────────────────────────────────────────
   function getVal(snap: TimingSnapshot, key: string): number {
@@ -220,7 +269,8 @@ export function TimingDiagram({ history, onClose }: Props) {
               const rows: React.ReactElement[] = [];
               let yOffset = 2;
 
-              for (const ch of channels) {
+              for (let chIdx = 0; chIdx < orderedChannels.length; chIdx++) {
+                const ch = orderedChannels[chIdx];
                 const hidden = hiddenKeys.has(ch.key);
                 const rowH   = hidden ? CH_MINI : CH_H;
                 const y0     = yOffset;
@@ -287,12 +337,61 @@ export function TimingDiagram({ history, onClose }: Props) {
                   }
 
                   rows.push(
-                    <g key={ch.key}>
+                    <g key={ch.key}
+                      onMouseEnter={() => setHoveredRowKey(ch.key)}
+                      onMouseLeave={() => setHoveredRowKey(prev => (prev === ch.key ? null : prev))}>
                       {/* Klickbarer Label-Bereich */}
                       <rect x={0} y={y0} width={LBL_W - 2} height={CH_H - 2}
                         fill="rgba(0,0,0,0.3)"
                         onClick={() => toggleHidden(ch.key)}
                         style={{ cursor: 'pointer' }} />
+                      {/* Sort-Buttons — nur bei Hover */}
+                      {hoveredRowKey === ch.key && (
+                        <>
+                          {(() => {
+                            const canMoveUp = chIdx > 0;
+                            const canMoveDown = chIdx < orderedChannels.length - 1;
+                            return (
+                              <>
+                          <g
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (canMoveUp) moveRow(ch.key, -1);
+                            }}
+                            style={{
+                              cursor: canMoveUp ? 'pointer' : 'default',
+                            }}
+                          >
+                            <rect x={2} y={y0 + 4} width={14} height={10} rx={2}
+                              fill="#1e293b"
+                              opacity={canMoveUp ? 1 : 0.45} />
+                            <text x={9} y={y0 + 12}
+                              textAnchor="middle" fontSize={9} fill="#94a3b8"
+                              fontFamily="monospace" style={{ userSelect: 'none' }}
+                            >↑</text>
+                          </g>
+                          <g
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (canMoveDown) moveRow(ch.key, 1);
+                            }}
+                            style={{
+                              cursor: canMoveDown ? 'pointer' : 'default',
+                            }}
+                          >
+                            <rect x={2} y={y0 + 16} width={14} height={10} rx={2}
+                              fill="#1e293b"
+                              opacity={canMoveDown ? 1 : 0.45} />
+                            <text x={9} y={y0 + 24}
+                              textAnchor="middle" fontSize={9} fill="#94a3b8"
+                              fontFamily="monospace" style={{ userSelect: 'none' }}
+                            >↓</text>
+                          </g>
+                              </>
+                            );
+                          })()}
+                        </>
+                      )}
                       <text x={LBL_W - 6} y={y0 + CH_H / 2 + 4}
                         textAnchor="end" fontSize={9} fill={ch.color} fontFamily="monospace"
                         onClick={() => toggleHidden(ch.key)}

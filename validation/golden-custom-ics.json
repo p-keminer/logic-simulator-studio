@@ -1,0 +1,16 @@
+{
+  "gc_v2_6_custom_halfadder": [
+    {
+      "name": "HALF_ADDER",
+      "circuitSlug": "gc_c2_half_adder",
+      "portNames": ["a", "b", "sum", "carry"]
+    }
+  ],
+  "gc_v2_9_custom_reg4_pipeline": [
+    {
+      "name": "REG4_STAGE",
+      "circuitSlug": "gc_s4_reg4_enable",
+      "portNames": ["d0", "d1", "d2", "d3", "en", "clk", "rst", "q0", "q1", "q2", "q3"]
+    }
+  ]
+}

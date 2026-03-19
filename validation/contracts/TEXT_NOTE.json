@@ -1,0 +1,46 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "TEXT_NOTE",
+  "label": "Notiz",
+  "category": "annotation",
+
+  "semantics": {
+    "timingModel": "annotation",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Text annotation on canvas. Double-click to edit text. No electrical function."
+  },
+
+  "ports": {
+    "inputs": [],
+    "outputs": []
+  },
+
+  "signalModel": {
+    "allowedInputValues": [],
+    "allowedOutputValues": [],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "Annotation only — no HDL export.",
+    "vhdlNotes": "Annotation only — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "No functional test — annotation only."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No electrical function whatsoever."
+  ]
+}

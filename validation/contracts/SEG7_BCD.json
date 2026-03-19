@@ -1,0 +1,52 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SEG7_BCD",
+  "label": "7-Seg BCD",
+  "category": "output",
+
+  "semantics": {
+    "timingModel": "io",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "7-segment display with built-in BCD decoder. Accepts 4-bit BCD input D[3:0] and displays digits 0–9. Invalid BCD values (10–15) produce undefined display patterns."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d3", "label": "D3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d2", "label": "D2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d1", "label": "D1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d0", "label": "D0", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": []
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI display element — no HDL export.",
+    "vhdlNotes": "UI display element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Manual UI observation. Test BCD values 0–9."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export.",
+    "BCD values 10–15 are invalid/undefined."
+  ]
+}

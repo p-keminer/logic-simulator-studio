@@ -1,0 +1,58 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "NAND_C",
+  "label": "NAND_C",
+  "category": "logic_comp_out",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "2-input NAND with complementary outputs Q and Q̄. Q = ~(A&B); Q̄ = A&B."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "data",   "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "dualVerilog: assign q_n = a & b; assign q = ~q_n; (inverted compared to AND_C)",
+    "vhdlNotes": "dualVHDL: q_n <= a and b; q <= not q_n;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Q follows NAND (inverted AND), Q̄ follows AND."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No propagation delay (combinational, instantaneous)."
+  ]
+}

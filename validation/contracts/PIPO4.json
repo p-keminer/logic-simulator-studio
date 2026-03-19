@@ -1,0 +1,67 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "PIPO4",
+  "label": "PIPO4",
+  "category": "register",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["q0", "q1", "q2", "q3", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit Parallel-In Parallel-Out register. clk↑ loads P0–P3 directly into Q0–Q3 simultaneously."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "p0",  "label": "P0",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p1",  "label": "P1",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p2",  "label": "P2",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p3",  "label": "P3",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "q", "canBeTriState": false },
+      { "id": "q1", "label": "Q1", "role": "q", "canBeTriState": false },
+      { "id": "q2", "label": "Q2", "role": "q", "canBeTriState": false },
+      { "id": "q3", "label": "Q3", "role": "q", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) begin q0<=p0; q1<=p1; q2<=p2; q3<=p3; end",
+    "vhdlNotes": "process(clk) if rising_edge(clk) then q<=p; end if;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify all 4 bits loaded simultaneously at rising edge. Initial Q=0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No enable — always loads at rising edge.",
+    "No reset."
+  ]
+}

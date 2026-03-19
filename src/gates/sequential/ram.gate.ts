@@ -45,8 +45,8 @@ gateRegistry.register({
     { id: 'do7', label: 'DO7', relativeX: 1, relativeY: 0.84 },
   ],
   evaluate: ({ a0,a1,a2,a3,a4,a5,a6,a7, cs, oe }, state) => {
-    const zero = { do0:0,do1:0,do2:0,do3:0,do4:0,do5:0,do6:0,do7:0 } as Record<string, SignalValue>;
-    if ((cs ?? 1) === 1 || (oe ?? 1) === 1) return zero;
+    const hiz = { do0:2,do1:2,do2:2,do3:2,do4:2,do5:2,do6:2,do7:2 } as Record<string, SignalValue>;
+    if ((cs ?? 1) === 1 || (oe ?? 1) === 1) return hiz;
     const addr =
       ((a0 ?? 0) as number)       | (((a1 ?? 0) as number) << 1) |
       (((a2 ?? 0) as number) << 2) | (((a3 ?? 0) as number) << 3) |
@@ -98,10 +98,12 @@ gateRegistry.register({
     const doCat   = `{${[...dos].reverse().join(', ')}}`; // {do7,...,do0}
     return [
       `// RAM256 ${sid}`,
+      `/* verilator lint_off LATCH */`,
       `always @(*) begin // async write (transparent latch)`,
       `  if (${cs_n} == 1'b0 && ${we_n} == 1'b0)`,
       `    ram_${sid}[${addrCat}] = ${diCat};`,
       `end`,
+      `/* verilator lint_on LATCH */`,
       `always @(*) begin // read`,
       `  if (${cs_n} == 1'b0 && ${oe_n} == 1'b0)`,
       `    ${doCat} = ram_${sid}[${addrCat}];`,
@@ -112,7 +114,8 @@ gateRegistry.register({
   },
   verilogExtraRegs: (g) => {
     const sid = sanitize(g.id);
-    return [{ name: `ram_${sid}`, width: 8, depth: 256 }]; // no initData → zeroed
+    const data = (g.customState?.data as number[] | undefined) ?? new Array(256).fill(0);
+    return [{ name: `ram_${sid}`, width: 8, depth: 256, initData: data }];
   },
   toVHDL: (g, w) => {
     const sid     = sanitize(g.id);
@@ -122,8 +125,8 @@ gateRegistry.register({
     const cs_n    = w[`${g.id}:cs`] ?? "'1'";
     const oe_n    = w[`${g.id}:oe`] ?? "'1'";
     const dos     = ['do0','do1','do2','do3','do4','do5','do6','do7'].map(id => w[`${g.id}:${id}`] ?? `w_${sid}_${id}`);
-    const addrCat = [...addr].reverse().join(' & '); // a7 & ... & a0 (MSB first)
-    const diCat   = [...di].reverse().join(' & ');   // di7 & ... & di0 (MSB first)
+    const addrCat = `std_logic_vector'(${[...addr].reverse().join(' & ')})`; // a7 & ... & a0 (MSB first)
+    const diCat   = `std_logic_vector'(${[...di].reverse().join(' & ')})`;   // di7 & ... & di0 (MSB first)
     const ramName = `ram_${sid}`;
     const writePorts = ['a0','a1','a2','a3','a4','a5','a6','a7',
                         'di0','di1','di2','di3','di4','di5','di6','di7','we','cs'];
