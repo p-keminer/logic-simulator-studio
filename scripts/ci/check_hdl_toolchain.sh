@@ -15,9 +15,15 @@ for tool in "${tools[@]}"; do
   fi
 done
 
+print_first_line() {
+  local output
+  output="$("$@" 2>&1)"
+  printf '%s\n' "$output" | sed -n '1p'
+}
+
 echo "==> HDL toolchain versions"
-iverilog -V | head -n 1
-ghdl --version | head -n 1
+print_first_line iverilog -V
+print_first_line ghdl --version
 yosys -V
 verilator --version
 
