@@ -8,9 +8,11 @@ interface Props { history: TimingSnapshot[]; onClose: () => void; }
 // ── Konstanten ───────────────────────────────────────────────────────────────
 
 const CH_H    = 32;   // Zeilenhöhe (sichtbar)
-const CH_MINI = 10;   // Zeilenhöhe (ausgeblendet / eingeklappt)
+const CH_MINI = 22;   // Zeilenhöhe (ausgeblendet / eingeklappt)
 const LBL_W   = 148;
 const MAX_ST  = 200;  // Sichtbare Snapshots (letzte N)
+const ROW_ORDER_STORAGE_KEY = 'logic-sim:timing-diagram:row-order';
+const HIDDEN_KEYS_STORAGE_KEY = 'logic-sim:timing-diagram:hidden-keys';
 
 // Index-basierte X-Achse (Zero-Delay): Snapshot-Index × STEP_W Pixel.
 // Da Snapshots alle SAMPLE_EVERY=25 Ticks aufgenommen werden (CircuitContext),
@@ -42,14 +44,34 @@ const OUTPUT_TYPES = new Set(['OUTPUT_LED', 'SEG7', 'SEG7_BCD']);
 /** Werden komplett übersprungen (keine sinnvollen Signalwerte) */
 const SKIP_TYPES   = new Set(['TEXT_NOTE', 'JUNCTION', 'ADC8']);
 
+function readPersistedKeys(storageKey: string): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePersistedKeys(storageKey: string, values: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(values));
+  } catch {
+    // Persistenz ist rein ergonomisch; Schreibfehler sollen das Panel nicht brechen.
+  }
+}
+
 // ── Hauptkomponente ──────────────────────────────────────────────────────────
 
 export function TimingDiagram({ history, onClose }: Props) {
   const { circuit }   = useCircuitContext();
   const scrollRef                       = useRef<HTMLDivElement>(null);
-  const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(new Set());
-  const [rowOrder, setRowOrder]         = useState<string[]>([]); // channel keys in user-chosen order
-  const [hoveredRowKey, setHoveredRowKey] = useState<string | null>(null);
+  const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(() => new Set(readPersistedKeys(HIDDEN_KEYS_STORAGE_KEY)));
+  const [rowOrder, setRowOrder]         = useState<string[]>(() => readPersistedKeys(ROW_ORDER_STORAGE_KEY)); // channel keys in user-chosen order
   // true = Nutzer hat zurückgescrollt → Auto-Scroll pausieren
   const userScrolledBackRef             = useRef(false);
 
@@ -90,6 +112,10 @@ export function TimingDiagram({ history, onClose }: Props) {
       next.splice(toIdx, 0, moved);
       return next;
     });
+  }, []);
+
+  const resetRowOrder = useCallback((nextKeys: string[]) => {
+    setRowOrder(nextKeys);
   }, []);
 
   // ── Verbundene Gatter-IDs ermitteln ──────────────────────────────────────
@@ -161,6 +187,14 @@ export function TimingDiagram({ history, onClose }: Props) {
     });
   }, [channels]);
 
+  useEffect(() => {
+    writePersistedKeys(ROW_ORDER_STORAGE_KEY, rowOrder);
+  }, [rowOrder]);
+
+  useEffect(() => {
+    writePersistedKeys(HIDDEN_KEYS_STORAGE_KEY, [...hiddenKeys]);
+  }, [hiddenKeys]);
+
   // Kanäle in user-chosen Reihenfolge (rowOrder), mit Fallback auf Default-Sort
   const orderedChannels = useMemo(() => {
     if (rowOrder.length === 0) return channels;
@@ -208,6 +242,64 @@ export function TimingDiagram({ history, onClose }: Props) {
 
   const hiddenCount  = channels.filter(ch => hiddenKeys.has(ch.key)).length;
   const visibleCount = channels.length - hiddenCount;
+  const hasCustomRowOrder = channels.length > 0 && channels.some((channel, idx) => orderedChannels[idx]?.key !== channel.key);
+
+  function renderRowControls(key: string, label: string, y0: number, rowH: number, canMoveUp: boolean, canMoveDown: boolean) {
+    const buttonSize = Math.max(12, Math.min(16, rowH - 8));
+    const controlsWidth = buttonSize * 2 + 6;
+    const y = y0 + Math.max(2, Math.floor((rowH - buttonSize) / 2));
+    const buttonStyle = (enabled: boolean) => ({
+      width: `${buttonSize}px`,
+      height: `${buttonSize}px`,
+      padding: 0,
+      borderRadius: 3,
+      border: '1px solid #334155',
+      background: enabled ? '#0f172a' : '#111827',
+      color: enabled ? '#cbd5e1' : '#64748b',
+      cursor: enabled ? 'pointer' : 'not-allowed',
+      fontSize: 10,
+      lineHeight: 1,
+      fontFamily: 'monospace',
+    });
+
+    return (
+      <foreignObject x={4} y={y} width={controlsWidth} height={buttonSize}>
+        <div
+          xmlns="http://www.w3.org/1999/xhtml"
+          style={{ display: 'flex', gap: 6, width: `${controlsWidth}px`, height: `${buttonSize}px` }}
+          onClick={(event) => event.stopPropagation()}
+          onMouseDown={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            aria-label={`${label} nach oben verschieben`}
+            title="Nach oben verschieben"
+            disabled={!canMoveUp}
+            onClick={(event) => {
+              event.stopPropagation();
+              moveRow(key, -1);
+            }}
+            style={buttonStyle(canMoveUp)}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            aria-label={`${label} nach unten verschieben`}
+            title="Nach unten verschieben"
+            disabled={!canMoveDown}
+            onClick={(event) => {
+              event.stopPropagation();
+              moveRow(key, 1);
+            }}
+            style={buttonStyle(canMoveDown)}
+          >
+            ↓
+          </button>
+        </div>
+      </foreignObject>
+    );
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -231,6 +323,14 @@ export function TimingDiagram({ history, onClose }: Props) {
             alle einblenden
           </button>
         )}
+        {hasCustomRowOrder && (
+          <button
+            onClick={() => resetRowOrder(channels.map(channel => channel.key))}
+            style={{ background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
+          >
+            reihenfolge reset
+          </button>
+        )}
         {/* Legende + Hinweis */}
         <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 4 }}>
           <span style={{ color: '#60a5fa', fontSize: 9, fontFamily: 'monospace' }}>■ Eingang</span>
@@ -238,7 +338,7 @@ export function TimingDiagram({ history, onClose }: Props) {
           <span style={{ color: '#22c55e', fontSize: 9, fontFamily: 'monospace' }}>■ Ausgang</span>
         </span>
         <span style={{ color: '#1e3a5f', fontSize: 9, fontFamily: 'monospace', marginLeft: 4 }}>
-          (Label klicken = ein-/ausblenden)
+          (Label klicken = ein-/ausblenden, Pfeile = sortieren)
         </span>
         <button
           onClick={onClose}
@@ -275,6 +375,8 @@ export function TimingDiagram({ history, onClose }: Props) {
                 const rowH   = hidden ? CH_MINI : CH_H;
                 const y0     = yOffset;
                 yOffset     += rowH;
+                const canMoveUp = chIdx > 0;
+                const canMoveDown = chIdx < orderedChannels.length - 1;
 
                 if (hidden) {
                   /* ── Eingeklappte Zeile ───────────────────────────── */
@@ -287,6 +389,7 @@ export function TimingDiagram({ history, onClose }: Props) {
                         fill={ch.color + '99'} fontFamily="monospace">
                         ▶ {ch.label}
                       </text>
+                      {renderRowControls(ch.key, ch.label, y0, rowH, canMoveUp, canMoveDown)}
                       <line x1={0} y1={y0 + rowH - 1} x2={Math.max(totalW, 400)} y2={y0 + rowH - 1}
                         stroke="#1e293b" strokeWidth={1} />
                     </g>
@@ -337,61 +440,13 @@ export function TimingDiagram({ history, onClose }: Props) {
                   }
 
                   rows.push(
-                    <g key={ch.key}
-                      onMouseEnter={() => setHoveredRowKey(ch.key)}
-                      onMouseLeave={() => setHoveredRowKey(prev => (prev === ch.key ? null : prev))}>
+                    <g key={ch.key}>
                       {/* Klickbarer Label-Bereich */}
                       <rect x={0} y={y0} width={LBL_W - 2} height={CH_H - 2}
                         fill="rgba(0,0,0,0.3)"
                         onClick={() => toggleHidden(ch.key)}
                         style={{ cursor: 'pointer' }} />
-                      {/* Sort-Buttons — nur bei Hover */}
-                      {hoveredRowKey === ch.key && (
-                        <>
-                          {(() => {
-                            const canMoveUp = chIdx > 0;
-                            const canMoveDown = chIdx < orderedChannels.length - 1;
-                            return (
-                              <>
-                          <g
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (canMoveUp) moveRow(ch.key, -1);
-                            }}
-                            style={{
-                              cursor: canMoveUp ? 'pointer' : 'default',
-                            }}
-                          >
-                            <rect x={2} y={y0 + 4} width={14} height={10} rx={2}
-                              fill="#1e293b"
-                              opacity={canMoveUp ? 1 : 0.45} />
-                            <text x={9} y={y0 + 12}
-                              textAnchor="middle" fontSize={9} fill="#94a3b8"
-                              fontFamily="monospace" style={{ userSelect: 'none' }}
-                            >↑</text>
-                          </g>
-                          <g
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (canMoveDown) moveRow(ch.key, 1);
-                            }}
-                            style={{
-                              cursor: canMoveDown ? 'pointer' : 'default',
-                            }}
-                          >
-                            <rect x={2} y={y0 + 16} width={14} height={10} rx={2}
-                              fill="#1e293b"
-                              opacity={canMoveDown ? 1 : 0.45} />
-                            <text x={9} y={y0 + 24}
-                              textAnchor="middle" fontSize={9} fill="#94a3b8"
-                              fontFamily="monospace" style={{ userSelect: 'none' }}
-                            >↓</text>
-                          </g>
-                              </>
-                            );
-                          })()}
-                        </>
-                      )}
+                      {renderRowControls(ch.key, ch.label, y0, rowH, canMoveUp, canMoveDown)}
                       <text x={LBL_W - 6} y={y0 + CH_H / 2 + 4}
                         textAnchor="end" fontSize={9} fill={ch.color} fontFamily="monospace"
                         onClick={() => toggleHidden(ch.key)}
