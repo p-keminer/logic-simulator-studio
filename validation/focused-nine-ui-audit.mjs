@@ -11,6 +11,7 @@ const REPORT_FILE = path.join(OUT_DIR, 'focused-nine-ui-report.md');
 const BASE_URL = process.env.LOGICSIM_BASE_URL ?? '<dev-server>';
 const PUBLIC_REPO = '<repo-root>';
 const PUBLIC_SERVER = '<dev-server>';
+const IS_CI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 
 fs.mkdirSync(UI_DIR, { recursive: true });
 
@@ -31,6 +32,17 @@ function sanitizePublicText(value) {
     .split(BASE_URL).join(PUBLIC_SERVER)
     .split('<dev-server>').join(PUBLIC_SERVER)
     .split('<dev-server>').join(PUBLIC_SERVER);
+}
+
+function buildBrowserLaunchOptions() {
+  const options = { headless: true };
+  if (!IS_CI) return options;
+  return {
+    ...options,
+    // GitHub Actions Ubuntu runners can block Chromium's sandbox/userns path.
+    // These flags keep the focused-nine UI audit reproducible in CI.
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  };
 }
 
 // ── Semantic timing expectations for 5 target cases ──────────────────────────
@@ -435,7 +447,7 @@ function renderReport(summary) {
 
 const SEMANTIC_SLUGS = new Set(Object.keys(TIMING_SEMANTIC));
 
-const browser = await puppeteer.launch({ headless: true });
+const browser = await puppeteer.launch(buildBrowserLaunchOptions());
 const results = [];
 
 for (const item of SUMMARY.cases) {
