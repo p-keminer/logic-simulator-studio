@@ -265,7 +265,6 @@ export function TimingDiagram({ history, onClose }: Props) {
     return (
       <foreignObject x={4} y={y} width={controlsWidth} height={buttonSize}>
         <div
-          xmlns="http://www.w3.org/1999/xhtml"
           style={{ display: 'flex', gap: 6, width: `${controlsWidth}px`, height: `${buttonSize}px` }}
           onClick={(event) => event.stopPropagation()}
           onMouseDown={(event) => event.stopPropagation()}
