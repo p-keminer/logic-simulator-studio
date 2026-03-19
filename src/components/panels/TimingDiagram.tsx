@@ -65,6 +65,17 @@ function writePersistedKeys(storageKey: string, values: string[]) {
   }
 }
 
+function reconcileRowOrder(rowOrder: string[], channelKeys: string[]): string[] {
+  if (channelKeys.length === 0) return [];
+  if (rowOrder.length === 0) return channelKeys;
+
+  const next = rowOrder.filter((key) => channelKeys.includes(key));
+  for (const key of channelKeys) {
+    if (!next.includes(key)) next.push(key);
+  }
+  return next;
+}
+
 // ── Hauptkomponente ──────────────────────────────────────────────────────────
 
 export function TimingDiagram({ history, onClose }: Props) {
@@ -102,17 +113,18 @@ export function TimingDiagram({ history, onClose }: Props) {
 
   // Zeile nach oben/unten verschieben
   const moveRow = useCallback((key: string, direction: -1 | 1) => {
-    setRowOrder(prev => {
-      const fromIdx = prev.indexOf(key);
-      if (fromIdx === -1) return prev;
-      const toIdx = fromIdx + direction;
-      if (toIdx < 0 || toIdx >= prev.length) return prev;
-      const next = [...prev];
-      const [moved] = next.splice(fromIdx, 1);
-      next.splice(toIdx, 0, moved);
-      return next;
-    });
-  }, []);
+    const channelKeys = channels.map((channel) => channel.key);
+    const currentOrder = reconcileRowOrder(rowOrder, channelKeys);
+    const fromIdx = currentOrder.indexOf(key);
+    if (fromIdx === -1) return;
+    const toIdx = fromIdx + direction;
+    if (toIdx < 0 || toIdx >= currentOrder.length) return;
+
+    const next = [...currentOrder];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setRowOrder(next);
+  }, [channels, rowOrder]);
 
   const resetRowOrder = useCallback((nextKeys: string[]) => {
     setRowOrder(nextKeys);
@@ -167,46 +179,32 @@ export function TimingDiagram({ history, onClose }: Props) {
     return chs;
   }, [circuit, connectedIds]);
 
-  // rowOrder bei Kanaländerungen konsistent halten:
-  // bestehende Reihenfolge bewahren, verschwundene Keys entfernen, neue Keys anhängen.
   useEffect(() => {
-    const keys = channels.map(c => c.key);
-    setRowOrder(prev => {
-      if (keys.length === 0) return prev.length === 0 ? prev : [];
-      if (prev.length === 0) return keys;
-
-      const next = prev.filter(key => keys.includes(key));
-      for (const key of keys) {
-        if (!next.includes(key)) next.push(key);
-      }
-
-      if (next.length === prev.length && next.every((key, idx) => key === prev[idx])) {
-        return prev;
-      }
-      return next;
-    });
-  }, [channels]);
-
-  useEffect(() => {
-    writePersistedKeys(ROW_ORDER_STORAGE_KEY, rowOrder);
-  }, [rowOrder]);
+    const channelKeys = channels.map((channel) => channel.key);
+    writePersistedKeys(ROW_ORDER_STORAGE_KEY, reconcileRowOrder(rowOrder, channelKeys));
+  }, [channels, rowOrder]);
 
   useEffect(() => {
     writePersistedKeys(HIDDEN_KEYS_STORAGE_KEY, [...hiddenKeys]);
   }, [hiddenKeys]);
 
+  const effectiveRowOrder = useMemo(() => {
+    const channelKeys = channels.map((channel) => channel.key);
+    return reconcileRowOrder(rowOrder, channelKeys);
+  }, [channels, rowOrder]);
+
   // Kanäle in user-chosen Reihenfolge (rowOrder), mit Fallback auf Default-Sort
   const orderedChannels = useMemo(() => {
-    if (rowOrder.length === 0) return channels;
+    if (effectiveRowOrder.length === 0) return channels;
     // rowOrder enthält die keys in gewünschter Reihenfolge
     const byKey = new Map(channels.map(c => [c.key, c]));
-    const ordered = rowOrder.map(k => byKey.get(k)).filter((c): c is typeof channels[0] => c !== undefined);
+    const ordered = effectiveRowOrder.map(k => byKey.get(k)).filter((c): c is typeof channels[0] => c !== undefined);
     // Nicht in rowOrder enthaltene Channels (z.B. neuer Gate nach Änderung) hinten anfügen
     for (const c of channels) {
-      if (!rowOrder.includes(c.key)) ordered.push(c);
+      if (!effectiveRowOrder.includes(c.key)) ordered.push(c);
     }
     return ordered;
-  }, [channels, rowOrder]);
+  }, [channels, effectiveRowOrder]);
 
   // ── Geometrie ─────────────────────────────────────────────────────────────
   function getVal(snap: TimingSnapshot, key: string): number {
