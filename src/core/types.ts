@@ -41,6 +41,12 @@ export interface GateShapeProps {
   onPortClick: (e: React.MouseEvent, endpoint: WireEndpoint) => void;
 }
 
+export interface CustomICExportMetadata {
+  subcircuit: Circuit;
+  inputGateIds: string[];
+  outputGateIds: string[];
+}
+
 export interface GateDefinition {
   typeId: GateTypeId;
   label: string;
@@ -164,6 +170,12 @@ export interface GateDefinition {
    * Example: D_FF → { q: 0, prevClk: 0 }
    */
   stateInit?: Record<string, unknown>;
+  /**
+   * Optional structural metadata for user-defined custom ICs.
+   * The HDL exporters use this to flatten a custom IC into its proven
+   * subcircuit before generating Verilog/VHDL.
+   */
+  customIC?: CustomICExportMetadata;
 }
 
 export interface GateInstance {

@@ -1,0 +1,74 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SR_FF_EDGE",
+  "label": "SR-E",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": true,
+    "invalidInputCombinations": [
+      { "inputs": { "s": 1, "r": 1 }, "effect": "undefined" }
+    ],
+    "notes": "Edge-triggered SR flip-flop. Only responds to S/R at rising clock edge (unlike level-sensitive SR_LATCH). S=1,R=0→Q=1; S=0,R=1→Q=0; S=0,R=0→hold; S=1,R=1→X (undefined)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "s",   "label": "S",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 },
+      { "id": "r",   "label": "R",   "role": "data",  "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) case({s,r}) 2'b10: q<=1; 2'b01: q<=0; 2'b00: hold; 2'b11: q<=1'bx; endcase",
+    "vhdlNotes": "process(clk) if rising_edge(clk) then case(s&r) when '10'=>q<='1'; when '01'=>q<='0'; when others=>null; end case; end if;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "forbidden-input-combination",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify S=R=1 produces X output. Verify only rising edge triggers state change."
+  },
+
+  "risks": [
+    {
+      "class": "model-limit",
+      "description": "S=R=1 forbidden combination — real hardware has undefined/illegal behavior. Model outputs X.",
+      "confirmed": true
+    }
+  ],
+  "modelLimits": [
+    "No metastability modelling.",
+    "S=R=1 is illegal/undefined.",
+    "prevClk hidden state not exposed."
+  ]
+}

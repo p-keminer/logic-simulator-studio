@@ -257,7 +257,7 @@ gateRegistry.register({
     const g2a  = w[`${g.id}:g2a`] ?? "'1'";
     const g2b  = w[`${g.id}:g2b`] ?? "'1'";
     const ys   = Array.from({length:8},(_,i) => w[`${g.id}:y${i}`] ?? `w_${sid}_y${i}`);
-    const addr = `(${c} & ${b} & ${a})`; // 3-bit concat in VHDL via &
+    const addr = `STD_LOGIC_VECTOR'(${c} & ${b} & ${a})`; // cast avoids ambiguous "=" overloads in GHDL
     const en   = `(${g1} = '1' and ${g2a} = '0' and ${g2b} = '0')`;
     const lines = [`-- 74HC138 ${sid}`];
     for (let i = 0; i < 8; i++) {
@@ -326,9 +326,24 @@ gateRegistry.register({
     return [
       `-- 74HC283 ${sid}`,
       `process(${a1},${b1},${a2},${b2},${a3},${b3},${a4},${b4},${c0})`,
+      `  variable a_v : integer range 0 to 15;`,
+      `  variable b_v : integer range 0 to 15;`,
+      `  variable cin_v : integer range 0 to 1;`,
       `  variable sum_v : unsigned(4 downto 0);`,
       `begin`,
-      `  sum_v := unsigned('0' & ${a4} & ${a3} & ${a2} & ${a1}) + unsigned('0' & ${b4} & ${b3} & ${b2} & ${b1}) + unsigned("0000" & ${c0});`,
+      `  a_v := 0;`,
+      `  if ${a1} = '1' then a_v := a_v + 1; end if;`,
+      `  if ${a2} = '1' then a_v := a_v + 2; end if;`,
+      `  if ${a3} = '1' then a_v := a_v + 4; end if;`,
+      `  if ${a4} = '1' then a_v := a_v + 8; end if;`,
+      `  b_v := 0;`,
+      `  if ${b1} = '1' then b_v := b_v + 1; end if;`,
+      `  if ${b2} = '1' then b_v := b_v + 2; end if;`,
+      `  if ${b3} = '1' then b_v := b_v + 4; end if;`,
+      `  if ${b4} = '1' then b_v := b_v + 8; end if;`,
+      `  cin_v := 0;`,
+      `  if ${c0} = '1' then cin_v := 1; end if;`,
+      `  sum_v := to_unsigned(a_v + b_v + cin_v, 5);`,
       `  ${s1} <= std_logic(sum_v(0));`,
       `  ${s2} <= std_logic(sum_v(1));`,
       `  ${s3} <= std_logic(sum_v(2));`,
@@ -723,7 +738,7 @@ gateRegistry.register({
     return [
       `-- 74HC151 ${sid}`,
       `${y} <= '0' when ${en} = '1' else`,
-      ...d.slice(0,-1).map((di,i) => `       ${di} when ${s[2]} & ${s[1]} & ${s[0]} = "${bits(i)}" else`),
+      ...d.slice(0,-1).map((di,i) => `       ${di} when STD_LOGIC_VECTOR'(${s[2]} & ${s[1]} & ${s[0]}) = STD_LOGIC_VECTOR'("${bits(i)}") else`),
       `       ${d[7]};`,
       `${yn} <= not ${y};`,
     ].join('\n');
@@ -791,10 +806,10 @@ gateRegistry.register({
     return [
       `-- 74HC153 ${sid}`,
       `${y1} <= '0' when ${e1n} = '1' else`,
-      ...i1.slice(0,-1).map((x,i) => `       ${x} when ${s[1]} & ${s[0]} = "${bits(i)}" else`),
+      ...i1.slice(0,-1).map((x,i) => `       ${x} when STD_LOGIC_VECTOR'(${s[1]} & ${s[0]}) = STD_LOGIC_VECTOR'("${bits(i)}") else`),
       `       ${i1[3]};`,
       `${y2} <= '0' when ${e2n} = '1' else`,
-      ...i2.slice(0,-1).map((x,i) => `       ${x} when ${s[1]} & ${s[0]} = "${bits(i)}" else`),
+      ...i2.slice(0,-1).map((x,i) => `       ${x} when STD_LOGIC_VECTOR'(${s[1]} & ${s[0]}) = STD_LOGIC_VECTOR'("${bits(i)}") else`),
       `       ${i2[3]};`,
     ].join('\n');
   },

@@ -1,0 +1,59 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "DEMUX4",
+  "label": "DEMUX4",
+  "category": "mux",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "1-to-4 demultiplexer. {S1,S0} routes D to one of Y0–Y3."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d",  "label": "D",  "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "s0", "label": "S0", "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "s1", "label": "S1", "role": "select", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y0", "label": "Y0", "role": "data", "canBeTriState": false },
+      { "id": "y1", "label": "Y1", "role": "data", "canBeTriState": false },
+      { "id": "y2", "label": "Y2", "role": "data", "canBeTriState": false },
+      { "id": "y3", "label": "Y3", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(*) case({s1,s0}) 2'b00: begin y0=d; y1=0; y2=0; y3=0; end ...",
+    "vhdlNotes": "with s1s0 select y <= d0 when '00', d1 when '01', d2 when '10', d3 when others;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify correct output gets D, all others get 0, for each of 4 select values."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

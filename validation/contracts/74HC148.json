@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC148",
+  "label": "74HC148",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "8-to-3 line priority encoder (active-low). EI=1 (disable) → all outputs=1. EI=0: highest-priority active input (I7 highest) is encoded to A[2:0] active-low. GS=0 when any input active; EO=1 when no input active (cascade out). defaultInputValues: ein=1, i0–i7=1 (all inactive). propagationDelay=16."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "ein", "label": "EI",  "role": "enable", "activeLow": true, "defaultValue": 1 },
+      { "id": "i0",  "label": "I0",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i1",  "label": "I1",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i2",  "label": "I2",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i3",  "label": "I3",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i4",  "label": "I4",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i5",  "label": "I5",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i6",  "label": "I6",  "role": "data",   "activeLow": true, "defaultValue": 1 },
+      { "id": "i7",  "label": "I7",  "role": "data",   "activeLow": true, "defaultValue": 1 }
+    ],
+    "outputs": [
+      { "id": "a0", "label": "A0", "role": "data", "canBeTriState": false },
+      { "id": "a1", "label": "A1", "role": "data", "canBeTriState": false },
+      { "id": "a2", "label": "A2", "role": "data", "canBeTriState": false },
+      { "id": "gs", "label": "GS", "role": "data", "canBeTriState": false },
+      { "id": "eo", "label": "EO", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Priority encoder. I7 is highest priority. Outputs are active-low.",
+    "vhdlNotes": "Priority encoder logic.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify priority: I7 has highest priority. Verify EI=1 disables all. Verify GS=0 when any input active. Verify EO cascade behavior."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "Active-low encoding requires careful interpretation."
+  ]
+}

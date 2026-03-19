@@ -33,8 +33,8 @@ gateRegistry.register({
     { id: 'd7', label: 'D7', relativeX: 1, relativeY: 0.91 },
   ],
   evaluate: ({ a0, a1, a2, a3, a4, a5, a6, a7, cs, oe }, state) => {
-    const zero = { d0:0, d1:0, d2:0, d3:0, d4:0, d5:0, d6:0, d7:0 } as Record<string, SignalValue>;
-    if ((cs ?? 1) === 1 || (oe ?? 1) === 1) return zero;
+    const hiz = { d0:2, d1:2, d2:2, d3:2, d4:2, d5:2, d6:2, d7:2 } as Record<string, SignalValue>;
+    if ((cs ?? 1) === 1 || (oe ?? 1) === 1) return hiz;
     const addr =
       ((a0 ?? 0) as number)       | (((a1 ?? 0) as number) << 1) |
       (((a2 ?? 0) as number) << 2) | (((a3 ?? 0) as number) << 3) |

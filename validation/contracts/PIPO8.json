@@ -1,0 +1,75 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "PIPO8",
+  "label": "PIPO8",
+  "category": "register",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "8-bit Parallel-In Parallel-Out register. clk↑ loads all 8 data bits simultaneously."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "p0",  "label": "P0",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p1",  "label": "P1",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p2",  "label": "P2",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p3",  "label": "P3",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p4",  "label": "P4",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p5",  "label": "P5",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p6",  "label": "P6",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "p7",  "label": "P7",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "q", "canBeTriState": false },
+      { "id": "q1", "label": "Q1", "role": "q", "canBeTriState": false },
+      { "id": "q2", "label": "Q2", "role": "q", "canBeTriState": false },
+      { "id": "q3", "label": "Q3", "role": "q", "canBeTriState": false },
+      { "id": "q4", "label": "Q4", "role": "q", "canBeTriState": false },
+      { "id": "q5", "label": "Q5", "role": "q", "canBeTriState": false },
+      { "id": "q6", "label": "Q6", "role": "q", "canBeTriState": false },
+      { "id": "q7", "label": "Q7", "role": "q", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk) begin q0<=p0; ... q7<=p7; end",
+    "vhdlNotes": "process(clk) if rising_edge(clk) then q<=p; end if;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify all 8 bits loaded simultaneously at rising edge. Initial Q=0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No enable — always loads at rising edge.",
+    "No reset."
+  ]
+}

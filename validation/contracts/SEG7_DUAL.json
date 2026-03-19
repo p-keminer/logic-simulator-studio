@@ -1,0 +1,61 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SEG7_DUAL",
+  "label": "7-Seg Dual (a–g)",
+  "category": "output",
+
+  "semantics": {
+    "timingModel": "io",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Dual 7-segment display with direct segment inputs. Left digit: A1–G1. Right digit: A2–G2. Each segment driven directly by its input."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a1", "label": "A1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b1", "label": "B1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "c1", "label": "C1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d1", "label": "D1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "e1", "label": "E1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "f1", "label": "F1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "g1", "label": "G1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2", "label": "A2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b2", "label": "B2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "c2", "label": "C2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d2", "label": "D2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "e2", "label": "E2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "f2", "label": "F2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "g2", "label": "G2", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": []
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI display element — no HDL export.",
+    "vhdlNotes": "UI display element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Manual UI observation."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export."
+  ]
+}

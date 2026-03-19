@@ -1,0 +1,66 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "74HC153",
+  "label": "74HC153",
+  "category": "ic74",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Dual 4-to-1 data selector. Two independent mux banks sharing select lines S0,S1. Each bank has its own enable /E1, /E2 (active low). EN=1 → Y=0 for that bank; EN=0 → Y = I[n*4 + {S1,S0}]. propagationDelay=12."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "s0",  "label": "S0",  "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "s1",  "label": "S1",  "role": "select", "activeLow": false, "defaultValue": 0 },
+      { "id": "e1n", "label": "/E1", "role": "enable", "activeLow": true, "defaultValue": 0 },
+      { "id": "i10", "label": "I10", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "i11", "label": "I11", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "i12", "label": "I12", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "i13", "label": "I13", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "e2n", "label": "/E2", "role": "enable", "activeLow": true, "defaultValue": 0 },
+      { "id": "i20", "label": "I20", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "i21", "label": "I21", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "i22", "label": "I22", "role": "data",   "activeLow": false, "defaultValue": 0 },
+      { "id": "i23", "label": "I23", "role": "data",   "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y1", "label": "Y1", "role": "data", "canBeTriState": false },
+      { "id": "y2", "label": "Y2", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Two independent mux banks sharing S0,S1. Y1 = /E1 ? 0 : I1[{s1,s0}]; Y2 = /E2 ? 0 : I2[{s1,s0}].",
+    "vhdlNotes": "Similar mux logic.",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test both banks for all 4 select combinations. Verify enable=1 forces Y=0."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

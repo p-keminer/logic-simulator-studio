@@ -1,0 +1,66 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "PISO4",
+  "label": "PISO4",
+  "category": "register",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["bit0", "bit1", "bit2", "bit3", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit Parallel-In Serial-Out register. LD=1 loads P0-P3 into bit0-bit3 on rising edge. LD=0 shifts left toward Q: q reflects bit0, bit0<-bit1, bit1<-bit2, bit2<-bit3, bit3<-0."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "p0",   "label": "P0",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "p1",   "label": "P1",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "p2",   "label": "P2",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "p3",   "label": "P3",   "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "load", "label": "LD",   "role": "enable", "activeLow": false, "defaultValue": 0 },
+      { "id": "clk",  "label": "CLK",  "role": "clock", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q", "label": "Q", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "verilogExtraRegs: sr[3:0] internal register. always @(posedge clk) if (load) sr<={p0,p1,p2,p3}; else sr<={sr[2:0],1'b0}; q reflects the shifted internal state.",
+    "vhdlNotes": "process(clk) if rising_edge(clk) then if load='1' then sr<=p0 & p1 & p2 & p3; else sr<=sr(2 downto 0) & '0'; end if; end if; q reflects the shifted register state.",
+    "verilogExtraRegs": true,
+    "vhdlExtraSignals": true
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "load-shift-mode",
+      "shift-sequence",
+      "clock-edge-detection",
+      "hold-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify parallel load: LD=1 + clk↑ loads P0-P3 into state. Verify shift: LD=0 + 4 clocks serially exposes P0,P1,P2,P3 on Q and then shifts in 0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No synchronous/asynchronous reset.",
+    "prevClk hidden state not exposed to STT."
+  ]
+}

@@ -471,7 +471,7 @@ The golden corpus is organized into five tracks. Each circuit has:
 **Test vectors:**
 - All 8 combinations of A, B, Cin → verify S and Cout for each
 
-**Note:** This circuit is blocked until custom IC contract strategy (P2-3) is defined. Record current behavior as baseline even if unverifiable against a formal spec.
+**Note:** This circuit is no longer blocked. The first executable custom-IC path now works by structurally flattening a registered one-level custom IC into HDL export; deeper hierarchy and static contract strategy remain follow-up work.
 
 **Gap coverage:** P2-3 (custom IC), hierarchy support
 
@@ -493,6 +493,46 @@ The golden corpus is organized into five tracks. Each circuit has:
 **Gap coverage:** Large design support, multi-IC data path
 
 ---
+
+## Golden Corpus v2 Seed Candidates
+
+The v1 corpus already covers the primitive building blocks: small combinational chains, single-IC sequential parts, tri-state basics, a memory read/write cycle, and two one-level hierarchical custom-IC concepts. The v2 corpus should not repeat those exact shapes. Instead, it should lift the same primitives into larger, more hierarchical reference circuits that stress composition, deeper traces, and export stability.
+
+Seed criteria for v2:
+- reuse v1-validated primitives whenever possible
+- prefer 2+ levels of composition
+- include at least one long trace or multi-cycle scenario per circuit
+- close one known gap per circuit, so each entry earns its place
+
+Progress note (2026-03-19):
+- Integrated into the executable corpus: `GC-V2-1`, `GC-V2-2`, `GC-V2-3`, `GC-V2-4`, `GC-V2-5`, `GC-V2-6`, `GC-V2-7`, `GC-V2-8`, `GC-V2-9`
+- Immediate follow-up targets: broader HDL-trace deepening beyond the newly strengthened `GC-V2-4` / `GC-V2-8` paths, plus deeper hierarchy/custom-IC cases beyond the two landed one-level flattening paths
+
+### Proposed v2 seeds
+
+| Seed | Shape | Why it matters | Gap it closes |
+|---|---|---|---|
+| `GC-V2-1` | `74HC151` / `74HC153` selector tree built into a wider mux fabric | Pushes the current 11-/12-input truth-table cases through a realistic hierarchy instead of treating them as flat toys. It also exercises select-line fan-in and wider combinational export in one place. | Wide `truth-table-exhaustive`, mux/select mapping, HDL export determinism for larger combinational blocks |
+| `GC-V2-2` | `ALU4 + REG4/REG8 + BIN_CTR7S` as a small datapath slice | Mirrors the roadmap's mixed-datapath goal: arithmetic, storage, and sequencing in one reference circuit. This is the best place to catch carry/overflow mistakes that only show up after register feedback. | Mixed datapath coverage, longer temporal traces, carry propagation under feedback |
+| `GC-V2-3` | `74HC194` feeding a `74HC595` output stage | Turns the v1 shift-register checks into a multi-IC pipeline with both latch and tri-state behavior. That gives us a better regression target for reset, hold, and output isolation across boundaries. | Multi-IC sequential propagation, `reset-to-known-state`, `oe-tristate`, output latch isolation |
+| `GC-V2-4` | `RAM256 -> bus -> REG8` readback chain | Extends the v1 RAM single-cycle checks into a real consumer path. This is the best seed for validating that memory data survives the bus and ends up in a downstream register exactly once. | Memory-to-register integration, downstream Hi-Z propagation, bus-capable export sanity |
+| `GC-V2-5` | Decode tree built from `74HC138`, `74HC148`, `74HC373`, and `74HC374` | Exercises address decode, enable gating, and latched outputs together. This is the kind of circuit that reveals whether the simulator still behaves correctly when one decoded path fans into several latched consumers. | Hierarchical fanout, enable gating, output-enable interactions, broader sequential/combinational composition |
+| `GC-V2-6` | Custom-IC wrapper around a proven v1 subcircuit, then re-used inside a larger design | Now landed as `gc_v2_6_custom_halfadder`: `gc_c2_half_adder` is registered as a reusable custom IC, instantiated twice inside a full-adder path, and checked against a raw-gate oracle. The HDL exporter now proves the first one-level custom-IC path by structural flattening. | Hierarchy / custom IC strategy, subcircuit round-trip, first flattened custom-IC HDL export |
+| `GC-V2-7` | Controlled shared-bus contention scenario scaled beyond the two-driver toy case | Keeps the multi-driver story from GC-T2, but in a bus that also has downstream consumers and decode logic. That makes contention behavior easier to verify as part of a real system rather than as a standalone corner case. | Multi-driver conflict handling, bus arbitration visibility, `X` propagation in a larger circuit |
+| `GC-V2-8` | Three-stage sequential feedback mesh with seed load and XOR feedback | Adds a compact but stateful feedback design where the same circuit must support deterministic seeding, reset, and multi-cycle autonomous evolution. This is a better long-trace regression target than a single isolated flip-flop. | Longer sequential traces, seed-vs-feedback mode switching, feedback-path export stability |
+| `GC-V2-9` | Reusable `REG4` custom-IC pipeline with staged comparison tap | Extends the first custom-IC success path into a sequential hierarchy case where enable/reset and stage-to-stage transfer matter across repeated custom-IC reuse. | Second hierarchy/custom-IC path, sequential custom-IC flattening, staged state transfer |
+
+### Recommended v2 ordering
+
+1. `GC-V2-1` and `GC-V2-2` are already landed as the first scale-up beyond the original v1 baseline.
+2. `GC-V2-4` and `GC-V2-7` are now also landed, covering memory readback and larger shared-bus conflict semantics.
+3. `GC-V2-3` is now landed, adding a shared-clock `74HC194 -> 74HC595` pipeline with latch-isolation, `OE` tri-state, and visible `/MR` behavior.
+4. `GC-V2-5` is now landed, adding a decode/encode tree with explicit `74HC138` enable gating, `74HC373` hold-vs-tristate visibility, and `74HC374` edge-capture visibility.
+5. `GC-V2-6` is now landed and closes the first hierarchy/custom-IC gap with an explicit one-level flattening export semantic.
+6. `GC-V2-8` is now landed, adding a compact sequential feedback case with deterministic seeding, reset coverage, and multi-cycle HDL traces.
+7. `GC-V2-9` is now landed, adding a second one-level custom-IC hierarchy path through a reusable sequential `REG4` pipeline.
+
+These seeds line up with the current roadmap: W3 still wants larger and hierarchical designs in the golden corpus, W5 now has two concrete custom-IC HDL-export semantics (one-level structural flattening in combinational and sequential forms), and W6 still wants the CI gates to stay reproducible as designs get bigger.
 
 ## Implementation Notes
 
@@ -518,7 +558,7 @@ validation/golden-corpus/
 | Track 2 (Sequential) | P0-3 (VHDL `&`) for GC-S8 |
 | Track 3 (Tri-state) | P0-1 (Z sanitization), P0-2 (multi-driver) |
 | Track 4 (Mixed) | P0-4 for HDL export of combined circuits |
-| Track 5 (Hierarchical) | P2-3 (custom IC strategy) for GC-H1 |
+| Track 5 (Hierarchical) | Two one-level paths are landed via `GC-V2-6` and `GC-V2-9`; follow-on work is deeper hierarchy coverage plus the still-open P2-3 contract strategy |
 
 ### Recommended implementation order
 
@@ -528,4 +568,4 @@ validation/golden-corpus/
 4. GC-S8 (validates P0-3 fix for 74HC194)
 5. Remaining circuits in Track 1 and Track 2
 6. Track 3 and Track 4 after all P0 fixes
-7. Track 5 last (depends on P2-3 strategy)
+7. Track 5 is now started via `GC-V2-6`; next expand it beyond the first one-level flattening path while the broader P2-3 contract strategy remains open.

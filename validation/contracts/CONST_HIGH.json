@@ -1,0 +1,46 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "CONST_HIGH",
+  "label": "VCC (1)",
+  "category": "input",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Constant HIGH source. Always outputs 1. propagationDelay=0."
+  },
+
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      { "id": "out", "label": "1", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [],
+    "allowedOutputValues": [1],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "Constant source — no HDL export needed.",
+    "vhdlNotes": "Constant source — no HDL export needed."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Verify output is always 1."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

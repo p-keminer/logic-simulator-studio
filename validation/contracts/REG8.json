@@ -1,0 +1,80 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "REG8",
+  "label": "REG8",
+  "category": "register",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "rst", "effect": "reset", "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "8-bit parallel-load register with async reset. clk↑ loads all 8 data bits into q0–q7. rst=1 resets all q outputs immediately."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d0",  "label": "D0",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d1",  "label": "D1",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d2",  "label": "D2",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d3",  "label": "D3",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d4",  "label": "D4",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d5",  "label": "D5",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d6",  "label": "D6",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "d7",  "label": "D7",  "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 },
+      { "id": "rst", "label": "RST", "role": "async-reset", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "q", "canBeTriState": false },
+      { "id": "q1", "label": "Q1", "role": "q", "canBeTriState": false },
+      { "id": "q2", "label": "Q2", "role": "q", "canBeTriState": false },
+      { "id": "q3", "label": "Q3", "role": "q", "canBeTriState": false },
+      { "id": "q4", "label": "Q4", "role": "q", "canBeTriState": false },
+      { "id": "q5", "label": "Q5", "role": "q", "canBeTriState": false },
+      { "id": "q6", "label": "Q6", "role": "q", "canBeTriState": false },
+      { "id": "q7", "label": "Q7", "role": "q", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk or posedge rst) begin if (rst) q<=0; else q<=d; end",
+    "vhdlNotes": "process(clk, rst) if rst='1' then q<=(others=>'0'); elsif rising_edge(clk) then q<=d; end if;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "async-control-override",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify rst=1 resets all Q to 0 immediately. Verify rising edge loads representative data bits. Initial state all Q=0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No enable — always loads at rising edge.",
+    "Async reset clears all 8 bits simultaneously.",
+    "prevClk hidden state not exposed to STT."
+  ]
+}

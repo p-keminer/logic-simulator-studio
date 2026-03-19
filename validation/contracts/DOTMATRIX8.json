@@ -1,0 +1,63 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "DOTMATRIX8",
+  "label": "8×8 Dot Matrix",
+  "category": "output",
+
+  "semantics": {
+    "timingModel": "io",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "8×8 LED dot matrix display. R0–R7 = rows (left side), C0–C7 = columns (right side). Pixel illuminates when ROW=1 AND COL=1. No electrical outputs."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "row0", "label": "R0", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row1", "label": "R1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row2", "label": "R2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row3", "label": "R3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row4", "label": "R4", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row5", "label": "R5", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row6", "label": "R6", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "row7", "label": "R7", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col0", "label": "C0", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col1", "label": "C1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col2", "label": "C2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col3", "label": "C3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col4", "label": "C4", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col5", "label": "C5", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col6", "label": "C6", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "col7", "label": "C7", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": []
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI display element — no HDL export.",
+    "vhdlNotes": "UI display element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Manual UI observation. Pixel [r,c] lights when row[r]=1 AND col[c]=1."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export."
+  ]
+}

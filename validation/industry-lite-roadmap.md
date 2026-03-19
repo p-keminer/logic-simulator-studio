@@ -1,6 +1,6 @@
 # Industry-Lite EDA Roadmap
 
-Datum: 2026-03-08
+Datum: 2026-03-19
 Repo: `<repo-root>`
 
 ## Zweck
@@ -19,11 +19,11 @@ Zielbild:
 
 ### Positiv bestaetigt
 
-- `npm test` ist gruen: **845** Tests bestanden.
+- `npm test` ist gruen: **853** Tests bestanden.
 - `npm run build` ist gruen.
 - `npm run lint` ist gruen.
-- Contract Runner v1: **91 pass, 0 fail, 34 unsupported** (125 total) - in CI als eigenes Gate.
-- Golden Corpus v1 Runner: **11 pass, 0 fail, 1 expected_limit** (12 total) - in CI als eigenes Gate.
+- Contract Runner v1: **447 pass, 0 fail, 0 unsupported** (447 total) - in CI als eigenes Gate.
+- Golden Corpus v1 Runner: **23 pass, 0 fail, 1 expected_limit** (24 total) - in CI als eigenes Gate.
 - Focused-Nine Core: **12/12** funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen - in CI als eigenes Gate.
 - CI hat 6 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain.
 - Tri-State-Ausgaenge propagieren korrekt: downstream-Gates sehen `Z`, nicht `0`.
@@ -35,11 +35,11 @@ Zielbild:
 ### Fachlich relevante Restluecken
 
 - Es gibt noch kein `X`-Signal fuer Setup/Hold-Verletzungen oder Metastabilitaet (Modellgrenze, kein Bug).
-- Hierarchische Custom-ICs sind simulativ brauchbar, aber fuer HDL-Export noch nicht first-class abgesichert.
+- Hierarchische Custom-ICs sind simulativ brauchbar; ein erster einlagiger HDL-Exportpfad ist jetzt via strukturellem Flattening abgesichert, aber tiefergehende Hierarchie ist noch nicht first-class verifiziert.
 - UI-Timing-Audit ist semantisch gruen (5 PASS) und jetzt als eigenes CI-Gate eingebunden; der offene Restpunkt ist ein breiterer Waveform-/Visual-Diff.
-- Export-Determinismus (Re-Export + Diff gegen goldene Artefakte) ist noch nicht implementiert.
+- Export-Determinismus (Re-Export + Diff gegen goldene Artefakte) ist jetzt aktiv; Golden Corpus v1 fuehrt ausserdem externe HDL-Syntax/Lint-Checks und szenariobasierte HDL-Simulation aus.
 - Branch-Protection-Rules in GitHub Settings sind noch nicht konfiguriert (externer manueller Schritt).
-- 34 Contract-Runner-Testmuster sind noch `unsupported` (step-sequence, forbidden-input, etc.).
+- Contract-Runner-Multi-Driver-Konflikte sind jetzt ausgefuehrt; offener bleibt nur die Ausweitung von der repräsentativen Bus-Fixture auf groessere zusammengesetzte Designs.
 
 ## Maturitaetsziel
 
@@ -68,8 +68,8 @@ Abgeschlossen:
 - ~~fehlende Mehrtreiberauflosung~~ - RESOLVED P0 2026-03-07 (Konflikte ergeben `X`)
 - ~~fehlende HDL-Export-Abdeckung fuer Basisgatter~~ - RESOLVED P0 2026-03-07
 - ~~Verilator-LATCH-Warnung bei `74HC373`~~ - RESOLVED P1-1 2026-03-07
-- ~~Kein automatisierter Contract-Runner~~ - RESOLVED P1-5 2026-03-08 (91 pass, 34 unsupported)
-- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED P1-6 2026-03-08 (11 pass, 1 expected_limit)
+- ~~Kein automatisierter Contract-Runner~~ - RESOLVED / EXPANDED P1-5 2026-03-19 (447 pass, 0 unsupported)
+- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED / EXPANDED P1-6 2026-03-19 (23 pass, 1 expected_limit, externe HDL-Pruefung aktiv)
 
 Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
@@ -90,17 +90,17 @@ Status:
 
 Erreicht:
 - Formales 0/1/Z/X-Signalmodell (W1, W2)
-- Golden Corpus v1 als ausfuehrbare Regression mit 12 Referenzschaltungen (W3)
-- Contract Runner v1 fuer 12 Gate-Contracts (W3)
+- Golden Corpus v1 als ausfuehrbare Regression mit 24 Referenzschaltungen inklusive neun v2-Pilot-Seeds (W3)
+- Contract Runner v1 fuer 86 Gate-Contracts (W3)
 - Reproduzierbare JSON-/Markdown-Reports fuer alle drei fachlichen Suiten
 - CI mit 6 Jobs, davon 5 blockierende Qualitaets-/Regressionsgates (W6)
 - Report-Artefakte als CI-Uploads
 
 Noch offen:
-- Externer HDL-Diff (iverilog/ghdl Simulation gegen goldene Exporte) - noch nicht im Runner
-- Export-Determinismus (Re-Export + Byte-Diff) - noch nicht implementiert
+- Externe HDL-Pruefung im Golden Corpus ist aktiv; offen bleibt die Ausweitung auf groessere/hierarchische Designs und breitere Trace-Tiefen
+- Export-Determinismus (Re-Export + Byte-Diff) - erledigt
 - UI-Timing-Semantik (W4) - fokussierte Faelle in CI verifiziert; voller Waveform-/Visual-Diff bleibt offen
-- Hierarchie-/Custom-IC-Absicherung (W5) - noch nicht angegangen
+- Hierarchie-/Custom-IC-Absicherung (W5) - zwei einlagige Flattening-Pfade verifiziert, breitere/nestbare Hierarchie bleibt offen
 - Branch-Protection in GitHub Settings - manueller externer Schritt
 
 ## Arbeitsstroeme
@@ -128,17 +128,17 @@ Status: **ABGESCHLOSSEN** (P0 2026-03-07)
 Status: **TEILWEISE ERREICHT**
 
 Erreicht:
-- Golden Corpus v1 mit 12 Referenzschaltungen
+- Golden Corpus v1 mit 24 Referenzschaltungen inklusive `GC-V2-1`, `GC-V2-2`, `GC-V2-3`, `GC-V2-4`, `GC-V2-5`, `GC-V2-6`, `GC-V2-7`, `GC-V2-8` und `GC-V2-9`
 - Ausfuehrbarer Runner (`validation/run-golden-corpus-v1.mjs`) mit 11 check-Kategorien pro Fall
-- Contract Runner v1 (`validation/run-contract-runner.mjs`) fuer 12 Gate-Contracts
+- Contract Runner v1 (`validation/run-contract-runner.mjs`) fuer 86 Gate-Contracts
 - Checkpoint-Verifikation gegen Verilog/VHDL-Quelltext
+- Externe HDL-Syntax/Lint-Checks plus szenariobasierte iverilog/vvp- und ghdl-Simulation fuer alle nicht-boundary Faelle
 - Beide als CI-Gate verdrahtet
 - `gc_t2_bus_mux` bewusst als `expected_limit` klassifiziert
 
 Noch offen:
-- Funktionale HDL-Simulation (iverilog/ghdl gegen goldene Exporte)
-- Export-Determinismus (Re-Export + Diff)
-- Erweiterung auf v2 (mehr Schaltungen, Hierarchie)
+- Tiefere und breitere HDL-Traces statt nur kuratierter Szenarien
+- Erweiterung auf weitere v2-Seeds (mehr Schaltungen, Hierarchie, bus-/memory-lastige Designs)
 
 ### W4. UI als Projektion des Kerns
 
@@ -151,16 +151,16 @@ Status: **TEILWEISE ERREICHT**
 
 ### W5. Hierarchie und Exportierbarkeit
 
-Status: **OFFEN**
+Status: **TEILWEISE ERREICHT** (2026-03-19)
 
 - Custom ICs sind simulativ nutzbar
-- Kein HDL-Export fuer Custom ICs
+- Ein einlagiger HDL-Exportpfad fuer registrierte Custom ICs ist jetzt ueber strukturelles Flattening verifiziert
 - Keine Contracts oder Tests fuer Custom ICs
-- Muss bewusst entschieden werden: voll exportierbar oder nur simulativ
+- Offene Entscheidung bleibt: tiefere/nestbare Hierarchie first-class exportierbar machen oder bewusst begrenzen
 
 ### W6. Qualitaetsgates und CI
 
-Status: **WEITGEHEND ERREICHT** (2026-03-08)
+Status: **WEITGEHEND ERREICHT** (2026-03-19)
 
 Aktueller Stand:
 - CI vorhanden: `.github/workflows/quality-gates.yml`  6 Jobs:
@@ -204,8 +204,8 @@ Umfang:
 - W3 Grundgeruest fertig
 
 Erreicht:
-- Golden Corpus v1 mit 12 Referenzschaltungen  ausfuehrbar + CI
-- Contract Runner v1 mit 12 Gate-Contracts  ausfuehrbar + CI
+- Golden Corpus v1 mit 24 Referenzschaltungen  ausfuehrbar + CI
+- Contract Runner v1 mit 86 Gate-Contracts  ausfuehrbar + CI
 
 Noch offen:
 - v2-Erweiterung: 15-25 Referenzschaltungen (Hierarchie, grosse Designs)
@@ -233,7 +233,7 @@ Umfang:
 
 Status:
 - UI-Timing-Semantik ist fokussiert in CI abgesichert; naechster Schritt ist ein breiterer Waveform-/Visual-Diff
-- Hierarchie/Custom-IC-Absicherung noch nicht begonnen
+- Hierarchie/Custom-IC-Absicherung hat mit `GC-V2-6` und `GC-V2-9` zwei one-level-Pfade; naechster Schritt ist tiefere/nestbare Absicherung
 
 ### Phase D  Teilweise erreicht
 
@@ -252,7 +252,7 @@ Erreicht:
 Noch offen:
 - Branch Protection (externer Schritt)
 - CI-Performance/Caching
-- Export-Determinismus / Re-Export-Diff
+- Funktionale HDL-Simulation gegen Golden-Corpus-Exporte
 
 ## Bug-Fix-Protokoll
 
@@ -277,17 +277,16 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 - UI und HDL keinen Widerspruch dazu zeigen
 - die bekannte Modellgrenze nicht einfach nur unerkannt geblieben ist
 
-## Naechster empfohlener Fokus (Stand 2026-03-08)
+## Naechster empfohlener Fokus (Stand 2026-03-19)
 
-1. **P1:** UI-Timing-Audit als CI-Job integrieren
-2. **P2:** Export-Determinismus / Re-Export-Diff in Golden Corpus aufnehmen
-3. **P2:** Funktionale Schaltungssimulation im Golden Corpus (iverilog/ghdl gegen goldene Exporte)
-4. **P2:** 34 unsupported Contract-Runner-Muster implementieren (step-sequence, forbidden-input, etc.)
-5. **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, Hierarchie, grosse Designs)
-6. **P2:** Branch Protection / Required Checks in GitHub Settings konfigurieren (externer Schritt)
-7. **P2:** CI-Performance (HDL-Tool-Caching, Docker-Image)
+1. **P2:** Funktionale Schaltungssimulation im Golden Corpus vertiefen (laengere und dichtere HDL-Traces)
+2. **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster)
+3. **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, Hierarchie, grosse Designs)
+  Acht v2-Pilot-Seeds `GC-V2-1`, `GC-V2-2`, `GC-V2-3`, `GC-V2-4`, `GC-V2-5`, `GC-V2-6`, `GC-V2-7` und `GC-V2-8` sind jetzt integriert; als Naechstes folgen breitere HDL-Traces und ein zweiter Hierarchie-/Custom-IC-Fall
+4. **P2:** Branch Protection / Required Checks in GitHub Settings konfigurieren (externer Schritt)
+5. **P2:** CI-Performance (HDL-Tool-Caching, Docker-Image)
 
 Phase B (0/1/Z/X und Mehrtreiberauflosung) ist abgeschlossen.
 Phase D (CI-Qualitaetsgates) ist weitgehend erreicht mit 6 Jobs.
 Phase A (HDL-Differenztest-Infrastruktur) ist teilweise erreicht mit Golden Corpus v1 + Contract Runner v1.
-Naechster Schwerpunkt: Phase C (UI-Konsistenz, insb. Timing-Semantik) und Phase A Vertiefung (Export-Determinismus, funktionale Simulation).
+Naechster Schwerpunkt: Phase A Vertiefung (funktionale HDL-Simulation, Corpus-v2) und Phase C (breiterer Waveform-/Visual-Diff fuer die UI-Projektion).

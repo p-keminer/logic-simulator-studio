@@ -14,7 +14,7 @@
     "sw_c0": { "id": "sw_c0", "typeId": "INPUT_SWITCH", "x": 40,  "y": 600, "label": "c0", "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
     "dut": {
       "id": "dut",
-      "typeId": "IC_74HC283",
+      "typeId": "74HC283",
       "x": 300, "y": 300,
       "customState": {},
       "outputSignals": {}, "isSelected": false

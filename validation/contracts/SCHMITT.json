@@ -1,0 +1,63 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SCHMITT",
+  "label": "Schmitt",
+  "category": "logic_special",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Schmitt trigger inverter. Binary passthrough with Schmitt-trigger symbol. UI representation only; behavioral model is simple passthrough. verilogSkipUnconnectedOutputs=true."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y", "label": "Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign y = ~a; (passthrough with inversion — Schmitt hysteresis not modelled in simulation)",
+    "vhdlNotes": "y <= not a;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Behavioral model: Y = NOT(A). Hysteresis is a UI/schematic symbol feature, not simulated."
+  },
+
+  "risks": [
+    {
+      "class": "model-limit",
+      "description": "Schmitt hysteresis (VT+ / VT- thresholds) is not modelled in simulation — only a binary passthrough/inversion.",
+      "confirmed": true
+    }
+  ],
+  "modelLimits": [
+    "No hysteresis modelling — thresholds are not simulated.",
+    "No propagation delay."
+  ]
+}

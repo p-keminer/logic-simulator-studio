@@ -10,8 +10,10 @@ module gc_c3_sr_latch (
 );
 
   // SR-Latch dut (cross-coupled NOR)
+  /* verilator lint_off UNOPTFLAT */
   nor g_dut_q (w_0,  r, w_1);
   nor g_dut_qn(w_1, s, w_0);
+  /* verilator lint_on UNOPTFLAT */
 
 endmodule // gc_c3_sr_latch
 `default_nettype wire

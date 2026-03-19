@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SPLIT8",
+  "label": "BUS-8",
+  "category": "bus",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "8-bit pass-through bus splitter. Routes a0–a7 directly to y0–y7."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a0", "label": "A0", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a1", "label": "A1", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2", "label": "A2", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a3", "label": "A3", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a4", "label": "A4", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a5", "label": "A5", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a6", "label": "A6", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "a7", "label": "A7", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y0", "label": "Y0", "role": "data", "canBeTriState": false },
+      { "id": "y1", "label": "Y1", "role": "data", "canBeTriState": false },
+      { "id": "y2", "label": "Y2", "role": "data", "canBeTriState": false },
+      { "id": "y3", "label": "Y3", "role": "data", "canBeTriState": false },
+      { "id": "y4", "label": "Y4", "role": "data", "canBeTriState": false },
+      { "id": "y5", "label": "Y5", "role": "data", "canBeTriState": false },
+      { "id": "y6", "label": "Y6", "role": "data", "canBeTriState": false },
+      { "id": "y7", "label": "Y7", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign {y7,y6,y5,y4,y3,y2,y1,y0} = {a7,a6,a5,a4,a3,a2,a1,a0};",
+    "vhdlNotes": "y <= a;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify all 8 bits pass through unchanged."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

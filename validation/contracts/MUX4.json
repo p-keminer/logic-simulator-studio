@@ -1,0 +1,59 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "MUX4",
+  "label": "MUX4",
+  "category": "mux",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "4-to-1 multiplexer. {S1,S0} selects one of D0–D3."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d0", "label": "D0", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "d1", "label": "D1", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "d2", "label": "D2", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "d3", "label": "D3", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "s0", "label": "S0", "role": "select",  "activeLow": false, "defaultValue": 0 },
+      { "id": "s1", "label": "S1", "role": "select",  "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y", "label": "Y", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(*) case({s1,s0}) 2'b00: y=d0; 2'b01: y=d1; 2'b10: y=d2; 2'b11: y=d3; endcase",
+    "vhdlNotes": "with s1s0 select y <= d0 when '00', d1 when '01', d2 when '10', d3 when others;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify all 4 select combinations map to correct data input."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

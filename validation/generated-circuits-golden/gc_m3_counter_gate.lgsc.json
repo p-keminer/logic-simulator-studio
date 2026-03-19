@@ -14,7 +14,7 @@
     "sw_d3":   { "id": "sw_d3",   "typeId": "INPUT_SWITCH", "x": 40, "y": 560, "label": "d3",   "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
     "ctr": {
       "id": "ctr",
-      "typeId": "IC_74HC161",
+      "typeId": "74HC161",
       "x": 280, "y": 260,
       "customState": { "cnt": 0, "prevClk": 0 },
       "outputSignals": {}, "isSelected": false

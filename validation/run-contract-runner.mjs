@@ -6,7 +6,7 @@
  *   - validation/contract-runner-summary.json  (machine-readable)
  *   - validation/contract-runner-report.md     (human-readable)
  *
- * Supported pattern families in v1:
+ * Supported pattern families in v1.4:
  *   - truth-table-exhaustive  (combinational gates: full 2^N enumeration)
  *   - sequential-step-sequence (edge-triggered + level-sensitive FFs/latches)
  *   - clock-edge-detection    (all 4 CLK transitions for edge-triggered gates)
@@ -15,13 +15,13 @@
  *   - reset-to-known-state    (async/sync reset reachability)
  *   - forbidden-input-combination (documented illegal input combos)
  *   - oe-tristate             (/OE toggle for Hi-Z gates)
+ *   - counter-rollover        (multi-cycle counter wrap verification)
+ *   - shift-sequence          (multi-cycle shift-register propagation)
+ *   - load-shift-mode         (load/shift or load/count mode transitions)
+ *   - multi-driver-conflict   (representative shared-bus resolution checks)
+ *   - export-verilog / export-vhdl (actual HDL generator smoke tests)
  *
  * NOT supported in v1 (explicitly marked unsupported):
- *   - export-verilog / export-vhdl  (HDL export patterns, covered by focused-nine)
- *   - multi-driver-conflict         (requires circuit-level simulation)
- *   - counter-rollover              (multi-cycle, deferred to v2)
- *   - shift-sequence                (multi-cycle, deferred to v2)
- *   - load-shift-mode               (multi-cycle, deferred to v2)
  *   - ui-state-projection           (requires UI, not unit-testable here)
  *
  * Usage:
@@ -35,7 +35,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONTRACTS_DIR = path.join(ROOT, 'validation', 'contracts');
 const SUMMARY_FILE = path.join(ROOT, 'validation', 'contract-runner-summary.json');
 const REPORT_FILE = path.join(ROOT, 'validation', 'contract-runner-report.md');
-const RUNNER_VERSION = '1.0.0';
+const RUNNER_VERSION = '1.4.0';
+const MAX_EXHAUSTIVE_INPUTS = 16;
 
 function fileHref(...parts) {
   return pathToFileURL(path.join(ROOT, ...parts)).href;
@@ -44,6 +45,9 @@ function fileHref(...parts) {
 // ── Bootstrap gate registry via vite-node TS import ──────────────────────────
 await import(fileHref('src', 'core', 'registry', 'index.ts'));
 const { gateRegistry } = await import(fileHref('src', 'core', 'registry', 'GateRegistry.ts'));
+const { generateVerilog } = await import(fileHref('src', 'core', 'io', 'verilog.ts'));
+const { generateVHDL } = await import(fileHref('src', 'core', 'io', 'vhdl.ts'));
+const { resolveWiredValues } = await import(fileHref('src', 'core', 'simulation', 'signal.ts'));
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,9 +102,11 @@ function buildInitState(def, contract, visibleVal, clkVal) {
   // Set visible keys
   for (const k of visibleKeys) state[k] = visibleVal;
 
-  // Set hidden prevClk keys
+  // Only edge-shadow keys should be forced to the requested clock level.
   if (def.hiddenStateKeys) {
-    for (const hk of def.hiddenStateKeys) state[hk] = clkVal;
+    for (const hk of def.hiddenStateKeys) {
+      if (isClockShadowKey(hk)) state[hk] = clkVal;
+    }
   } else {
     // Heuristic for gates without hiddenStateKeys metadata:
     // Set ALL known prevClk-style patterns used by 74xx ICs.
@@ -175,6 +181,131 @@ function makeResult(gateTypeId, patternId, caseId, status, expected, actual, err
   };
 }
 
+function makeDefaultInputs(contract) {
+  const inputs = {};
+  for (const p of contract.ports.inputs) {
+    inputs[p.id] = p.defaultValue ?? 0;
+  }
+  return inputs;
+}
+
+function pulseRisingEdge(def, contract, inputs, state, clkId) {
+  const lowInputs = { ...inputs, [clkId]: 0 };
+  const idleState = stateTransition(def, lowInputs, state);
+  return stateTransition(def, { ...inputs, [clkId]: 1 }, idleState.nextState);
+}
+
+function stateFromValue(stateKeys, value) {
+  const state = {};
+  for (let i = 0; i < stateKeys.length; i++) {
+    state[stateKeys[i]] = (value >> i) & 1;
+  }
+  return state;
+}
+
+function valueFromState(state, stateKeys) {
+  let value = 0;
+  for (let i = 0; i < stateKeys.length; i++) {
+    value |= (((state?.[stateKeys[i]] ?? 0) & 1) << i);
+  }
+  return value;
+}
+
+function isClockShadowKey(key) {
+  return key === 'prevClk'
+    || key === 'pClk'
+    || key === 'pShcp'
+    || key === 'pStcp'
+    || /^pc\d+$/.test(key);
+}
+
+function activeValue(meta) {
+  if (meta?.activeLevel !== undefined) return meta.activeLevel;
+  return meta?.activeLow ? 0 : 1;
+}
+
+function inactiveValue(meta) {
+  return activeValue(meta) === 1 ? 0 : 1;
+}
+
+function findOutputEnableControl(contract) {
+  const explicit = (contract.semantics.asyncControls ?? []).find(ctrl => {
+    const port = contract.ports.inputs.find(p => p.id === ctrl.portId);
+    return port?.role === 'output-enable';
+  });
+  if (explicit) return explicit;
+
+  const port = contract.ports.inputs.find(p => p.role === 'output-enable');
+  if (!port) return null;
+
+  return {
+    portId: port.id,
+    effect: 'enable',
+    activeLevel: activeValue(port),
+    activeLow: !!port.activeLow,
+  };
+}
+
+function getAsyncControls(contract) {
+  const explicit = contract.semantics.asyncControls ?? [];
+  const inferred = [];
+
+  for (const port of contract.ports.inputs ?? []) {
+    if (explicit.some(ctrl => ctrl.portId === port.id)) continue;
+    if (port.role === 'async-set') {
+      inferred.push({
+        portId: port.id,
+        effect: 'preset',
+        activeLevel: activeValue(port),
+        activeLow: !!port.activeLow,
+      });
+    } else if (port.role === 'async-reset') {
+      inferred.push({
+        portId: port.id,
+        effect: 'reset',
+        activeLevel: activeValue(port),
+        activeLow: !!port.activeLow,
+      });
+    }
+  }
+
+  return [...explicit, ...inferred];
+}
+
+function pulseClockEdge(def, contract, inputs, state, clkId) {
+  const rising = contract.semantics.timingModel !== 'edge-triggered-falling';
+  const idleClk = rising ? 0 : 1;
+  const edgeClk = rising ? 1 : 0;
+  const idleState = stateTransition(def, { ...inputs, [clkId]: idleClk }, state);
+  return stateTransition(def, { ...inputs, [clkId]: edgeClk }, idleState.nextState);
+}
+
+function matchStateKeyForPort(stateKeys, portId) {
+  const suffix = portId.match(/\d+$/)?.[0] ?? '';
+  if (suffix) {
+    const suffixed = stateKeys.find(key => key.endsWith(suffix));
+    if (suffixed) return suffixed;
+  }
+  const normalized = portId.replace(/^[a-z]+/, '').toLowerCase();
+  if (normalized) {
+    const loose = stateKeys.find(key => key.toLowerCase().endsWith(normalized));
+    if (loose) return loose;
+  }
+  return stateKeys[0];
+}
+
+function injectStateValue(state, stateKeys, value) {
+  Object.assign(state, stateFromValue(stateKeys, value));
+
+  if ('count' in state) state.count = value;
+  if ('cnt' in state) state.cnt = value;
+  if ('reg' in state) state.reg = value;
+  if ('shift' in state) state.shift = value;
+  if ('latch' in state) state.latch = value;
+
+  return state;
+}
+
 // ── Pattern runners ──────────────────────────────────────────────────────────
 
 const SUPPORTED_PATTERNS = new Set([
@@ -186,26 +317,146 @@ const SUPPORTED_PATTERNS = new Set([
   'reset-to-known-state',
   'forbidden-input-combination',
   'oe-tristate',
-]);
-
-const UNSUPPORTED_PATTERNS = new Set([
-  'export-verilog',
-  'export-vhdl',
-  'multi-driver-conflict',
   'counter-rollover',
   'shift-sequence',
   'load-shift-mode',
+  'multi-driver-conflict',
+  'export-verilog',
+  'export-vhdl',
+]);
+
+const UNSUPPORTED_PATTERNS = new Set([
   'ui-state-projection',
 ]);
+
+const DEFAULT_SIGNAL = { value: 0, version: 0, lastChangedAt: 0 };
+
+function sanitizeId(id) {
+  return id.replace(/[^a-zA-Z0-9_]/g, '_');
+}
+
+function makeCircuitGate(id, typeId, label) {
+  return {
+    id,
+    typeId,
+    x: 0,
+    y: 0,
+    label,
+    outputSignals: {},
+    customState: {},
+    isSelected: false,
+  };
+}
+
+function makeCircuitWire(id, fromGate, fromPort, toGate, toPort) {
+  return {
+    id,
+    from: { gateId: fromGate, portId: fromPort },
+    to: { gateId: toGate, portId: toPort },
+    signal: { ...DEFAULT_SIGNAL },
+    waypoints: [],
+    isSelected: false,
+  };
+}
+
+function buildExportCircuit(contract) {
+  const coreId = 'core';
+  const gates = {
+    [coreId]: makeCircuitGate(coreId, contract.typeId, contract.label ?? contract.typeId),
+  };
+  const wires = {};
+  let wireIdx = 0;
+
+  for (const [i, port] of (contract.ports.inputs ?? []).entries()) {
+    const swId = `in_${sanitizeId(port.id)}_${i}`;
+    gates[swId] = makeCircuitGate(swId, 'INPUT_SWITCH', port.label ?? port.id);
+    wires[`w${wireIdx}`] = makeCircuitWire(`w${wireIdx}`, swId, 'out', coreId, port.id);
+    wireIdx++;
+  }
+
+  for (const [i, port] of (contract.ports.outputs ?? []).entries()) {
+    const ledId = `out_${sanitizeId(port.id)}_${i}`;
+    gates[ledId] = makeCircuitGate(ledId, 'OUTPUT_LED', port.label ?? port.id);
+    wires[`w${wireIdx}`] = makeCircuitWire(`w${wireIdx}`, coreId, port.id, ledId, 'in');
+    wireIdx++;
+  }
+
+  return {
+    id: `${sanitizeId(contract.typeId)}_export_test`,
+    name: `${sanitizeId(contract.typeId)}_export_test`,
+    version: '1.0',
+    gates,
+    wires,
+    viewport: { panX: 0, panY: 0, zoom: 1 },
+    metadata: {
+      createdAt: '2026-03-19',
+      updatedAt: '2026-03-19',
+    },
+  };
+}
+
+function validateExportSource(language, source) {
+  const lower = source.toLowerCase();
+  if (lower.includes('export blocked') || lower.includes('multi-driver port conflict')) {
+    return { ok: false, reason: 'blocked export stub detected' };
+  }
+
+  if (language === 'verilog') {
+    const ok = /\bmodule\s+\w+/.test(source) && /\bendmodule\b/.test(source);
+    return ok ? { ok: true } : { ok: false, reason: 'missing Verilog module wrapper' };
+  }
+
+  const ok = /\bentity\s+\w+\s+is\b/i.test(source)
+    && /\barchitecture\s+Behavioral\s+of\s+\w+\s+is\b/i.test(source)
+    && /\bend\s+Behavioral;/i.test(source);
+  return ok ? { ok: true } : { ok: false, reason: 'missing VHDL entity/architecture wrapper' };
+}
+
+function runExportPattern(contract, def, contractFile, language) {
+  const exportSupport = contract.exportSupport?.[language] ?? 'none';
+  if (exportSupport === 'none' || exportSupport === 'not-applicable') {
+    return [makeResult(contract.typeId, `export-${language}`, 'unsupported-export-support',
+      'fail', `exportSupport.${language} must be supported`, exportSupport,
+      'contract_mismatch', contractFile)];
+  }
+
+  try {
+    const circuit = buildExportCircuit(contract);
+    const source = language === 'verilog'
+      ? generateVerilog(circuit)
+      : generateVHDL(circuit);
+    const validation = validateExportSource(language, source);
+
+    return [makeResult(contract.typeId, `export-${language}`, 'generator-smoke-test',
+      validation.ok ? 'pass' : 'fail',
+      {
+        exportSupport,
+        wrapper: language === 'verilog' ? 'module/endmodule' : 'entity/architecture',
+      },
+      {
+        exportSupport,
+        outputChars: source.length,
+        outputLines: source.split('\n').length,
+        snippet: source.slice(0, 120),
+        validation: validation.ok ? 'ok' : validation.reason,
+      },
+      validation.ok ? null : 'contract_mismatch',
+      contractFile,
+    )];
+  } catch (e) {
+    return [makeResult(contract.typeId, `export-${language}`, 'runner-exception',
+      'fail', 'no exception', String(e), 'runner_error', contractFile)];
+  }
+}
 
 // ── truth-table-exhaustive ───────────────────────────────────────────────────
 function runTruthTableExhaustive(contract, def, contractFile) {
   const results = [];
   const inputPorts = contract.ports.inputs;
   const n = inputPorts.length;
-  if (n > 10) {
+  if (n > MAX_EXHAUSTIVE_INPUTS) {
     results.push(makeResult(contract.typeId, 'truth-table-exhaustive', 'skip-too-wide',
-      'unsupported', `<= 10 inputs`, `${n} inputs`, 'unsupported_contract_feature', contractFile));
+      'unsupported', `<= ${MAX_EXHAUSTIVE_INPUTS} inputs`, `${n} inputs`, 'unsupported_contract_feature', contractFile));
     return results;
   }
 
@@ -303,65 +554,85 @@ function runSequentialStepSequence(contract, def, contractFile) {
   }
 
   if (tm === 'edge-triggered-rising' || tm === 'edge-triggered-falling') {
-    const rising = tm === 'edge-triggered-rising';
     const clkIds = findClockInputIds(contract, def);
 
-    // Classify data inputs: role=data inputs that are NOT clock
     const dataInputs = contract.ports.inputs.filter(p =>
       p.role === 'data' && !clkIds.includes(p.id));
-
-    // Check if this gate needs special enable/control inputs to capture data
     const enableInputs = contract.ports.inputs.filter(p => p.role === 'enable');
     const controlInputs = contract.ports.inputs.filter(p => p.role === 'control');
-
-    // Determine if this is a simple D-capture or a complex IC
+    const selectInputs = contract.ports.inputs.filter(p => p.role === 'select');
     const isSimpleDFF = dataInputs.length <= 2 && enableInputs.length === 0 && controlInputs.length === 0;
-    // JK_FF: has j/k ports but role may not be 'data'
     const jPort = contract.ports.inputs.find(p => p.id === 'j');
     const kPort = contract.ports.inputs.find(p => p.id === 'k');
     const isJKFF = jPort && kPort;
+    const isTFF = contract.typeId === 'T_FF' || contract.typeId === 'T_FF_ASSR';
+    const isSREdge = contract.typeId === 'SR_FF_EDGE';
 
     for (const clkId of clkIds) {
       const stateKeysForClk = clockToStateKeys(clkId, contract, def);
-      const prevClkKey = prevClkKeyForClock(clkId, contract, def);
 
-      // Build default inactive inputs
-      const baseInputs = {};
-      for (const p of contract.ports.inputs) {
-        baseInputs[p.id] = p.defaultValue ?? 0;
-      }
+      const baseInputs = makeDefaultInputs(contract);
 
       if (isJKFF) {
-        // JK FF: test J=1,K=0 (set) and J=0,K=1 (reset)
         const testKey = stateKeysForClk[0];
 
-        // J=1,K=0 at rising edge => Q=1
         const initSet = buildInitState(def, contract, 0, 0);
-        initSet[prevClkKey] = 0;
-        const s1 = stateTransition(def, { ...baseInputs, j: 1, k: 0, [clkId]: rising ? 0 : 1 }, initSet);
-        const s2 = stateTransition(def, { ...baseInputs, j: 1, k: 0, [clkId]: rising ? 1 : 0 }, s1.nextState);
+        const s2 = pulseClockEdge(def, contract, { ...baseInputs, j: 1, k: 0 }, initSet, clkId);
         const setPass = s2.nextState[testKey] === 1;
         results.push(makeResult(contract.typeId, 'sequential-step-sequence',
           `${clkId}-JK-set`, setPass ? 'pass' : 'fail',
           { [testKey]: 1 }, { [testKey]: s2.nextState[testKey] },
           setPass ? null : 'contract_mismatch', contractFile));
 
-        // J=0,K=1 at rising edge => Q=0
         const initReset = buildInitState(def, contract, 1, 0);
-        initReset[prevClkKey] = 0;
-        const r1 = stateTransition(def, { ...baseInputs, j: 0, k: 1, [clkId]: rising ? 0 : 1 }, initReset);
-        const r2 = stateTransition(def, { ...baseInputs, j: 0, k: 1, [clkId]: rising ? 1 : 0 }, r1.nextState);
+        const r2 = pulseClockEdge(def, contract, { ...baseInputs, j: 0, k: 1 }, initReset, clkId);
         const rstPass = r2.nextState[testKey] === 0;
         results.push(makeResult(contract.typeId, 'sequential-step-sequence',
           `${clkId}-JK-reset`, rstPass ? 'pass' : 'fail',
           { [testKey]: 0 }, { [testKey]: r2.nextState[testKey] },
           rstPass ? null : 'contract_mismatch', contractFile));
 
+      } else if (isTFF) {
+        const testKey = stateKeysForClk[0];
+
+        const holdState = buildInitState(def, contract, 1, 0);
+        const holdResult = pulseClockEdge(def, contract, { ...baseInputs, t: 0 }, holdState, clkId);
+        const holdPass = holdResult.nextState[testKey] === 1;
+        results.push(makeResult(contract.typeId, 'sequential-step-sequence',
+          `${clkId}-T-hold`, holdPass ? 'pass' : 'fail',
+          { [testKey]: 1 }, { [testKey]: holdResult.nextState[testKey] },
+          holdPass ? null : 'contract_mismatch', contractFile));
+
+        const toggleState = buildInitState(def, contract, 0, 0);
+        const toggleResult = pulseClockEdge(def, contract, { ...baseInputs, t: 1 }, toggleState, clkId);
+        const togglePass = toggleResult.nextState[testKey] === 1;
+        results.push(makeResult(contract.typeId, 'sequential-step-sequence',
+          `${clkId}-T-toggle`, togglePass ? 'pass' : 'fail',
+          { [testKey]: 1 }, { [testKey]: toggleResult.nextState[testKey] },
+          togglePass ? null : 'contract_mismatch', contractFile));
+
+      } else if (isSREdge) {
+        const testKey = stateKeysForClk[0];
+
+        const setState = buildInitState(def, contract, 0, 0);
+        const setResult = pulseClockEdge(def, contract, { ...baseInputs, s: 1, r: 0 }, setState, clkId);
+        const setPass = setResult.nextState[testKey] === 1;
+        results.push(makeResult(contract.typeId, 'sequential-step-sequence',
+          `${clkId}-SR-set`, setPass ? 'pass' : 'fail',
+          { [testKey]: 1 }, { [testKey]: setResult.nextState[testKey] },
+          setPass ? null : 'contract_mismatch', contractFile));
+
+        const resetState = buildInitState(def, contract, 1, 0);
+        const resetResult = pulseClockEdge(def, contract, { ...baseInputs, s: 0, r: 1 }, resetState, clkId);
+        const resetPass = resetResult.nextState[testKey] === 0;
+        results.push(makeResult(contract.typeId, 'sequential-step-sequence',
+          `${clkId}-SR-reset`, resetPass ? 'pass' : 'fail',
+          { [testKey]: 0 }, { [testKey]: resetResult.nextState[testKey] },
+          resetPass ? null : 'contract_mismatch', contractFile));
+
       } else if (isSimpleDFF && dataInputs.length > 0) {
-        // Simple D-FF: test D=0 and D=1 capture
-        // Match data port to clock by suffix (d1<->clk1, d2<->clk2)
         const clkSuffix = clkId.replace(/^clk/, '');
-        let testDataPort = dataInputs[0]; // default
+        let testDataPort = dataInputs[0];
         if (clkSuffix) {
           const suffixMatch = dataInputs.find(p => p.id.endsWith(clkSuffix));
           if (suffixMatch) testDataPort = suffixMatch;
@@ -370,13 +641,8 @@ function runSequentialStepSequence(contract, def, contractFile) {
 
         for (const dVal of [0, 1]) {
           const initState = buildInitState(def, contract, dVal === 1 ? 0 : 1, 0);
-          initState[prevClkKey] = 0;
-
           const inputs = { ...baseInputs, [testDataPort.id]: dVal };
-          // Step 1: CLK inactive
-          const s1 = stateTransition(def, { ...inputs, [clkId]: rising ? 0 : 1 }, initState);
-          // Step 2: CLK active edge
-          const s2 = stateTransition(def, { ...inputs, [clkId]: rising ? 1 : 0 }, s1.nextState);
+          const s2 = pulseClockEdge(def, contract, inputs, initState, clkId);
 
           const pass = s2.nextState[testKey] === dVal;
           results.push(makeResult(contract.typeId, 'sequential-step-sequence',
@@ -384,46 +650,55 @@ function runSequentialStepSequence(contract, def, contractFile) {
             { [testKey]: dVal }, { [testKey]: s2.nextState[testKey] },
             pass ? null : 'contract_mismatch', contractFile));
         }
+      } else if (dataInputs.length > 0 && enableInputs.length === 0 && controlInputs.length === 0 && selectInputs.length === 0) {
+        const testDataPort = dataInputs[0];
+        const testKey = matchStateKeyForPort(stateKeysForClk, testDataPort.id);
+        const initState = buildInitState(def, contract, 0, 0);
+        const result = pulseClockEdge(def, contract, { ...baseInputs, [testDataPort.id]: 1 }, initState, clkId);
+        const pass = result.nextState[testKey] === 1;
+        results.push(makeResult(contract.typeId, 'sequential-step-sequence',
+          `${clkId}-wide-parallel-capture`, pass ? 'pass' : 'fail',
+          { [testKey]: 1 }, { [testKey]: result.nextState[testKey] },
+          pass ? null : 'contract_mismatch', contractFile));
       } else {
-        // Complex IC (counter, shift register, etc.):
-        // Test parallel load if available, or basic count step.
-        const hasLoad = controlInputs.find(p => p.id === 'ldn' || p.id === 'load');
+        const loadPort = [...controlInputs, ...enableInputs].find(p => p.id === 'ldn' || p.id === 'load');
 
-        if (hasLoad && dataInputs.length > 0) {
-          // Parallel load test: activate /LDN=0 (active-low), set D=1010..., trigger CLK edge
-          const testKey = stateKeysForClk[0];
+        if (loadPort && dataInputs.length > 0) {
           const loadInputs = { ...baseInputs };
-          // Activate load: for active-low /LDN, set to 0
-          loadInputs[hasLoad.id] = hasLoad.activeLow ? 0 : 1;
-          // Set first data input to 1, rest to 0
+          loadInputs[loadPort.id] = activeValue(loadPort);
           for (const dp of dataInputs) loadInputs[dp.id] = 0;
           loadInputs[dataInputs[0].id] = 1;
 
           const initState = buildInitState(def, contract, 0, 0);
-          initState[prevClkKey] = 0;
-
-          // CLK idle then edge
-          const s1 = stateTransition(def, { ...loadInputs, [clkId]: 0 }, initState);
-          const s2 = stateTransition(def, { ...loadInputs, [clkId]: 1 }, s1.nextState);
+          const s2 = pulseClockEdge(def, contract, loadInputs, initState, clkId);
+          const testKey = matchStateKeyForPort(def.stateKeys ?? stateKeysForClk, dataInputs[0].id);
 
           const pass = s2.nextState[testKey] === 1;
           results.push(makeResult(contract.typeId, 'sequential-step-sequence',
             `${clkId}-parallel-load`, pass ? 'pass' : 'fail',
             { [testKey]: 1 }, { [testKey]: s2.nextState[testKey] },
             pass ? null : 'contract_mismatch', contractFile));
-        } else if (enableInputs.length > 0) {
-          // Counter/shift with enable: enable counting, verify state changes
-          const enInputs = { ...baseInputs };
-          for (const ep of enableInputs) enInputs[ep.id] = ep.activeLow ? 0 : 1;
+        } else if (enableInputs.length > 0 && dataInputs.length > 0) {
+          const captureInputs = { ...baseInputs };
+          for (const ep of enableInputs) captureInputs[ep.id] = activeValue(ep);
+          for (const dp of dataInputs) captureInputs[dp.id] = 0;
+          captureInputs[dataInputs[0].id] = 1;
 
           const initState = buildInitState(def, contract, 0, 0);
-          initState[prevClkKey] = 0;
+          const result = pulseClockEdge(def, contract, captureInputs, initState, clkId);
+          const testKey = matchStateKeyForPort(def.stateKeys ?? stateKeysForClk, dataInputs[0].id);
+          const pass = result.nextState[testKey] === 1;
+          results.push(makeResult(contract.typeId, 'sequential-step-sequence',
+            `${clkId}-enabled-data-capture`, pass ? 'pass' : 'fail',
+            { [testKey]: 1 }, { [testKey]: result.nextState[testKey] },
+            pass ? null : 'contract_mismatch', contractFile));
+        } else if (enableInputs.length > 0) {
+          const enInputs = { ...baseInputs };
+          for (const ep of enableInputs) enInputs[ep.id] = activeValue(ep);
 
-          // One clock cycle
-          const s1 = stateTransition(def, { ...enInputs, [clkId]: 0 }, initState);
-          const s2 = stateTransition(def, { ...enInputs, [clkId]: 1 }, s1.nextState);
+          const initState = buildInitState(def, contract, 0, 0);
+          const s2 = pulseClockEdge(def, contract, enInputs, initState, clkId);
 
-          // Verify some state changed
           const testKey = stateKeysForClk[0];
           const changed = s2.nextState[testKey] !== 0;
           results.push(makeResult(contract.typeId, 'sequential-step-sequence',
@@ -431,11 +706,8 @@ function runSequentialStepSequence(contract, def, contractFile) {
             'state changed after edge', { [testKey]: s2.nextState[testKey] },
             changed ? null : 'contract_mismatch', contractFile));
         } else {
-          // Fallback: just verify no crash on a clock edge
           const initState = buildInitState(def, contract, 0, 0);
-          initState[prevClkKey] = 0;
-          const s1 = stateTransition(def, { ...baseInputs, [clkId]: 0 }, initState);
-          const s2 = stateTransition(def, { ...baseInputs, [clkId]: 1 }, s1.nextState);
+          const s2 = pulseClockEdge(def, contract, baseInputs, initState, clkId);
           results.push(makeResult(contract.typeId, 'sequential-step-sequence',
             `${clkId}-basic-edge`, 'pass',
             'no crash', 'OK', null, contractFile));
@@ -444,13 +716,14 @@ function runSequentialStepSequence(contract, def, contractFile) {
     }
   } else if (tm === 'latch-level-sensitive') {
     // Find enable input
-    const enableCtrl = contract.semantics.asyncControls.find(c => c.effect === 'enable');
+    const asyncCtrls = getAsyncControls(contract);
+    const enableCtrl = asyncCtrls.find(c => c.effect === 'enable');
     const visibleKeys = def.stateKeys ?? ['q'];
 
     if (enableCtrl) {
       const enId = enableCtrl.portId;
-      const enActive = enableCtrl.activeLevel;
-      const enInactive = enActive === 1 ? 0 : 1;
+      const enActive = activeValue(enableCtrl);
+      const enInactive = inactiveValue(enableCtrl);
       const dataInputs = contract.ports.inputs.filter(p => p.role === 'data');
       const testDataPort = dataInputs[0];
       if (!testDataPort) {
@@ -483,10 +756,10 @@ function runSequentialStepSequence(contract, def, contractFile) {
         holdPass ? 'pass' : 'fail',
         { [visibleKeys[0]]: 1 }, { [visibleKeys[0]]: s2.nextState[visibleKeys[0]] },
         holdPass ? null : 'contract_mismatch', contractFile));
-    } else if (contract.semantics.asyncControls.length > 0) {
+    } else if (asyncCtrls.length > 0) {
       // SR_LATCH style: no enable, just async controls
-      const setCtrl = contract.semantics.asyncControls.find(c => c.effect === 'preset');
-      const clrCtrl = contract.semantics.asyncControls.find(c => c.effect === 'clear');
+      const setCtrl = asyncCtrls.find(c => c.effect === 'preset');
+      const clrCtrl = asyncCtrls.find(c => c.effect === 'clear' || c.effect === 'reset');
       const visKey = visibleKeys[0];
       const initState = buildInitState(def, contract, 0, 0);
 
@@ -495,7 +768,7 @@ function runSequentialStepSequence(contract, def, contractFile) {
         for (const p of contract.ports.inputs) baseInputs[p.id] = p.defaultValue ?? 0;
 
         // Set: S=active => Q=1
-        const sInputs = { ...baseInputs, [setCtrl.portId]: setCtrl.activeLevel, [clrCtrl.portId]: clrCtrl.activeLow ? 1 : 0 };
+        const sInputs = { ...baseInputs, [setCtrl.portId]: activeValue(setCtrl), [clrCtrl.portId]: inactiveValue(clrCtrl) };
         const s1 = stateTransition(def, sInputs, initState);
         const setPass = s1.nextState[visKey] === 1;
         results.push(makeResult(contract.typeId, 'sequential-step-sequence', 'set-to-1',
@@ -503,7 +776,7 @@ function runSequentialStepSequence(contract, def, contractFile) {
           setPass ? null : 'contract_mismatch', contractFile));
 
         // Clear: R=active => Q=0
-        const rInputs = { ...baseInputs, [setCtrl.portId]: setCtrl.activeLow ? 1 : 0, [clrCtrl.portId]: clrCtrl.activeLevel };
+        const rInputs = { ...baseInputs, [setCtrl.portId]: inactiveValue(setCtrl), [clrCtrl.portId]: activeValue(clrCtrl) };
         const s2 = stateTransition(def, rInputs, s1.nextState);
         const clrPass = s2.nextState[visKey] === 0;
         results.push(makeResult(contract.typeId, 'sequential-step-sequence', 'clear-to-0',
@@ -521,8 +794,32 @@ function runSequentialStepSequence(contract, def, contractFile) {
       }
     }
   } else if (tm === 'master-slave') {
-    results.push(makeResult(contract.typeId, 'sequential-step-sequence', 'master-slave-basic',
-      'unsupported', 'deferred-to-v2', 'master-slave pattern', 'unsupported_contract_feature', contractFile));
+    const baseInputs = {};
+    for (const p of contract.ports.inputs) baseInputs[p.id] = p.defaultValue ?? 0;
+
+    const initState = buildInitState(def, contract, 0, 0);
+
+    const masterOpen = stateTransition(def, { ...baseInputs, j: 1, k: 0, clk: 1 }, initState);
+    const masterPass = masterOpen.nextState.qM === 1 && masterOpen.nextState.qS === 0;
+    results.push(makeResult(contract.typeId, 'sequential-step-sequence', 'master-transparent-while-clk-high',
+      masterPass ? 'pass' : 'fail',
+      { qM: 1, qS: 0 }, { qM: masterOpen.nextState.qM, qS: masterOpen.nextState.qS },
+      masterPass ? null : 'contract_mismatch', contractFile));
+
+    const slaveTransfer = stateTransition(def, { ...baseInputs, j: 1, k: 0, clk: 0 }, masterOpen.nextState);
+    const transferPass = slaveTransfer.nextState.qS === 1;
+    results.push(makeResult(contract.typeId, 'sequential-step-sequence', 'slave-transfers-on-falling-edge',
+      transferPass ? 'pass' : 'fail',
+      { qS: 1 }, { qS: slaveTransfer.nextState.qS },
+      transferPass ? null : 'contract_mismatch', contractFile));
+
+    const toggleHigh = stateTransition(def, { ...baseInputs, j: 1, k: 1, clk: 1 }, slaveTransfer.nextState);
+    const toggleLow = stateTransition(def, { ...baseInputs, j: 1, k: 1, clk: 0 }, toggleHigh.nextState);
+    const togglePass = toggleLow.nextState.qS === 0;
+    results.push(makeResult(contract.typeId, 'sequential-step-sequence', 'toggle-after-full-clock-cycle',
+      togglePass ? 'pass' : 'fail',
+      { qS: 0 }, { qS: toggleLow.nextState.qS },
+      togglePass ? null : 'contract_mismatch', contractFile));
   }
 
   return results;
@@ -689,8 +986,8 @@ function runHoldState(contract, def, contractFile) {
 // ── async-control-override ───────────────────────────────────────────────────
 function runAsyncControlOverride(contract, def, contractFile) {
   const results = [];
-  const asyncCtrls = contract.semantics.asyncControls.filter(c =>
-    c.effect === 'preset' || c.effect === 'clear');
+  const asyncCtrls = getAsyncControls(contract).filter(c =>
+    c.effect === 'preset' || c.effect === 'clear' || c.effect === 'reset');
 
   if (asyncCtrls.length === 0) return results;
 
@@ -726,10 +1023,8 @@ function runAsyncControlOverride(contract, def, contractFile) {
     const initState = buildInitState(def, contract, initVal, 0);
     initState[targetKey] = initVal;
 
-    const baseInputs = {};
-    for (const p of contract.ports.inputs) baseInputs[p.id] = p.defaultValue ?? 0;
-    // Activate the async control
-    baseInputs[ctrl.portId] = ctrl.activeLevel;
+    const baseInputs = makeDefaultInputs(contract);
+    baseInputs[ctrl.portId] = activeValue(ctrl);
 
     const result = stateTransition(def, baseInputs, initState);
     const pass = result.nextState[targetKey] === targetVal;
@@ -748,9 +1043,33 @@ function runAsyncControlOverride(contract, def, contractFile) {
 function runResetToKnownState(contract, def, contractFile) {
   const results = [];
   const visibleKeys = def.stateKeys ?? ['q'];
-  const resetCtrls = contract.semantics.asyncControls.filter(c => c.effect === 'clear');
+  const resetCtrls = getAsyncControls(contract).filter(c => c.effect === 'clear' || c.effect === 'reset');
 
   if (resetCtrls.length === 0) {
+    if (contract.typeId === '74HC163') {
+      const clkId = contract.semantics.clockInputId ?? def.clockInputId ?? 'clk';
+      const stateKeys = def.stateKeys ?? ['q'];
+      const initState = injectStateValue(buildInitState(def, contract, 0, 0), stateKeys, 5);
+      const baseInputs = { ...makeDefaultInputs(contract), clrn: 0 };
+
+      const idle = stateTransition(def, { ...baseInputs, [clkId]: 0 }, initState);
+      const heldBeforeEdge = valueFromState(idle.nextState, stateKeys) === 5;
+      results.push(makeResult(contract.typeId, 'reset-to-known-state', 'sync-clear-waits-for-edge',
+        heldBeforeEdge ? 'pass' : 'fail',
+        { valueBeforeEdge: 5 },
+        { valueBeforeEdge: valueFromState(idle.nextState, stateKeys) },
+        heldBeforeEdge ? null : 'contract_mismatch', contractFile));
+
+      const cleared = pulseClockEdge(def, contract, baseInputs, initState, clkId);
+      const clearedPass = valueFromState(cleared.nextState, stateKeys) === 0;
+      results.push(makeResult(contract.typeId, 'reset-to-known-state', 'sync-clear-on-edge',
+        clearedPass ? 'pass' : 'fail',
+        { valueAfterEdge: 0 },
+        { valueAfterEdge: valueFromState(cleared.nextState, stateKeys) },
+        clearedPass ? null : 'contract_mismatch', contractFile));
+      return results;
+    }
+
     // Edge-triggered FFs without async reset: verify default init
     if (def.stateInit) {
       const allZero = visibleKeys.every(k => def.stateInit[k] === 0);
@@ -786,10 +1105,9 @@ function runResetToKnownState(contract, def, contractFile) {
   // Apply all async resets simultaneously from a non-zero state
   const initState = buildInitState(def, contract, 1, 0);
 
-  const baseInputs = {};
-  for (const p of contract.ports.inputs) baseInputs[p.id] = p.defaultValue ?? 0;
+  const baseInputs = makeDefaultInputs(contract);
   for (const ctrl of resetCtrls) {
-    baseInputs[ctrl.portId] = ctrl.activeLevel;
+    baseInputs[ctrl.portId] = activeValue(ctrl);
   }
 
   const result = stateTransition(def, baseInputs, initState);
@@ -813,23 +1131,21 @@ function runForbiddenInputCombination(contract, def, contractFile) {
 
   for (let i = 0; i < combos.length; i++) {
     const combo = combos[i];
-    const inputs = {};
-    for (const p of contract.ports.inputs) inputs[p.id] = p.defaultValue ?? 0;
-    // Override with forbidden values
-    for (const [key, val] of Object.entries(combo)) {
-      if (key === 'result') continue;
+    const inputs = makeDefaultInputs(contract);
+    const comboInputs = (combo.inputs && typeof combo.inputs === 'object') ? combo.inputs : combo;
+    for (const [key, val] of Object.entries(comboInputs)) {
+      if (key === 'result' || key === 'effect' || key === 'inputs') continue;
       inputs[key] = val;
     }
 
     const initState = { ...(def.stateInit ?? {}) };
     try {
       const result = stateTransition(def, inputs, initState);
-      // We just verify the gate doesn't throw. The result string in the contract
-      // is documentation — we verify the gate handles it deterministically.
+      const expected = combo.result ?? combo.effect ?? 'deterministic output';
       results.push(makeResult(contract.typeId, 'forbidden-input-combination',
         `combo-${i}`,
         'pass',
-        combo.result,
+        expected,
         result.outputs,
         null, contractFile));
     } catch (e) {
@@ -848,21 +1164,37 @@ function runForbiddenInputCombination(contract, def, contractFile) {
 // ── oe-tristate ──────────────────────────────────────────────────────────────
 function runOeTristate(contract, def, contractFile) {
   const results = [];
-  const oeCtrl = contract.semantics.asyncControls.find(c => c.effect === 'enable' && c.activeLow === true)
-    ?? contract.semantics.asyncControls.find(c =>
-      contract.ports.inputs.find(p => p.id === c.portId && p.role === 'output-enable'));
+  const oeCtrl = findOutputEnableControl(contract);
 
-  if (!oeCtrl) return results;
+  if (!oeCtrl) {
+    results.push(makeResult(contract.typeId, 'oe-tristate', 'missing-oe-metadata',
+      'unsupported',
+      'output-enable metadata present',
+      'not found',
+      'unsupported_contract_feature', contractFile));
+    return results;
+  }
 
   const tsOutputs = contract.ports.outputs.filter(p => p.canBeTriState);
-  if (tsOutputs.length === 0) return results;
+  if (tsOutputs.length === 0) {
+    results.push(makeResult(contract.typeId, 'oe-tristate', 'no-tristate-outputs',
+      'unsupported',
+      'at least one tri-state output',
+      'not found',
+      'unsupported_contract_feature', contractFile));
+    return results;
+  }
 
   const oeId = oeCtrl.portId;
-  const oeInactive = oeCtrl.activeLow ? 1 : 0; // Hi-Z level
-  const oeActive = oeCtrl.activeLow ? 0 : 1;   // driven level
+  const oeInactive = inactiveValue(oeCtrl); // Hi-Z level
+  const oeActive = activeValue(oeCtrl);     // driven level
 
   const baseInputs = {};
-  for (const p of contract.ports.inputs) baseInputs[p.id] = p.defaultValue ?? 0;
+  for (const p of contract.ports.inputs) {
+    baseInputs[p.id] = p.defaultValue ?? 0;
+    // Keep prerequisite selects active so this pattern isolates OE behavior.
+    if (p.role === 'chip-select') baseInputs[p.id] = activeValue(p);
+  }
   const initState = { ...(def.stateInit ?? {}) };
 
   // OE inactive => all tri-state outputs should be Hi-Z (2)
@@ -885,6 +1217,350 @@ function runOeTristate(contract, def, contractFile) {
     Object.fromEntries(tsOutputs.map(p => [p.id, outActive[p.id]])),
     allDriven ? null : 'contract_mismatch', contractFile));
 
+  return results;
+}
+
+function makeMultiDriverFixture(contract, def, drivenValue) {
+  const baseInputs = makeDefaultInputs(contract);
+
+  if (contract.typeId === 'TRIBUF') {
+    return {
+      outputId: 'y',
+      state: { ...(def.stateInit ?? {}) },
+      driveInputs: { ...baseInputs, a: drivenValue, oe: 0 },
+      floatInputs: { ...baseInputs, a: drivenValue, oe: 1 },
+    };
+  }
+
+  if (contract.typeId === '74HC373') {
+    const loadState = stateTransition(def, {
+      ...baseInputs,
+      oe: 1,
+      le: 1,
+      d0: drivenValue,
+    }, buildInitState(def, contract, 0, 0)).nextState;
+    return {
+      outputId: 'q0',
+      state: loadState,
+      driveInputs: { ...baseInputs, oe: 0, le: 0 },
+      floatInputs: { ...baseInputs, oe: 1, le: 0 },
+    };
+  }
+
+  if (contract.typeId === '74HC374') {
+    const captured = pulseClockEdge(def, contract, {
+      ...baseInputs,
+      oe: 1,
+      d0: drivenValue,
+    }, buildInitState(def, contract, 0, 0), 'clk').nextState;
+    return {
+      outputId: 'q0',
+      state: captured,
+      driveInputs: { ...baseInputs, oe: 0, clk: 0 },
+      floatInputs: { ...baseInputs, oe: 1, clk: 0 },
+    };
+  }
+
+  if (contract.typeId === 'RAM256') {
+    const data = new Array(256).fill(0);
+    data[0] = drivenValue;
+    const addressZero = Object.fromEntries(
+      contract.ports.inputs
+        .filter(p => p.role === 'address')
+        .map(p => [p.id, 0]),
+    );
+    return {
+      outputId: 'do0',
+      state: { ...(def.stateInit ?? {}), data },
+      driveInputs: { ...baseInputs, ...addressZero, cs: 0, oe: 0, we: 1 },
+      floatInputs: { ...baseInputs, ...addressZero, cs: 0, oe: 1, we: 1 },
+    };
+  }
+
+  return null;
+}
+
+function runMultiDriverConflict(contract, def, contractFile) {
+  const results = [];
+  if (!contract.signalModel?.busCapable) {
+    results.push(makeResult(contract.typeId, 'multi-driver-conflict', 'bus-capability-missing',
+      'unsupported',
+      'signalModel.busCapable=true',
+      contract.signalModel?.busCapable ?? false,
+      'unsupported_contract_feature', contractFile));
+    return results;
+  }
+
+  const fixture0 = makeMultiDriverFixture(contract, def, 0);
+  const fixture1 = makeMultiDriverFixture(contract, def, 1);
+  if (!fixture0 || !fixture1) {
+    results.push(makeResult(contract.typeId, 'multi-driver-conflict', 'no-fixture',
+      'unsupported',
+      'runner fixture for shared-bus gate',
+      contract.typeId,
+      'unsupported_contract_feature', contractFile));
+    return results;
+  }
+
+  const outputId = fixture0.outputId;
+  const drive0 = def.evaluate(fixture0.driveInputs, fixture0.state)[outputId];
+  const drive1 = def.evaluate(fixture1.driveInputs, fixture1.state)[outputId];
+  const float0 = def.evaluate(fixture0.floatInputs, fixture0.state)[outputId];
+  const float1 = def.evaluate(fixture1.floatInputs, fixture1.state)[outputId];
+
+  const conflictResolved = resolveWiredValues([drive0, drive1]);
+  results.push(makeResult(contract.typeId, 'multi-driver-conflict', 'conflicting-drivers-resolve-to-x',
+    conflictResolved === 3 ? 'pass' : 'fail',
+    { drivers: [0, 1], resolved: 3, outputId },
+    { drivers: [drive0, drive1], resolved: conflictResolved, outputId },
+    conflictResolved === 3 ? null : 'contract_mismatch', contractFile));
+
+  const singleResolved = resolveWiredValues([drive1, float0]);
+  results.push(makeResult(contract.typeId, 'multi-driver-conflict', 'single-driver-wins-over-z',
+    singleResolved === 1 ? 'pass' : 'fail',
+    { drivers: [1, 2], resolved: 1, outputId },
+    { drivers: [drive1, float0], resolved: singleResolved, outputId },
+    singleResolved === 1 ? null : 'contract_mismatch', contractFile));
+
+  const floatResolved = resolveWiredValues([float0, float1]);
+  results.push(makeResult(contract.typeId, 'multi-driver-conflict', 'all-z-bus-stays-z',
+    floatResolved === 2 ? 'pass' : 'fail',
+    { drivers: [2, 2], resolved: 2, outputId },
+    { drivers: [float0, float1], resolved: floatResolved, outputId },
+    floatResolved === 2 ? null : 'contract_mismatch', contractFile));
+
+  return results;
+}
+
+// ── counter-rollover ────────────────────────────────────────────────────────
+function runCounterRollover(contract, def, contractFile) {
+  const results = [];
+  const clkId = findClockInputIds(contract, def)[0];
+  const stateKeys = def.stateKeys ?? ['q'];
+
+  if (!clkId) {
+    results.push(makeResult(contract.typeId, 'counter-rollover', 'no-clock',
+      'unsupported', 'clocked counter', 'missing clock input',
+      'unsupported_contract_feature', contractFile));
+    return results;
+  }
+
+  const maxValue = contract.typeId === 'BIN_CTR_99' ? 99 : ((1 << stateKeys.length) - 1);
+  const nearMax = maxValue - 1;
+  const baseInputs = makeDefaultInputs(contract);
+
+  for (const port of contract.ports.inputs.filter(p => p.role === 'enable')) {
+    baseInputs[port.id] = activeValue(port);
+  }
+  if ('ldn' in baseInputs) baseInputs.ldn = 1;
+  if ('clrn' in baseInputs) baseInputs.clrn = 1;
+  if ('rst' in baseInputs) baseInputs.rst = 0;
+
+  const initState = injectStateValue(buildInitState(def, contract, 0, 0), stateKeys, nearMax);
+  const toMax = pulseClockEdge(def, contract, baseInputs, initState, clkId);
+  const reachedMax = valueFromState(toMax.nextState, stateKeys);
+  const maxPass = reachedMax === maxValue;
+  results.push(makeResult(contract.typeId, 'counter-rollover', 'near-max-to-max',
+    maxPass ? 'pass' : 'fail',
+    { value: maxValue },
+    { value: reachedMax },
+    maxPass ? null : 'contract_mismatch', contractFile));
+
+  if (contract.ports.outputs.some(p => p.id === 'rco')) {
+    const maxOutputs = def.evaluate(baseInputs, toMax.nextState);
+    const rcoPass = maxOutputs.rco === 1;
+    results.push(makeResult(contract.typeId, 'counter-rollover', 'rco-at-max',
+      rcoPass ? 'pass' : 'fail',
+      { rco: 1 },
+      { rco: maxOutputs.rco },
+      rcoPass ? null : 'contract_mismatch', contractFile));
+  }
+
+  const toZero = pulseClockEdge(def, contract, baseInputs, toMax.nextState, clkId);
+  const rolled = valueFromState(toZero.nextState, stateKeys);
+  const rolloverPass = rolled === 0;
+  results.push(makeResult(contract.typeId, 'counter-rollover', 'max-to-zero',
+    rolloverPass ? 'pass' : 'fail',
+    { value: 0 },
+    { value: rolled },
+    rolloverPass ? null : 'contract_mismatch', contractFile));
+
+  return results;
+}
+
+// ── shift-sequence ──────────────────────────────────────────────────────────
+function runShiftSequence(contract, def, contractFile) {
+  const results = [];
+  const clkId = findClockInputIds(contract, def)[0];
+
+  if (contract.typeId === 'SHIFT4') {
+    const pattern = [1, 0, 1, 1];
+    let state = buildInitState(def, contract, 0, 0);
+    const baseInputs = makeDefaultInputs(contract);
+
+    for (const bit of pattern) {
+      state = pulseClockEdge(def, contract, { ...baseInputs, si: bit, rst: 0 }, state, clkId).nextState;
+    }
+
+    const expected = { q0: 1, q1: 1, q2: 0, q3: 1 };
+    const actual = Object.fromEntries(Object.keys(expected).map(key => [key, state[key]]));
+    const pass = Object.entries(expected).every(([key, value]) => actual[key] === value);
+    results.push(makeResult(contract.typeId, 'shift-sequence', 'four-step-serial-propagation',
+      pass ? 'pass' : 'fail', expected, actual,
+      pass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  if (contract.typeId === 'PISO4') {
+    const baseInputs = makeDefaultInputs(contract);
+    const loadInputs = { ...baseInputs, load: 1, p0: 1, p1: 0, p2: 1, p3: 1 };
+    const initState = buildInitState(def, contract, 0, 0);
+    const loaded = pulseClockEdge(def, contract, loadInputs, initState, clkId);
+    const observed = [loaded.outputs.q];
+    let state = loaded.nextState;
+
+    for (let i = 0; i < 4; i++) {
+      const shifted = pulseClockEdge(def, contract, { ...baseInputs, load: 0 }, state, clkId);
+      observed.push(shifted.outputs.q);
+      state = shifted.nextState;
+    }
+
+    const expected = [1, 0, 1, 1, 0];
+    const pass = expected.every((value, index) => observed[index] === value);
+    results.push(makeResult(contract.typeId, 'shift-sequence', 'serial-drain-after-load',
+      pass ? 'pass' : 'fail',
+      { qSequence: expected },
+      { qSequence: observed },
+      pass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  if (contract.typeId === '74HC194') {
+    const baseInputs = { ...makeDefaultInputs(contract), clrn: 1 };
+    const loadInputs = { ...baseInputs, s0: 1, s1: 1, d0: 1, d1: 0, d2: 1, d3: 0 };
+    const initState = buildInitState(def, contract, 0, 0);
+    const loaded = pulseClockEdge(def, contract, loadInputs, initState, clkId);
+    const shifted = pulseClockEdge(def, contract, { ...baseInputs, s0: 1, s1: 0, sr: 1 }, loaded.nextState, clkId);
+    const expected = { q0: 0, q1: 1, q2: 0, q3: 1 };
+    const actual = Object.fromEntries(Object.keys(expected).map(key => [key, shifted.nextState[key]]));
+    const pass = Object.entries(expected).every(([key, value]) => actual[key] === value);
+    results.push(makeResult(contract.typeId, 'shift-sequence', 'load-then-shift-right',
+      pass ? 'pass' : 'fail', expected, actual,
+      pass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  if (contract.typeId === '74HC595') {
+    const baseInputs = { ...makeDefaultInputs(contract), mr: 1, oe: 0, shcp: 0, stcp: 0 };
+    let state = buildInitState(def, contract, 0, 0);
+    state.shift = 0;
+    state.latch = 0;
+
+    for (const bit of [1, 0, 1, 1]) {
+      state = pulseClockEdge(def, contract, { ...baseInputs, ds: bit }, state, 'shcp').nextState;
+    }
+
+    const latchedLow = stateTransition(def, { ...baseInputs, stcp: 0 }, state);
+    const latchedHigh = stateTransition(def, { ...baseInputs, stcp: 1 }, latchedLow.nextState);
+    const expected = { q0: 1, q1: 1, q2: 0, q3: 1 };
+    const actual = def.evaluate(baseInputs, latchedHigh.nextState);
+    const pass = Object.entries(expected).every(([key, value]) => actual[key] === value);
+    results.push(makeResult(contract.typeId, 'shift-sequence', 'shift-then-latch-lower-nibble',
+      pass ? 'pass' : 'fail', expected,
+      Object.fromEntries(Object.keys(expected).map(key => [key, actual[key]])),
+      pass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  results.push(makeResult(contract.typeId, 'shift-sequence', 'gate-not-covered',
+    'unsupported', 'gate-specific shift verification', contract.typeId,
+    'unsupported_contract_feature', contractFile));
+  return results;
+}
+
+// ── load-shift-mode ─────────────────────────────────────────────────────────
+function runLoadShiftMode(contract, def, contractFile) {
+  const results = [];
+  const clkId = findClockInputIds(contract, def)[0];
+
+  if (!clkId) {
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'no-clock',
+      'unsupported', 'clocked load/shift gate', 'missing clock input',
+      'unsupported_contract_feature', contractFile));
+    return results;
+  }
+
+  if (contract.typeId === 'PISO4') {
+    const baseInputs = makeDefaultInputs(contract);
+    const initState = buildInitState(def, contract, 0, 0);
+    const loaded = pulseClockEdge(def, contract, { ...baseInputs, load: 1, p0: 1, p1: 1, p2: 0, p3: 1 }, initState, clkId);
+    const loadPass = valueFromState(loaded.nextState, def.stateKeys ?? ['bit0']) === 0b1011;
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'parallel-load',
+      loadPass ? 'pass' : 'fail',
+      { value: 0b1011 },
+      { value: valueFromState(loaded.nextState, def.stateKeys ?? ['bit0']) },
+      loadPass ? null : 'contract_mismatch', contractFile));
+
+    const shifted = pulseClockEdge(def, contract, { ...baseInputs, load: 0 }, loaded.nextState, clkId);
+    const shiftPass = valueFromState(shifted.nextState, def.stateKeys ?? ['bit0']) === 0b0101;
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'shift-after-load',
+      shiftPass ? 'pass' : 'fail',
+      { value: 0b0101 },
+      { value: valueFromState(shifted.nextState, def.stateKeys ?? ['bit0']) },
+      shiftPass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  if (contract.typeId === '74HC161' || contract.typeId === '74HC163') {
+    const stateKeys = def.stateKeys ?? ['cnt0'];
+    const baseInputs = { ...makeDefaultInputs(contract), clrn: 1, ldn: 1, enp: 1, ent: 1 };
+    const initState = buildInitState(def, contract, 0, 0);
+    const loaded = pulseClockEdge(def, contract, { ...baseInputs, ldn: 0, d0: 1, d1: 0, d2: 1, d3: 0 }, initState, clkId);
+    const loadValue = valueFromState(loaded.nextState, stateKeys);
+    const loadPass = loadValue === 0b0101;
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'parallel-load',
+      loadPass ? 'pass' : 'fail',
+      { value: 0b0101 },
+      { value: loadValue },
+      loadPass ? null : 'contract_mismatch', contractFile));
+
+    const counted = pulseClockEdge(def, contract, baseInputs, loaded.nextState, clkId);
+    const countValue = valueFromState(counted.nextState, stateKeys);
+    const countPass = countValue === 0b0110;
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'count-after-load',
+      countPass ? 'pass' : 'fail',
+      { value: 0b0110 },
+      { value: countValue },
+      countPass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  if (contract.typeId === '74HC194') {
+    const baseInputs = { ...makeDefaultInputs(contract), clrn: 1 };
+    const initState = buildInitState(def, contract, 0, 0);
+    const loaded = pulseClockEdge(def, contract, { ...baseInputs, s0: 1, s1: 1, d0: 1, d1: 0, d2: 1, d3: 0 }, initState, clkId);
+    const loadValue = valueFromState(loaded.nextState, def.stateKeys ?? ['q0']);
+    const loadPass = loadValue === 0b0101;
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'parallel-load',
+      loadPass ? 'pass' : 'fail',
+      { value: 0b0101 },
+      { value: loadValue },
+      loadPass ? null : 'contract_mismatch', contractFile));
+
+    const shiftedLeft = pulseClockEdge(def, contract, { ...baseInputs, s0: 0, s1: 1, sl: 1 }, loaded.nextState, clkId);
+    const leftValue = valueFromState(shiftedLeft.nextState, def.stateKeys ?? ['q0']);
+    const leftPass = leftValue === 0b1011;
+    results.push(makeResult(contract.typeId, 'load-shift-mode', 'shift-left-mode',
+      leftPass ? 'pass' : 'fail',
+      { value: 0b1011 },
+      { value: leftValue },
+      leftPass ? null : 'contract_mismatch', contractFile));
+    return results;
+  }
+
+  results.push(makeResult(contract.typeId, 'load-shift-mode', 'gate-not-covered',
+    'unsupported', 'gate-specific load/shift verification', contract.typeId,
+    'unsupported_contract_feature', contractFile));
   return results;
 }
 
@@ -941,6 +1617,12 @@ function runContract(contract, contractFile) {
         case 'truth-table-exhaustive':
           patternResults = runTruthTableExhaustive(contract, def, contractFile);
           break;
+        case 'export-verilog':
+          patternResults = runExportPattern(contract, def, contractFile, 'verilog');
+          break;
+        case 'export-vhdl':
+          patternResults = runExportPattern(contract, def, contractFile, 'vhdl');
+          break;
         case 'sequential-step-sequence':
           patternResults = runSequentialStepSequence(contract, def, contractFile);
           break;
@@ -961,6 +1643,18 @@ function runContract(contract, contractFile) {
           break;
         case 'oe-tristate':
           patternResults = runOeTristate(contract, def, contractFile);
+          break;
+        case 'counter-rollover':
+          patternResults = runCounterRollover(contract, def, contractFile);
+          break;
+        case 'shift-sequence':
+          patternResults = runShiftSequence(contract, def, contractFile);
+          break;
+        case 'load-shift-mode':
+          patternResults = runLoadShiftMode(contract, def, contractFile);
+          break;
+        case 'multi-driver-conflict':
+          patternResults = runMultiDriverConflict(contract, def, contractFile);
           break;
       }
       results.push(...patternResults);
@@ -1040,16 +1734,16 @@ function generateReport(allResults, contracts) {
   md += `- \`testability.requiredPatterns[]\` — pattern dispatch list\n`;
 
   md += `\n### Contract fields NOT yet consumed\n\n`;
-  md += `- \`exportSupport\` — HDL export testing (covered by focused-nine audit)\n`;
+  md += `- \`exportSupport\` — HDL export smoke tests via real generator calls\n`;
   md += `- \`risks[]\` — informational, not automatically verified\n`;
   md += `- \`modelLimits[]\` — informational, not automatically verified\n`;
   md += `- \`signalModel.hiZInputHandling\` — not exercised\n`;
-  md += `- \`signalModel.busCapable\` — not exercised (requires multi-gate circuit)\n`;
+  md += `- \`signalModel.busCapable\` — exercised by shared-bus resolution checks\n`;
 
   md += `\n## Limits for v1\n\n`;
-  md += `- No multi-cycle counter/shift-register verification (counter-rollover, shift-sequence, load-shift-mode)\n`;
-  md += `- No HDL export validation (covered separately by focused-nine core audit)\n`;
-  md += `- No circuit-level tests (multi-driver-conflict requires bus simulation)\n`;
+  md += `- Multi-cycle counter/shift verification is implemented only for gate families with dedicated handlers; other gates may still report unsupported.\n`;
+  md += `- HDL export checks are smoke-tests only; they do not prove full HDL equivalence or synthesis fidelity.\n`;
+  md += `- Shared-bus checks use representative two-driver fixtures, not full graph-level circuit simulation.\n`;
   md += `- No UI projection tests (ui-state-projection requires browser)\n`;
   md += `- 74HC74 dual-FF: only FF1 clock (clk1) is exercised for edge detection; FF2 follows same pattern\n`;
   md += `- Wide ICs (74HC373/374/595): only representative data bit tested for step-sequence, not all 8\n`;

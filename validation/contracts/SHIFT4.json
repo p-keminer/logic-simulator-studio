@@ -1,0 +1,69 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "SHIFT4",
+  "label": "SHIFT4",
+  "category": "register",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "rst", "effect": "reset", "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q0", "q1", "q2", "q3", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit Serial-In Parallel-Out (SIPO) shift register. clk rising edge shifts q0<=SI, q1<=q0, q2<=q1, q3<=q2. rst=1 clears q0-q3 immediately."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "si",  "label": "SI",  "role": "data",  "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 },
+      { "id": "rst", "label": "RST", "role": "async-reset", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "q", "canBeTriState": false },
+      { "id": "q1", "label": "Q1", "role": "q", "canBeTriState": false },
+      { "id": "q2", "label": "Q2", "role": "q", "canBeTriState": false },
+      { "id": "q3", "label": "Q3", "role": "q", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk or posedge rst) if (rst) q<=4'b0; else begin q3<=q2; q2<=q1; q1<=q0; q0<=si; end",
+    "vhdlNotes": "process(clk, rst) if rst='1' then q<=(others=>'0'); elsif rising_edge(clk) then q3<=q2; q2<=q1; q1<=q0; q0<=si; end if;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "async-control-override",
+      "shift-sequence",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify serial propagation across four rising edges and that rst=1 clears all stages immediately."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No parallel load — serial input only.",
+    "prevClk hidden state not exposed to STT."
+  ]
+}

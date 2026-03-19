@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "BIN_CTR_99",
+  "label": "BIN-CTR 99",
+  "category": "output",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [],
+    "stateVariables": ["cnt0", "cnt1", "cnt2", "cnt3", "cnt4", "cnt5", "cnt6"],
+    "hasStableUndefinedState": false,
+    "notes": "2-digit BCD counter (0–99). 7-bit counter output (q0–q6) with dual decimal 7-segment display."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "clk", "label": "CLK", "role": "clock", "activeLow": false, "defaultValue": 0 },
+      { "id": "rst", "label": "RST", "role": "async-reset", "activeLow": false, "defaultValue": 0 },
+      { "id": "en",  "label": "EN",  "role": "enable", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q0", "label": "Q0", "role": "q", "canBeTriState": false },
+      { "id": "q1", "label": "Q1", "role": "q", "canBeTriState": false },
+      { "id": "q2", "label": "Q2", "role": "q", "canBeTriState": false },
+      { "id": "q3", "label": "Q3", "role": "q", "canBeTriState": false },
+      { "id": "q4", "label": "Q4", "role": "q", "canBeTriState": false },
+      { "id": "q5", "label": "Q5", "role": "q", "canBeTriState": false },
+      { "id": "q6", "label": "Q6", "role": "q", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "7-bit counter: ones digit (0–9) and tens digit (0–9) with BCD correction. verilogExtraRegs for internal counter state.",
+    "vhdlNotes": "process(clk, rst) ... BCD counter logic;",
+    "verilogExtraRegs": true,
+    "vhdlExtraSignals": true
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "counter-rollover",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify counts 00→01→...→99→00. Verify BCD correction (no invalid states 10–15 per digit)."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "Display outputs are UI-only, not part of HDL export."
+  ]
+}

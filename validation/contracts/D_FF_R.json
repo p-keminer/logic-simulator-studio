@@ -1,0 +1,67 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "D_FF_R",
+  "label": "D-FF/R",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "rst", "effect": "reset", "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "D flip-flop with synchronous clock and asynchronous reset. Q captures D on rising CLK edge. Async reset: rst=1 → Q=0 immediately, overrides clock."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d",   "label": "D",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock",      "activeLow": false, "defaultValue": 0 },
+      { "id": "rst", "label": "RST", "role": "async-reset", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "always @(posedge clk or posedge rst) if (rst) q <= 0; else q <= d; assign q_n = ~q;",
+    "vhdlNotes": "process(clk, rst) if rst='1' then q<='0'; elsif rising_edge(clk) then q<=d; end if;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "async-control-override",
+      "clock-edge-detection",
+      "reset-to-known-state",
+      "hold-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify: rst=1 overrides clock and resets immediately. Verify Q follows D at rising edge when rst=0. Initial Q=0."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "No metastability modelling.",
+    "No propagation delay.",
+    "prevClk hidden state not exposed to STT or test framework."
+  ]
+}

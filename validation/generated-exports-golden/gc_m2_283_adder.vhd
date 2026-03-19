@@ -34,9 +34,24 @@ begin
 
   -- 74HC283 dut
   process(a1,b1,a2,b2,a3,b3,a4,b4,c0)
+    variable a_v : integer range 0 to 15;
+    variable b_v : integer range 0 to 15;
+    variable cin_v : integer range 0 to 1;
     variable sum_v : unsigned(4 downto 0);
   begin
-    sum_v := unsigned('0' & a4 & a3 & a2 & a1) + unsigned('0' & b4 & b3 & b2 & b1) + unsigned("0000" & c0);
+    a_v := 0;
+    if a1 = '1' then a_v := a_v + 1; end if;
+    if a2 = '1' then a_v := a_v + 2; end if;
+    if a3 = '1' then a_v := a_v + 4; end if;
+    if a4 = '1' then a_v := a_v + 8; end if;
+    b_v := 0;
+    if b1 = '1' then b_v := b_v + 1; end if;
+    if b2 = '1' then b_v := b_v + 2; end if;
+    if b3 = '1' then b_v := b_v + 4; end if;
+    if b4 = '1' then b_v := b_v + 8; end if;
+    cin_v := 0;
+    if c0 = '1' then cin_v := 1; end if;
+    sum_v := to_unsigned(a_v + b_v + cin_v, 5);
     w_0_q <= std_logic(sum_v(0));
     w_1_q <= std_logic(sum_v(1));
     w_2_q <= std_logic(sum_v(2));

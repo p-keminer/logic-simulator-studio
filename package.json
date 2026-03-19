@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "contract:test": "vite-node validation/run-contract-runner.mjs",
-    "golden:test": "node validation/run-golden-corpus-v1.mjs"
+    "golden:test": "vite-node validation/run-golden-corpus-v1.mjs"
   },
   "dependencies": {
     "puppeteer": "^24.38.0",

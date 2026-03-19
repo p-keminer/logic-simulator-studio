@@ -1,0 +1,68 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "CMP4",
+  "label": "CMP4",
+  "category": "arith",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "4-bit cascadable magnitude comparator. Compares A[3:0] vs B[3:0] with cascade inputs (ltin,eqin,gtin) for chaining multiple CMP4 units."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a0", "label": "A0", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "a1", "label": "A1", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "a2", "label": "A2", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "a3", "label": "A3", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "b0", "label": "B0", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "b1", "label": "B1", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "b2", "label": "B2", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "b3", "label": "B3", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "ltin", "label": "LTIN", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "eqin", "label": "EQIN", "role": "data", "activeLow": false, "defaultValue": 1 },
+      { "id": "gtin", "label": "GTIN", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "lt", "label": "LT", "role": "overflow", "canBeTriState": false },
+      { "id": "eq", "label": "EQ", "role": "zero",     "canBeTriState": false },
+      { "id": "gt", "label": "GT", "role": "overflow", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "Compares A vs B bit by bit from MSB; cascade inputs allow chaining for wider comparisons.",
+    "vhdlNotes": "process(a,b,ltin,eqin,gtin) begin ... end process;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Test cascade behavior: verify standalone cmp, then verify cascading two CMP4 units for 8-bit comparison."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "Cascade logic depends on correct tie-off of cascade inputs on first stage."
+  ]
+}

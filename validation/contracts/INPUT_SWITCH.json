@@ -1,0 +1,49 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "INPUT_SWITCH",
+  "label": "Schalter",
+  "category": "input",
+
+  "semantics": {
+    "timingModel": "io",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": ["value"],
+    "hasStableUndefinedState": false,
+    "notes": "Manual toggle switch. Click to alternate between HIGH (1) and LOW (0). Output is stable until next click."
+  },
+
+  "ports": {
+    "inputs": [],
+    "outputs": [
+      { "id": "out", "label": "Q", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "not-applicable",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "UI input element — no HDL export.",
+    "vhdlNotes": "UI input element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [],
+    "notes": "Manual UI interaction. Verify output toggles between 0 and 1 on each click."
+  },
+
+  "risks": [],
+  "modelLimits": [
+    "UI-only — no HDL export.",
+    "State persisted in simulation customState."
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "RAM256",
+  "label": "RAM",
+  "category": "memory",
+
+  "semantics": {
+    "timingModel": "memory-async",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": ["data"],
+    "hasStableUndefinedState": false,
+    "notes": "256×8 asynchronous SRAM. Write: /WE=0 & /CS=0 → mem[addr]←di. Read: /OE=0 & /CS=0 → do←mem[addr]; else outputs are Hi-Z. defaultInputValues: we=1, cs=1, oe=1 (all inactive at start)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a0",  "label": "A0",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a1",  "label": "A1",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a2",  "label": "A2",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a3",  "label": "A3",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a4",  "label": "A4",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a5",  "label": "A5",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a6",  "label": "A6",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "a7",  "label": "A7",  "role": "address", "activeLow": false, "defaultValue": 0 },
+      { "id": "di0", "label": "DI0", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di1", "label": "DI1", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di2", "label": "DI2", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di3", "label": "DI3", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di4", "label": "DI4", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di5", "label": "DI5", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di6", "label": "DI6", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "di7", "label": "DI7", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "we",  "label": "/WE",  "role": "write-enable", "activeLow": true, "defaultValue": 1 },
+      { "id": "cs",  "label": "/CS",  "role": "chip-select", "activeLow": true, "defaultValue": 1 },
+      { "id": "oe",  "label": "/OE",  "role": "output-enable", "activeLow": true, "defaultValue": 1 }
+    ],
+    "outputs": [
+      { "id": "do0", "label": "DO0", "role": "data", "canBeTriState": true },
+      { "id": "do1", "label": "DO1", "role": "data", "canBeTriState": true },
+      { "id": "do2", "label": "DO2", "role": "data", "canBeTriState": true },
+      { "id": "do3", "label": "DO3", "role": "data", "canBeTriState": true },
+      { "id": "do4", "label": "DO4", "role": "data", "canBeTriState": true },
+      { "id": "do5", "label": "DO5", "role": "data", "canBeTriState": true },
+      { "id": "do6", "label": "DO6", "role": "data", "canBeTriState": true },
+      { "id": "do7", "label": "DO7", "role": "data", "canBeTriState": true }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1, 2],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": true
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "verilogExtraRegs: ram_{sid}[255:0] (8-bit × 256). always @(*) for async write/read. tri-state with 8'hzz when not selected.",
+    "vhdlNotes": "vhdlExtraSignals: ram_{sid}[255:0] signal. process for async write; process for async read with tri-state Z.",
+    "verilogExtraRegs": true,
+    "vhdlExtraSignals": true
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "oe-tristate",
+      "multi-driver-conflict",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify write: /CS=0 & /WE=0 stores DI to address. Verify read: /CS=0 & /OE=0 outputs DO from address. Verify tri-state: /CS=1 or /OE=1 → DO=Z."
+  },
+
+  "risks": [
+    {
+      "class": "model-limit",
+      "description": "Async write is transparent latch behavior — /WE=0 & /CS=0 continuously writes while conditions hold. Real SRAM typically uses clocked write.",
+      "confirmed": true
+    }
+  ],
+  "modelLimits": [
+    "Async write (no clock).",
+    "No read-modify-write cycle.",
+    "Initial content is all-zero."
+  ]
+}

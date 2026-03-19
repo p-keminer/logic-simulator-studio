@@ -1,0 +1,56 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "DEMUX2",
+  "label": "DEMUX2",
+  "category": "mux",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "1-to-2 demultiplexer. S=0 routes D to Y0; S=1 routes D to Y1."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d", "label": "D", "role": "data",    "activeLow": false, "defaultValue": 0 },
+      { "id": "s", "label": "S", "role": "select", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y0", "label": "Y0", "role": "data", "canBeTriState": false },
+      { "id": "y1", "label": "Y1", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign y0 = (s==0) ? d : 1'b0; assign y1 = (s==1) ? d : 1'b0;",
+    "vhdlNotes": "y0 <= d when s='0' else '0'; y1 <= d when s='1' else '0';",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify: S=0→Y0=D,Y1=0; S=1→Y0=0,Y1=D."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

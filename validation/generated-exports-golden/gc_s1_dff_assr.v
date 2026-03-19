@@ -17,7 +17,7 @@ module gc_s1_dff_assr (
     if      (r)  w_0 <= 1'b0;
     else if (s)  w_0 <= 1'b1;
     else begin
-      w_0 <= d;
+    w_0 <= d;
     end
   end // D-FF/ASSR dut
   assign w_dut_q_n = ~w_0;

@@ -1,0 +1,57 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "CMP1",
+  "label": "CMP",
+  "category": "arith",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "1-bit magnitude comparator. Compares A and B, asserts eq/gt/lt."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "a", "label": "A", "role": "data", "activeLow": false, "defaultValue": 0 },
+      { "id": "b", "label": "B", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "eq", "label": "=",  "role": "zero",     "canBeTriState": false },
+      { "id": "gt", "label": ">",  "role": "overflow", "canBeTriState": false },
+      { "id": "lt", "label": "<",  "role": "overflow", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "assign eq = (a == b); assign gt = (a > b); assign lt = (a < b);",
+    "vhdlNotes": "eq <= '1' when a=b else '0'; gt <= '1' when a>b else '0'; lt <= '1' when a<b else '0';",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Truth table: 00→eq=1,gt=0,lt=0; 01→eq=0,gt=0,lt=1; 10→eq=0,gt=1,lt=0; 11→eq=1,gt=0,lt=0."
+  },
+
+  "risks": [],
+  "modelLimits": []
+}

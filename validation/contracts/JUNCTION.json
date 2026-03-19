@@ -1,0 +1,61 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "JUNCTION",
+  "label": "•",
+  "category": "internal",
+
+  "semantics": {
+    "timingModel": "combinational",
+    "clockEdge": "none",
+    "clockInputId": null,
+    "asyncControls": [],
+    "stateVariables": [],
+    "hasStableUndefinedState": false,
+    "notes": "Internal routing junction. Splits single input into three outputs. propagationDelay=0. No HDL export — internal routing element."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "in", "label": "IN", "role": "data", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "y0", "label": "Y0", "role": "data", "canBeTriState": false },
+      { "id": "y1", "label": "Y1", "role": "data", "canBeTriState": false },
+      { "id": "y2", "label": "Y2", "role": "data", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "not-applicable",
+    "vhdl": "not-applicable",
+    "verilogNotes": "Internal routing element — no HDL export.",
+    "vhdlNotes": "Internal routing element — no HDL export."
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "truth-table-exhaustive"
+    ],
+    "notes": "Verify: Y0=Y1=Y2=IN for all input values."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "Multi-driver scenarios with multiple Junction nodes driving the same output net resolve to X (3) — verified by focused-nine multi_driver_same_input test.",
+      "confirmed": true
+    }
+  ],
+  "modelLimits": [
+    "No HDL export — internal routing only.",
+    "No propagation delay (propagationDelay=0)."
+  ]
+}

@@ -1,28 +1,35 @@
 {
   "version": 1,
-  "verifiedOn": "2026-03-08",
+  "verifiedOn": "2026-03-19",
+  "runnerVersion": "1.8.0",
   "status": {
     "exists": true,
     "executed": true,
     "inCi": true
   },
   "counts": {
-    "indexEntries": 12,
-    "circuitFiles": 12,
-    "verilogExports": 12,
-    "vhdlExports": 12
+    "indexEntries": 24,
+    "circuitFiles": 24,
+    "verilogExports": 24,
+    "vhdlExports": 24
   },
   "coverage": {
     "combinational": [
       "gc_c1_basic_gates",
       "gc_c2_half_adder",
-      "gc_c3_sr_latch"
+      "gc_c3_sr_latch",
+      "gc_v2_1_mux_fabric",
+      "gc_v2_6_custom_halfadder"
     ],
     "sequential": [
       "gc_s1_dff_assr",
       "gc_s2_jkff_toggle",
       "gc_s3_74hc74",
-      "gc_s4_reg4_enable"
+      "gc_s4_reg4_enable",
+      "gc_s5_dff_basic",
+      "gc_s7_hc161_vs_hc163",
+      "gc_s8_hc194_modes",
+      "gc_v2_8_sequential_feedback"
     ],
     "tristate": [
       "gc_t1_tribuf_direct",
@@ -31,7 +38,13 @@
     "mixed": [
       "gc_m1_dff_chain",
       "gc_m2_283_adder",
-      "gc_m3_counter_gate"
+      "gc_m3_counter_gate",
+      "gc_v2_2_datapath_slice",
+      "gc_v2_3_shift_pipeline",
+      "gc_v2_4_ram_readback",
+      "gc_v2_5_decode_tree",
+      "gc_v2_7_bus_conflict_system",
+      "gc_v2_9_custom_reg4_pipeline"
     ]
   },
   "knownBoundaries": [
@@ -41,9 +54,15 @@
       "reason": "Documented exporter limitation / bus modeling boundary"
     }
   ],
+  "externalHdl": {
+    "syntaxLint": true,
+    "scenarioSimulation": true,
+    "scope": "all non-boundary corpus cases"
+  },
   "runnerAcceptanceCriteria": [
-    "discover_all_12_entries",
+    "discover_all_24_entries",
     "resolve_slug_to_circuit_and_exports",
+    "run_external_hdl_checks_for_non_boundary_cases",
     "classify_expected_limit_explicitly",
     "keep_gc_t2_bus_mux_out_of_clean_pass_if_limitation_remains",
     "produce_deterministic_summary",

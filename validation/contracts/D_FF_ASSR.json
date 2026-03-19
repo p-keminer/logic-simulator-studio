@@ -1,0 +1,74 @@
+{
+  "$schema": "../gate-contract-schema.json",
+  "schemaVersion": "1.0",
+  "typeId": "D_FF_ASSR",
+  "label": "D-FF/SR",
+  "category": "flipflop",
+
+  "semantics": {
+    "timingModel": "edge-triggered-rising",
+    "clockEdge": "rising",
+    "clockInputId": "clk",
+    "asyncControls": [
+      { "portId": "s", "effect": "preset", "activeLevel": 1, "activeLow": false },
+      { "portId": "r", "effect": "reset", "activeLevel": 1, "activeLow": false }
+    ],
+    "stateVariables": ["q", "prevClk"],
+    "hasStableUndefinedState": false,
+    "notes": "D flip-flop with asynchronous set and reset. s=1 → Q=1 immediately (async preset). r=1 → Q=0 immediately (async reset). When neither is active, Q captures D at rising clock edge. s=r=1 simultaneously is a forbidden combination (both async controls compete)."
+  },
+
+  "ports": {
+    "inputs": [
+      { "id": "d",   "label": "D",   "role": "data",        "activeLow": false, "defaultValue": 0 },
+      { "id": "clk", "label": "CLK", "role": "clock",       "activeLow": false, "defaultValue": 0 },
+      { "id": "s",   "label": "S",   "role": "async-set",   "activeLow": false, "defaultValue": 0 },
+      { "id": "r",   "label": "R",   "role": "async-reset", "activeLow": false, "defaultValue": 0 }
+    ],
+    "outputs": [
+      { "id": "q",   "label": "Q",   "role": "q",     "canBeTriState": false },
+      { "id": "q_n", "label": "Q̄", "role": "q-bar", "canBeTriState": false }
+    ]
+  },
+
+  "signalModel": {
+    "allowedInputValues": [0, 1],
+    "allowedOutputValues": [0, 1],
+    "hiZInputHandling": "treated-as-0",
+    "busCapable": false
+  },
+
+  "exportSupport": {
+    "verilog": "full",
+    "vhdl": "full",
+    "verilogNotes": "asyncSRWrapVerilog: always @(posedge clk or posedge s or posedge r) begin if (s) q<=1; else if (r) q<=0; else q<=d; end. assign q_n = ~q; verilogWireOutputs=['q_n'].",
+    "vhdlNotes": "asyncSRWrapVHDL: process(clk, s, r) if s='1' then q<='1'; elsif r='1' then q<='0'; elsif rising_edge(clk) then q<=d; end if; q_n <= not q;",
+    "verilogExtraRegs": false,
+    "vhdlExtraSignals": false
+  },
+
+  "testability": {
+    "requiredPatterns": [
+      "async-control-override",
+      "clock-edge-detection",
+      "hold-state",
+      "reset-to-known-state",
+      "sequential-step-sequence",
+      "export-verilog",
+      "export-vhdl"
+    ],
+    "notes": "Verify async set/reset override clock. s=1 → Q=1 regardless of clk. r=1 → Q=0 regardless of clk. Initial Q=0."
+  },
+
+  "risks": [
+    {
+      "class": "core-risk",
+      "description": "s=r=1 simultaneously — both async controls active. Priority: s wins (preset has higher priority in most real 74HC circuits).",
+      "confirmed": false
+    }
+  ],
+  "modelLimits": [
+    "No metastability modelling.",
+    "prevClk hidden state not exposed to STT."
+  ]
+}
