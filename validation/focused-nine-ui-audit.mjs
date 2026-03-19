@@ -12,6 +12,7 @@ const BASE_URL = process.env.LOGICSIM_BASE_URL ?? '<dev-server>';
 const PUBLIC_REPO = '<repo-root>';
 const PUBLIC_SERVER = '<dev-server>';
 const IS_CI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+const APP_NAME = 'Logic Simulator Studio';
 
 fs.mkdirSync(UI_DIR, { recursive: true });
 
@@ -162,7 +163,9 @@ async function loadCircuit(page, file) {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.evaluate((value) => sessionStorage.setItem('lgsim_autosave', value), json);
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.waitForFunction(() => document.body.textContent?.includes('LogicSim'), { timeout: 10000 });
+  await page.waitForFunction((appName) =>
+    document.title.includes(appName) || document.body.textContent?.includes(appName),
+  { timeout: 10000 }, APP_NAME);
 }
 
 async function extractTable(page) {

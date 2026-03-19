@@ -8,6 +8,7 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { TruthTableModal } from '../panels/TruthTableModal';
 import { CustomICModal } from '../panels/CustomICModal';
 import { RacePanel } from '../panels/RacePanel';
+import { APP_NAME } from '../../core/branding';
 
 interface Props {
   showTiming: boolean;
@@ -74,7 +75,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowFsm }: Props) {
           <line x1="16" y1="10" x2="20" y2="10" stroke="currentColor" strokeWidth="1.5"/>
           <circle cx="10" cy="10" r="2" fill="currentColor"/>
         </svg>
-        <span className="text-sm font-bold text-slate-200 font-mono">LogicSim</span>
+        <span className="text-xs md:text-sm font-bold text-slate-200 font-mono tracking-tight">{APP_NAME}</span>
       </div>
 
       <input
