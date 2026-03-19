@@ -111,25 +111,6 @@ export function TimingDiagram({ history, onClose }: Props) {
     });
   }, []);
 
-  // Zeile nach oben/unten verschieben
-  const moveRow = useCallback((key: string, direction: -1 | 1) => {
-    const channelKeys = channels.map((channel) => channel.key);
-    const currentOrder = reconcileRowOrder(rowOrder, channelKeys);
-    const fromIdx = currentOrder.indexOf(key);
-    if (fromIdx === -1) return;
-    const toIdx = fromIdx + direction;
-    if (toIdx < 0 || toIdx >= currentOrder.length) return;
-
-    const next = [...currentOrder];
-    const [moved] = next.splice(fromIdx, 1);
-    next.splice(toIdx, 0, moved);
-    setRowOrder(next);
-  }, [channels, rowOrder]);
-
-  const resetRowOrder = useCallback((nextKeys: string[]) => {
-    setRowOrder(nextKeys);
-  }, []);
-
   // ── Verbundene Gatter-IDs ermitteln ──────────────────────────────────────
   const connectedIds = useMemo(() => {
     const ids = new Set<string>();
@@ -178,6 +159,25 @@ export function TimingDiagram({ history, onClose }: Props) {
 
     return chs;
   }, [circuit, connectedIds]);
+
+  // Zeile nach oben/unten verschieben
+  const moveRow = useCallback((key: string, direction: -1 | 1) => {
+    const channelKeys = channels.map((channel) => channel.key);
+    const currentOrder = reconcileRowOrder(rowOrder, channelKeys);
+    const fromIdx = currentOrder.indexOf(key);
+    if (fromIdx === -1) return;
+    const toIdx = fromIdx + direction;
+    if (toIdx < 0 || toIdx >= currentOrder.length) return;
+
+    const next = [...currentOrder];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setRowOrder(next);
+  }, [channels, rowOrder]);
+
+  const resetRowOrder = useCallback((nextKeys: string[]) => {
+    setRowOrder(nextKeys);
+  }, []);
 
   useEffect(() => {
     const channelKeys = channels.map((channel) => channel.key);
