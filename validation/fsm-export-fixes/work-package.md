@@ -728,3 +728,9 @@ geloest die neuen Projektionsinvarianten absichern:
     Produktautomat reduziert
   - stattdessen muss die STT ein einzelnes vollstaendiges FSM-Subsystem
     auswaehlbar analysieren koennen
+  - aktueller Tradeoff: die Auftrennung erfolgt entlang verbundener Subsysteme.
+    Zwei direkt hintereinandergeschaltete FSMs bilden damit bewusst ein
+    gemeinsames STT-System statt zwei isolierte Auswahleintraege
+  - normale sequentielle Folgeschaltungen, die hinter einer FSM liegen und mit
+    ihr verbunden sind, bleiben dadurch dem jeweiligen verbundenen System
+    zugeordnet und muessen in `Technisch voll` weiterhin sichtbar bleiben

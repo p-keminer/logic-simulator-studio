@@ -270,12 +270,18 @@ Erwartung:
   damit jeweils ein vollstaendiges FSM-Subsystem isoliert analysiert wird.
 - Beim Umschalten auf das erste bzw. zweite System muessen Eingaenge, Zustandsbits
   und Ausgaenge jeweils zu genau diesem FSM-Block passen.
+- Normale sequentielle Folgeschaltungen, die sichtbar an einem dieser
+  Subsysteme haengen, muessen in der gewaehlten `Technisch voll`-Ansicht weiter
+  mit auftauchen.
 - In der STT duÌˆrfen keine kollidierenden Header wie `CLK / CLK` oder `Y / Y`
   mehr sichtbar sein.
 - Im Timing duÌˆrfen dieselben fachlichen Signale nicht mehr uneindeutig doppelt
   benannt auftauchen.
 - Der Single-FSM-Fall behaelt weiter die unveraenderten Basissignale
   `CLK`, `RST`, `A`, `Q0`, `Y`.
+- Tradeoff: Zwei direkt verkettete FSMs gelten aktuell als ein gemeinsames
+  verbundenes System und werden nicht als zwei getrennte `FSM-System`-Eintraege
+  angeboten.
 
 ## Fehlerprotokoll
 
