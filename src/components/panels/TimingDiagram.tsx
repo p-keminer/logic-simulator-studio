@@ -1,7 +1,10 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
-import { buildSequentialProjectionChannels } from '../../core/analysis/sequentialProjection';
+import {
+  buildAnalysisSubsystemOptions,
+  buildSequentialProjectionChannels,
+} from '../../core/analysis/sequentialProjection';
 import type { TimingSnapshot } from '../../core/types';
 
 interface Props { history: TimingSnapshot[]; onClose: () => void; }
@@ -174,6 +177,7 @@ export function TimingDiagram({ history, onClose }: Props) {
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() => initialSelection.keys);
   const [hasCustomSelection, setHasCustomSelection] = useState<boolean>(() => initialSelection.configured);
   const [isSignalMenuOpen, setIsSignalMenuOpen] = useState(false);
+  const [selectedSubsystemKey, setSelectedSubsystemKey] = useState('');
   // true = Nutzer hat zurückgescrollt → Auto-Scroll pausieren
   const userScrolledBackRef             = useRef(false);
 
@@ -210,25 +214,38 @@ export function TimingDiagram({ history, onClose }: Props) {
     setSelectedKeys(nextKeys);
   }, []);
 
+  const analysisSubsystemOptions = useMemo(
+    () => buildAnalysisSubsystemOptions(circuit),
+    [circuit],
+  );
+
+  const activeAnalysisSubsystem = analysisSubsystemOptions.find((option) => option.key === selectedSubsystemKey)
+    ?? analysisSubsystemOptions[0]
+    ?? null;
+
+  const analysisSourceCircuit = analysisSubsystemOptions.length > 1
+    ? (activeAnalysisSubsystem?.circuit ?? circuit)
+    : circuit;
+
   // ── Verbundene Gatter-IDs ermitteln ──────────────────────────────────────
   const connectedIds = useMemo(() => {
     const ids = new Set<string>();
-    for (const w of Object.values(circuit.wires)) {
+    for (const w of Object.values(analysisSourceCircuit.wires)) {
       ids.add(w.from.gateId);
       ids.add(w.to.gateId);
     }
     return ids;
-  }, [circuit]);
+  }, [analysisSourceCircuit]);
 
   // ── Kanäle aufbauen ──────────────────────────────────────────────────────
   // Nur verbundene Gatter; Priorität: Eingänge → Logik → Ausgänge
   const channels = useMemo<TimingChannel[]>(() => {
-    const projectedChannels = buildSequentialProjectionChannels(circuit);
+    const projectedChannels = buildSequentialProjectionChannels(analysisSourceCircuit);
     if (projectedChannels.length > 0) return projectedChannels;
 
     const chs: TimingChannel[] = [];
 
-    const sortedGates = Object.values(circuit.gates)
+    const sortedGates = Object.values(analysisSourceCircuit.gates)
       .filter(g => !SKIP_TYPES.has(g.typeId) && connectedIds.has(g.id))
       .sort((a, b) => {
         const pa = INPUT_TYPES.has(a.typeId) ? 0 : OUTPUT_TYPES.has(a.typeId) ? 2 : 1;
@@ -264,7 +281,7 @@ export function TimingDiagram({ history, onClose }: Props) {
     }
 
     return chs;
-  }, [circuit, connectedIds]);
+  }, [analysisSourceCircuit, connectedIds]);
 
   // Zeile nach oben/unten verschieben
   const moveRow = useCallback((key: string, direction: -1 | 1) => {
@@ -559,6 +576,32 @@ export function TimingDiagram({ history, onClose }: Props) {
             <option value="selected">ausgewählt</option>
           </select>
         </label>
+        {analysisSubsystemOptions.length > 1 && (
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}>
+            <span>System</span>
+            <select
+              aria-label="Timing-System"
+              value={activeAnalysisSubsystem?.key ?? ''}
+              onChange={(event) => setSelectedSubsystemKey(event.target.value)}
+              style={{
+                minWidth: 132,
+                padding: '3px 8px',
+                borderRadius: 4,
+                border: '1px solid #334155',
+                background: '#0f172a',
+                color: '#e2e8f0',
+                fontFamily: 'monospace',
+                fontSize: 11,
+              }}
+            >
+              {analysisSubsystemOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div ref={signalMenuRef} style={{ position: 'relative' }}>
           <button
             type="button"

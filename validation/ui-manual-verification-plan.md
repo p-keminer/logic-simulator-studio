@@ -209,6 +209,29 @@ Erwartung:
   leichter zuzaehlen.
 - Wenn kein Taktkanal sichtbar ist, darf die Achse auch fehlen.
 
+## Abschnitt J2 - Timing Diagramm: System-Selektor bei getrennten Subsystemen
+
+1. Zwei getrennte FSMs auf das Canvas legen.
+2. Zusaetzlich eine komplett getrennte Rohschaltung bauen, z. B.
+   `INPUT_SWITCH -> NOT -> OUTPUT_LED`.
+3. Timing Diagramm oeffnen.
+4. Pruefen, ob ein Dropdown `System` sichtbar ist.
+5. Zwischen:
+   - FSM 1
+   - FSM 2
+   - Rohschaltung
+   umschalten.
+
+Erwartung:
+- Das Timing-Diagramm zeigt immer nur die Kanaele des aktuell ausgewaehlten
+  verbundenen Systems.
+- Die getrennte Rohschaltung wird nicht mehr von den FSM-Kanaelen ueberlagert.
+- Die bestehende Kanal-Auswahl (`vollstaendig` / `ausgewählt`) bleibt dabei
+  funktional.
+- Reihenfolge, Hidden-State und Signalauswahl bleiben stabil und werden beim
+  Umschalten nur auf die gerade sichtbaren Kanaele reconciled, nicht global
+  kaputtgeschrieben.
+
 ## Abschnitt K - Panel-Stabilitaet
 
 1. Zwischen Timing Diagramm, STT und ggf. HDL-Ansicht wechseln.

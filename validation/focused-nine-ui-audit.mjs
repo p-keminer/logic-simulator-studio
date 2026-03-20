@@ -315,6 +315,49 @@ async function extractTimingSemantic(page, slug) {
   return timing;
 }
 
+async function extractTimingSystemAudit(page) {
+  await clickButton(page, 'Timing');
+  await page.waitForFunction(() => document.body.textContent?.includes('ZEITDIAGRAMM'), { timeout: 10000 });
+  await sleep(150);
+
+  const snapshot = () => page.evaluate(() => {
+    const select = document.querySelector('select[aria-label="Timing-System"]');
+    const sidePanelHeader = [...document.querySelectorAll('div')]
+      .find((node) => node.textContent?.trim() === 'SIGNAL-STEUERUNG');
+    const sidePanel = sidePanelHeader?.parentElement;
+    const rowLabels = [...(sidePanel?.querySelectorAll('button[title]:not([aria-label])') ?? [])]
+      .map((node) => node.getAttribute('title')?.trim())
+      .filter(Boolean);
+
+    return {
+      selectExists: Boolean(select),
+      selected: select instanceof HTMLSelectElement ? select.value : null,
+      options: select instanceof HTMLSelectElement
+        ? [...select.options].map((option) => ({ value: option.value, label: option.textContent?.trim() ?? '' }))
+        : [],
+      rowLabels,
+    };
+  });
+
+  const first = await snapshot();
+  let second = null;
+
+  if (first.selectExists && first.options.length > 1) {
+    const nextOption = first.options.find((option) => option.value !== first.selected) ?? first.options[0];
+    await page.evaluate((nextValue) => {
+      const select = document.querySelector('select[aria-label="Timing-System"]');
+      if (!(select instanceof HTMLSelectElement)) throw new Error('Timing-System select missing');
+      select.value = nextValue;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }, nextOption.value);
+    await sleep(150);
+    second = await snapshot();
+  }
+
+  await clickButton(page, 'Timing');
+  return { first, second };
+}
+
 function buildMixedLegacyFsmFallbackFixtureJson() {
   const circuit = JSON.parse(fs.readFileSync(LEGACY_FSM_EXPORT, 'utf8'));
   const rawInputSource = Object.values(circuit.gates).find((gate) => gate?.label === 'A');
@@ -445,6 +488,158 @@ function buildWideProjectedFsmFixtureJson() {
     viewport: { panX: 0, panY: 0, zoom: 1 },
     metadata: { createdAt: '2026-03-20', updatedAt: '2026-03-20' },
   });
+}
+
+function buildTimingSubsystemFixtureJson() {
+  const defaultSignal = { value: 0, version: 0, lastChangedAt: 0 };
+  const batchId = 'ui-audit-timing-fsm';
+  const makeProjectedSignal = (role, label, signalPortId) => ({
+    sourceSystem: 'fsm_synth',
+    projectionBatchId: batchId,
+    role,
+    visibility: 'canonical',
+    signalLabel: label,
+    groupKey: `${role}:${label}`,
+    signalPortId,
+  });
+
+  const circuit = {
+    id: 'ui-audit-timing-subsystem',
+    name: 'UI Audit Timing Subsystem',
+    version: '1.0.0',
+    gates: {
+      clk: {
+        id: 'clk',
+        typeId: 'CLOCK',
+        x: 40,
+        y: 40,
+        label: 'CLK',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('clock', 'CLK', 'clk'),
+      },
+      rst: {
+        id: 'rst',
+        typeId: 'INPUT_SWITCH',
+        x: 40,
+        y: 120,
+        label: 'RST',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('reset', 'RST', 'out'),
+      },
+      inA: {
+        id: 'inA',
+        typeId: 'INPUT_SWITCH',
+        x: 40,
+        y: 200,
+        label: 'A',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('input', 'A', 'out'),
+      },
+      ffQ0: {
+        id: 'ffQ0',
+        typeId: 'D_FF_R',
+        x: 340,
+        y: 120,
+        label: 'Q0',
+        outputSignals: {},
+        customState: { q: 0, prevClk: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('state', 'Q0', 'q'),
+      },
+      outY: {
+        id: 'outY',
+        typeId: 'OUTPUT_LED',
+        x: 560,
+        y: 120,
+        label: 'Y',
+        outputSignals: {},
+        isSelected: false,
+        projection: makeProjectedSignal('output', 'Y', '_display'),
+      },
+      timing_raw_sw: {
+        id: 'timing_raw_sw',
+        typeId: 'INPUT_SWITCH',
+        x: 40,
+        y: 360,
+        label: 'RAW_A',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+      },
+      timing_raw_not: {
+        id: 'timing_raw_not',
+        typeId: 'NOT',
+        x: 220,
+        y: 360,
+        outputSignals: {},
+        customState: {},
+        isSelected: false,
+      },
+      timing_raw_led: {
+        id: 'timing_raw_led',
+        typeId: 'OUTPUT_LED',
+        x: 420,
+        y: 360,
+        label: 'RAW_Y',
+        outputSignals: {},
+        isSelected: false,
+      },
+    },
+    wires: {
+      w1: {
+        id: 'w1',
+        from: { gateId: 'clk', portId: 'clk' },
+        to: { gateId: 'ffQ0', portId: 'clk' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w2: {
+        id: 'w2',
+        from: { gateId: 'rst', portId: 'out' },
+        to: { gateId: 'ffQ0', portId: 'rst' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w3: {
+        id: 'w3',
+        from: { gateId: 'inA', portId: 'out' },
+        to: { gateId: 'ffQ0', portId: 'd' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w4: {
+        id: 'w4',
+        from: { gateId: 'ffQ0', portId: 'q' },
+        to: { gateId: 'outY', portId: 'in' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      raw1: {
+        id: 'raw1',
+        from: { gateId: 'timing_raw_sw', portId: 'out' },
+        to: { gateId: 'timing_raw_not', portId: 'in' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      raw2: {
+        id: 'raw2',
+        from: { gateId: 'timing_raw_not', portId: 'out' },
+        to: { gateId: 'timing_raw_led', portId: 'in' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+    },
+    viewport: { panX: 0, panY: 0, zoom: 1 },
+    metadata: { createdAt: '2026-03-20', updatedAt: '2026-03-20' },
+  };
+
+  return JSON.stringify(circuit);
 }
 
 // ── Semantic timing validation for 5 target cases ────────────────────────────
@@ -599,6 +794,30 @@ function analyzeSttModeChecks(checks) {
   });
 }
 
+function analyzeTimingSystemChecks(checks) {
+  return checks.map((check) => {
+    const first = check.first;
+    const second = check.second;
+    const labelSetsDiffer = !!second
+      && JSON.stringify(first.rowLabels) !== JSON.stringify(second.rowLabels);
+    const clockVisibilityChanged = !!second
+      && first.rowLabels.includes('CLK') !== second.rowLabels.includes('CLK');
+    const pass = first.selectExists
+      && first.options.length >= 2
+      && !!second
+      && second.selected !== first.selected
+      && (labelSetsDiffer || clockVisibilityChanged);
+
+    return {
+      ...check,
+      status: pass ? 'pass' : 'fail',
+      message: pass
+        ? 'Timing system selector switches between disconnected subsystems and changes the visible channel set.'
+        : 'Timing system selector is missing, exposes too few options, or does not change the visible timing channels.',
+    };
+  });
+}
+
 // ── Report rendering ──────────────────────────────────────────────────────────
 
 function renderReport(summary) {
@@ -642,6 +861,12 @@ function renderReport(summary) {
   const fsmModeLines = fsmModeChecks.map((item) =>
     `- \`${item.slug}\`: ${item.status.toUpperCase()} - ${item.message}`,
   ).join('\n') || '- keine';
+  const timingSystemChecks = summary.timingSystemChecks ?? [];
+  const timingSystemPasses = timingSystemChecks.filter((item) => item.status === 'pass');
+  const timingSystemFails = timingSystemChecks.filter((item) => item.status === 'fail');
+  const timingSystemLines = timingSystemChecks.map((item) =>
+    `- \`${item.slug}\`: ${item.status.toUpperCase()} - ${item.message}`,
+  ).join('\n') || '- keine';
 
   return `# Focused High-Risk UI Audit\n\n` +
     `Datum: 2026-03-07\n` +
@@ -657,6 +882,7 @@ function renderReport(summary) {
     `- HDL-Modal war in allen erfolgreich geladenen Faellen textuell konsistent mit den generierten Exportdateien\n` +
     `- Timing-Panel hat in allen erfolgreich geladenen Faellen geoeffnet\n` +
     `- FSM-STT-Modus-Audit: \`${fsmModePasses.length}\` PASS, \`${fsmModeFails.length}\` FAIL\n` +
+    `- Timing-System-Audit: \`${timingSystemPasses.length}\` PASS, \`${timingSystemFails.length}\` FAIL\n` +
     `- Semantischer Timing-Check fuer ${semanticResults.length} Fokusfaelle: ` +
     `\`${semanticPasses.length}\` PASS, \`${semanticWarns.length}\` WARN` +
     `${semanticWarns.length > 0 ? ' (steps=0, headless RAF-Limit)' : ''}\n\n` +
@@ -676,6 +902,8 @@ function renderReport(summary) {
     `${errorLines}\n\n` +
     `## FSM-STT-Modus-Pruefung\n\n` +
     `${fsmModeLines}\n\n` +
+    `## Timing-System-Pruefung\n\n` +
+    `${timingSystemLines}\n\n` +
     `## Semantische Timing-Pruefung (5 Fokusfaelle)\n\n` +
     `Fuer \`tri_not_sanitized\`, \`dff_led\`, \`jkff_led\`, \`tff_led\` und \`multi_driver_same_input\` ` +
     `wird jetzt nicht nur geprueft, ob das Panel laedt, sondern:\n` +
@@ -711,6 +939,7 @@ const SEMANTIC_SLUGS = new Set(Object.keys(TIMING_SEMANTIC));
 const browser = await puppeteer.launch(buildBrowserLaunchOptions());
 const results = [];
 const fsmModeChecks = [];
+const timingSystemChecks = [];
 
 for (const item of SUMMARY.cases) {
   const page = await browser.newPage();
@@ -805,13 +1034,41 @@ for (const modeCase of [
   }
 }
 
+for (const timingCase of [
+  {
+    slug: 'timing_subsystem_selector',
+    load: (page) => loadCircuitJson(page, buildTimingSubsystemFixtureJson()),
+  },
+]) {
+  const page = await browser.newPage();
+  page.setDefaultTimeout(30000);
+  try {
+    await timingCase.load(page);
+    const result = await extractTimingSystemAudit(page);
+    timingSystemChecks.push({
+      slug: timingCase.slug,
+      ...result,
+    });
+  } catch (error) {
+    timingSystemChecks.push({
+      slug: timingCase.slug,
+      status: 'fail',
+      message: sanitizePublicText(error),
+    });
+  } finally {
+    await page.close();
+  }
+}
+
 await browser.close();
 const analyzedFsmModeChecks = analyzeSttModeChecks(fsmModeChecks);
+const analyzedTimingSystemChecks = analyzeTimingSystemChecks(timingSystemChecks);
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: PUBLIC_SERVER,
   results,
   fsmModeChecks: analyzedFsmModeChecks,
+  timingSystemChecks: analyzedTimingSystemChecks,
 };
 fs.writeFileSync(path.join(OUT_DIR, 'focused-nine-ui-summary.json'), JSON.stringify(summary, null, 2));
 fs.writeFileSync(REPORT_FILE, renderReport(summary));

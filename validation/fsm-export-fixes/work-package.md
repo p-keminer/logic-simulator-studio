@@ -106,6 +106,19 @@ durch manuelles Nachpatchen einzelner Schaltungen gepflegt werden muss.
   - dadurch bleibt eine manuell aufgebaute Rohschaltung neben mehreren FSMs
     weiter in der Wahrheitstabelle/STT erreichbar, statt hinter dem
     Mehrfach-FSM-Fallback zu verschwinden
+- das Timing-Diagramm nutzt jetzt dieselbe Subsystem-Auswahl wie die STT:
+  - bei mehreren getrennten verbundenen Systemen kann gezielt zwischen
+    projizierten FSMs und vollstaendig getrennten Rohschaltungen gewechselt
+    werden
+  - dabei bleiben Kanal-Keys, Sortierung, Hidden-State und Signalauswahl
+    bewusst auf dem bestehenden Timing-Unterbau und werden nur auf das aktive
+    System reconciled
+- der Mehrfach-FSM-HDL-Export behaelt jetzt auch an der Top-Level-
+  Schnittstelle die kanonischen Namen:
+  - `CLK`, `CLK_1`, ...
+  - fachliche Outputs wie `Y`, `Y_1`
+  - State-Ausgaenge wie `Q0`, `Q0_1`
+  - die generischen Nicht-FSM-Exporte bleiben davon unberuehrt
 
 Bewusst noch offen:
 - der neue STT-Kern ist absichtlich noch schmal und bildet nur den bereits
