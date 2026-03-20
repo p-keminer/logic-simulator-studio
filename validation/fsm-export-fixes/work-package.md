@@ -82,6 +82,9 @@ durch manuelles Nachpatchen einzelner Schaltungen gepflegt werden muss.
   Modusfaelle: projected FSM mit Umschaltung zwischen `FSM kompakt` und
   `Technisch voll`, plus gemischter Legacy-Fallback ohne irrefuehrenden
   Kompakt-Dropdown
+- der focused-nine UI-Audit deckt jetzt auch die breite reduzierte projected
+  FSM-Sicht browserseitig ab und prueft zusaetzlich die semantischen
+  Erklaerungstexte fuer `FSM kompakt` sowie den technischen Fallback-Hinweis
 
 Bewusst noch offen:
 - der neue STT-Kern ist absichtlich noch schmal und bildet nur den bereits

@@ -204,6 +204,7 @@ async function extractSttModeAudit(page, switchToTechnical = false) {
     const headers = [...document.querySelectorAll('table thead tr:last-child th')]
       .map((node) => node.textContent?.trim())
       .filter(Boolean);
+    const text = (document.body.textContent ?? '').replace(/\s+/g, ' ').trim();
     return {
       title: [...document.querySelectorAll('h2')].map((node) => node.textContent?.trim()).find(Boolean) ?? '',
       selectExists: Boolean(select),
@@ -214,6 +215,8 @@ async function extractSttModeAudit(page, switchToTechnical = false) {
       headers,
       rowCount: document.querySelectorAll('table tbody tr').length,
       paragraphs: [...document.querySelectorAll('p')].map((node) => node.textContent?.trim()).filter(Boolean),
+      hasCompactExplanation: text.includes('FSM kompakt:'),
+      hasFallbackExplanation: text.includes('Ansicht bleibt technisch voll'),
     };
   });
 
@@ -347,6 +350,103 @@ function buildMixedLegacyFsmFallbackFixtureJson() {
   return JSON.stringify(circuit);
 }
 
+function buildWideProjectedFsmFixtureJson() {
+  const defaultSignal = { value: 0, version: 0, lastChangedAt: 0 };
+  const batchId = 'ui-audit-wide-fsm';
+
+  const makeGate = (id, typeId, x, y, extra = {}) => ({
+    id,
+    typeId,
+    x,
+    y,
+    outputSignals: {},
+    customState: {},
+    isSelected: false,
+    ...extra,
+  });
+
+  const makeProjectedSignal = (role, label, signalPortId) => ({
+    sourceSystem: 'fsm_synth',
+    projectionBatchId: batchId,
+    role,
+    visibility: 'canonical',
+    signalLabel: label,
+    groupKey: `${role}:${label}`,
+    signalPortId,
+  });
+
+  const makeWire = (id, fromGateId, fromPortId, toGateId, toPortId) => ({
+    id,
+    from: { gateId: fromGateId, portId: fromPortId },
+    to: { gateId: toGateId, portId: toPortId },
+    signal: { ...defaultSignal },
+    isSelected: false,
+  });
+
+  const gates = {
+    clk: makeGate('clk', 'CLOCK', 40, 40, {
+      label: 'CLK',
+      customState: { value: 0 },
+      projection: makeProjectedSignal('clock', 'CLK', 'clk'),
+    }),
+    rst: makeGate('rst', 'INPUT_SWITCH', 40, 120, {
+      label: 'RST',
+      customState: { value: 0 },
+      projection: makeProjectedSignal('reset', 'RST', 'out'),
+    }),
+    q0: makeGate('q0', 'D_FF_R', 520, 80, {
+      label: 'Q0',
+      customState: { q: 0, prevClk: 0 },
+      projection: makeProjectedSignal('state', 'Q0', 'q'),
+    }),
+    q1: makeGate('q1', 'D_FF_R', 520, 180, {
+      label: 'Q1',
+      customState: { q: 0, prevClk: 0 },
+      projection: makeProjectedSignal('state', 'Q1', 'q'),
+    }),
+    outY: makeGate('outY', 'OUTPUT_LED', 860, 80, {
+      label: 'Y',
+      projection: makeProjectedSignal('output', 'Y', '_display'),
+    }),
+  };
+
+  for (let index = 0; index < 6; index += 1) {
+    gates[`in${index}`] = makeGate(`in${index}`, 'INPUT_SWITCH', 40, 220 + index * 60, {
+      label: `A${index}`,
+      customState: { value: 0 },
+      projection: makeProjectedSignal('input', `A${index}`, 'out'),
+    });
+    gates[`tap${index}`] = makeGate(`tap${index}`, 'OUTPUT_LED', 860, 180 + index * 60, {
+      label: `T${index}`,
+      projection: makeProjectedSignal('output', `T${index}`, '_display'),
+    });
+  }
+
+  const wires = {
+    w1: makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+    w2: makeWire('w2', 'clk', 'clk', 'q1', 'clk'),
+    w3: makeWire('w3', 'rst', 'out', 'q0', 'rst'),
+    w4: makeWire('w4', 'rst', 'out', 'q1', 'rst'),
+    w5: makeWire('w5', 'in0', 'out', 'q0', 'd'),
+    w6: makeWire('w6', 'q0', 'q', 'q1', 'd'),
+    w7: makeWire('w7', 'q0', 'q', 'outY', 'in'),
+  };
+
+  for (let index = 0; index < 6; index += 1) {
+    wires[`tap-wire-${index}`] = makeWire(`tap-wire-${index}`, `in${index}`, 'out', `tap${index}`, 'in');
+  }
+
+  return JSON.stringify({
+    id: 'ui-audit-wide-projected-fsm',
+    name: 'UI Audit Wide Projected FSM',
+    version: '1.0.0',
+    gates,
+    wires,
+    viewport: { panX: 0, panY: 0, zoom: 1 },
+    metadata: { createdAt: '2026-03-20', updatedAt: '2026-03-20' },
+  });
+}
+
 // ── Semantic timing validation for 5 target cases ────────────────────────────
 
 function checkTimingSemantic(slug, timingSem) {
@@ -449,6 +549,7 @@ function analyzeSttModeChecks(checks) {
         && compact.options.some((option) => option.value === 'fsm_compact')
         && compact.options.some((option) => option.value === 'technical_full')
         && !compact.headers.includes('CLK')
+        && compact.hasCompactExplanation
         && !!technical
         && technical.selected === 'technical_full'
         && technical.headers.includes('CLK')
@@ -463,13 +564,30 @@ function analyzeSttModeChecks(checks) {
     }
 
     if (check.slug === 'fsm_mixed_fallback') {
-      const pass = !check.compact.selectExists && check.compact.headers.includes('CLK');
+      const pass = !check.compact.selectExists
+        && check.compact.headers.includes('CLK')
+        && check.compact.hasFallbackExplanation;
       return {
         ...check,
         status: pass ? 'pass' : 'fail',
         message: pass
-          ? 'Mixed FSM/raw case stays in technical-full mode without a misleading compact dropdown.'
-          : 'Mixed FSM/raw fallback still exposes a compact dropdown or no longer shows the technical clock dimension.',
+          ? 'Mixed FSM/raw case stays in technical-full mode and renders the fallback explanation without a misleading compact dropdown.'
+          : 'Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation.',
+      };
+    }
+
+    if (check.slug === 'fsm_projected_reduced') {
+      const hasReducedHint = check.compact.paragraphs.some((line) => /Reduzierte/i.test(line));
+      const pass = !check.compact.selectExists
+        && !check.compact.headers.includes('CLK')
+        && check.compact.rowCount > 0
+        && hasReducedHint;
+      return {
+        ...check,
+        status: pass ? 'pass' : 'fail',
+        message: pass
+          ? 'Wide projected FSM stays in the reduced compact view and does not expose a misleading technical-full dropdown.'
+          : 'Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints.',
       };
     }
 
@@ -659,6 +777,11 @@ for (const modeCase of [
   {
     slug: 'fsm_mixed_fallback',
     load: (page) => loadCircuitJson(page, buildMixedLegacyFsmFallbackFixtureJson()),
+    switchToTechnical: false,
+  },
+  {
+    slug: 'fsm_projected_reduced',
+    load: (page) => loadCircuitJson(page, buildWideProjectedFsmFixtureJson()),
     switchToTechnical: false,
   },
 ]) {

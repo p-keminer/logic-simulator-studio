@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T11:16:15.879Z",
+  "generatedAt": "2026-03-20T11:46:57.964Z",
   "baseUrl": "<dev-server>",
   "results": [
     {
@@ -654,7 +654,9 @@
           "• Strg+Klick Draht: Löschen",
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
-        ]
+        ],
+        "hasCompactExplanation": true,
+        "hasFallbackExplanation": false
       },
       "technical": {
         "title": "Zustandsübergangstabelle",
@@ -698,7 +700,9 @@
           "• Strg+Klick Draht: Löschen",
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
-        ]
+        ],
+        "hasCompactExplanation": false,
+        "hasFallbackExplanation": false
       },
       "status": "pass",
       "message": "Projected FSM exposes compact + technical STT modes with distinct table shapes."
@@ -742,11 +746,62 @@
           "• Strg+Klick Draht: Löschen",
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
-        ]
+        ],
+        "hasCompactExplanation": false,
+        "hasFallbackExplanation": true
       },
       "technical": null,
       "status": "pass",
-      "message": "Mixed FSM/raw case stays in technical-full mode without a misleading compact dropdown."
+      "message": "Mixed FSM/raw case stays in technical-full mode and renders the fallback explanation without a misleading compact dropdown."
+    },
+    {
+      "slug": "fsm_projected_reduced",
+      "compact": {
+        "title": "Zustandsübergangstabelle",
+        "selectExists": false,
+        "selected": null,
+        "options": [],
+        "headers": [
+          "A0",
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "│",
+          "Q0",
+          "│",
+          "Q0′",
+          "│",
+          "T0",
+          "T1",
+          "T2",
+          "T3",
+          "T4",
+          "T5",
+          "Y"
+        ],
+        "rowCount": 64,
+        "paragraphs": [
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "FSM kompakt: Takt als Übergangsereignis, Resetfälle im technischen Modus. | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 256 Zeilen nicht darstellbar",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ],
+        "hasCompactExplanation": true,
+        "hasFallbackExplanation": false
+      },
+      "technical": null,
+      "status": "pass",
+      "message": "Wide projected FSM stays in the reduced compact view and does not expose a misleading technical-full dropdown."
     }
   ]
 }
