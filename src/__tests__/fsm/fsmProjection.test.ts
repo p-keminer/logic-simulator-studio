@@ -51,6 +51,23 @@ function loadLegacyFsmExportFixture(): Circuit {
   return legacyFsmExportFixture as Circuit;
 }
 
+function makeProjection(
+  batchId: string,
+  role: 'clock' | 'reset' | 'input' | 'state' | 'output',
+  signalLabel: string,
+  signalPortId?: string,
+) {
+  return {
+    sourceSystem: 'fsm_synth' as const,
+    projectionBatchId: batchId,
+    role,
+    visibility: 'canonical' as const,
+    signalLabel,
+    groupKey: `${role}:${signalLabel}`,
+    signalPortId,
+  };
+}
+
 describe('FSM projection metadata', () => {
   it('annotates synthesized FSM gates with canonical and derived projection roles', () => {
     const sA = 'state-a';
@@ -242,6 +259,97 @@ describe('FSM projection metadata', () => {
 
     expect(buildProjectedSequentialSttGates(mixedCircuit)).toBeNull();
     expect(buildSequentialProjectionChannels(mixedCircuit)).toEqual([]);
+  });
+
+  it('deduplicates subsystem selector entries when a malformed circuit reuses one projection batch across disconnected components', () => {
+    const batchId = 'shared-batch';
+    const circuit: Circuit = {
+      ...emptyCircuit(),
+      gates: {
+        clk: {
+          id: 'clk',
+          typeId: 'CLOCK',
+          x: 0,
+          y: 0,
+          label: 'CLK',
+          projection: makeProjection(batchId, 'clock', 'CLK', 'clk'),
+        } as GateInstance,
+        rst: {
+          id: 'rst',
+          typeId: 'INPUT_SWITCH',
+          x: 0,
+          y: 80,
+          label: 'RST',
+          outputSignals: {},
+          isSelected: false,
+          customState: { value: 0 },
+          projection: makeProjection(batchId, 'reset', 'RST', 'out'),
+        } as GateInstance,
+        inA: {
+          id: 'inA',
+          typeId: 'INPUT_SWITCH',
+          x: 0,
+          y: 160,
+          label: 'A',
+          outputSignals: {},
+          isSelected: false,
+          customState: { value: 0 },
+          projection: makeProjection(batchId, 'input', 'A', 'out'),
+        } as GateInstance,
+        ffQ0: {
+          id: 'ffQ0',
+          typeId: 'D_FF_R',
+          x: 220,
+          y: 80,
+          label: 'Q0',
+          outputSignals: {},
+          isSelected: false,
+          customState: { q: 0, prevClk: 0 },
+          projection: makeProjection(batchId, 'state', 'Q0', 'q'),
+        } as GateInstance,
+        outY: {
+          id: 'outY',
+          typeId: 'OUTPUT_LED',
+          x: 420,
+          y: 80,
+          label: 'Y',
+          projection: makeProjection(batchId, 'output', 'Y', '_display'),
+        } as GateInstance,
+        tapIn: {
+          id: 'tapIn',
+          typeId: 'INPUT_SWITCH',
+          x: 0,
+          y: 320,
+          label: 'TAP_A',
+          outputSignals: {},
+          isSelected: false,
+          customState: { value: 0 },
+          projection: makeProjection(batchId, 'input', 'TAP_A', 'out'),
+        } as GateInstance,
+        tapOut: {
+          id: 'tapOut',
+          typeId: 'OUTPUT_LED',
+          x: 220,
+          y: 320,
+          label: 'TAP_Y',
+          projection: makeProjection(batchId, 'output', 'TAP_Y', '_display'),
+        } as GateInstance,
+      },
+      wires: {
+        w1: { id: 'w1', from: { gateId: 'clk', portId: 'clk' }, to: { gateId: 'ffQ0', portId: 'clk' } } as Wire,
+        w2: { id: 'w2', from: { gateId: 'rst', portId: 'out' }, to: { gateId: 'ffQ0', portId: 'rst' } } as Wire,
+        w3: { id: 'w3', from: { gateId: 'inA', portId: 'out' }, to: { gateId: 'ffQ0', portId: 'd' } } as Wire,
+        w4: { id: 'w4', from: { gateId: 'ffQ0', portId: 'q' }, to: { gateId: 'outY', portId: 'in' } } as Wire,
+        w5: { id: 'w5', from: { gateId: 'tapIn', portId: 'out' }, to: { gateId: 'tapOut', portId: 'in' } } as Wire,
+      },
+    };
+
+    const projectedOptions = buildProjectedFsmSubsystemOptions(circuit);
+    expect(projectedOptions).toHaveLength(1);
+    expect(projectedOptions[0].label).toBe('Y');
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    expect(analysisOptions.filter((option) => option.kind === 'projected_fsm')).toHaveLength(1);
   });
 
   it('keeps technical-full labels distinct when two synthesized FSMs share the same base signal names', () => {

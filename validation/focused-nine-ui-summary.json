@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T16:58:32.941Z",
+  "generatedAt": "2026-03-20T17:03:41.330Z",
   "baseUrl": "<dev-server>",
   "results": [
     {
@@ -711,20 +711,14 @@
       "slug": "fsm_mixed_fallback",
       "compact": {
         "title": "Zustandsuebergangstabelle",
-        "selectExists": true,
-        "selected": "fsm_compact",
-        "options": [
-          {
-            "value": "fsm_compact",
-            "label": "FSM kompakt"
-          },
-          {
-            "value": "technical_full",
-            "label": "Technisch voll"
-          }
-        ],
+        "selectExists": false,
+        "selected": null,
+        "options": [],
         "headers": [
+          "CLK",
+          "RST",
           "A",
+          "RAW_BTN",
           "|",
           "Q0",
           "Q1",
@@ -732,12 +726,64 @@
           "Q0'",
           "Q1'",
           "|",
-          "Y"
+          "RAW_LED",
+          "Y",
+          "Q0",
+          "Q1"
         ],
-        "rowCount": 8,
+        "rowCount": 64,
         "paragraphs": [
           "[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - Zustandsanalyse",
-          "FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)",
+          "' = Zustand nach einem Simulationsschritt (Settle-Phase) | [*] = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ],
+        "hasCompactExplanation": false,
+        "hasFallbackExplanation": true
+      },
+      "technical": null,
+      "status": "pass",
+      "message": "Mixed FSM/raw case stays in technical-full mode and renders the fallback explanation without a misleading compact dropdown."
+    },
+    {
+      "slug": "fsm_projected_reduced",
+      "compact": {
+        "title": "Zustandsuebergangstabelle",
+        "selectExists": false,
+        "selected": null,
+        "options": [],
+        "headers": [
+          "A0",
+          "A1",
+          "A2",
+          "A3",
+          "A4",
+          "|",
+          "Q0",
+          "|",
+          "Q0'",
+          "|",
+          "T0",
+          "T1",
+          "T2",
+          "T3",
+          "T4",
+          "T5",
+          "Y"
+        ],
+        "rowCount": 64,
+        "paragraphs": [
+          "[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - Zustandsanalyse",
+          "FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht - vollstaendige Analyse bei 256 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -754,41 +800,8 @@
         "hasFallbackExplanation": false
       },
       "technical": null,
-      "status": "fail",
-      "message": "Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation."
-    },
-    {
-      "slug": "fsm_projected_reduced",
-      "compact": {
-        "title": "Wahrheitstabelle",
-        "selectExists": false,
-        "selected": null,
-        "options": [],
-        "headers": [
-          "A5",
-          "|",
-          "T5"
-        ],
-        "rowCount": 2,
-        "paragraphs": [
-          "Ziehen zum Platzieren",
-          "• Doppelklick: Umschalten / Umbenennen",
-          "• R: Gatter drehen",
-          "• Strg+C/V: Kopieren / Einfügen",
-          "• Lasso → Pfeiltasten: Gatter verschieben",
-          "• Klick auf Port: Draht",
-          "• Klick auf Canvas: Wegpunkt",
-          "• Rechtsklick Draht: Farbe",
-          "• Strg+Klick Draht: Löschen",
-          "• Alt+Ziehen: Verschieben",
-          "• Entf: Auswahl löschen"
-        ],
-        "hasCompactExplanation": false,
-        "hasFallbackExplanation": false
-      },
-      "technical": null,
-      "status": "fail",
-      "message": "Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints."
+      "status": "pass",
+      "message": "Wide projected FSM stays in the reduced compact view and does not expose a misleading technical-full dropdown."
     }
   ],
   "timingSystemChecks": [

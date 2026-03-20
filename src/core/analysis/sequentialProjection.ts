@@ -450,14 +450,26 @@ export function buildProjectedFsmSubsystemOptions(circuit: Circuit): ProjectedFs
       ?? inputLabels.find((entry) => entry !== 'CLK' && entry !== 'RST')
       ?? `FSM ${options.length + 1}`;
 
-    options.push({
+    const nextOption: ProjectedFsmSubsystemOption = {
       key: batchId,
       batchId,
       label,
       circuit: subcircuit,
       inputLabels,
       outputLabels,
-    });
+    };
+
+    const existingIndex = options.findIndex((option) => option.batchId === batchId);
+    if (existingIndex === -1) {
+      options.push(nextOption);
+      continue;
+    }
+
+    const existingGateCount = Object.keys(options[existingIndex].circuit.gates).length;
+    const nextGateCount = Object.keys(subcircuit.gates).length;
+    if (nextGateCount > existingGateCount) {
+      options[existingIndex] = nextOption;
+    }
   }
 
   return options.sort((a, b) => a.label.localeCompare(b.label));
@@ -511,6 +523,9 @@ export function buildAnalysisSubsystemOptions(circuit: Circuit): AnalysisSubsyst
     if (batchIds.size === 1) {
       const projectedOption = projectedOptionByBatchId.get([...batchIds][0]!);
       if (projectedOption) {
+        if (options.some((option) => option.key === projectedOption.key)) {
+          continue;
+        }
         options.push({
           key: projectedOption.key,
           label: projectedOption.label,

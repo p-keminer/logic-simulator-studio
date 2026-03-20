@@ -113,6 +113,11 @@ durch manuelles Nachpatchen einzelner Schaltungen gepflegt werden muss.
   - dabei bleiben Kanal-Keys, Sortierung, Hidden-State und Signalauswahl
     bewusst auf dem bestehenden Timing-Unterbau und werden nur auf das aktive
     System reconciled
+- die Subsystem-Auswahl dedupliziert jetzt Mehrfach-Eintraege derselben
+  `projectionBatchId`, falls ein fehlerhafter oder kuenstlicher Fixture-Fall
+  dieselbe Batch ueber mehrere getrennte Komponenten spannt:
+  - im Projected-Selector bleibt pro Batch nur eine Option sichtbar
+  - die groessere/inhaltlich vollstaendigere Komponente gewinnt dabei
 - der Mehrfach-FSM-HDL-Export behaelt jetzt auch an der Top-Level-
   Schnittstelle die kanonischen Namen:
   - `CLK`, `CLK_1`, ...
