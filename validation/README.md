@@ -2,7 +2,7 @@
 
 **Projekt:** logic-gate-simulator
 **Stand:** 2026-03-20
-**Qualitaetsstand:** 883/883 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
+**Qualitaetsstand:** 884/884 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Metrik | Wert |
 |---|---|
-| Vitest-Suite | **883/883** pass |
+| Vitest-Suite | **884/884** pass |
 | Build | pass (`tsc -b` + `vite build`) |
 | Lint | pass |
 | Contract Runner v1 | **447 pass, 0 fail, 0 unsupported** (447 total) |

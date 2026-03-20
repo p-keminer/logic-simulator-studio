@@ -387,6 +387,14 @@ describe('stateTransitionTable', () => {
     })).toEqual(['technical_full']);
   });
 
+  it('keeps projected FSM tables in technical mode when more than one clock role is present', () => {
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'projected',
+      isProjectedFsmView: true,
+      inputRoles: { clkA: 'clock', clkB: 'clock', rst: 'reset', a: 'input' },
+    })).toEqual(['technical_full']);
+  });
+
   it('maps fallback projection statuses to stable explanatory notes', () => {
     expect(getStateTransitionFallbackNote('fallback_partial_state'))
       .toContain('nicht alle Zustandsbits');
