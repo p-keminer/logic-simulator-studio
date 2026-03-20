@@ -35,6 +35,12 @@ export interface ProjectedFsmSubsystemOption {
   inputLabels: string[];
   outputLabels: string[];
 }
+export interface AnalysisSubsystemOption {
+  key: string;
+  label: string;
+  circuit: Circuit;
+  kind: 'projected_fsm' | 'generic';
+}
 
 export interface StateTransitionProjectionStateVar {
   gateId: string;
@@ -452,6 +458,76 @@ export function buildProjectedFsmSubsystemOptions(circuit: Circuit): ProjectedFs
       inputLabels,
       outputLabels,
     });
+  }
+
+  return options.sort((a, b) => a.label.localeCompare(b.label));
+}
+function buildGenericSubsystemLabel(circuit: Circuit, fallbackIndex: number): string {
+  const connectedIds = getConnectedGateIds(circuit);
+  const gates = Object.values(circuit.gates)
+    .filter((gate) => connectedIds.has(gate.id))
+    .sort((a, b) => {
+      const xDiff = a.x - b.x;
+      if (xDiff !== 0) return xDiff;
+      return a.y - b.y;
+    });
+
+  const outputs = gates
+    .filter((gate) => OUTPUT_TYPES.has(gate.typeId))
+    .map((gate) => trimLabel(gate))
+    .filter(Boolean);
+  if (outputs.length > 0) return outputs[0];
+
+  const namedInputs = gates
+    .filter((gate) => INPUT_TYPES.has(gate.typeId))
+    .map((gate) => trimLabel(gate))
+    .filter((label) => label && label !== 'CLK' && label !== 'RST');
+  if (namedInputs.length > 0) return namedInputs[0];
+
+  const firstNamedGate = gates.map((gate) => trimLabel(gate)).find(Boolean);
+  return firstNamedGate || `System ${fallbackIndex}`;
+}
+
+export function buildAnalysisSubsystemOptions(circuit: Circuit): AnalysisSubsystemOption[] {
+  const projectedOptions = buildProjectedFsmSubsystemOptions(circuit);
+  const projectedOptionByBatchId = new Map(projectedOptions.map((option) => [option.batchId, option]));
+  const projectionLookup = getProjectionLookup(circuit);
+
+  const options: AnalysisSubsystemOption[] = [];
+  let genericIndex = 1;
+
+  for (const gateIds of getConnectedComponents(circuit)) {
+    const subcircuit = buildCircuitSubset(circuit, gateIds);
+    const connectedIds = getConnectedGateIds(subcircuit);
+    const connectedGates = Object.values(subcircuit.gates).filter((gate) => connectedIds.has(gate.id));
+    if (connectedGates.length === 0) continue;
+
+    const batchIds = new Set(
+      connectedGates
+        .map((gate) => (projectionLookup.get(gate.id) ?? gate.projection)?.projectionBatchId)
+        .filter((batchId): batchId is string => Boolean(batchId)),
+    );
+
+    if (batchIds.size === 1) {
+      const projectedOption = projectedOptionByBatchId.get([...batchIds][0]!);
+      if (projectedOption) {
+        options.push({
+          key: projectedOption.key,
+          label: projectedOption.label,
+          circuit: projectedOption.circuit,
+          kind: 'projected_fsm',
+        });
+        continue;
+      }
+    }
+
+    options.push({
+      key: `system:${genericIndex}`,
+      label: buildGenericSubsystemLabel(subcircuit, genericIndex),
+      circuit: subcircuit,
+      kind: 'generic',
+    });
+    genericIndex++;
   }
 
   return options.sort((a, b) => a.label.localeCompare(b.label));

@@ -259,14 +259,14 @@ Erwartung:
    ebenfalls mit `CLK`, `RST`, `A`, `Q0`, `Y`.
 3. Sicherstellen, dass beide FSMs gleichzeitig auf dem Canvas liegen.
 4. Zustandsuebergangstabelle oeffnen.
-5. Den Dropdown `FSM-System` pruefen.
+5. Den Dropdown `System` pruefen.
 6. Zwischen beiden Systemen umschalten.
 7. Timing Diagramm oeffnen.
 
 Erwartung:
 - Die zweite Synthese bekommt eindeutige kanonische Signalnamen, z. B.
   `CLK_1`, `RST_1`, `A_1`, `Q0_1`, `Y_1`.
-- In der STT erscheint fuer Mehrfach-FSM-Faelle ein `FSM-System`-Selektor,
+- In der STT erscheint fuer Mehrfach-FSM-Faelle ein `System`-Selektor,
   damit jeweils ein vollstaendiges FSM-Subsystem isoliert analysiert wird.
 - Beim Umschalten auf das erste bzw. zweite System muessen Eingaenge, Zustandsbits
   und Ausgaenge jeweils zu genau diesem FSM-Block passen.
@@ -280,8 +280,26 @@ Erwartung:
 - Der Single-FSM-Fall behaelt weiter die unveraenderten Basissignale
   `CLK`, `RST`, `A`, `Q0`, `Y`.
 - Tradeoff: Zwei direkt verkettete FSMs gelten aktuell als ein gemeinsames
-  verbundenes System und werden nicht als zwei getrennte `FSM-System`-Eintraege
+  verbundenes System und werden nicht als zwei getrennte `System`-Eintraege
   angeboten.
+
+## Abschnitt Q - Mehrere FSMs plus getrennte Rohschaltung
+
+1. Zwei getrennte FSMs gleichzeitig auf das Canvas legen.
+2. Zusaetzlich eine komplett getrennte Rohschaltung aufbauen, z. B.
+   `INPUT_SWITCH -> NOT -> OUTPUT_LED`, ohne Verbindung zu einer der FSMs.
+3. Wahrheitstabelle bzw. STT oeffnen.
+4. Den Dropdown `System` pruefen.
+5. Zwischen den beiden FSM-Systemen und der Rohschaltung umschalten.
+
+Erwartung:
+- Der `System`-Selektor bietet nicht nur die beiden FSM-Systeme an, sondern
+  auch die getrennte Rohschaltung.
+- Beim Umschalten auf die Rohschaltung wird deren eigene Wahrheitstabelle bzw.
+  ihr eigener Analysemodus gezeigt.
+- Die Rohschaltung wird nicht von der Mehrfach-FSM-Logik verschluckt.
+- Beim Umschalten zurueck auf eine FSM bleiben deren Eingaenge, Zustandsbits
+  und Ausgaenge sauber isoliert.
 
 ## Abschnitt P - Copy/Paste und Duplicate von synthetisierten FSMs
 

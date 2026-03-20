@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { Circuit, GateInstance, Wire } from '../../core/types';
 import {
   buildStateTransitionProjection,
+  buildAnalysisSubsystemOptions,
   buildProjectedFsmSubsystemOptions,
   buildProjectedSequentialSttGates,
   buildSequentialProjectionChannels,
@@ -358,6 +359,92 @@ describe('FSM projection metadata', () => {
     expect(buildProjectedSequentialSttGates(firstSubsystem!.circuit)?.outputs.map((gate) => gate.label)).toEqual(['Y']);
     expect(buildProjectedSequentialSttGates(secondSubsystem!.circuit)?.inputs.map((gate) => gate.label)).toEqual(['CLK_1', 'RST_1', 'A_1']);
     expect(buildProjectedSequentialSttGates(secondSubsystem!.circuit)?.outputs.map((gate) => gate.label)).toEqual(['Y_1']);
+  });
+  it('includes separate raw disconnected circuits in the analysis subsystem selector', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const fsm = makeFsm({
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const first = synthesizeFsm(fsm, emptyCircuit());
+    const firstCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: first.gates,
+      wires: first.wires,
+    };
+    const second = synthesizeFsm(fsm, firstCircuit);
+
+    const rawSwitch: GateInstance = {
+      id: 'raw-switch',
+      typeId: 'INPUT_SWITCH',
+      x: 900,
+      y: 80,
+      label: 'RAW_IN',
+      outputSignals: {},
+      isSelected: false,
+    };
+    const rawNot: GateInstance = {
+      id: 'raw-not',
+      typeId: 'NOT',
+      x: 1020,
+      y: 80,
+      outputSignals: {},
+      isSelected: false,
+    };
+    const rawLed: GateInstance = {
+      id: 'raw-led',
+      typeId: 'OUTPUT_LED',
+      x: 1140,
+      y: 80,
+      label: 'RAW_LED',
+      outputSignals: {},
+      isSelected: false,
+    };
+
+    const rawCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: {
+        ...first.gates,
+        ...second.gates,
+        [rawSwitch.id]: rawSwitch,
+        [rawNot.id]: rawNot,
+        [rawLed.id]: rawLed,
+      },
+      wires: {
+        ...first.wires,
+        ...second.wires,
+        raw_w1: {
+          id: 'raw_w1',
+          from: { gateId: rawSwitch.id, portId: 'out' },
+          to: { gateId: rawNot.id, portId: 'a' },
+          signal: { value: 0, version: 0, lastChangedAt: 0 },
+          isSelected: false,
+        },
+        raw_w2: {
+          id: 'raw_w2',
+          from: { gateId: rawNot.id, portId: 'out' },
+          to: { gateId: rawLed.id, portId: 'in' },
+          signal: { value: 0, version: 0, lastChangedAt: 0 },
+          isSelected: false,
+        },
+      },
+    };
+
+    const subsystemOptions = buildAnalysisSubsystemOptions(rawCircuit);
+    expect(subsystemOptions.map((option) => option.label)).toEqual(['RAW_LED', 'Y', 'Y_1']);
+
+    const rawSubsystem = subsystemOptions.find((option) => option.label === 'RAW_LED');
+    expect(rawSubsystem?.kind).toBe('generic');
+    expect(Object.keys(rawSubsystem!.circuit.gates).sort()).toEqual(['raw-led', 'raw-not', 'raw-switch']);
+    expect(buildProjectedSequentialSttGates(rawSubsystem!.circuit)).toBeNull();
   });
 
   it('keeps raw push-button and LED additions inside the selected FSM subsystem and falls back to technical-full STT', () => {

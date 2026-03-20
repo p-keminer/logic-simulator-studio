@@ -5,7 +5,7 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { topologicalSort } from '../../core/simulation/topologicalSort';
 import {
   buildStateTransitionProjection,
-  buildProjectedFsmSubsystemOptions,
+  buildAnalysisSubsystemOptions,
   type StateTransitionProjectionStatus,
 } from '../../core/analysis/sequentialProjection';
 import {
@@ -30,12 +30,12 @@ import {
   type StateVar,
 } from './truthTableAnalysis';
 
-// ── Gattertyp-Kategorien ─────────────────────────────────────────────────────
+// â”€â”€ Gattertyp-Kategorien â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/** Gatter die als variable Eingabe durchgezählt werden */
+/** Gatter die als variable Eingabe durchgezÃ¤hlt werden */
 
 
-// ── Typen ────────────────────────────────────────────────────────────────────
+// â”€â”€ Typen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface IntermediateCol { gateId: string; portId: string; header: string; }
 
@@ -72,12 +72,12 @@ type ColKind  = 'in' | 'state' | 'next' | 'out' | 'mid';
 
 interface Props { onClose: () => void; }
 
-// ── Komponente ────────────────────────────────────────────────────────────────
+// â”€â”€ Komponente â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function TruthTableModal({ onClose }: Props) {
   const { circuit } = useCircuitContext();
   const [sttViewMode, setSttViewMode] = useState<StateTransitionDisplayMode>('fsm_compact');
-  const [selectedProjectedSubsystemKey, setSelectedProjectedSubsystemKey] = useState<string>('');
+  const [selectedSubsystemKey, setSelectedSubsystemKey] = useState<string>('');
   const analysisKey = useMemo(() => buildStaticAnalysisKey(circuit), [circuit]);
   const analysisSnapshotRef = useRef<{ key: string; circuit: Circuit } | null>(null);
   if (!analysisSnapshotRef.current || analysisSnapshotRef.current.key !== analysisKey) {
@@ -87,18 +87,18 @@ export function TruthTableModal({ onClose }: Props) {
     };
   }
   const analysisCircuit = analysisSnapshotRef.current.circuit;
-  const projectedSubsystemOptions = useMemo(
-    () => buildProjectedFsmSubsystemOptions(analysisCircuit),
+  const analysisSubsystemOptions = useMemo(
+    () => buildAnalysisSubsystemOptions(analysisCircuit),
     [analysisCircuit],
   );
-  const activeProjectedSubsystem = projectedSubsystemOptions.find((option) => option.key === selectedProjectedSubsystemKey)
-    ?? projectedSubsystemOptions[0]
+  const activeAnalysisSubsystem = analysisSubsystemOptions.find((option) => option.key === selectedSubsystemKey)
+    ?? analysisSubsystemOptions[0]
     ?? null;
-  const analysisSourceCircuit = projectedSubsystemOptions.length > 1
-    ? (activeProjectedSubsystem?.circuit ?? analysisCircuit)
+  const analysisSourceCircuit = analysisSubsystemOptions.length > 1
+    ? (activeAnalysisSubsystem?.circuit ?? analysisCircuit)
     : analysisCircuit;
 
-  // ── Hauptberechnung ────────────────────────────────────────────────────────
+  // â”€â”€ Hauptberechnung â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const computed = useMemo((): Computed => {
     const allGates = Object.values(analysisSourceCircuit.gates);
 
@@ -110,12 +110,12 @@ export function TruthTableModal({ onClose }: Props) {
     const hasCycles = cycles.length > 0;
 
     // Erkennung sequenzieller Gatter (Flip-Flops, Latches) auch ohne Draht-Zyklen.
-    // isSynchronous-Gatter (D-FF, JK-FF …) und Gatter mit stateUpdate (SR-Latch, D-Latch)
-    // führen intern Zustand → Mode 2 (Zustandsübergangstabelle) nötig.
+    // isSynchronous-Gatter (D-FF, JK-FF â€¦) und Gatter mit stateUpdate (SR-Latch, D-Latch)
+    // fÃ¼hren intern Zustand â†’ Mode 2 (ZustandsÃ¼bergangstabelle) nÃ¶tig.
     //
     // Autonome Quellen (CLOCK, INPUT_SWITCH, PUSH_BTN, CONST, ADC) und reine
     // Ausgabe-Gatter (OUTPUT_LED) werden explizit ausgeschlossen: Sie haben
-    // zwar stateUpdate (z. B. CLOCK-Tick-Zähler) oder isSynchronous (STEPPER),
+    // zwar stateUpdate (z. B. CLOCK-Tick-ZÃ¤hler) oder isSynchronous (STEPPER),
     // sind aber keine Zustands-Elemente der kombinatorischen Logik.
     const hasSynchronous = allGates.some(g => {
       if (!connectedIds.has(g.id)) return false;
@@ -128,9 +128,9 @@ export function TruthTableModal({ onClose }: Props) {
       } catch { return false; }
     });
 
-    // ════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // MODUS 1: Klassische Wahrheitstabelle (rein kombinatorische Schaltung)
-    // ════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     if (!hasCycles && !hasSynchronous) {
       const inputs = allGates
         .filter(g => INPUT_TYPES.has(g.typeId))
@@ -216,9 +216,9 @@ export function TruthTableModal({ onClose }: Props) {
       return { mode: 'truth-table', inputs, outputs, tooMany, table, intermediateCols };
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // MODUS 2: Zustandsübergangstabelle (sequenzielle / rückkoppelnde Schaltung)
-    // ════════════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // MODUS 2: ZustandsÃ¼bergangstabelle (sequenzielle / rÃ¼ckkoppelnde Schaltung)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     // Zustandsgatter = Gatter in Draht-Zyklen (Feedback) ODER synchrone
     // FF/Register ODER Gatter mit stateUpdate (z.B. SR-Latch, D-Latch).
@@ -237,9 +237,9 @@ export function TruthTableModal({ onClose }: Props) {
       gateRegistry.get.bind(gateRegistry),
     );
 
-    // ── Label-Deduplizierung ────────────────────────────────────────────────────
+    // â”€â”€ Label-Deduplizierung â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Falls mehrere Feedback-Gatter den gleichen auto-generierten Namen haben
-    // (z.B. zwei unbeschriftete NOT-Gatter → "NOT_xxxx"), Index anhängen.
+    // (z.B. zwei unbeschriftete NOT-Gatter â†’ "NOT_xxxx"), Index anhÃ¤ngen.
     {
       const labelCount = new Map<string, number>();
       for (const sv of stateVars) labelCount.set(sv.label, (labelCount.get(sv.label) ?? 0) + 1);
@@ -253,12 +253,12 @@ export function TruthTableModal({ onClose }: Props) {
       }
     }
 
-    // Externe Eingänge (keine Feedback-Gates, verbunden)
+    // Externe EingÃ¤nge (keine Feedback-Gates, verbunden)
     const inputs = allGates
       .filter(g => INPUT_TYPES.has(g.typeId) && connectedIds.has(g.id))
       .sort((a, b) => a.x - b.x);
 
-    // Externe Ausgänge
+    // Externe AusgÃ¤nge
     const outputGates = allGates
       .filter(g => OUTPUT_TYPES.has(g.typeId) && connectedIds.has(g.id))
       .sort((a, b) => a.x - b.x);
@@ -268,7 +268,7 @@ export function TruthTableModal({ onClose }: Props) {
     const projectedStateVars = projectedView.stateVars;
     const projectedOutputGates = projectedView.outputGates;
 
-    // Keine Zustandsvariablen → kein valides STT-Modell
+    // Keine Zustandsvariablen â†’ kein valides STT-Modell
     if (projectedStateVars.length === 0) {
       return {
         mode: 'state-transition',
@@ -343,14 +343,14 @@ export function TruthTableModal({ onClose }: Props) {
     ? getStateTransitionFallbackNote(computed.projectionStatus)
     : '';
 
-  // ── Style-Funktionen ──────────────────────────────────────────────────────────
+  // â”€â”€ Style-Funktionen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const kindColor = (kind: ColKind): string =>
-    kind === 'in'    ? '#60a5fa'   // Blau   – externe Eingänge
-    : kind === 'state' ? '#f59e0b' // Amber  – aktueller Zustand Q(t)
-    : kind === 'next'  ? '#a78bfa' // Lila   – nächster Zustand Q(t+1)
-    : kind === 'mid'   ? '#a78bfa' // Lila   – Zwischenwerte
-    : '#22c55e';                   // Grün   – Ausgänge
+    kind === 'in'    ? '#60a5fa'   // Blau   â€“ externe EingÃ¤nge
+    : kind === 'state' ? '#f59e0b' // Amber  â€“ aktueller Zustand Q(t)
+    : kind === 'next'  ? '#a78bfa' // Lila   â€“ nÃ¤chster Zustand Q(t+1)
+    : kind === 'mid'   ? '#a78bfa' // Lila   â€“ Zwischenwerte
+    : '#22c55e';                   // GrÃ¼n   â€“ AusgÃ¤nge
 
   const thStyle = (kind: ColKind): React.CSSProperties => ({
     padding: '4px 10px',
@@ -387,7 +387,7 @@ export function TruthTableModal({ onClose }: Props) {
   };
   const sepTd: React.CSSProperties = { padding: '3px 4px', color: '#334155' };
 
-  // ── Render ────────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}
@@ -397,21 +397,21 @@ export function TruthTableModal({ onClose }: Props) {
         style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 24, maxWidth: '95vw', maxHeight: '82vh', overflow: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
-        {/* ── Kopfzeile ──────────────────────────────────────────────────── */}
+        {/* â”€â”€ Kopfzeile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 16 }}>
           <div>
             <h2 style={{ margin: 0, color: '#e2e8f0', fontSize: 16, fontFamily: 'monospace' }}>
               {computed.mode === 'state-transition'
-                ? 'Zustandsübergangstabelle'
+                ? 'ZustandsÃ¼bergangstabelle'
                 : 'Wahrheitstabelle'}
             </h2>
             {computed.mode === 'state-transition' && (
               <p style={{ margin: '4px 0 0', color: '#f59e0b', fontSize: 11, fontFamily: 'monospace' }}>
-                ⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse
+                âŸ³ Sequenzielle Logik erkannt (Flip-Flops / RÃ¼ckkopplung) â€“ Zustandsanalyse
               </p>
             )}
           </div>
-          {computed.mode === 'state-transition' && projectedSubsystemOptions.length > 1 && activeProjectedSubsystem && (
+          {analysisSubsystemOptions.length > 1 && activeAnalysisSubsystem && (
             <label
               style={{
                 marginLeft: 'auto',
@@ -424,11 +424,11 @@ export function TruthTableModal({ onClose }: Props) {
                 marginRight: showSttViewModeSelect ? 12 : 0,
               }}
             >
-              <span>FSM-System</span>
+              <span>System</span>
               <select
-                aria-label="FSM-System"
-                value={activeProjectedSubsystem.key}
-                onChange={(event) => setSelectedProjectedSubsystemKey(event.target.value)}
+                aria-label="System"
+                value={activeAnalysisSubsystem.key}
+                onChange={(event) => setSelectedSubsystemKey(event.target.value)}
                 style={{
                   minWidth: 180,
                   padding: '6px 10px',
@@ -440,7 +440,7 @@ export function TruthTableModal({ onClose }: Props) {
                   fontSize: 12,
                 }}
               >
-                {projectedSubsystemOptions.map((option) => (
+                {analysisSubsystemOptions.map((option) => (
                   <option key={option.key} value={option.key}>
                     {option.label}
                   </option>
@@ -451,7 +451,7 @@ export function TruthTableModal({ onClose }: Props) {
           {showSttViewModeSelect && (
             <label
               style={{
-                marginLeft: projectedSubsystemOptions.length > 1 ? 0 : 'auto',
+                marginLeft: analysisSubsystemOptions.length > 1 ? 0 : 'auto',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 4,
@@ -483,37 +483,37 @@ export function TruthTableModal({ onClose }: Props) {
           )}
           <button
             onClick={onClose}
-            style={{ marginLeft: showSttViewModeSelect ? 12 : 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
-          >×</button>
+            style={{ marginLeft: (showSttViewModeSelect || analysisSubsystemOptions.length > 1) ? 12 : 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
+          >Ã—</button>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {/* MODUS 1: Klassische Wahrheitstabelle                              */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {computed.mode === 'truth-table' && (() => {
           const { inputs, outputs, tooMany, table, intermediateCols } = computed;
           return (
             <>
               {inputs.length === 0 && (
                 <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                  Keine Eingänge (INPUT_SWITCH / PUSH_BTN / CLOCK) gefunden.
+                  Keine EingÃ¤nge (INPUT_SWITCH / PUSH_BTN / CLOCK) gefunden.
                 </p>
               )}
               {outputs.length === 0 && (
                 <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                  Keine Ausgänge (OUTPUT_LED) gefunden.
+                  Keine AusgÃ¤nge (OUTPUT_LED) gefunden.
                 </p>
               )}
               {tooMany && (
                 <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                  Zu viele Eingänge (&gt;12).
+                  Zu viele EingÃ¤nge (&gt;12).
                 </p>
               )}
               {table && intermediateCols.length > 0 && (
                 <div style={{ display: 'flex', gap: 16, marginBottom: 12, fontSize: 11, fontFamily: 'monospace' }}>
-                  <span style={{ color: '#60a5fa' }}>■ Eingänge</span>
-                  <span style={{ color: '#a78bfa' }}>■ Zwischenwerte</span>
-                  <span style={{ color: '#22c55e' }}>■ Ausgänge</span>
+                  <span style={{ color: '#60a5fa' }}>[in] Eingaenge</span>
+                  <span style={{ color: '#a78bfa' }}>[mid] Zwischenwerte</span>
+                  <span style={{ color: '#22c55e' }}>[out] Ausgaenge</span>
                 </div>
               )}
               {table && (
@@ -523,11 +523,11 @@ export function TruthTableModal({ onClose }: Props) {
                       {inputs.map(g => (
                         <th key={g.id} style={thStyle('in')}>{gateLabel(g)}</th>
                       ))}
-                      {intermediateCols.length > 0 && <th style={sepTh}>│</th>}
+                      {intermediateCols.length > 0 && <th style={sepTh}>â”‚</th>}
                       {intermediateCols.map((col) => (
                         <th key={`${col.gateId}:${col.portId}`} style={thStyle('mid')}>{col.header}</th>
                       ))}
-                      <th style={sepTh}>│</th>
+                      <th style={sepTh}>â”‚</th>
                       {outputs.map(g => (
                         <th key={g.id} style={thStyle('out')}>{gateLabel(g)}</th>
                       ))}
@@ -537,9 +537,9 @@ export function TruthTableModal({ onClose }: Props) {
                     {table.map((row, ri) => (
                       <tr key={row.ins.join('')} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.025)' }}>
                         {row.ins.map((v, i)  => <td key={i} style={tdStyle(v, 'in')} >{v}</td>)}
-                        {intermediateCols.length > 0 && <td style={sepTd}>│</td>}
+                        {intermediateCols.length > 0 && <td style={sepTd}>â”‚</td>}
                         {row.mids.map((v, i) => <td key={i} style={tdStyle(v, 'mid')}>{displayVal(v)}</td>)}
-                        <td style={sepTd}>│</td>
+                        <td style={sepTd}>â”‚</td>
                         {row.outs.map((v, i) => <td key={i} style={tdStyle(v, 'out')}>{displayVal(v)}</td>)}
                       </tr>
                     ))}
@@ -550,9 +550,9 @@ export function TruthTableModal({ onClose }: Props) {
           );
         })()}
 
-        {/* ══════════════════════════════════════════════════════════════════ */}
-        {/* MODUS 2: Zustandsübergangstabelle                                 */}
-        {/* ══════════════════════════════════════════════════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+        {/* MODUS 2: ZustandsÃ¼bergangstabelle                                 */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {computed.mode === 'state-transition' && (() => {
           const { tooMany, reducedMeta } = computed;
           const inputs = displayedStateTransition?.inputs ?? computed.inputs;
@@ -572,7 +572,7 @@ export function TruthTableModal({ onClose }: Props) {
           if (tooMany) {
             return (
               <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                Zu viele Steuer-Eingänge für reduzierte Analyse (&gt;7). Schaltung zu komplex für tabellarische Darstellung.
+                Zu viele Steuer-EingÃ¤nge fÃ¼r reduzierte Analyse (&gt;7). Schaltung zu komplex fÃ¼r tabellarische Darstellung.
               </p>
             );
           }
@@ -582,7 +582,7 @@ export function TruthTableModal({ onClose }: Props) {
 
           return (
             <>
-              {/* ── Reduzierte-Analyse-Banner ────────────────────────────── */}
+              {/* â”€â”€ Reduzierte-Analyse-Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
               {reducedMeta && (
                 <div style={{
                   marginBottom: 14,
@@ -594,18 +594,18 @@ export function TruthTableModal({ onClose }: Props) {
                   fontSize: 11,
                 }}>
                   <div style={{ color: '#fbbf24', fontWeight: 700, marginBottom: 4 }}>
-                    ⚠ Reduzierte Steuerlogik-Analyse
+                    ! Reduzierte Steuerlogik-Analyse
                   </div>
                   <div style={{ color: '#94a3b8', lineHeight: 1.7 }}>
                     <div>
                       Zeigt Zustandsbit <span style={{ color: '#f59e0b' }}>{stateVars[0].label}</span>
-                      {' '}stellvertretend für alle{' '}
+                      {' '}stellvertretend fÃ¼r alle{' '}
                       <span style={{ color: '#f59e0b' }}>{reducedMeta.totalStateBits}</span> Zustandsbits
-                      {reducedMeta.totalStateBits > 1 && ' (übrige Bits: 0)'}
+                      {reducedMeta.totalStateBits > 1 && ' (Ã¼brige Bits: 0)'}
                     </div>
                     {reducedMeta.fixedDataLabels.length > 0 && (
                       <div>
-                        Dateneingänge fest 0:{' '}
+                        DateneingÃ¤nge fest 0:{' '}
                         <span style={{ color: '#64748b' }}>
                           {reducedMeta.fixedDataLabels.join(', ')}
                         </span>
@@ -613,7 +613,7 @@ export function TruthTableModal({ onClose }: Props) {
                     )}
                     {reducedMeta.cappedControls && (
                       <div style={{ color: '#f87171' }}>
-                        Steuer-Eingänge auf {reducedMeta.controlCount} begrenzt (überschüssige weggelassen)
+                        Steuer-EingÃ¤nge auf {reducedMeta.controlCount} begrenzt (Ã¼berschÃ¼ssige weggelassen)
                       </div>
                     )}
                   </div>
@@ -652,7 +652,7 @@ export function TruthTableModal({ onClose }: Props) {
                 </div>
               )}
 
-              {projectedSubsystemOptions.length > 1 && activeProjectedSubsystem && (
+              {analysisSubsystemOptions.length > 1 && activeAnalysisSubsystem?.kind === 'projected_fsm' && (
                 <div style={{
                   marginBottom: 14,
                   padding: '8px 12px',
@@ -664,8 +664,8 @@ export function TruthTableModal({ onClose }: Props) {
                   color: '#cbd5e1',
                   lineHeight: 1.7,
                 }}>
-                  Analysiert isoliert das ausgewählte FSM-System <span style={{ color: '#f8fafc' }}>{activeProjectedSubsystem.label}</span>,
-                  damit mehrere getrennte FSM-Projektionsbatches nicht in eine gemeinsame technische Fallback-STT gedrückt werden.
+                  Analysiert isoliert das ausgewaehlte System <span style={{ color: '#f8fafc' }}>{activeAnalysisSubsystem.label}</span>,
+                  damit getrennte FSM-Projektionsbatches nicht in eine gemeinsame technische Fallback-STT gedrueckt werden.
                 </div>
               )}
 
@@ -682,17 +682,17 @@ export function TruthTableModal({ onClose }: Props) {
                   lineHeight: 1.7,
                 }}>
                   {modeNotes.map((note) => (
-                    <div key={note}>• {note}</div>
+                    <div key={note}>- {note}</div>
                   ))}
                 </div>
               )}
 
               {/* Legende */}
               <div style={{ marginBottom: 12, fontSize: 11, fontFamily: 'monospace', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                {hasInputs  && <span style={{ color: '#60a5fa' }}>■ Steuer-Eingänge</span>}
-                <span style={{ color: '#f59e0b' }}>■ Aktueller Zustand Q(t)</span>
-                <span style={{ color: '#a78bfa' }}>■ Nächster Zustand Q(t+1)</span>
-                {hasOutputs && <span style={{ color: '#22c55e' }}>■ Ausgänge</span>}
+                {hasInputs  && <span style={{ color: '#60a5fa' }}>[in] Steuer-Eingaenge</span>}
+                <span style={{ color: '#f59e0b' }}>[state] Aktueller Zustand Q(t)</span>
+                <span style={{ color: '#a78bfa' }}>[next] Naechster Zustand Q(t+1)</span>
+                {hasOutputs && <span style={{ color: '#22c55e' }}>[out] Ausgaenge</span>}
               </div>
 
               <table style={{ borderCollapse: 'collapse', fontFamily: 'monospace', fontSize: 12, color: '#e2e8f0' }}>
@@ -700,16 +700,16 @@ export function TruthTableModal({ onClose }: Props) {
                   {/* Sektions-Zeile (Gruppen-Beschriftung) */}
                   <tr>
                     {hasInputs && (
-                      <th colSpan={inputs.length} style={sectionTh('in')}>STEUER-EINGÄNGE</th>
+                      <th colSpan={inputs.length} style={sectionTh('in')}>STEUER-EINGÃ„NGE</th>
                     )}
                     {hasInputs && <th style={{ ...sectionTh('in'), color: '#334155', padding: '3px 4px' }}></th>}
                     <th colSpan={stateVars.length} style={sectionTh('state')}>ZUSTAND Q(t)</th>
                     <th style={{ ...sectionTh('state'), color: '#334155', padding: '3px 4px' }}></th>
-                    <th colSpan={stateVars.length} style={sectionTh('next')}>NÄCHSTER ZUSTAND Q(t+1)</th>
+                    <th colSpan={stateVars.length} style={sectionTh('next')}>NÃ„CHSTER ZUSTAND Q(t+1)</th>
                     {hasOutputs && (
                       <>
                         <th style={{ ...sectionTh('out'), color: '#334155', padding: '3px 4px' }}></th>
-                        <th colSpan={outputGates.length} style={sectionTh('out')}>AUSGÄNGE</th>
+                        <th colSpan={outputGates.length} style={sectionTh('out')}>AUSGÃ„NGE</th>
                       </>
                     )}
                   </tr>
@@ -719,15 +719,15 @@ export function TruthTableModal({ onClose }: Props) {
                     {inputs.map(g => (
                       <th key={g.id} style={thStyle('in')}>{gateLabel(g)}</th>
                     ))}
-                    {hasInputs && <th style={sepTh}>│</th>}
+                    {hasInputs && <th style={sepTh}>â”‚</th>}
                     {stateVars.map((sv) => (
                       <th key={`${sv.gateId}:${sv.stateKey}`} style={thStyle('state')}>{sv.label}</th>
                     ))}
-                    <th style={sepTh}>│</th>
+                    <th style={sepTh}>â”‚</th>
                     {stateVars.map((sv) => (
-                      <th key={`${sv.gateId}:${sv.stateKey}:next`} style={thStyle('next')}>{sv.label}′</th>
+                      <th key={`${sv.gateId}:${sv.stateKey}:next`} style={thStyle('next')}>{sv.label}â€²</th>
                     ))}
-                    {hasOutputs && <th style={sepTh}>│</th>}
+                    {hasOutputs && <th style={sepTh}>â”‚</th>}
                     {hasOutputs && outputGates.map(g => (
                       <th key={g.id} style={thStyle('out')}>{gateLabel(g)}</th>
                     ))}
@@ -736,7 +736,7 @@ export function TruthTableModal({ onClose }: Props) {
 
                 <tbody>
                   {rows.map((row, ri) => {
-                    // Stabiler Zustand: Q(t) = Q(t+1) für alle Zustandsbits
+                    // Stabiler Zustand: Q(t) = Q(t+1) fÃ¼r alle Zustandsbits
                     const isStableState = row.stateBits.every((v, i) => v === row.nextState[i]);
                     return (
                       <tr
@@ -748,11 +748,11 @@ export function TruthTableModal({ onClose }: Props) {
                         }}
                       >
                         {row.inputBits.map( (v, i) => <td key={i} style={tdStyle(v, 'in')   }>{v}</td>)}
-                        {hasInputs && <td style={sepTd}>│</td>}
+                        {hasInputs && <td style={sepTd}>â”‚</td>}
                         {row.stateBits.map( (v, i) => <td key={i} style={tdStyle(v, 'state')}>{v}</td>)}
-                        <td style={sepTd}>│</td>
+                        <td style={sepTd}>â”‚</td>
                         {row.nextState.map( (v, i) => <td key={i} style={tdStyle(v, 'next') }>{displayVal(v)}</td>)}
-                        {hasOutputs && <td style={sepTd}>│</td>}
+                        {hasOutputs && <td style={sepTd}>â”‚</td>}
                         {row.outputBits.map((v, i) => <td key={i} style={tdStyle(v, 'out')  }>{displayVal(v)}</td>)}
                       </tr>
                     );
@@ -760,16 +760,16 @@ export function TruthTableModal({ onClose }: Props) {
                 </tbody>
               </table>
 
-              {/* Fußzeile */}
+              {/* FuÃŸzeile */}
               <p style={{ marginTop: 10, fontSize: 10, color: '#64748b', fontFamily: 'monospace' }}>
                 {activeSttViewMode === 'fsm_compact'
-                  ? 'FSM kompakt: Takt als Übergangsereignis, Resetfälle im technischen Modus.'
-                  : '′ = Zustand nach einem Simulationsschritt (Settle-Phase)'}
+                  ? 'FSM kompakt: Takt als Ãœbergangsereignis, ResetfÃ¤lle im technischen Modus.'
+                  : 'â€² = Zustand nach einem Simulationsschritt (Settle-Phase)'}
                 &nbsp;|&nbsp;
-                <span style={{ color: '#f59e0b' }}>■</span> = Stabiler Zustand Q(t) = Q(t+1)
+                <span style={{ color: '#f59e0b' }}>[*]</span> = Stabiler Zustand Q(t) = Q(t+1)
                 {reducedMeta && (
                   <span style={{ color: '#78716c' }}>
-                    &nbsp;|&nbsp; Reduzierte Ansicht – vollständige Analyse bei {reducedMeta.totalStateBits * Math.pow(2, inputs.length + reducedMeta.totalStateBits)} Zeilen nicht darstellbar
+                    &nbsp;|&nbsp; Reduzierte Ansicht â€“ vollstÃ¤ndige Analyse bei {reducedMeta.totalStateBits * Math.pow(2, inputs.length + reducedMeta.totalStateBits)} Zeilen nicht darstellbar
                   </span>
                 )}
               </p>
