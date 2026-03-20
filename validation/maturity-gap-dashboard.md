@@ -1,7 +1,7 @@
 # Logic Gate Simulator - Maturity Gap Dashboard
 
 **Project:** logic-gate-simulator
-**Generated:** 2026-03-19
+**Generated:** 2026-03-20
 **Basis:** focused-nine-summary.json, focused-nine-ui-summary.json, contract-runner-summary.json, golden-corpus-v1-summary.json, gate-gap-analysis.md, gate-inventory.json, testability-mapping.json, all 86 gate contracts
 
 ---
@@ -12,7 +12,7 @@ This dashboard consolidates maturity evidence across seven criteria. Each criter
 
 **Overall maturity level: BETA / APPROACHING-PRODUCTION**
 
-**Last updated 2026-03-19:** All P0 blockers and P1-1 through P1-7 remain resolved. Contract Runner v1 now stands at 447 pass, 0 fail, 0 unsupported and is green in CI. Golden Corpus v1 stands at 23 pass, 0 fail, 1 expected_limit across 24 circuits and now runs live export-determinism plus external HDL syntax/lint and scenario-based simulation, including the nine v2 pilot seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`. Two one-level hierarchical/custom-IC HDL paths are now verified via structural flattening, and the sequential-feedback seed adds a longer multi-cycle regression path. P1-7 (Focused-Nine UI Audit) remains green at 12 smoke PASS, 5 semantic PASS, 0 semantic WARN. CI still has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **853/853**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P2: Golden Corpus v2 breadth, branch protection, CI performance, deeper hierarchy coverage, and broader custom-IC verification.
+**Last updated 2026-03-20:** All P0 blockers and P1-1 through P1-7 remain resolved. Contract Runner v1 now stands at 447 pass, 0 fail, 0 unsupported and is green in CI. Golden Corpus v1 stands at 23 pass, 0 fail, 1 expected_limit across 24 circuits and now runs live export-determinism plus external HDL syntax/lint and scenario-based simulation, including the nine v2 pilot seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`. Two one-level hierarchical/custom-IC HDL paths are now verified via structural flattening, and the sequential-feedback seed adds a longer multi-cycle regression path. The FSM export work has now moved from pure planning into an implemented first slice: projection metadata, `projectionBatchId`, the central sequential projection helper, a small core helper for static/reduced STT, explicit mixed-fallback behavior for partial projections, and direct core-level regressions are in place. The next FSM step should stay intentionally small: broaden verification around the new STT core and only then tighten subsystem boundaries further. P1-7 (Focused-Nine UI Audit) remains green at 12 smoke PASS, 5 semantic PASS, 0 semantic WARN. CI still has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **868/868**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P1/P2: finish the static/reduced FSM projection path for broad and mixed circuits, structured race-panel lifecycle semantics, Golden Corpus v2 breadth, branch protection, CI performance, and deeper hierarchy/custom-IC verification.
 
 ---
 
@@ -81,6 +81,8 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 | ~~**74HC373 Verilog always@(*) latch triggers Verilator LATCH warning-as-error**~~ | **RESOLVED P1-1 2026-03-07**  Verilog-2001 export with `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */` inline comments; all tools PASS | ~~P1~~ done |
 | MS_JK_FF HDL export uses `negedge clk` only  does not model master-slave behavior | gate-gap-analysis.md 4.2 | synthesis-risk |
 | D_LATCH Verilog `always @(*)` causes latch inference warnings in synthesis tools | gate-gap-analysis.md 4.4 | synthesis-risk |
+| Synthetisierte FSM-Exporte haben noch keine kanonische UI-Projektion; STT und Timing arbeiten dort noch auf Roh-Gate-/Port-Ebene und brauchen eine eigene read-only Sequential-Projection-Schicht mit statischer/verkuerzter STT | `validation/fsm-export-fixes/work-package.md` | P1/P2 |
+| Race-Panel-Eintraege und Race-Markierungen haben noch keine saubere Reset-/Prune-/Dedupe-Lifecycle-Logik | `validation/race-panel-fixes/work-package.md` | P1/P2 |
 | ~~17 basic gates (AND/OR/NOT/NAND/NOR/XOR/XNOR/BUFFER + multi-input variants) have no toVerilog/toVHDL~~ | **RESOLVED P0 2026-03-07**  all logic_basic and logic_multi gates now export | ~~P0 blocker~~ done |
 | AND_C/OR_C/XOR_C output naming (`q`, `q_n`) inverted vs NAND_C/NOR_C  inconsistency | gate-gap-analysis.md 7.3 | documentation-gap |
 
@@ -104,7 +106,7 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 
 ### Current State
 
-Verification covers 853/853 vitest tests, 12/12 focused-nine simulation + toolchain cases, 447/447 contract runner cases (0 unsupported cases), and 22/23 golden corpus cases (1 expected_limit). Multi-driver behavior is now formally defined and tested. The testability mapping (`testability-mapping.json`) defines 14 test patterns across 18 gate classes (124 required pattern slots). Contract Runner v1 now provides automated behavioral verification across 86 gate contracts. Golden Corpus v1 Runner provides structural, syntax, and scenario-based HDL regression across 23 reference circuits.
+Verification covers 868/868 vitest tests, 12/12 focused-nine simulation + toolchain cases, 447/447 contract runner cases (0 unsupported cases), and 23/24 golden corpus cases plus 1 expected_limit. Multi-driver behavior is now formally defined and tested. The testability mapping (`testability-mapping.json`) defines 14 test patterns across 18 gate classes (124 required pattern slots). Contract Runner v1 now provides automated behavioral verification across 86 gate contracts. Golden Corpus v1 Runner provides structural, syntax, and scenario-based HDL regression across 24 reference circuits.
 
 ### Confirmed Strengths
 
@@ -128,7 +130,7 @@ Verification covers 853/853 vitest tests, 12/12 focused-nine simulation + toolch
 ### Resolved Blockers
 
 - **RESOLVED P0 2026-03-07:** Multi-driver simulation behavior is now defined: conflicting drivers on the same net resolve to X (3). The `multi_driver_same_input` test confirms conflict detection and X resolution.
-- **RESOLVED / EXPANDED 2026-03-19:** Contract Runner v1 executes automatically, runs as a CI gate, and now covers 86 contracts with 447 pass, 0 fail, 0 unsupported. Shared-bus multi-driver conflict cases are now executed for TRIBUF, 74HC373, 74HC374, and RAM256.
+- **RESOLVED / EXPANDED 2026-03-20:** Contract Runner v1 executes automatically, runs as a CI gate, and now covers 86 contracts with 447 pass, 0 fail, 0 unsupported. Shared-bus multi-driver conflict cases are now executed for TRIBUF, 74HC373, 74HC374, and RAM256.
 
 ### Next Steps
 
@@ -175,8 +177,9 @@ None.
 1. ~~Fix 74HC373 Verilog latch~~  **RESOLVED P1-1 2026-03-07** (Verilog-2001 + `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */`)
 2. ~~Extend CI beyond focused-nine core~~  **RESOLVED P1-6 2026-03-08** (contract-runner + golden-corpus jobs added)
 3. Expand the current golden-corpus HDL scenarios toward larger traces and hierarchical designs
+4. Add a read-only sequential projection layer for canonical FSM export semantics, static/reduced STT, and end-to-end timing/STT validation
 
-**Priority: P2** (broader regression automation  all tooling warnings resolved 2026-03-07)
+**Priority: P1/P2** (broader regression automation plus FSM export projection semantics)
 
 ---
 
@@ -201,6 +204,7 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 | Custom ICs: no contracts, no static analysis possible | gate-gap-analysis.md 8 | P2 |
 | Golden Corpus v1 covers 24 circuits and now includes nine broader v2 pilot seeds, but hierarchy/custom-IC coverage is still only one-level and still narrow | `golden-corpus-v1.json`  24 reference circuits including `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`; two custom-IC HDL paths are covered via flattening and longer sequential traces have begun, but deeper hierarchy remains open | P2 |
 | ~~STT variable limit (max 8) blocks state inspection for all ICs with >8 inputs+state~~ | **PARTIALLY RESOLVED (post-P0):** STT now renders a "Reduzierte Ansicht" (reduced view) for wide sequentials  8-64 rows of meaningful data instead of error message | P2 (residual) |
+| FSM-Editor-Synthese skaliert strukturell, aber STT/Timing behandeln exportierte FSMs noch nicht als first-class kanonische Designs | `validation/fsm-export-fixes/work-package.md` | P1/P2 |
 
 ### Resolved Blockers
 
@@ -212,8 +216,9 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 1. Expand Golden Corpus v2 with large (>20 gates) and hierarchical/custom-IC cases
 2. Design a dynamic contract verification approach for custom ICs (runtime invariant checking)
 3. Extend the STT reduced view to show more configurable input subsets
+4. Add a structural FSM-export projection layer so synthesized FSMs expose canonical state/output signals instead of raw helper nets, with a static/reduced STT path separate from live timing
 
-**Priority: P2** (golden corpus expansion, STT improvements, custom IC contracts  Golden Corpus v1 is now executable and in CI)
+**Priority: P1/P2** (golden corpus expansion, STT improvements, custom IC contracts, FSM export projection semantics)
 
 ---
 
@@ -242,7 +247,7 @@ Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real 
 - Gap analysis assigns risk classes to all findings
 - Testability mapping defines a prioritized test plan (P0/P1/P2/P3)
 - Gate contracts provide specification-level acceptance criteria
-- vitest: 853/853 pass  test suite is comprehensive for simulation correctness
+- vitest: 868/868 pass  test suite is comprehensive for simulation correctness
 - CI uploads reports as artifacts for contract-runner, golden-corpus, focused-nine-core, and focused-nine-ui
 
 ### Confirmed Weaknesses
@@ -324,15 +329,17 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | ~~P1-2~~ | Unsafe /OE defaultInputValues on TRIBUF, 74HC373, 74HC374, 74HC595 | **DONE P1b 2026-03-07** |
 | ~~P1-1~~ | 74HC373 Verilog latch  Verilator LATCH warning-as-error | **DONE P1-1 2026-03-07** |
 | ~~P1-3~~ | prevClk hidden state not in stateKeys (edge-triggered FFs) | **DONE P1-3 2026-03-07** |
-| ~~P1-5~~ | Contract Runner v1  automated gate contract verification | **DONE / EXPANDED P1-5 2026-03-19**  447 pass, 0 fail, 0 unsupported, in CI |
-| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE / EXPANDED P1-6 2026-03-19**  23 pass, 1 expected_limit, live exporter diff + external HDL checks established |
+| ~~P1-5~~ | Contract Runner v1  automated gate contract verification | **DONE / EXPANDED P1-5 2026-03-20**  447 pass, 0 fail, 0 unsupported, in CI |
+| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE / EXPANDED P1-6 2026-03-20**  23 pass, 1 expected_limit, live exporter diff + external HDL checks established |
 | ~~P1-7~~ | Focused-Nine UI audit as CI gate | **DONE P1-7 2026-03-08**  12 smoke PASS, 5 semantic PASS, 6 CI jobs |
 
-### P1  High Priority (no open items)
+### P1  High Priority
 
 | ID | Issue | Criterion |
 |---|---|---|
 | ~~P1-4~~ | ~~STT variable limit blocks UI verification for all ICs~~ | **PARTIALLY RESOLVED (post-P0):** Reduced-view renders 8-64 rows for wide ICs  remaining gap is full enumeration |
+| P1-8 | FSM export projection semantics missing for STT and timing | Crit 2 / Crit 5 |
+| P1-9 | Race panel lifecycle semantics missing for reset, pruning, and dedupe | Crit 6 / Crit 7 |
 
 ### P2  Medium Priority (completeness and polish)
 

@@ -1,16 +1,19 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { runSimulation } from '../../core/simulation/engine';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { topologicalSort } from '../../core/simulation/topologicalSort';
+import { buildStateTransitionProjection } from '../../core/analysis/sequentialProjection';
 import {
-  initBuffer, buildWireMap, runOneTick,
-} from '../../core/simulation/tickEngine';
-import { resolveWiredValues } from '../../core/simulation/signal';
-import type { Circuit, GateInstance, SignalValue } from '../../core/types';
+  buildDisplayedStateTransitionTable,
+  buildStaticAnalysisCircuit,
+  buildStaticAnalysisKey,
+  buildStaticStateTransitionTable,
+  type ReducedStateTransitionMeta,
+  type StateTransitionDisplayMode,
+} from '../../core/analysis/stateTransitionTable';
+import type { Circuit, GateInstance } from '../../core/types';
 import {
-  classifyInputs,
-  chooseRepresentativeStateVar,
   collectConnectedGateIds,
   collectStateVarsForStt,
   collectSttFeedbackGateIds,
@@ -30,22 +33,6 @@ import {
 
 interface IntermediateCol { gateId: string; portId: string; header: string; }
 
-/**
- * Metadata present when the STT was computed in "reduced" mode because
- * totalVars > 8.  The table uses only control inputs and 1 representative
- * state bit; all data inputs and the remaining state bits were fixed at 0.
- */
-interface ReducedMeta {
-  /** Labels of the data-input gates whose value was held at 0 */
-  fixedDataLabels: string[];
-  /** Total number of state bits in the circuit (only 1 is enumerated) */
-  totalStateBits: number;
-  /** Number of control inputs that were actually enumerated */
-  controlCount: number;
-  /** True if some control inputs were also capped (> 7) */
-  cappedControls: boolean;
-}
-
 interface TruthTableResult {
   mode:            'truth-table';
   inputs:          GateInstance[];
@@ -58,6 +45,7 @@ interface TruthTableResult {
 interface StateTransitionResult {
   mode:        'state-transition';
   inputs:      GateInstance[];
+  inputRoles:  Record<string, 'clock' | 'reset' | 'input'>;
   stateVars:   StateVar[];
   outputGates: GateInstance[];
   rows:        Array<{
@@ -66,9 +54,10 @@ interface StateTransitionResult {
     nextState:  number[];
     outputBits: number[];
   }>;
+  isProjectedFsmView: boolean;
   tooMany: boolean;
   /** Present when the analysis was reduced to fit within the row limit. */
-  reducedMeta?: ReducedMeta;
+  reducedMeta?: ReducedStateTransitionMeta;
 }
 
 type Computed = TruthTableResult | StateTransitionResult;
@@ -80,16 +69,26 @@ interface Props { onClose: () => void; }
 
 export function TruthTableModal({ onClose }: Props) {
   const { circuit } = useCircuitContext();
+  const [sttViewMode, setSttViewMode] = useState<StateTransitionDisplayMode>('fsm_compact');
+  const analysisKey = useMemo(() => buildStaticAnalysisKey(circuit), [circuit]);
+  const analysisSnapshotRef = useRef<{ key: string; circuit: Circuit } | null>(null);
+  if (!analysisSnapshotRef.current || analysisSnapshotRef.current.key !== analysisKey) {
+    analysisSnapshotRef.current = {
+      key: analysisKey,
+      circuit: buildStaticAnalysisCircuit(circuit),
+    };
+  }
+  const analysisCircuit = analysisSnapshotRef.current.circuit;
 
   // ── Hauptberechnung ────────────────────────────────────────────────────────
   const computed = useMemo((): Computed => {
-    const allGates = Object.values(circuit.gates);
+    const allGates = Object.values(analysisCircuit.gates);
 
     // Verbundene Gate-IDs (haben mindestens einen Draht)
-    const connectedIds = collectConnectedGateIds(circuit);
+    const connectedIds = collectConnectedGateIds(analysisCircuit);
 
     // Zyklenerkennung via Topologischer Sortierung
-    const { order: evalOrder, cycles } = topologicalSort(circuit);
+    const { order: evalOrder, cycles } = topologicalSort(analysisCircuit);
     const hasCycles = cycles.length > 0;
 
     // Erkennung sequenzieller Gatter (Flip-Flops, Latches) auch ohne Draht-Zyklen.
@@ -167,9 +166,9 @@ export function TruthTableModal({ onClose }: Props) {
       const table: Array<{ ins: number[]; mids: number[]; outs: number[] }> = [];
       for (let mask = 0; mask < (1 << inputs.length); mask++) {
         const copy: Circuit = {
-          ...circuit,
+          ...analysisCircuit,
           gates: Object.fromEntries(
-            Object.entries(circuit.gates).map(([id, g]) => {
+            Object.entries(analysisCircuit.gates).map(([id, g]) => {
               const idx = inputs.findIndex(sw => sw.id === id);
               if (idx < 0) return [id, g];
               const val = (mask >> (inputs.length - 1 - idx)) & 1;
@@ -206,7 +205,7 @@ export function TruthTableModal({ onClose }: Props) {
     // Zustandsgatter = Gatter in Draht-Zyklen (Feedback) ODER synchrone
     // FF/Register ODER Gatter mit stateUpdate (z.B. SR-Latch, D-Latch).
     const feedbackGateIds = collectSttFeedbackGateIds(
-      circuit,
+      analysisCircuit,
       connectedIds,
       cycles,
       gateRegistry.get.bind(gateRegistry),
@@ -214,7 +213,7 @@ export function TruthTableModal({ onClose }: Props) {
 
     // Zustandsvariablen = sichtbare State-Carriers der Zustandsgatter, x-sortiert
     const stateVars = collectStateVarsForStt(
-      circuit,
+      analysisCircuit,
       connectedIds,
       feedbackGateIds,
       gateRegistry.get.bind(gateRegistry),
@@ -246,254 +245,73 @@ export function TruthTableModal({ onClose }: Props) {
       .filter(g => OUTPUT_TYPES.has(g.typeId) && connectedIds.has(g.id))
       .sort((a, b) => a.x - b.x);
 
-    const totalVars = inputs.length + stateVars.length;
+    const projectedView = buildStateTransitionProjection(analysisCircuit, inputs, stateVars, outputGates);
+    const projectedInputs = projectedView.inputs;
+    const projectedStateVars = projectedView.stateVars;
+    const projectedOutputGates = projectedView.outputGates;
 
     // Keine Zustandsvariablen → kein valides STT-Modell
-    if (stateVars.length === 0) {
-      return { mode: 'state-transition', inputs, stateVars, outputGates, rows: [], tooMany: false };
-    }
-
-    // ── Reduzierte Analyse für breite Schaltungen (totalVars > 8) ────────────
-    //
-    // Strategie: Eingänge in "Steuer-Pins" (CLK, /CLR, LE, OE, …) und
-    // "Daten-Pins" (D0-D7, DS) trennen.  Nur Steuerpins × ein repräsentatives
-    // Zustandsbit werden enumerated.  Datenpins werden auf 0 fixiert, alle
-    // übrigen Zustandsbits auf 0 fixiert.  Damit bleibt die Tabelle ≤ 256 Zeilen
-    // und zeigt das wesentliche Steuerverhalten des IC.
-    let activeInputs  = inputs;
-    let activeStateVars = stateVars;
-    let dataInputsToZero: GateInstance[] = [];
-    let nonRepStateBits: StateVar[] = [];
-    let reducedMeta: StateTransitionResult['reducedMeta'];
-
-    if (totalVars > 8) {
-      const { controls, data } = classifyInputs(inputs, circuit);
-      const representative = chooseRepresentativeStateVar(stateVars);
-      // Reserve 1 slot for the representative state bit → max 7 control inputs
-      const MAX_CTRL    = 7;
-      const cappedCtrls = controls.length > MAX_CTRL;
-      activeInputs       = cappedCtrls ? controls.slice(0, MAX_CTRL) : controls;
-      activeStateVars    = [representative];
-      dataInputsToZero   = data;
-      nonRepStateBits    = stateVars.filter(sv => sv !== representative);
-      reducedMeta = {
-        fixedDataLabels: data.map(g => gateLabel(g)),
-        totalStateBits:  stateVars.length,
-        controlCount:    activeInputs.length,
-        cappedControls:  cappedCtrls,
+    if (projectedStateVars.length === 0) {
+      return {
+        mode: 'state-transition',
+        inputs: projectedInputs,
+        inputRoles: projectedView.inputRoles,
+        stateVars: projectedStateVars,
+        outputGates: projectedOutputGates,
+        rows: [],
+        isProjectedFsmView: projectedView.isProjectedFsmView,
+        tooMany: false,
       };
-      // Sanity: if we still can't fit (shouldn't happen), fall back to tooMany
-      if (activeInputs.length + 1 > 8) {
-        return { mode: 'state-transition', inputs, stateVars, outputGates, rows: [], tooMany: true };
-      }
     }
-
-    const activeTotalVars = activeInputs.length + activeStateVars.length;
-
-    // Wire-Map für Single-Tick-Simulation (einmal berechnen)
-    const wireMap = buildWireMap(circuit);
-
-    // Alle Kombinationen von (aktive Eingänge × aktiver Zustand) enumerated
-    const rows: StateTransitionResult['rows'] = [];
-
-    for (let combo = 0; combo < (1 << activeTotalVars); combo++) {
-      // Bit-Layout: [input0 ... inputN-1 | state0 ... stateM-1], MSB links
-      const inputBits = activeInputs.map(
-        (_, i) => (combo >> (activeTotalVars - 1 - i)) & 1
-      );
-      const stateBits = activeStateVars.map(
-        (_, s) => (combo >> (activeStateVars.length - 1 - s)) & 1
-      );
-
-      // Buffer aus aktuellem Circuit-Zustand initialisieren
-      const buf = initBuffer(circuit);
-
-      // ── Aktive Steuer-Eingänge erzwingen ─────────────────────────────────
-      for (let i = 0; i < activeInputs.length; i++) {
-        const g   = activeInputs[i];
-        const val = inputBits[i] as SignalValue;
-        buf.customStates[g.id] = { ...(buf.customStates[g.id] ?? {}), value: val };
-        if (!buf.outputs[g.id]) buf.outputs[g.id] = {};
-        try {
-          for (const port of gateRegistry.get(g.typeId).outputs) {
-            buf.outputs[g.id][port.id] = val;
-          }
-        } catch {
-          buf.outputs[g.id]['out'] = val; // Fallback
-        }
-      }
-
-      // ── Datenpins fest 0 (reduzierte Analyse) ────────────────────────────
-      for (const g of dataInputsToZero) {
-        buf.customStates[g.id] = { ...(buf.customStates[g.id] ?? {}), value: 0 };
-        if (!buf.outputs[g.id]) buf.outputs[g.id] = {};
-        try {
-          for (const port of gateRegistry.get(g.typeId).outputs) {
-            buf.outputs[g.id][port.id] = 0 as SignalValue;
-          }
-        } catch {
-          buf.outputs[g.id]['out'] = 0 as SignalValue;
-        }
-      }
-
-      // ── Nicht-repräsentative Zustandsbits auf 0 fixieren ─────────────────
-      for (const sv of nonRepStateBits) {
-        let hiddenInit: Record<string, unknown> = {};
-        try {
-          const svDef = gateRegistry.get(circuit.gates[sv.gateId].typeId);
-          if (svDef.stateInit) {
-            // Pick only hidden state keys from stateInit
-            for (const hk of svDef.hiddenStateKeys ?? []) {
-              if (hk in svDef.stateInit) hiddenInit[hk] = svDef.stateInit[hk];
-            }
-          } else {
-            hiddenInit = { prevClk: 0 }; // legacy fallback
-          }
-        } catch { hiddenInit = { prevClk: 0 }; }
-        buf.customStates[sv.gateId] = {
-          ...(buf.customStates[sv.gateId] ?? {}),
-          [sv.stateKey]: 0,
-          ...hiddenInit,
-        };
-      }
-
-      // ── Aktive Zustandsvariablen erzwingen ────────────────────────────────
-      // 1) buf.customStates: damit das Gatter in evaluate() / stateUpdate()
-      //    den korrekten aktuellen Zustand kennt (nicht den aus der echten Schaltung)
-      // 2) Hidden state (z.B. prevClk) wird aus stateInit initialisiert,
-      //    damit clock=1 immer eine steigende Flanke auslöst.
-      for (let s = 0; s < activeStateVars.length; s++) {
-        const sv  = activeStateVars[s];
-        const val = stateBits[s] as SignalValue;
-        let hiddenInit: Record<string, unknown> = {};
-        try {
-          const svDef = gateRegistry.get(circuit.gates[sv.gateId].typeId);
-          if (svDef.stateInit) {
-            for (const hk of svDef.hiddenStateKeys ?? []) {
-              if (hk in svDef.stateInit) hiddenInit[hk] = svDef.stateInit[hk];
-            }
-          } else {
-            hiddenInit = { prevClk: 0 }; // legacy fallback
-          }
-        } catch { hiddenInit = { prevClk: 0 }; }
-        buf.customStates[sv.gateId] = {
-          ...(buf.customStates[sv.gateId] ?? {}),
-          [sv.stateKey]: val,
-          ...hiddenInit,
-        };
-      }
-
-      // Ausgabe-Ports aus dem erzwungenen customState via evaluate() berechnen,
-      // damit downstream-Gates den vorgegebenen Zustand lesen.
-      // Echte Input-Werte (z.B. OE) werden aus dem Buffer via WireMap gelesen.
-      // NOTE: we use stateVars (full list) here to ensure all state-gate outputs
-      // are initialised, even if their state is fixed at 0 in reducedMeta mode.
-      const forcedGateIds = new Set(stateVars.map(sv => sv.gateId));
-      for (const gateId of forcedGateIds) {
-        try {
-          const def = gateRegistry.get(circuit.gates[gateId].typeId);
-          const gateInputs: Record<string, SignalValue> = {};
-          for (const inp of def.inputs) {
-            const upstream = wireMap.get(`${gateId}:${inp.id}`) ?? [];
-            gateInputs[inp.id] = upstream.length > 0
-              ? resolveWiredValues(
-                upstream.map((src) => ((buf.outputs[src.fromGateId]?.[src.fromPortId] ?? 0) as SignalValue)),
-              )
-              : (def.defaultInputValues?.[inp.id] ?? 0);
-          }
-          const evalOutputs = def.evaluate(
-            gateInputs,
-            buf.customStates[gateId] as Record<string, unknown>,
-          );
-          if (!buf.outputs[gateId]) buf.outputs[gateId] = {};
-          for (const [pid, v] of Object.entries(evalOutputs)) {
-            buf.outputs[gateId][pid] = v as SignalValue;
-          }
-        } catch { /* unbekannter Typ */ }
-      }
-
-      // Alle anderen synchronen Gatter (nicht State-Variable) ebenfalls auf prevClk=0
-      // setzen, damit keine Phantom-Flanken aus dem echten Schaltungszustand entstehen.
-      for (const gate of allGates) {
-        if (feedbackGateIds.has(gate.id)) continue; // bereits oben behandelt
-        try {
-          if (gateRegistry.get(gate.typeId).isSynchronous) {
-            buf.customStates[gate.id] = { ...(buf.customStates[gate.id] ?? {}), prevClk: 0 };
-          }
-        } catch { /* unbekannter Typ */ }
-      }
-
-      // ── Exakt EIN Simulations-Tick (Read-Buffer → Logik → Write-Buffer) ─────
-      // KEIN Settle/while-Loop! Die STT zeigt den Zustand nach genau einem
-      // Propagations-Schritt. Das ist die mathematisch korrekte Definition von
-      // Q(t+1): was die Gatter im nächsten Takt aus Q(t) und den Eingängen machen.
-      // Clocks werden eingefroren (isClockPaused = true) → nur kombinatorische Logik.
-      const nextBuf = runOneTick(circuit, buf, wireMap, /* isClockPaused */ true);
-
-      // ── Synchrone Outputs nachziehen ──────────────────────────────────────
-      // runOneTick berechnet outputs via evaluate(oldState) → Q(t).
-      // stateUpdate berechnet Q(t+1) → nextBuf.customStates.
-      // Damit nachgelagerte LEDs den korrekten Q(t+1) sehen, müssen wir
-      // evaluate() für synchrone Gatter mit dem neuen customState wiederholen.
-      // Dabei werden die echten Input-Werte (z.B. OE) aus dem Wire-Map gelesen,
-      // damit tri-state Outputs korrekt Z liefern wenn OE inaktiv ist.
-      for (const gate of allGates) {
-        let def; try { def = gateRegistry.get(gate.typeId); } catch { continue; }
-        if (!def.isSynchronous) continue;
-        const newCs = nextBuf.customStates[gate.id];
-        if (!newCs) continue;
-        // Re-read actual input values from post-tick buffer via wireMap
-        const reInputs: Record<string, SignalValue> = {};
-        for (const inp of def.inputs) {
-          const upstream = wireMap.get(`${gate.id}:${inp.id}`) ?? [];
-          reInputs[inp.id] = upstream.length > 0
-            ? resolveWiredValues(
-              upstream.map((src) => ((nextBuf.outputs[src.fromGateId]?.[src.fromPortId] ?? 0) as SignalValue)),
-            )
-            : (def.defaultInputValues?.[inp.id] ?? 0);
-        }
-        const reEval = def.evaluate(
-          reInputs,
-          newCs as Record<string, unknown>,
-        );
-        if (!nextBuf.outputs[gate.id]) nextBuf.outputs[gate.id] = {};
-        for (const [pid, v] of Object.entries(reEval)) {
-          nextBuf.outputs[gate.id][pid] = v as SignalValue;
-        }
-      }
-
-      // Nächster Zustand Q(t+1) bestimmen (only for active/enumerated state vars):
-      const nextState = activeStateVars.map(sv => {
-        try {
-          const gType = circuit.gates[sv.gateId]?.typeId ?? '';
-          if (gateRegistry.get(gType).isSynchronous) {
-            return (nextBuf.customStates[sv.gateId]?.[sv.stateKey] ?? 0) as number;
-          }
-        } catch { /* unbekannter Typ → Fallback */ }
-        return (nextBuf.outputs[sv.gateId]?.[sv.portId] ?? 0) as number;
-      });
-
-      // Externe LED-Ausgänge — outputs bereits mit neuem Zustand aktualisiert
-      const outputBits = outputGates.map(led => {
-        const wire = Object.values(circuit.wires).find(w => w.to.gateId === led.id);
-        if (!wire) return 0;
-        return (nextBuf.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as number;
-      });
-
-      rows.push({ inputBits, stateBits, nextState, outputBits });
-    }
+    const staticTable = buildStaticStateTransitionTable({
+      circuit: analysisCircuit,
+      feedbackGateIds,
+      projectedInputs,
+      projectedStateVars,
+      projectedOutputGates,
+      isProjectedFsmView: projectedView.isProjectedFsmView,
+    });
 
     return {
       mode: 'state-transition',
-      inputs:      activeInputs,
-      stateVars:   activeStateVars,
-      outputGates,
-      rows,
-      tooMany:     false,
-      reducedMeta,
+      inputs: staticTable.inputs,
+      inputRoles: projectedView.inputRoles,
+      stateVars: staticTable.stateVars,
+      outputGates: staticTable.outputGates,
+      rows: staticTable.rows,
+      isProjectedFsmView: projectedView.isProjectedFsmView,
+      tooMany: staticTable.tooMany,
+      reducedMeta: staticTable.reducedMeta,
     };
 
-  }, [circuit]);
+  }, [analysisCircuit]);
+
+  const activeSttViewMode: StateTransitionDisplayMode =
+    computed.mode === 'state-transition' && computed.isProjectedFsmView
+      ? (computed.reducedMeta ? 'fsm_compact' : sttViewMode)
+      : 'technical_full';
+
+  const displayedStateTransition = useMemo(() => {
+    if (computed.mode !== 'state-transition') return null;
+    return buildDisplayedStateTransitionTable({
+      table: {
+        inputs: computed.inputs,
+        stateVars: computed.stateVars,
+        outputGates: computed.outputGates,
+        rows: computed.rows,
+        tooMany: computed.tooMany,
+        reducedMeta: computed.reducedMeta,
+      },
+      mode: activeSttViewMode,
+      isProjectedFsmView: computed.isProjectedFsmView,
+      inputRoles: computed.inputRoles,
+    });
+  }, [activeSttViewMode, computed]);
+
+  const showSttViewModeSelect = computed.mode === 'state-transition'
+    && computed.isProjectedFsmView
+    && !computed.tooMany
+    && !computed.reducedMeta;
 
   // ── Style-Funktionen ──────────────────────────────────────────────────────────
 
@@ -563,9 +381,42 @@ export function TruthTableModal({ onClose }: Props) {
               </p>
             )}
           </div>
+          {showSttViewModeSelect && (
+            <label
+              style={{
+                marginLeft: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                color: '#94a3b8',
+                fontSize: 11,
+                fontFamily: 'monospace',
+              }}
+            >
+              <span>Ansicht</span>
+              <select
+                aria-label="STT-Ansicht"
+                value={activeSttViewMode}
+                onChange={(event) => setSttViewMode(event.target.value as StateTransitionDisplayMode)}
+                style={{
+                  minWidth: 170,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  border: '1px solid #475569',
+                  background: '#0f172a',
+                  color: '#e2e8f0',
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                }}
+              >
+                <option value="fsm_compact">FSM kompakt</option>
+                <option value="technical_full">Technisch voll</option>
+              </select>
+            </label>
+          )}
           <button
             onClick={onClose}
-            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
+            style={{ marginLeft: showSttViewModeSelect ? 12 : 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
           >×</button>
         </div>
 
@@ -606,8 +457,8 @@ export function TruthTableModal({ onClose }: Props) {
                         <th key={g.id} style={thStyle('in')}>{gateLabel(g)}</th>
                       ))}
                       {intermediateCols.length > 0 && <th style={sepTh}>│</th>}
-                      {intermediateCols.map((col, i) => (
-                        <th key={i} style={thStyle('mid')}>{col.header}</th>
+                      {intermediateCols.map((col) => (
+                        <th key={`${col.gateId}:${col.portId}`} style={thStyle('mid')}>{col.header}</th>
                       ))}
                       <th style={sepTh}>│</th>
                       {outputs.map(g => (
@@ -617,7 +468,7 @@ export function TruthTableModal({ onClose }: Props) {
                   </thead>
                   <tbody>
                     {table.map((row, ri) => (
-                      <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.025)' }}>
+                      <tr key={row.ins.join('')} style={{ background: ri % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.025)' }}>
                         {row.ins.map((v, i)  => <td key={i} style={tdStyle(v, 'in')} >{v}</td>)}
                         {intermediateCols.length > 0 && <td style={sepTd}>│</td>}
                         {row.mids.map((v, i) => <td key={i} style={tdStyle(v, 'mid')}>{displayVal(v)}</td>)}
@@ -636,7 +487,12 @@ export function TruthTableModal({ onClose }: Props) {
         {/* MODUS 2: Zustandsübergangstabelle                                 */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {computed.mode === 'state-transition' && (() => {
-          const { inputs, stateVars, outputGates, rows, tooMany, reducedMeta } = computed;
+          const { tooMany, reducedMeta } = computed;
+          const inputs = displayedStateTransition?.inputs ?? computed.inputs;
+          const stateVars = displayedStateTransition?.stateVars ?? computed.stateVars;
+          const outputGates = displayedStateTransition?.outputGates ?? computed.outputGates;
+          const rows = displayedStateTransition?.rows ?? computed.rows;
+          const modeNotes = displayedStateTransition?.notes ?? [];
 
           if (stateVars.length === 0) {
             return (
@@ -697,6 +553,24 @@ export function TruthTableModal({ onClose }: Props) {
                 </div>
               )}
 
+              {activeSttViewMode === 'fsm_compact' && modeNotes.length > 0 && (
+                <div style={{
+                  marginBottom: 14,
+                  padding: '8px 12px',
+                  background: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: 6,
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: '#cbd5e1',
+                  lineHeight: 1.7,
+                }}>
+                  {modeNotes.map((note) => (
+                    <div key={note}>• {note}</div>
+                  ))}
+                </div>
+              )}
+
               {/* Legende */}
               <div style={{ marginBottom: 12, fontSize: 11, fontFamily: 'monospace', display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 {hasInputs  && <span style={{ color: '#60a5fa' }}>■ Steuer-Eingänge</span>}
@@ -730,12 +604,12 @@ export function TruthTableModal({ onClose }: Props) {
                       <th key={g.id} style={thStyle('in')}>{gateLabel(g)}</th>
                     ))}
                     {hasInputs && <th style={sepTh}>│</th>}
-                    {stateVars.map((sv, i) => (
-                      <th key={i} style={thStyle('state')}>{sv.label}</th>
+                    {stateVars.map((sv) => (
+                      <th key={`${sv.gateId}:${sv.stateKey}`} style={thStyle('state')}>{sv.label}</th>
                     ))}
                     <th style={sepTh}>│</th>
-                    {stateVars.map((sv, i) => (
-                      <th key={i} style={thStyle('next')}>{sv.label}′</th>
+                    {stateVars.map((sv) => (
+                      <th key={`${sv.gateId}:${sv.stateKey}:next`} style={thStyle('next')}>{sv.label}′</th>
                     ))}
                     {hasOutputs && <th style={sepTh}>│</th>}
                     {hasOutputs && outputGates.map(g => (
@@ -750,7 +624,7 @@ export function TruthTableModal({ onClose }: Props) {
                     const isStableState = row.stateBits.every((v, i) => v === row.nextState[i]);
                     return (
                       <tr
-                        key={ri}
+                        key={`${row.inputBits.join('')}:${row.stateBits.join('')}`}
                         style={{
                           background: isStableState
                             ? 'rgba(245,158,11,0.07)'      // Amber-Tint = stabiler Zustand
@@ -772,7 +646,9 @@ export function TruthTableModal({ onClose }: Props) {
 
               {/* Fußzeile */}
               <p style={{ marginTop: 10, fontSize: 10, color: '#64748b', fontFamily: 'monospace' }}>
-                ′ = Zustand nach einem Simulationsschritt (Settle-Phase)
+                {activeSttViewMode === 'fsm_compact'
+                  ? 'FSM kompakt: Takt als Übergangsereignis, Resetfälle im technischen Modus.'
+                  : '′ = Zustand nach einem Simulationsschritt (Settle-Phase)'}
                 &nbsp;|&nbsp;
                 <span style={{ color: '#f59e0b' }}>■</span> = Stabiler Zustand Q(t) = Q(t+1)
                 {reducedMeta && (

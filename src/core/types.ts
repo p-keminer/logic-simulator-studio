@@ -47,6 +47,30 @@ export interface CustomICExportMetadata {
   outputGateIds: string[];
 }
 
+export type ProjectionSourceSystem = 'fsm_synth';
+
+export type ProjectionSignalRole =
+  | 'state'
+  | 'state_inverted'
+  | 'output'
+  | 'input'
+  | 'clock'
+  | 'reset'
+  | 'display_mirror'
+  | 'internal_helper';
+
+export type ProjectionVisibility = 'canonical' | 'derived' | 'debug';
+
+export interface GateProjectionMetadata {
+  sourceSystem: ProjectionSourceSystem;
+  projectionBatchId: string;
+  role: ProjectionSignalRole;
+  visibility: ProjectionVisibility;
+  signalLabel: string;
+  groupKey: string;
+  signalPortId?: string;
+}
+
 export interface GateDefinition {
   typeId: GateTypeId;
   label: string;
@@ -189,6 +213,7 @@ export interface GateInstance {
   label?: string;
   outputSignals: Record<string, SignalState>;
   customState?: Record<string, unknown>;
+  projection?: GateProjectionMetadata;
   isSelected: boolean;
 }
 

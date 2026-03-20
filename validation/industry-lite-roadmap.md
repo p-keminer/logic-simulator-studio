@@ -1,6 +1,6 @@
 # Industry-Lite EDA Roadmap
 
-Datum: 2026-03-19
+Datum: 2026-03-20
 Repo: `<repo-root>`
 
 ## Zweck
@@ -19,7 +19,7 @@ Zielbild:
 
 ### Positiv bestaetigt
 
-- `npm test` ist gruen: **853** Tests bestanden.
+- `npm test` ist gruen: **868** Tests bestanden.
 - `npm run build` ist gruen.
 - `npm run lint` ist gruen.
 - Contract Runner v1: **447 pass, 0 fail, 0 unsupported** (447 total) - in CI als eigenes Gate.
@@ -31,6 +31,8 @@ Zielbild:
 - Alle logic_basic- und logic_multi-Gatter exportieren nach Verilog und VHDL.
 - `gc_t2_bus_mux` ist bewusst als `expected_limit` klassifiziert - dokumentierte Exporter-Grenze, nicht als pass verkauft.
 - Report-Artefakte (JSON + Markdown) werden von allen vier fachlichen CI-Jobs hochgeladen.
+- Fuer aus dem FSM-Editor synthetisierte Schaltungen fehlt noch eine kanonische Projektion in STT und Timing: die aktuelle UI arbeitet dort noch zu stark auf Roh-Gate-/Port-Ebene statt auf semantischen FSM-Signalen. Der naechste Schritt bleibt bewusst klein und zieht nur den statischen/reduzierten STT-Kern weiter in den Core, ohne das UI-Wiring gross umzubauen.
+- Das Race-Panel und die Race-Markierungen haben noch keine saubere Lifecycle-Logik fuer Reset, Strukturpruning und Dedupe identischer Wiederholungen.
 
 ### Fachlich relevante Restluecken
 
@@ -39,7 +41,7 @@ Zielbild:
 - UI-Timing-Audit ist semantisch gruen (5 PASS) und jetzt als eigenes CI-Gate eingebunden; der offene Restpunkt ist ein breiterer Waveform-/Visual-Diff.
 - Export-Determinismus (Re-Export + Diff gegen goldene Artefakte) ist jetzt aktiv; Golden Corpus v1 fuehrt ausserdem externe HDL-Syntax/Lint-Checks und szenariobasierte HDL-Simulation aus.
 - Branch-Protection-Rules in GitHub Settings sind noch nicht konfiguriert (externer manueller Schritt).
-- Contract-Runner-Multi-Driver-Konflikte sind jetzt ausgefuehrt; offener bleibt nur die Ausweitung von der repräsentativen Bus-Fixture auf groessere zusammengesetzte Designs.
+- Contract-Runner-Multi-Driver-Konflikte sind jetzt ausgefuehrt; offener bleibt nur die Ausweitung von der reprÃ¤sentativen Bus-Fixture auf groessere zusammengesetzte Designs.
 
 ## Maturitaetsziel
 
@@ -68,13 +70,15 @@ Abgeschlossen:
 - ~~fehlende Mehrtreiberauflosung~~ - RESOLVED P0 2026-03-07 (Konflikte ergeben `X`)
 - ~~fehlende HDL-Export-Abdeckung fuer Basisgatter~~ - RESOLVED P0 2026-03-07
 - ~~Verilator-LATCH-Warnung bei `74HC373`~~ - RESOLVED P1-1 2026-03-07
-- ~~Kein automatisierter Contract-Runner~~ - RESOLVED / EXPANDED P1-5 2026-03-19 (447 pass, 0 unsupported)
-- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED / EXPANDED P1-6 2026-03-19 (23 pass, 1 expected_limit, externe HDL-Pruefung aktiv)
+- ~~Kein automatisierter Contract-Runner~~ - RESOLVED / EXPANDED P1-5 2026-03-20 (447 pass, 0 unsupported)
+- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED / EXPANDED P1-6 2026-03-20 (23 pass, 1 expected_limit, externe HDL-Pruefung aktiv)
 
 Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
 - STT-Variablenlimit blockiert UI-Verifikation fuer breite sequenzielle Schaltungen: P2 (Reduzierte Ansicht implementiert)
 - UI-Timing-Audit ist funktional gruen und als CI-Gate verdrahtet; offen bleibt nur ein breiterer Waveform-/Visual-Diff
+- Synthetisierte FSM-Exporte haben noch kein vollstaendig aus dem Core abgeleitetes semantisches Projektionsmodell fuer STT/Timing; ein erster Infrastrukturschnitt ist da, und der naechste Schritt bleibt bewusst klein: nur den statischen/reduzierten STT-Kern weiter aus der UI loesen; siehe `validation/fsm-export-fixes/work-package.md`
+- Race-Panel/Race-Monitor braucht eine eigene strukturierte Lifecycle-Logik fuer Auto-Reset, manuellen Reset und Incident-Dedupe; siehe `validation/race-panel-fixes/work-package.md`
 
 ### Stufe 3: Industry-Lite EDA
 
@@ -148,10 +152,21 @@ Status: **TEILWEISE ERREICHT**
 - 5 Fokusfaelle liefern echte Timing-Snapshots und PASS statt WARN
 - UI-Timing-Rendering ist fuer die Fokusfaelle lokal und in CI verifiziert
 - Offene Restluecke ist jetzt nicht mehr die CI-Anbindung, sondern ein breiterer Waveform-/Visual-Diff fuer mehr als die Fokusfaelle
+- Fuer FSM-Editor -> Canvas-Synthese fehlt noch die volle semantische Signalprojektion: ein erster Infrastrukturschnitt ist bereits umgesetzt (Projektionsmetadaten, projectionBatchId, zentrale STT-Projektion, kleiner Core-Helfer fuer statische/verkuerzte STT, kanonische Timing-Kanaele, isolierte FSM-STT-Ansicht und explizite Mixed-Fallbacks), offen bleiben jetzt vor allem feinere Subsystem-Grenzen fuer breite sowie gemischte Faelle und die dazu passenden Regressionen
+
+Offenes Struktur-Arbeitspaket:
+- `validation/fsm-export-fixes/work-package.md`
+- Kernidee: Signalrollen und Sichtbarkeitsklassen einfuehren, die FSM-Synthese annotieren, einen read-only Sequential-Projection-Layer bauen und STT/Timing auf dieselbe kanonische Projektion umstellen
+- bereits umgesetzt: erste Signalrollen, Projektionsmetadaten, Batch-Isolation und die gemeinsame STT-/Timing-Projektion fuer isolierte FSMs
+- naechste Validierungsobjekte: Batch-Konsistenz, kanonische STT, kanonische Timing-Reihenfolge, reduzierte STT fuer breite FSMs, Mixed-Mode-Fallback
+
+Zusaetzliches offenes Struktur-Arbeitspaket:
+- `validation/race-panel-fixes/work-package.md`
+- Kernidee: Race-Lifecycle als eigene Store-Logik behandeln, nicht als lokaler Panel-Hotfix
 
 ### W5. Hierarchie und Exportierbarkeit
 
-Status: **TEILWEISE ERREICHT** (2026-03-19)
+Status: **TEILWEISE ERREICHT** (2026-03-20)
 
 - Custom ICs sind simulativ nutzbar
 - Ein einlagiger HDL-Exportpfad fuer registrierte Custom ICs ist jetzt ueber strukturelles Flattening verifiziert
@@ -160,7 +175,7 @@ Status: **TEILWEISE ERREICHT** (2026-03-19)
 
 ### W6. Qualitaetsgates und CI
 
-Status: **WEITGEHEND ERREICHT** (2026-03-19)
+Status: **WEITGEHEND ERREICHT** (2026-03-20)
 
 Aktueller Stand:
 - CI vorhanden: `.github/workflows/quality-gates.yml`  6 Jobs:
@@ -234,6 +249,8 @@ Umfang:
 Status:
 - UI-Timing-Semantik ist fokussiert in CI abgesichert; naechster Schritt ist ein breiterer Waveform-/Visual-Diff
 - Hierarchie/Custom-IC-Absicherung hat mit `GC-V2-6` und `GC-V2-9` zwei one-level-Pfade; naechster Schritt ist tiefere/nestbare Absicherung
+- Fuer FSM-Exporte ist zusaetzlich das Struktur-Arbeitspaket offen: semantische Projektion fuer STT/Timing statt Roh-Gate-Anzeige, inklusive read-only Sequential-Projection-Layer und statischer/verkuerzter STT
+- Fuer Race-/Hazard-Monitoring ist zusaetzlich das Struktur-Arbeitspaket offen: entkoppelter Race-Lifecycle mit Pruning, Reset und Dedupe
 
 ### Phase D  Teilweise erreicht
 
@@ -277,7 +294,7 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 - UI und HDL keinen Widerspruch dazu zeigen
 - die bekannte Modellgrenze nicht einfach nur unerkannt geblieben ist
 
-## Naechster empfohlener Fokus (Stand 2026-03-19)
+## Naechster empfohlener Fokus (Stand 2026-03-20)
 
 1. **P2:** Funktionale Schaltungssimulation im Golden Corpus vertiefen (laengere und dichtere HDL-Traces)
 2. **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster)

@@ -1,8 +1,8 @@
 # validation/ - Kanonischer Einstiegspunkt
 
 **Projekt:** logic-gate-simulator
-**Stand:** 2026-03-19
-**Qualitaetsstand:** 853/853 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
+**Stand:** 2026-03-20
+**Qualitaetsstand:** 868/868 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Metrik | Wert |
 |---|---|
-| Vitest-Suite | **853/853** pass |
+| Vitest-Suite | **868/868** pass |
 | Build | pass (`tsc -b` + `vite build`) |
 | Lint | pass |
 | Contract Runner v1 | **447 pass, 0 fail, 0 unsupported** (447 total) |
@@ -46,6 +46,12 @@ Browser-Audit der 12 Fokusfaelle: STT-Projektion, HDL-Modal-Konsistenz, Screensh
 ### 7. Roadmap -> industry-lite-roadmap.md
 Drei Reifegrad-Stufen (Teaching Tool / Design Tool / Industry-Lite EDA) mit 6 Arbeitsstromen. Langfristiger Horizont.
 
+### 8. Offenes FSM-Arbeitspaket -> fsm-export-fixes/work-package.md
+Strukturelles Arbeitspaket fuer alle aus dem FSM-Editor synthetisierten Exporte. Dokumentiert die aktuell bekannten UI-/STT-/Timing-Semantikbrueche, die ersten Architekturideen fuer eine allgemeine Loesung, den geplanten read-only Sequential-Projection-Layer fuer statische/verkuerzte STT und die offenen Unterpakete.
+
+### 9. Offenes Race-Arbeitspaket -> race-panel-fixes/work-package.md
+Strukturelles Arbeitspaket fuer Race-Panel, Race-Markierungen und Race-Lifecycle im Store. Dokumentiert Reset-, Prune- und Dedupe-Anforderungen sowie die geforderte Trennung von Race-Logik und reinem UI-Rendering.
+
 ---
 
 ## CI-Struktur
@@ -77,7 +83,12 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | `golden-corpus-v1.json` | Maschinenlesbarer Index fuer Golden-Corpus v1 |
 | `golden-corpus-plan.md` | Plan fuer 25 Referenzschaltungen in 5 Tracks |
 | `industry-lite-roadmap.md` | Arbeitsstrom-Roadmap (W1-W6, Phasen A-D) |
+| `fsm-export-fixes/work-package.md` | Offenes Struktur-Arbeitspaket fuer FSM-Exportprojektionen (STT, Timing, Metadaten, Validation). Bereits umgesetzt sind Projektionsmetadaten, `projectionBatchId`, der zentrale `buildStateTransitionProjection(...)`-Pfad, ein kleiner Core-Helfer fuer statische/reduzierte STT, eine STT-Ansichtsumschaltung (`FSM kompakt` / `Technisch voll`) fuer projected FSMs und explizite Mixed-Fallback-Regeln fuer partielle Projektionen. Der naechste Schritt bleibt weiterhin klein: den neuen STT-Kern belastbar halten und erst danach feinere Subsystem-Grenzen planen. |
+| `fsm-export-fixes/README.md` | Einstiegspunkt fuer Repro-Faelle und Fix-Hierarchie rund um FSM-Exporte |
+| `race-panel-fixes/work-package.md` | Offenes Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik |
+| `race-panel-fixes/README.md` | Einstiegspunkt fuer die Race-Fix-Hierarchie |
 | `verification-matrix.md` | Pflichtpruefmuster je Gate-Klasse und Freigaberegeln |
+| `ui-manual-verification-plan.md` | Manueller UI-Pruefplan fuer FSM-Projektion, STT, Timing und Panel-Persistenz |
 | `claude-integration-review.md` | Bewertung der Claude-Integration im Projekt |
 | `audit-determinism-report.md` | Determinismus-/CI-Tauglichkeitsbericht fuer focused-nine core und UI |
 | `audit-determinism-summary.json` | Maschinenlesbare Determinismus-Zusammenfassung |
@@ -148,6 +159,8 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
+- **P1/P2:** Das offene Race-Arbeitspaket abarbeiten (`validation/race-panel-fixes/work-package.md`): store-seitiges Pruning geloeschter Race-Ursachen, manueller Reset, signaturbasiertes Dedupe und entkoppelte Race-Lifecycle-Logik
+- **P1/P2:** Das offene Struktur-Arbeitspaket fuer FSM-Exporte in kleinen Schritten weiterziehen (`validation/fsm-export-fixes/work-package.md`): den neuen STT-Core-Helfer und die expliziten Mixed-Fallbacks weiter ueber breite/gemischte Sequential-Faelle absichern und erst danach feinere Subsystem-Grenzen angehen, ohne das UI-Wiring gross umzubauen
 - **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster und tiefere Invarianten)
 - **P1/P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (laengere Traces statt nur kurzer Szenarien)
 - **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, tiefere HDL-Traces, zweite Hierarchie-Stufe, groessere Designs)

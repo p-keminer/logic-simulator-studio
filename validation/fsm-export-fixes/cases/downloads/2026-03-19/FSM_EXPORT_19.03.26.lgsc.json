@@ -1,0 +1,1545 @@
+{
+  "id": "mmy1nl3i-1",
+  "name": "FSM EXPORT 19.03.26",
+  "version": "1.0.0",
+  "gates": {
+    "mmy1vd6a-h": {
+      "id": "mmy1vd6a-h",
+      "typeId": "CLOCK",
+      "x": 500,
+      "y": 60,
+      "label": "CLK",
+      "outputSignals": {
+        "clk": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {
+        "_paused": false,
+        "tickCounter": 10,
+        "value": 1
+      }
+    },
+    "mmy1vd6a-i": {
+      "id": "mmy1vd6a-i",
+      "typeId": "INPUT_SWITCH",
+      "x": 500,
+      "y": 140,
+      "label": "RST",
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6a-j": {
+      "id": "mmy1vd6a-j",
+      "typeId": "INPUT_SWITCH",
+      "x": 500,
+      "y": 280,
+      "label": "A",
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6a-k": {
+      "id": "mmy1vd6a-k",
+      "typeId": "NOT",
+      "x": 640,
+      "y": 280,
+      "label": "!A",
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6a-m": {
+      "id": "mmy1vd6a-m",
+      "typeId": "D_FF_R",
+      "x": 640,
+      "y": 440,
+      "label": "Q0",
+      "outputSignals": {
+        "q": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        },
+        "q_n": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {
+        "q": 0,
+        "prevClk": 1
+      }
+    },
+    "mmy1vd6a-n": {
+      "id": "mmy1vd6a-n",
+      "typeId": "D_FF_R",
+      "x": 640,
+      "y": 560,
+      "label": "Q1",
+      "outputSignals": {
+        "q": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        },
+        "q_n": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {
+        "q": 0,
+        "prevClk": 1
+      }
+    },
+    "mmy1vd6a-s": {
+      "id": "mmy1vd6a-s",
+      "typeId": "NOT",
+      "x": 780,
+      "y": 440,
+      "label": "!Q0",
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6a-t": {
+      "id": "mmy1vd6a-t",
+      "typeId": "NOT",
+      "x": 780,
+      "y": 560,
+      "label": "!Q1",
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-w": {
+      "id": "mmy1vd6b-w",
+      "typeId": "AND",
+      "x": 920,
+      "y": 60,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-z": {
+      "id": "mmy1vd6b-z",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 60,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-12": {
+      "id": "mmy1vd6b-12",
+      "typeId": "AND",
+      "x": 920,
+      "y": 140,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-15": {
+      "id": "mmy1vd6b-15",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 140,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-18": {
+      "id": "mmy1vd6b-18",
+      "typeId": "AND",
+      "x": 920,
+      "y": 220,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1b": {
+      "id": "mmy1vd6b-1b",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 220,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1e": {
+      "id": "mmy1vd6b-1e",
+      "typeId": "AND",
+      "x": 920,
+      "y": 300,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1h": {
+      "id": "mmy1vd6b-1h",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 300,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1k": {
+      "id": "mmy1vd6b-1k",
+      "typeId": "OR",
+      "x": 1200,
+      "y": 380,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1n": {
+      "id": "mmy1vd6b-1n",
+      "typeId": "OR",
+      "x": 1200,
+      "y": 460,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1q": {
+      "id": "mmy1vd6b-1q",
+      "typeId": "OR",
+      "x": 1200,
+      "y": 540,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1t": {
+      "id": "mmy1vd6b-1t",
+      "typeId": "AND",
+      "x": 920,
+      "y": 680,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1w": {
+      "id": "mmy1vd6b-1w",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 680,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-1z": {
+      "id": "mmy1vd6b-1z",
+      "typeId": "AND",
+      "x": 920,
+      "y": 760,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-22": {
+      "id": "mmy1vd6b-22",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 760,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-25": {
+      "id": "mmy1vd6b-25",
+      "typeId": "AND",
+      "x": 920,
+      "y": 840,
+      "outputSignals": {
+        "out": {
+          "value": 1,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-28": {
+      "id": "mmy1vd6b-28",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 840,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2b": {
+      "id": "mmy1vd6b-2b",
+      "typeId": "AND",
+      "x": 920,
+      "y": 920,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2e": {
+      "id": "mmy1vd6b-2e",
+      "typeId": "AND",
+      "x": 1060,
+      "y": 920,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2h": {
+      "id": "mmy1vd6b-2h",
+      "typeId": "OR",
+      "x": 1200,
+      "y": 1000,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2k": {
+      "id": "mmy1vd6b-2k",
+      "typeId": "OR",
+      "x": 1200,
+      "y": 1080,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2n": {
+      "id": "mmy1vd6b-2n",
+      "typeId": "OR",
+      "x": 1200,
+      "y": 1160,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2q": {
+      "id": "mmy1vd6b-2q",
+      "typeId": "AND",
+      "x": 920,
+      "y": 1300,
+      "outputSignals": {
+        "out": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2v": {
+      "id": "mmy1vd6b-2v",
+      "typeId": "OUTPUT_LED",
+      "x": 1420,
+      "y": 60,
+      "label": "Y",
+      "outputSignals": {
+        "_display": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2x": {
+      "id": "mmy1vd6b-2x",
+      "typeId": "OUTPUT_LED",
+      "x": 1520,
+      "y": 60,
+      "label": "Q0",
+      "outputSignals": {
+        "_display": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    },
+    "mmy1vd6b-2z": {
+      "id": "mmy1vd6b-2z",
+      "typeId": "OUTPUT_LED",
+      "x": 1520,
+      "y": 160,
+      "label": "Q1",
+      "outputSignals": {
+        "_display": {
+          "value": 0,
+          "version": 0,
+          "lastChangedAt": 0
+        }
+      },
+      "isSelected": false,
+      "customState": {}
+    }
+  },
+  "wires": {
+    "mmy1vd6a-l": {
+      "id": "mmy1vd6a-l",
+      "from": {
+        "gateId": "mmy1vd6a-j",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-k",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6a-o": {
+      "id": "mmy1vd6a-o",
+      "from": {
+        "gateId": "mmy1vd6a-h",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6a-p": {
+      "id": "mmy1vd6a-p",
+      "from": {
+        "gateId": "mmy1vd6a-i",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6a-q": {
+      "id": "mmy1vd6a-q",
+      "from": {
+        "gateId": "mmy1vd6a-h",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6a-r": {
+      "id": "mmy1vd6a-r",
+      "from": {
+        "gateId": "mmy1vd6a-i",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6a-u": {
+      "id": "mmy1vd6a-u",
+      "from": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6a-v": {
+      "id": "mmy1vd6a-v",
+      "from": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-t",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-x": {
+      "id": "mmy1vd6b-x",
+      "from": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-w",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-y": {
+      "id": "mmy1vd6b-y",
+      "from": {
+        "gateId": "mmy1vd6a-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-w",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-10": {
+      "id": "mmy1vd6b-10",
+      "from": {
+        "gateId": "mmy1vd6b-w",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-z",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-11": {
+      "id": "mmy1vd6b-11",
+      "from": {
+        "gateId": "mmy1vd6a-k",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-z",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-13": {
+      "id": "mmy1vd6b-13",
+      "from": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-12",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-14": {
+      "id": "mmy1vd6b-14",
+      "from": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-12",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-16": {
+      "id": "mmy1vd6b-16",
+      "from": {
+        "gateId": "mmy1vd6b-12",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-15",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-17": {
+      "id": "mmy1vd6b-17",
+      "from": {
+        "gateId": "mmy1vd6a-k",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-15",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-19": {
+      "id": "mmy1vd6b-19",
+      "from": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-18",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1a": {
+      "id": "mmy1vd6b-1a",
+      "from": {
+        "gateId": "mmy1vd6a-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-18",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1c": {
+      "id": "mmy1vd6b-1c",
+      "from": {
+        "gateId": "mmy1vd6b-18",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1b",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1d": {
+      "id": "mmy1vd6b-1d",
+      "from": {
+        "gateId": "mmy1vd6a-j",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1b",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1f": {
+      "id": "mmy1vd6b-1f",
+      "from": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1e",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1g": {
+      "id": "mmy1vd6b-1g",
+      "from": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1e",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1i": {
+      "id": "mmy1vd6b-1i",
+      "from": {
+        "gateId": "mmy1vd6b-1e",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1h",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1j": {
+      "id": "mmy1vd6b-1j",
+      "from": {
+        "gateId": "mmy1vd6a-j",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1h",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1l": {
+      "id": "mmy1vd6b-1l",
+      "from": {
+        "gateId": "mmy1vd6b-z",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1k",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1m": {
+      "id": "mmy1vd6b-1m",
+      "from": {
+        "gateId": "mmy1vd6b-15",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1k",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1o": {
+      "id": "mmy1vd6b-1o",
+      "from": {
+        "gateId": "mmy1vd6b-1k",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1n",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1p": {
+      "id": "mmy1vd6b-1p",
+      "from": {
+        "gateId": "mmy1vd6b-1b",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1n",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1r": {
+      "id": "mmy1vd6b-1r",
+      "from": {
+        "gateId": "mmy1vd6b-1n",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1q",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1s": {
+      "id": "mmy1vd6b-1s",
+      "from": {
+        "gateId": "mmy1vd6b-1h",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1q",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1u": {
+      "id": "mmy1vd6b-1u",
+      "from": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1t",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1v": {
+      "id": "mmy1vd6b-1v",
+      "from": {
+        "gateId": "mmy1vd6a-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1t",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1x": {
+      "id": "mmy1vd6b-1x",
+      "from": {
+        "gateId": "mmy1vd6b-1t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1w",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-1y": {
+      "id": "mmy1vd6b-1y",
+      "from": {
+        "gateId": "mmy1vd6a-k",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1w",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-20": {
+      "id": "mmy1vd6b-20",
+      "from": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1z",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-21": {
+      "id": "mmy1vd6b-21",
+      "from": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-1z",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-23": {
+      "id": "mmy1vd6b-23",
+      "from": {
+        "gateId": "mmy1vd6b-1z",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-22",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-24": {
+      "id": "mmy1vd6b-24",
+      "from": {
+        "gateId": "mmy1vd6a-k",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-22",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-26": {
+      "id": "mmy1vd6b-26",
+      "from": {
+        "gateId": "mmy1vd6a-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-25",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-27": {
+      "id": "mmy1vd6b-27",
+      "from": {
+        "gateId": "mmy1vd6a-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-25",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-29": {
+      "id": "mmy1vd6b-29",
+      "from": {
+        "gateId": "mmy1vd6b-25",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-28",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2a": {
+      "id": "mmy1vd6b-2a",
+      "from": {
+        "gateId": "mmy1vd6a-j",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-28",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2c": {
+      "id": "mmy1vd6b-2c",
+      "from": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2b",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2d": {
+      "id": "mmy1vd6b-2d",
+      "from": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2b",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2f": {
+      "id": "mmy1vd6b-2f",
+      "from": {
+        "gateId": "mmy1vd6b-2b",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2e",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2g": {
+      "id": "mmy1vd6b-2g",
+      "from": {
+        "gateId": "mmy1vd6a-j",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2e",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2i": {
+      "id": "mmy1vd6b-2i",
+      "from": {
+        "gateId": "mmy1vd6b-1w",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2h",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2j": {
+      "id": "mmy1vd6b-2j",
+      "from": {
+        "gateId": "mmy1vd6b-22",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2h",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2l": {
+      "id": "mmy1vd6b-2l",
+      "from": {
+        "gateId": "mmy1vd6b-2h",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2k",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2m": {
+      "id": "mmy1vd6b-2m",
+      "from": {
+        "gateId": "mmy1vd6b-28",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2k",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2o": {
+      "id": "mmy1vd6b-2o",
+      "from": {
+        "gateId": "mmy1vd6b-2k",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2n",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2p": {
+      "id": "mmy1vd6b-2p",
+      "from": {
+        "gateId": "mmy1vd6b-2e",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2n",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2r": {
+      "id": "mmy1vd6b-2r",
+      "from": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2q",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2s": {
+      "id": "mmy1vd6b-2s",
+      "from": {
+        "gateId": "mmy1vd6a-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2q",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2t": {
+      "id": "mmy1vd6b-2t",
+      "from": {
+        "gateId": "mmy1vd6b-1q",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2u": {
+      "id": "mmy1vd6b-2u",
+      "from": {
+        "gateId": "mmy1vd6b-2n",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2w": {
+      "id": "mmy1vd6b-2w",
+      "from": {
+        "gateId": "mmy1vd6b-2q",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2v",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-2y": {
+      "id": "mmy1vd6b-2y",
+      "from": {
+        "gateId": "mmy1vd6a-m",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2x",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mmy1vd6b-30": {
+      "id": "mmy1vd6b-30",
+      "from": {
+        "gateId": "mmy1vd6a-n",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mmy1vd6b-2z",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    }
+  },
+  "viewport": {
+    "zoom": 1.7216048045809245,
+    "panX": 506.3603879302925,
+    "panY": -99.63480148863135
+  },
+  "metadata": {
+    "createdAt": "2026-03-19T22:30:51.534Z",
+    "updatedAt": "2026-03-19T22:57:35.820Z"
+  }
+}

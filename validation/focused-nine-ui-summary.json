@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T02:15:40.727Z",
+  "generatedAt": "2026-03-20T09:52:47.512Z",
   "baseUrl": "<dev-server>",
   "results": [
     {
@@ -101,7 +101,7 @@
         "rowCount": 8,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1)",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -136,11 +136,11 @@
           "D-FF",
           "D",
           "q",
+          "q",
           "clk",
           "d",
           "dff_dut.Q",
-          "dff_dut.Q̄",
-          "q"
+          "dff_dut.Q̄"
         ],
         "hasZPath": true,
         "hasXPath": false
@@ -166,11 +166,11 @@
           "D-FF",
           "D",
           "q",
+          "q",
           "clk",
           "d",
           "dff_dut.Q",
-          "dff_dut.Q̄",
-          "q"
+          "dff_dut.Q̄"
         ]
       }
     },
@@ -184,7 +184,7 @@
         "rowCount": 16,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1)",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -223,12 +223,12 @@
           "JK-FF",
           "D",
           "q",
+          "q",
           "clk",
-          "j",
-          "k",
           "jkff_dut.Q",
           "jkff_dut.Q̄",
-          "q"
+          "j",
+          "k"
         ],
         "hasZPath": true,
         "hasXPath": false
@@ -258,12 +258,12 @@
           "JK-FF",
           "D",
           "q",
+          "q",
           "clk",
-          "j",
-          "k",
           "jkff_dut.Q",
           "jkff_dut.Q̄",
-          "q"
+          "j",
+          "k"
         ]
       }
     },
@@ -277,7 +277,7 @@
         "rowCount": 8,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1)",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -312,11 +312,11 @@
           "T-FF",
           "D",
           "q",
+          "q",
           "clk",
-          "t",
           "tff_dut.Q",
           "tff_dut.Q̄",
-          "q"
+          "t"
         ],
         "hasZPath": true,
         "hasXPath": false
@@ -342,11 +342,11 @@
           "T-FF",
           "D",
           "q",
+          "q",
           "clk",
-          "t",
           "tff_dut.Q",
           "tff_dut.Q̄",
-          "q"
+          "t"
         ]
       }
     },
@@ -360,7 +360,7 @@
         "rowCount": 8,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 8192 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 8192 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -394,7 +394,7 @@
         "rowCount": 8,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 8192 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 8192 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -428,7 +428,7 @@
         "rowCount": 32,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 32768 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 32768 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -462,7 +462,7 @@
         "rowCount": 64,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 2048 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 2048 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -496,7 +496,7 @@
         "rowCount": 64,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 2048 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 2048 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -530,7 +530,7 @@
         "rowCount": 128,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 4096 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 4096 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -634,7 +634,7 @@
         "rowCount": 256,
         "paragraphs": [
           "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
-          "′ = Zustand nach einem Simulationsschritt (Settle-Phase)  | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 262144 Zeilen nicht darstellbar",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht – vollständige Analyse bei 262144 Zeilen nicht darstellbar",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",

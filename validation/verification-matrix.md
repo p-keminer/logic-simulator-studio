@@ -1,6 +1,6 @@
 # Repeatable Verification Matrix
 
-Datum: 2026-03-07
+Datum: 2026-03-19
 Repo: `<repo-root>`
 
 ## Zweck
@@ -47,6 +47,8 @@ Die folgenden Ebenen sind die Standard-Orakel:
 | Multi-driver | two drivers on one net | X | X | X | X | X | X | X |
 | Mixed datapath | ALU + register + counter + mux | X | X | X | X | X | X | X |
 | Hierarchical custom IC | custom block used in larger circuit | X | X | X | X | X | X | X |
+| FSM export projection | FSM-Editor -> synthetisierte Canvas-Schaltung | X | X | X | X | X | X | X |
+| Race monitor lifecycle | Race-Erkennung -> Panel -> Wire-Marking -> Reset | X | X | X |  |  |  | X |
 
 ## Mindestabdeckung pro Klasse
 
@@ -87,6 +89,57 @@ Die folgenden Ebenen sind die Standard-Orakel:
 - Subcircuit allein
 - Subcircuit in Oberbaugruppe
 - Exportpfad oder expliziter Unsupported-Befund
+
+### FSM-Exportprojektion
+
+- Editor-Zustandsraum fachlich sauber definiert
+- synthetisierte State-Bits kanonisch erkennbar
+- STT ist eine statische Zustandsrelation und keine Live-Mitschrift des
+  blinkenden Simulationszustands
+- verkuerzte STT fuer breite sequenzielle Schaltungen ist deterministisch und
+  fachlich stabil
+- STT zeigt nur fachliche Zustands-/Ausgangssignale in der Standardansicht
+- Timing zeigt keine doppelten `Q`/`!Q`/LED-Mirror-Kanaele in der Standardansicht
+- HDL-Export bleibt konsistent zur kanonischen Projektion
+
+### FSM-Exportregressionen
+
+Die folgenden projektionsspezifischen Regressionen sollen den neuen
+Infrastrukturschnitt absichern:
+
+- `fsm_projection_batch_consistency`
+  - eine Synthese erzeugt einen gemeinsamen Batch-Schluessel fuer alle
+    projektierten Gates
+  - zwei getrennte Synthesen bleiben isoliert
+  - gemischte Batches fallen stabil auf die generische STT zurueck
+- `fsm_projection_canonical_stt`
+  - isolierte FSMs zeigen nur kanonische Eingangs-, Zustands- und
+    Ausgangssignale
+  - Helper-, Mirror- und Inversionssignale bleiben aus der Standardansicht
+    heraus
+- `fsm_projection_timing_canonical_channels`
+  - Timing nutzt dieselbe kanonische Projektion wie die STT
+  - Reihenfolge und Gruppierung bleiben deterministisch
+  - keine Doppelung von `Q`/`!Q`/LED-Mirror-Kanaelen
+- `fsm_projection_reduced_view`
+  - breite FSMs erhalten eine reduzierte, aber stabile STT
+  - Steuerleitungen bleiben sichtbar, Daten-/Hilfssignale werden begrenzt
+- `fsm_projection_mixed_fallback`
+  - eine bewusst gemischte FSM-/Nicht-FSM-Schaltung laeuft weiter ueber die
+    generische STT statt in eine halb-projizierte Sonderansicht zu kippen
+- `fsm_projection_legacy_fixture`
+  - ein real gespeicherter Alt-Export ohne Projektionsmetadaten wird, falls die
+    Struktur eindeutig genug ist, read-only in die kanonische Projektion
+    ueberfuehrt
+  - bei nicht eindeutigen Altfaellen bleibt der Fallback aktiv, statt eine
+    halb-geratene Projektion zu erzwingen
+
+### Race-Monitor-Lifecycle
+
+- geloeschte Race-Ursachen verschwinden automatisch aus Panel und Markierungen
+- manueller Reset leert den Race-Zustand reproduzierbar
+- identische wiederkehrende Races werden koalesziert statt endlos neu angehaengt
+- Race-Lifecycle-Logik bleibt von reinem Panel-Rendering getrennt
 
 ## Pflichtartefakte pro Befund
 
@@ -132,5 +185,7 @@ Diese Muster muessen vor allen anderen voll gruen werden:
 7. `74HC161` und `74HC163` ueber mehrere Takte
 8. `74HC194` Shift/Load/Freeze
 9. gemischter Datenpfad `ALU + Register + Counter`
+10. FSM-Editor -> Canvas-Synthese mit STT-/Timing-Projektion
+11. Race-Erkennung -> Wire-Loeschung -> Auto-Prune + Manual-Reset + Dedupe
 
-Diese neun Muster decken den groessten Teil des verbleibenden fachlichen Risikos ab.
+Diese elf Muster decken den groessten Teil des verbleibenden fachlichen Risikos ab.

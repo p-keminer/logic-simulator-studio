@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
 import { gateRegistry } from '../../core/registry/GateRegistry';
+import { buildSequentialProjectionChannels } from '../../core/analysis/sequentialProjection';
 import type { TimingSnapshot } from '../../core/types';
 
 interface Props { history: TimingSnapshot[]; onClose: () => void; }
@@ -124,6 +125,9 @@ export function TimingDiagram({ history, onClose }: Props) {
   // ── Kanäle aufbauen ──────────────────────────────────────────────────────
   // Nur verbundene Gatter; Priorität: Eingänge → Logik → Ausgänge
   const channels = useMemo(() => {
+    const projectedChannels = buildSequentialProjectionChannels(circuit);
+    if (projectedChannels.length > 0) return projectedChannels;
+
     const chs: Array<{ key: string; label: string; color: string }> = [];
 
     const sortedGates = Object.values(circuit.gates)

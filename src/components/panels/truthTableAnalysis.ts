@@ -1,4 +1,17 @@
 import type { Circuit, GateDefinition, GateInstance } from '../../core/types';
+import {
+  buildStateTransitionProjection,
+  getProjectedSignalLabel,
+  type StateTransitionProjection,
+  type StateTransitionProjectionStateVar,
+} from '../../core/analysis/sequentialProjection';
+import {
+  chooseRepresentativeStateVar,
+  classifyInputs,
+  classifyStateTransitionInputs,
+  isDataPortId,
+  stateVarPriority,
+} from '../../core/analysis/stateTransitionTable';
 
 export const INPUT_TYPES = new Set(['INPUT_SWITCH', 'PUSH_BTN', 'CLOCK']);
 export const OUTPUT_TYPES = new Set(['OUTPUT_LED']);
@@ -6,50 +19,12 @@ export const SKIP_TYPES = new Set([
   'CONST_HIGH', 'CONST_LOW', 'ADC8', 'TEXT_NOTE', 'JUNCTION',
 ]);
 
-export interface StateVar {
-  gateId: string;
-  portId: string;
-  stateKey: string;
-  label: string;
-}
+export type StateVar = StateTransitionProjectionStateVar;
 
 type GateDefLookup = (typeId: string) => GateDefinition;
 
 export function gateLabel(g: GateInstance): string {
-  return g.label || g.typeId.replace(/_/g, '') + '_' + g.id.slice(0, 4);
-}
-
-export function isDataPortId(portId: string): boolean {
-  return /^d\d+$|^ds$/i.test(portId);
-}
-
-export function classifyInputs(
-  inputGates: GateInstance[],
-  circuit: Circuit,
-): { controls: GateInstance[]; data: GateInstance[] } {
-  const controls: GateInstance[] = [];
-  const data: GateInstance[] = [];
-
-  for (const g of inputGates) {
-    const outWires = Object.values(circuit.wires).filter(w => w.from.gateId === g.id);
-    const allData = outWires.length > 0 && outWires.every(w => isDataPortId(w.to.portId));
-    (allData ? data : controls).push(g);
-  }
-
-  return { controls, data };
-}
-
-export function stateVarPriority(stateVar: StateVar): number {
-  const key = stateVar.stateKey.toLowerCase();
-  const label = stateVar.label.toLowerCase();
-
-  if (/^(clk|clock|value|tickcounter|frequency|_paused)$/.test(key)) return -100;
-  if (/(^|[_\W])(clk|clock|tick|freq|paused)([_\W]|$)/.test(label)) return -100;
-  if (/^q$|^q\d+$|^qs$/.test(key)) return 100;
-  if (/^cnt\d+$/.test(key)) return 95;
-  if (/^bit\d+$|^b\d+$/.test(key)) return 90;
-  if (/^reg\d+$/.test(key)) return 85;
-  return 10;
+  return getProjectedSignalLabel(g, g.label || g.typeId.replace(/_/g, '') + '_' + g.id.slice(0, 4));
 }
 
 function numericSuffix(value: string): number {
@@ -57,16 +32,10 @@ function numericSuffix(value: string): number {
   return match ? Number(match[1]) : 0;
 }
 
-export function chooseRepresentativeStateVar(stateVars: StateVar[]): StateVar {
-  return [...stateVars].sort((a, b) => {
-    const prio = stateVarPriority(b) - stateVarPriority(a);
-    if (prio !== 0) return prio;
-
-    const suffix = numericSuffix(a.stateKey) - numericSuffix(b.stateKey);
-    if (suffix !== 0) return suffix;
-
-    return a.label.localeCompare(b.label);
-  })[0];
+function isCanonicalProjectedStateGate(gate: GateInstance): boolean {
+  return gate.projection?.sourceSystem === 'fsm_synth'
+    && gate.projection?.role === 'state'
+    && gate.projection?.visibility === 'canonical';
 }
 
 export function collectConnectedGateIds(circuit: Circuit): Set<string> {
@@ -114,7 +83,20 @@ export function collectStateVarsForStt(
     .map(id => circuit.gates[id])
     .filter((g): g is GateInstance => Boolean(g))
     .filter(g => connectedIds.has(g.id))
-    .sort((a, b) => a.x - b.x);
+    .sort((a, b) => {
+      const aProjected = isCanonicalProjectedStateGate(a);
+      const bProjected = isCanonicalProjectedStateGate(b);
+      if (aProjected !== bProjected) return aProjected ? -1 : 1;
+
+      if (aProjected && bProjected) {
+        const suffix = numericSuffix(getProjectedSignalLabel(a)) - numericSuffix(getProjectedSignalLabel(b));
+        if (suffix !== 0) return suffix;
+      }
+
+      const xDiff = a.x - b.x;
+      if (xDiff !== 0) return xDiff;
+      return a.y - b.y;
+    });
 
   const hasStructuredStateGates = feedbackGatesSorted.some(g => {
     try {
@@ -164,3 +146,20 @@ export function collectStateVarsForStt(
 
   return stateVars;
 }
+
+export function projectStateTransitionView(
+  circuit: Circuit,
+  inputs: GateInstance[],
+  stateVars: StateVar[],
+  outputGates: GateInstance[],
+): StateTransitionProjection {
+  return buildStateTransitionProjection(circuit, inputs, stateVars, outputGates);
+}
+
+export {
+  chooseRepresentativeStateVar,
+  classifyInputs,
+  classifyStateTransitionInputs,
+  isDataPortId,
+  stateVarPriority,
+};
