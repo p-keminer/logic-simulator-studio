@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T09:52:47.512Z",
+  "generatedAt": "2026-03-20T11:16:15.879Z",
   "baseUrl": "<dev-server>",
   "results": [
     {
@@ -31,7 +31,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 8,
-        "textNodeCount": 20,
+        "textNodeCount": 15,
         "signalLabels": [
           "HIGH",
           "Q",
@@ -47,11 +47,6 @@
           "A",
           "Y",
           "D",
-          "y",
-          "a",
-          "oe",
-          "not_inv",
-          "tribuf_tri",
           "y"
         ],
         "hasZPath": true,
@@ -82,11 +77,6 @@
           "A",
           "Y",
           "D",
-          "y",
-          "a",
-          "oe",
-          "not_inv",
-          "tribuf_tri",
           "y"
         ]
       }
@@ -122,7 +112,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 3,
-        "textNodeCount": 17,
+        "textNodeCount": 12,
         "signalLabels": [
           "HIGH",
           "Q",
@@ -135,12 +125,7 @@
           "Q̄",
           "D-FF",
           "D",
-          "q",
-          "q",
-          "clk",
-          "d",
-          "dff_dut.Q",
-          "dff_dut.Q̄"
+          "q"
         ],
         "hasZPath": true,
         "hasXPath": false
@@ -165,12 +150,7 @@
           "Q̄",
           "D-FF",
           "D",
-          "q",
-          "q",
-          "clk",
-          "d",
-          "dff_dut.Q",
-          "dff_dut.Q̄"
+          "q"
         ]
       }
     },
@@ -205,7 +185,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 3,
-        "textNodeCount": 22,
+        "textNodeCount": 16,
         "signalLabels": [
           "HIGH",
           "Q",
@@ -222,13 +202,7 @@
           "Q̄",
           "JK-FF",
           "D",
-          "q",
-          "q",
-          "clk",
-          "jkff_dut.Q",
-          "jkff_dut.Q̄",
-          "j",
-          "k"
+          "q"
         ],
         "hasZPath": true,
         "hasXPath": false
@@ -257,13 +231,7 @@
           "Q̄",
           "JK-FF",
           "D",
-          "q",
-          "q",
-          "clk",
-          "jkff_dut.Q",
-          "jkff_dut.Q̄",
-          "j",
-          "k"
+          "q"
         ]
       }
     },
@@ -298,7 +266,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 3,
-        "textNodeCount": 17,
+        "textNodeCount": 12,
         "signalLabels": [
           "HIGH",
           "Q",
@@ -311,12 +279,7 @@
           "Q̄",
           "T-FF",
           "D",
-          "q",
-          "q",
-          "clk",
-          "tff_dut.Q",
-          "tff_dut.Q̄",
-          "t"
+          "q"
         ],
         "hasZPath": true,
         "hasXPath": false
@@ -341,12 +304,7 @@
           "Q̄",
           "T-FF",
           "D",
-          "q",
-          "q",
-          "clk",
-          "tff_dut.Q",
-          "tff_dut.Q̄",
-          "t"
+          "q"
         ]
       }
     },
@@ -381,7 +339,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 70
+        "textNodeCount": 51
       }
     },
     {
@@ -415,7 +373,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 69
+        "textNodeCount": 50
       }
     },
     {
@@ -449,7 +407,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 48
+        "textNodeCount": 33
       }
     },
     {
@@ -483,7 +441,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 61
+        "textNodeCount": 45
       }
     },
     {
@@ -517,7 +475,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 61
+        "textNodeCount": 45
       }
     },
     {
@@ -551,7 +509,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 70
+        "textNodeCount": 52
       }
     },
     {
@@ -583,7 +541,7 @@
       "timing": {
         "titlePresent": true,
         "steps": 4,
-        "textNodeCount": 11,
+        "textNodeCount": 8,
         "signalLabels": [
           "HIGH",
           "Q",
@@ -592,9 +550,6 @@
           "Q",
           "b",
           "D",
-          "y",
-          "a",
-          "b",
           "y"
         ],
         "hasZPath": false,
@@ -617,9 +572,6 @@
           "Q",
           "b",
           "D",
-          "y",
-          "a",
-          "b",
           "y"
         ]
       }
@@ -655,8 +607,146 @@
       "timing": {
         "titlePresent": true,
         "steps": 0,
-        "textNodeCount": 114
+        "textNodeCount": 84
       }
+    }
+  ],
+  "fsmModeChecks": [
+    {
+      "slug": "fsm_projected_modes",
+      "compact": {
+        "title": "Zustandsübergangstabelle",
+        "selectExists": true,
+        "selected": "fsm_compact",
+        "options": [
+          {
+            "value": "fsm_compact",
+            "label": "FSM kompakt"
+          },
+          {
+            "value": "technical_full",
+            "label": "Technisch voll"
+          }
+        ],
+        "headers": [
+          "A",
+          "│",
+          "Q0",
+          "Q1",
+          "│",
+          "Q0′",
+          "Q1′",
+          "│",
+          "Y"
+        ],
+        "rowCount": 8,
+        "paragraphs": [
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "FSM kompakt: Takt als Übergangsereignis, Resetfälle im technischen Modus. | ■ = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ]
+      },
+      "technical": {
+        "title": "Zustandsübergangstabelle",
+        "selectExists": true,
+        "selected": "technical_full",
+        "options": [
+          {
+            "value": "fsm_compact",
+            "label": "FSM kompakt"
+          },
+          {
+            "value": "technical_full",
+            "label": "Technisch voll"
+          }
+        ],
+        "headers": [
+          "CLK",
+          "RST",
+          "A",
+          "│",
+          "Q0",
+          "Q1",
+          "│",
+          "Q0′",
+          "Q1′",
+          "│",
+          "Y"
+        ],
+        "rowCount": 32,
+        "paragraphs": [
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ]
+      },
+      "status": "pass",
+      "message": "Projected FSM exposes compact + technical STT modes with distinct table shapes."
+    },
+    {
+      "slug": "fsm_mixed_fallback",
+      "compact": {
+        "title": "Zustandsübergangstabelle",
+        "selectExists": false,
+        "selected": null,
+        "options": [],
+        "headers": [
+          "CLK",
+          "RST",
+          "A",
+          "RAW_BTN",
+          "│",
+          "Q0",
+          "Q1",
+          "│",
+          "Q0′",
+          "Q1′",
+          "│",
+          "RAW_LED",
+          "Y",
+          "Q0",
+          "Q1"
+        ],
+        "rowCount": 64,
+        "paragraphs": [
+          "⟳ Sequenzielle Logik erkannt (Flip-Flops / Rückkopplung) – Zustandsanalyse",
+          "′ = Zustand nach einem Simulationsschritt (Settle-Phase) | ■ = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ]
+      },
+      "technical": null,
+      "status": "pass",
+      "message": "Mixed FSM/raw case stays in technical-full mode without a misleading compact dropdown."
     }
   ]
 }

@@ -3,9 +3,14 @@ import { useCircuitContext } from '../../store/CircuitContext';
 import { runSimulation } from '../../core/simulation/engine';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { topologicalSort } from '../../core/simulation/topologicalSort';
-import { buildStateTransitionProjection } from '../../core/analysis/sequentialProjection';
+import {
+  buildStateTransitionProjection,
+  type StateTransitionProjectionStatus,
+} from '../../core/analysis/sequentialProjection';
 import {
   buildDisplayedStateTransitionTable,
+  getAvailableStateTransitionDisplayModes,
+  getStateTransitionFallbackNote,
   buildStaticAnalysisCircuit,
   buildStaticAnalysisKey,
   buildStaticStateTransitionTable,
@@ -46,6 +51,7 @@ interface StateTransitionResult {
   mode:        'state-transition';
   inputs:      GateInstance[];
   inputRoles:  Record<string, 'clock' | 'reset' | 'input'>;
+  projectionStatus: StateTransitionProjectionStatus;
   stateVars:   StateVar[];
   outputGates: GateInstance[];
   rows:        Array<{
@@ -256,6 +262,7 @@ export function TruthTableModal({ onClose }: Props) {
         mode: 'state-transition',
         inputs: projectedInputs,
         inputRoles: projectedView.inputRoles,
+        projectionStatus: projectedView.projectionStatus,
         stateVars: projectedStateVars,
         outputGates: projectedOutputGates,
         rows: [],
@@ -276,6 +283,7 @@ export function TruthTableModal({ onClose }: Props) {
       mode: 'state-transition',
       inputs: staticTable.inputs,
       inputRoles: projectedView.inputRoles,
+      projectionStatus: projectedView.projectionStatus,
       stateVars: staticTable.stateVars,
       outputGates: staticTable.outputGates,
       rows: staticTable.rows,
@@ -286,10 +294,19 @@ export function TruthTableModal({ onClose }: Props) {
 
   }, [analysisCircuit]);
 
+  const availableSttViewModes = computed.mode === 'state-transition'
+    ? getAvailableStateTransitionDisplayModes({
+      projectionStatus: computed.projectionStatus,
+      isProjectedFsmView: computed.isProjectedFsmView,
+      reducedMeta: computed.reducedMeta,
+      inputRoles: computed.inputRoles,
+    })
+    : [];
+
   const activeSttViewMode: StateTransitionDisplayMode =
-    computed.mode === 'state-transition' && computed.isProjectedFsmView
-      ? (computed.reducedMeta ? 'fsm_compact' : sttViewMode)
-      : 'technical_full';
+    availableSttViewModes.find((mode) => mode === sttViewMode)
+    ?? availableSttViewModes[0]
+    ?? 'technical_full';
 
   const displayedStateTransition = useMemo(() => {
     if (computed.mode !== 'state-transition') return null;
@@ -308,10 +325,11 @@ export function TruthTableModal({ onClose }: Props) {
     });
   }, [activeSttViewMode, computed]);
 
-  const showSttViewModeSelect = computed.mode === 'state-transition'
-    && computed.isProjectedFsmView
-    && !computed.tooMany
-    && !computed.reducedMeta;
+  const showSttViewModeSelect = availableSttViewModes.length > 1;
+
+  const fallbackProjectionNote = computed.mode === 'state-transition'
+    ? getStateTransitionFallbackNote(computed.projectionStatus)
+    : '';
 
   // ── Style-Funktionen ──────────────────────────────────────────────────────────
 
@@ -550,6 +568,38 @@ export function TruthTableModal({ onClose }: Props) {
                       </div>
                     )}
                   </div>
+                </div>
+              )}
+
+              {computed.isProjectedFsmView && reducedMeta && (
+                <div style={{
+                  marginBottom: 14,
+                  padding: '8px 12px',
+                  background: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: 6,
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: '#cbd5e1',
+                  lineHeight: 1.7,
+                }}>
+                  Technisch voll ist hier absichtlich ausgeblendet, weil die projizierte FSM bereits in einer reduzierten STT-Ansicht laeuft.
+                </div>
+              )}
+
+              {fallbackProjectionNote && (
+                <div style={{
+                  marginBottom: 14,
+                  padding: '8px 12px',
+                  background: '#172554',
+                  border: '1px solid #1d4ed8',
+                  borderRadius: 6,
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: '#dbeafe',
+                  lineHeight: 1.7,
+                }}>
+                  {fallbackProjectionNote}
                 </div>
               )}
 

@@ -13,6 +13,15 @@ const PUBLIC_REPO = '<repo-root>';
 const PUBLIC_SERVER = '<dev-server>';
 const IS_CI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
 const APP_NAME = 'Logic Simulator Studio';
+const LEGACY_FSM_EXPORT = path.join(
+  ROOT,
+  'validation',
+  'fsm-export-fixes',
+  'cases',
+  'downloads',
+  '2026-03-19',
+  'FSM_EXPORT_19.03.26.lgsc.json',
+);
 
 fs.mkdirSync(UI_DIR, { recursive: true });
 
@@ -158,14 +167,18 @@ async function clickButton(page, label) {
   }, label);
 }
 
-async function loadCircuit(page, file) {
-  const json = fs.readFileSync(resolveArtifactPath(file), 'utf8');
+async function loadCircuitJson(page, json) {
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.evaluate((value) => sessionStorage.setItem('lgsim_autosave', value), json);
   await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForFunction((appName) =>
     document.title.includes(appName) || document.body.textContent?.includes(appName),
   { timeout: 10000 }, APP_NAME);
+}
+
+async function loadCircuit(page, file) {
+  const json = fs.readFileSync(resolveArtifactPath(file), 'utf8');
+  await loadCircuitJson(page, json);
 }
 
 async function extractTable(page) {
@@ -180,6 +193,46 @@ async function extractTable(page) {
   }));
   await page.keyboard.press('Escape');
   return table;
+}
+
+async function extractSttModeAudit(page, switchToTechnical = false) {
+  await clickButton(page, 'W-Tabelle');
+  await page.waitForFunction(() => document.querySelector('table, p, h2'), { timeout: 10000 });
+
+  const snapshot = () => page.evaluate(() => {
+    const select = document.querySelector('select[aria-label="STT-Ansicht"]');
+    const headers = [...document.querySelectorAll('table thead tr:last-child th')]
+      .map((node) => node.textContent?.trim())
+      .filter(Boolean);
+    return {
+      title: [...document.querySelectorAll('h2')].map((node) => node.textContent?.trim()).find(Boolean) ?? '',
+      selectExists: Boolean(select),
+      selected: select instanceof HTMLSelectElement ? select.value : null,
+      options: select instanceof HTMLSelectElement
+        ? [...select.options].map((option) => ({ value: option.value, label: option.textContent?.trim() ?? '' }))
+        : [],
+      headers,
+      rowCount: document.querySelectorAll('table tbody tr').length,
+      paragraphs: [...document.querySelectorAll('p')].map((node) => node.textContent?.trim()).filter(Boolean),
+    };
+  });
+
+  const compact = await snapshot();
+  let technical = null;
+
+  if (switchToTechnical && compact.selectExists) {
+    await page.evaluate(() => {
+      const select = document.querySelector('select[aria-label="STT-Ansicht"]');
+      if (!(select instanceof HTMLSelectElement)) throw new Error('STT-Ansicht select missing');
+      select.value = 'technical_full';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await sleep(100);
+    technical = await snapshot();
+  }
+
+  await page.keyboard.press('Escape');
+  return { compact, technical };
 }
 
 async function extractHdl(page) {
@@ -257,6 +310,41 @@ async function extractTimingSemantic(page, slug) {
 
   await clickButton(page, 'Timing');
   return timing;
+}
+
+function buildMixedLegacyFsmFallbackFixtureJson() {
+  const circuit = JSON.parse(fs.readFileSync(LEGACY_FSM_EXPORT, 'utf8'));
+  const rawInputSource = Object.values(circuit.gates).find((gate) => gate?.label === 'A');
+  if (!rawInputSource) throw new Error('legacy FSM fixture missing source input A');
+
+  circuit.gates.fsm_mixed_raw_btn = {
+    id: 'fsm_mixed_raw_btn',
+    typeId: 'PUSH_BTN',
+    x: (rawInputSource.x ?? 0) + 260,
+    y: (rawInputSource.y ?? 0) + 140,
+    label: 'RAW_BTN',
+    outputSignals: {},
+    customState: { value: 0 },
+    isSelected: false,
+  };
+  circuit.gates.fsm_mixed_raw_led = {
+    id: 'fsm_mixed_raw_led',
+    typeId: 'OUTPUT_LED',
+    x: (rawInputSource.x ?? 0) + 420,
+    y: (rawInputSource.y ?? 0) + 140,
+    label: 'RAW_LED',
+    outputSignals: {},
+    isSelected: false,
+  };
+  circuit.wires.fsm_mixed_raw_btn_wire = {
+    id: 'fsm_mixed_raw_btn_wire',
+    from: { gateId: 'fsm_mixed_raw_btn', portId: 'out' },
+    to: { gateId: 'fsm_mixed_raw_led', portId: 'in' },
+    signal: { value: 0, version: 0, lastChangedAt: 0 },
+    isSelected: false,
+  };
+
+  return JSON.stringify(circuit);
 }
 
 // ── Semantic timing validation for 5 target cases ────────────────────────────
@@ -351,6 +439,48 @@ function analyze(slug, table, timing) {
   };
 }
 
+function analyzeSttModeChecks(checks) {
+  return checks.map((check) => {
+    if (check.slug === 'fsm_projected_modes') {
+      const compact = check.compact;
+      const technical = check.technical;
+      const pass = compact.selectExists
+        && compact.selected === 'fsm_compact'
+        && compact.options.some((option) => option.value === 'fsm_compact')
+        && compact.options.some((option) => option.value === 'technical_full')
+        && !compact.headers.includes('CLK')
+        && !!technical
+        && technical.selected === 'technical_full'
+        && technical.headers.includes('CLK')
+        && technical.rowCount >= compact.rowCount;
+      return {
+        ...check,
+        status: pass ? 'pass' : 'fail',
+        message: pass
+          ? 'Projected FSM exposes compact + technical STT modes with distinct table shapes.'
+          : 'Projected FSM STT mode switch is missing or does not change the rendered table as expected.',
+      };
+    }
+
+    if (check.slug === 'fsm_mixed_fallback') {
+      const pass = !check.compact.selectExists && check.compact.headers.includes('CLK');
+      return {
+        ...check,
+        status: pass ? 'pass' : 'fail',
+        message: pass
+          ? 'Mixed FSM/raw case stays in technical-full mode without a misleading compact dropdown.'
+          : 'Mixed FSM/raw fallback still exposes a compact dropdown or no longer shows the technical clock dimension.',
+      };
+    }
+
+    return {
+      ...check,
+      status: 'warn',
+      message: 'Unknown FSM STT mode audit case.',
+    };
+  });
+}
+
 // ── Report rendering ──────────────────────────────────────────────────────────
 
 function renderReport(summary) {
@@ -388,6 +518,13 @@ function renderReport(summary) {
       `Fuer Z/X-Pfad-Pruefung wird steps > 0 benoetigt.\n`
     : '';
 
+  const fsmModeChecks = summary.fsmModeChecks ?? [];
+  const fsmModePasses = fsmModeChecks.filter((item) => item.status === 'pass');
+  const fsmModeFails = fsmModeChecks.filter((item) => item.status === 'fail');
+  const fsmModeLines = fsmModeChecks.map((item) =>
+    `- \`${item.slug}\`: ${item.status.toUpperCase()} - ${item.message}`,
+  ).join('\n') || '- keine';
+
   return `# Focused High-Risk UI Audit\n\n` +
     `Datum: 2026-03-07\n` +
     `Repo: \`${PUBLIC_REPO}\`\n` +
@@ -401,6 +538,7 @@ function renderReport(summary) {
     `- \`${errors.length}\` Infrastruktur-/Ladefehler\n` +
     `- HDL-Modal war in allen erfolgreich geladenen Faellen textuell konsistent mit den generierten Exportdateien\n` +
     `- Timing-Panel hat in allen erfolgreich geladenen Faellen geoeffnet\n` +
+    `- FSM-STT-Modus-Audit: \`${fsmModePasses.length}\` PASS, \`${fsmModeFails.length}\` FAIL\n` +
     `- Semantischer Timing-Check fuer ${semanticResults.length} Fokusfaelle: ` +
     `\`${semanticPasses.length}\` PASS, \`${semanticWarns.length}\` WARN` +
     `${semanticWarns.length > 0 ? ' (steps=0, headless RAF-Limit)' : ''}\n\n` +
@@ -418,6 +556,8 @@ function renderReport(summary) {
     `${passSlugs}\n\n` +
     `## Infrastruktur-/Ladefehler\n\n` +
     `${errorLines}\n\n` +
+    `## FSM-STT-Modus-Pruefung\n\n` +
+    `${fsmModeLines}\n\n` +
     `## Semantische Timing-Pruefung (5 Fokusfaelle)\n\n` +
     `Fuer \`tri_not_sanitized\`, \`dff_led\`, \`jkff_led\`, \`tff_led\` und \`multi_driver_same_input\` ` +
     `wird jetzt nicht nur geprueft, ob das Panel laedt, sondern:\n` +
@@ -452,6 +592,7 @@ const SEMANTIC_SLUGS = new Set(Object.keys(TIMING_SEMANTIC));
 
 const browser = await puppeteer.launch(buildBrowserLaunchOptions());
 const results = [];
+const fsmModeChecks = [];
 
 for (const item of SUMMARY.cases) {
   const page = await browser.newPage();
@@ -509,11 +650,45 @@ for (const item of SUMMARY.cases) {
   }
 }
 
+for (const modeCase of [
+  {
+    slug: 'fsm_projected_modes',
+    load: (page) => loadCircuit(page, LEGACY_FSM_EXPORT),
+    switchToTechnical: true,
+  },
+  {
+    slug: 'fsm_mixed_fallback',
+    load: (page) => loadCircuitJson(page, buildMixedLegacyFsmFallbackFixtureJson()),
+    switchToTechnical: false,
+  },
+]) {
+  const page = await browser.newPage();
+  page.setDefaultTimeout(30000);
+  try {
+    await modeCase.load(page);
+    const result = await extractSttModeAudit(page, modeCase.switchToTechnical);
+    fsmModeChecks.push({
+      slug: modeCase.slug,
+      ...result,
+    });
+  } catch (error) {
+    fsmModeChecks.push({
+      slug: modeCase.slug,
+      status: 'fail',
+      message: sanitizePublicText(error),
+    });
+  } finally {
+    await page.close();
+  }
+}
+
 await browser.close();
+const analyzedFsmModeChecks = analyzeSttModeChecks(fsmModeChecks);
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl: PUBLIC_SERVER,
   results,
+  fsmModeChecks: analyzedFsmModeChecks,
 };
 fs.writeFileSync(path.join(OUT_DIR, 'focused-nine-ui-summary.json'), JSON.stringify(summary, null, 2));
 fs.writeFileSync(REPORT_FILE, renderReport(summary));

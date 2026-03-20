@@ -15,6 +15,7 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 - `0` Infrastruktur-/Ladefehler
 - HDL-Modal war in allen erfolgreich geladenen Faellen textuell konsistent mit den generierten Exportdateien
 - Timing-Panel hat in allen erfolgreich geladenen Faellen geoeffnet
+- FSM-STT-Modus-Audit: `2` PASS, `0` FAIL
 - Semantischer Timing-Check fuer 5 Fokusfaelle: `5` PASS, `0` WARN
 
 ## Echte UI-Befunde
@@ -43,6 +44,11 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 ## Infrastruktur-/Ladefehler
 
 - keine
+
+## FSM-STT-Modus-Pruefung
+
+- `fsm_projected_modes`: PASS - Projected FSM exposes compact + technical STT modes with distinct table shapes.
+- `fsm_mixed_fallback`: PASS - Mixed FSM/raw case stays in technical-full mode without a misleading compact dropdown.
 
 ## Semantische Timing-Pruefung (5 Fokusfaelle)
 

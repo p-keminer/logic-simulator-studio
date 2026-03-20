@@ -351,6 +351,63 @@ describe('truthTableAnalysis', () => {
     expect(projected.outputGates).toBe(outputGates);
   });
 
+  it('falls back when projected FSM inputs are mixed with raw inputs and disables timing projection too', () => {
+    const circuit = makeCircuit([
+      makeGate('clk', 'CLOCK', {
+        label: 'CLK',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-2',
+          role: 'clock',
+          visibility: 'canonical',
+          signalLabel: 'CLK',
+          groupKey: 'clock:CLK',
+          signalPortId: 'clk',
+        },
+      }),
+      makeGate('rawBtn', 'PUSH_BTN', { label: 'RAW_BTN' }),
+      makeGate('q0', 'D_FF_R', {
+        label: 'Q0',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-2',
+          role: 'state',
+          visibility: 'canonical',
+          signalLabel: 'Q0',
+          groupKey: 'state:Q0',
+          signalPortId: 'q',
+        },
+      }),
+      makeGate('outY', 'OUTPUT_LED', {
+        label: 'Y',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-2',
+          role: 'output',
+          visibility: 'canonical',
+          signalLabel: 'Y',
+          groupKey: 'output:Y',
+          signalPortId: '_display',
+        },
+      }),
+      makeGate('rawLed', 'OUTPUT_LED', { label: 'RAW_LED' }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'q0', 'q', 'outY', 'in'),
+      makeWire('w3', 'rawBtn', 'out', 'rawLed', 'in'),
+    ]);
+
+    const inputs = [circuit.gates.clk, circuit.gates.rawBtn];
+    const stateVars = [{ gateId: 'q0', portId: 'q', stateKey: 'q', label: 'Q0' }];
+    const outputGates = [circuit.gates.outY];
+
+    const projected = buildStateTransitionProjection(circuit, inputs, stateVars, outputGates);
+
+    expect(projected.isProjectedFsmView).toBe(false);
+    expect(projected.projectionStatus).toBe('fallback_partial_inputs');
+    expect(buildSequentialProjectionChannels(circuit)).toEqual([]);
+  });
+
   it('falls back when projected FSM outputs are mixed with raw outputs and disables timing projection too', () => {
     const circuit = makeCircuit([
       makeGate('clk', 'CLOCK', {
@@ -404,6 +461,101 @@ describe('truthTableAnalysis', () => {
 
     expect(projected.isProjectedFsmView).toBe(false);
     expect(projected.projectionStatus).toBe('fallback_partial_outputs');
+    expect(buildSequentialProjectionChannels(circuit)).toEqual([]);
+  });
+
+  it('falls back when canonical FSM gates from different projection batches are mixed', () => {
+    const circuit = makeCircuit([
+      makeGate('clkA', 'CLOCK', {
+        label: 'CLK',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-a',
+          role: 'clock',
+          visibility: 'canonical',
+          signalLabel: 'CLK',
+          groupKey: 'clock:CLK',
+          signalPortId: 'clk',
+        },
+      }),
+      makeGate('q0A', 'D_FF_R', {
+        label: 'Q0',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-a',
+          role: 'state',
+          visibility: 'canonical',
+          signalLabel: 'Q0',
+          groupKey: 'state:Q0',
+          signalPortId: 'q',
+        },
+      }),
+      makeGate('outYA', 'OUTPUT_LED', {
+        label: 'Y',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-a',
+          role: 'output',
+          visibility: 'canonical',
+          signalLabel: 'Y',
+          groupKey: 'output:Y',
+          signalPortId: '_display',
+        },
+      }),
+      makeGate('clkB', 'CLOCK', {
+        label: 'CLK_B',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-b',
+          role: 'clock',
+          visibility: 'canonical',
+          signalLabel: 'CLK_B',
+          groupKey: 'clock:CLK_B',
+          signalPortId: 'clk',
+        },
+      }),
+      makeGate('q0B', 'D_FF_R', {
+        label: 'QB0',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-b',
+          role: 'state',
+          visibility: 'canonical',
+          signalLabel: 'QB0',
+          groupKey: 'state:QB0',
+          signalPortId: 'q',
+        },
+      }),
+      makeGate('outYB', 'OUTPUT_LED', {
+        label: 'YB',
+        projection: {
+          sourceSystem: 'fsm_synth',
+          projectionBatchId: 'batch-b',
+          role: 'output',
+          visibility: 'canonical',
+          signalLabel: 'YB',
+          groupKey: 'output:YB',
+          signalPortId: '_display',
+        },
+      }),
+    ], [
+      makeWire('w1', 'clkA', 'clk', 'q0A', 'clk'),
+      makeWire('w2', 'q0A', 'q', 'outYA', 'in'),
+      makeWire('w3', 'clkB', 'clk', 'q0B', 'clk'),
+      makeWire('w4', 'q0B', 'q', 'outYB', 'in'),
+    ]);
+
+    const inputs = [circuit.gates.clkA, circuit.gates.clkB];
+    const stateVars = [
+      { gateId: 'q0A', portId: 'q', stateKey: 'q', label: 'Q0' },
+      { gateId: 'q0B', portId: 'q', stateKey: 'q', label: 'QB0' },
+    ];
+    const outputGates = [circuit.gates.outYA, circuit.gates.outYB];
+
+    const projected = buildStateTransitionProjection(circuit, inputs, stateVars, outputGates);
+
+    expect(projected.isProjectedFsmView).toBe(false);
+    expect(projected.projectionStatus).toBe('fallback_mixed_batches');
     expect(buildSequentialProjectionChannels(circuit)).toEqual([]);
   });
 

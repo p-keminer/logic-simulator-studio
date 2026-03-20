@@ -71,9 +71,17 @@ durch manuelles Nachpatchen einzelner Schaltungen gepflegt werden muss.
   `FSM kompakt` als ruhige Standardansicht ueber der unveraenderten
   technischen Volltabelle; die eigentliche Roh-STT bleibt als separater Modus
   erhalten und wurde nicht in die Display-Logik hineingemischt
+- die Modusfreigabe ist jetzt bewusst an `projectionStatus` gekoppelt:
+  nur sauber projizierte bzw. Legacy-projizierte FSMs duerfen `FSM kompakt`
+  ueberhaupt anbieten; partielle oder gemischte Faelle bleiben technisch voll
+  und zeigen explizit den Grund dafuer an
 - eine direkte Regression auf dem realen Download-/Legacy-Fall prueft jetzt
   explizit, dass dieselbe FSM-Tabelle auch dann identisch bleibt, wenn die
   aktuellen Gate-Ausgangssignale kuenstlich umgekippt werden
+- der focused-nine UI-Audit prueft jetzt zusaetzlich zwei konkrete STT-
+  Modusfaelle: projected FSM mit Umschaltung zwischen `FSM kompakt` und
+  `Technisch voll`, plus gemischter Legacy-Fallback ohne irrefuehrenden
+  Kompakt-Dropdown
 
 Bewusst noch offen:
 - der neue STT-Kern ist absichtlich noch schmal und bildet nur den bereits
@@ -92,7 +100,9 @@ Welle ausloesen:
 
 - auf dem neuen STT-Core-Helfer weiter testen statt ihn sofort auszubauen:
   breite projizierte Faelle, explizite Mixed-Fallbacks und spaeter feinere
-  Subsystem-Grenzen
+  Subsystem-Grenzen; der naechste echte Mehrwert liegt jetzt weniger in noch
+  mehr UI-Wiring, sondern in saubereren Subsystem-Grenzen fuer gemischte
+  sequentielle Netze
 - UI-Wiring weiter stabil lassen; keine grosse Refactor-Welle in
   `TruthTableModal` oder `TimingDiagram`
 - erst wenn der kleine Kern belastbar ist, den naechsten Schritt in Richtung

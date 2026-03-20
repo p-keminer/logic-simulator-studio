@@ -20,6 +20,8 @@ import {
   buildDisplayedStateTransitionTable,
   buildStaticAnalysisKey,
   buildStaticStateTransitionTable,
+  getAvailableStateTransitionDisplayModes,
+  getStateTransitionFallbackNote,
 } from '../../core/analysis/stateTransitionTable';
 import type { Circuit, GateInstance, SignalState, Wire } from '../../core/types';
 import { synthesizeFsm } from '../../fsm/synthesis/synthesize';
@@ -340,6 +342,61 @@ describe('stateTransitionTable', () => {
     expect(technical.inputs).toEqual(table.inputs);
     expect(technical.rows).toEqual(table.rows);
     expect(technical.notes).toEqual([]);
+  });
+
+  it('offers both compact and technical modes only for narrow projected FSM tables with one clock', () => {
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'projected',
+      isProjectedFsmView: true,
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    })).toEqual(['fsm_compact', 'technical_full']);
+
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'legacy_projected',
+      isProjectedFsmView: true,
+      reducedMeta: {
+        fixedDataLabels: [],
+        totalStateBits: 3,
+        controlCount: 7,
+        cappedControls: true,
+      },
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    })).toEqual(['fsm_compact']);
+
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'fallback_partial_inputs',
+      isProjectedFsmView: true,
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    })).toEqual(['technical_full']);
+
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'fallback_partial_outputs',
+      isProjectedFsmView: true,
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    })).toEqual(['technical_full']);
+
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'fallback_mixed_batches',
+      isProjectedFsmView: true,
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    })).toEqual(['technical_full']);
+
+    expect(getAvailableStateTransitionDisplayModes({
+      isProjectedFsmView: false,
+      inputRoles: {},
+    })).toEqual(['technical_full']);
+  });
+
+  it('maps fallback projection statuses to stable explanatory notes', () => {
+    expect(getStateTransitionFallbackNote('fallback_partial_state'))
+      .toContain('nicht alle Zustandsbits');
+    expect(getStateTransitionFallbackNote('fallback_partial_inputs'))
+      .toContain('Eingänge sind nur teilweise projiziert');
+    expect(getStateTransitionFallbackNote('fallback_partial_outputs'))
+      .toContain('Ausgänge sind gemischt oder nur teilweise projiziert');
+    expect(getStateTransitionFallbackNote('fallback_mixed_batches'))
+      .toContain('Mehrere FSM-Projektionsbatches erkannt');
+    expect(getStateTransitionFallbackNote('projected')).toBe('');
   });
 
   it('falls back to the technical view when compact mode is requested for a non-projected table', () => {

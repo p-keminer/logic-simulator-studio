@@ -2,7 +2,11 @@ import { gateRegistry } from '../registry/GateRegistry';
 import { buildWireMap, initBuffer, runOneTick, runUntilStable } from '../simulation/tickEngine';
 import { resolveWiredValues } from '../simulation/signal';
 import type { Circuit, GateInstance, ProjectionSignalRole, SignalState, SignalValue } from '../types';
-import { getProjectedSignalLabel, type StateTransitionProjectionStateVar } from './sequentialProjection';
+import {
+  getProjectedSignalLabel,
+  type StateTransitionProjectionStateVar,
+  type StateTransitionProjectionStatus,
+} from './sequentialProjection';
 
 export interface ReducedStateTransitionMeta {
   fixedDataLabels: string[];
@@ -37,6 +41,40 @@ export interface DisplayedStateTransitionTable {
   outputGates: GateInstance[];
   rows: StaticStateTransitionRow[];
   notes: string[];
+}
+
+export function getAvailableStateTransitionDisplayModes(args: {
+  projectionStatus?: StateTransitionProjectionStatus;
+  isProjectedFsmView: boolean;
+  reducedMeta?: ReducedStateTransitionMeta;
+  inputRoles?: Record<string, StateTransitionInputRole>;
+}): StateTransitionDisplayMode[] {
+  const { projectionStatus, isProjectedFsmView, reducedMeta, inputRoles = {} } = args;
+  const isProjectedStatus = projectionStatus === 'projected' || projectionStatus === 'legacy_projected';
+  if (!isProjectedFsmView || !isProjectedStatus) return ['technical_full'];
+  if (reducedMeta) return ['fsm_compact'];
+
+  const clockCount = Object.values(inputRoles).filter((role) => role === 'clock').length;
+  if (clockCount !== 1) return ['technical_full'];
+
+  return ['fsm_compact', 'technical_full'];
+}
+
+export function getStateTransitionFallbackNote(
+  projectionStatus: StateTransitionProjectionStatus | undefined,
+): string {
+  switch (projectionStatus) {
+    case 'fallback_partial_state':
+      return 'FSM-Projektion unvollständig: nicht alle Zustandsbits sind kanonisch erfasst. Ansicht bleibt technisch voll.';
+    case 'fallback_partial_inputs':
+      return 'FSM-Projektion unvollständig: Eingänge sind nur teilweise projiziert. Ansicht bleibt technisch voll.';
+    case 'fallback_partial_outputs':
+      return 'FSM-Projektion unvollständig: Ausgänge sind gemischt oder nur teilweise projiziert. Ansicht bleibt technisch voll.';
+    case 'fallback_mixed_batches':
+      return 'Mehrere FSM-Projektionsbatches erkannt. Ansicht bleibt technisch voll, damit keine halb-projizierte STT entsteht.';
+    default:
+      return '';
+  }
 }
 
 export function isDataPortId(portId: string): boolean {

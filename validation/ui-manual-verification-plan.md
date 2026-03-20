@@ -64,6 +64,9 @@ Erwartung:
 - `FSM kompakt` zeigt nur die fachlich noetigen FSM-Spalten; technische
   Clock-/Reset-Kombinationen duerfen in dieser Sicht reduziert sein.
 - `Technisch voll` zeigt weiterhin die komplette Roh-STT.
+- Der Dropdown darf nur erscheinen, wenn die FSM sauber projiziert ist;
+  partielle/gemischte Faelle sollen keinen scheinbar gueltigen Kompaktmodus
+  mehr anbieten.
 - State-Bits erscheinen stabil und fachlich lesbar.
 - Die Tabelle wirkt nicht wie eine Live-Mitschrift blinkender LEDs.
 - Naechster Zustand und Ausgangsspalten duerfen beim laufenden Blinken nicht sichtbar hin- und herspringen.
@@ -104,22 +107,24 @@ Ziel:
 
 Einfacher manueller Aufbau:
 1. Eine frisch synthetisierte FSM offen lassen.
-2. Zusaetzlich ein rohes, nicht zur FSM-Projektion gehoerendes UI-Element an
-   den gleichen sequentiellen Pfad haengen, z. B.:
-   - extra `OUTPUT_LED` direkt an ein `Q`-Signal
-   - oder ein weiteres rohes sequentielles Element in denselben Pfad bringen
-3. Timing Diagramm und STT erneut oeffnen.
+2. Zusaetzlich ein rohes, nicht zur FSM-Projektion gehoerendes UI-Element
+   anschliessen, das bewusst nicht als kanonischer FSM-Eingang erkannt wird,
+   z. B. einen `PUSH_BTN` plus separate `OUTPUT_LED`.
+3. Den Rohpfad verbunden lassen, ohne ihn ueber den FSM-Editor zu erzeugen.
+4. Timing Diagramm und STT erneut oeffnen.
 
 Erwartung:
 - Die App faellt bewusst auf den generischen Fallback zurueck.
 - Keine halb-projizierte Sonderansicht.
+- In der STT erscheint kein Dropdown `STT-Ansicht`; stattdessen bleibt die
+  technische Vollsicht aktiv und ein Hinweistext erklaert den Fallback.
 - Timing zeigt in diesem Mischfall nicht weiter nur eine scheinbar saubere
   kanonische Teilmenge, wenn die Gesamtstruktur nicht mehr eindeutig ist.
 
 ## Abschnitt F - Legacy-Fall: gespeicherter Download-Export
 
 1. Diese Altfall-Datei laden:
-   - `validation/fsm-export-fixes/cases/downloads/2026-03-20/FSM_EXPORT_19.03.26.lgsc.json`
+   - `validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json`
 2. Timing Diagramm oeffnen.
 3. STT oeffnen.
 4. Die Tabelle bei laufender Simulation einige Sekunden offen lassen.
@@ -136,18 +141,74 @@ Erwartung:
 
 1. Ein Circuit mit mehreren Timing-Kanaelen offen lassen.
 2. Timing Diagramm oeffnen.
-3. Die echten Up/Down-Buttons benutzen.
+3. Die Buttons `⇞`, `↑`, `↓`, `⇟` an einzelnen Zeilen benutzen.
 4. Reihenfolge veraendern.
 5. Optional einzelne Kanaele ein-/ausblenden.
 6. Panel schliessen und erneut oeffnen.
 
 Erwartung:
 - Sortierung funktioniert ueber echte Buttons.
+- Das Steuerpanel mit Namen und Buttons bleibt rechts sichtbar, auch wenn die
+  Wellenform im Zeitverlauf weiter nach rechts laeuft.
+- `⇞` schiebt eine Zeile komplett nach oben.
+- `⇟` schiebt eine Zeile komplett nach unten.
 - Es wird der richtige Kanal verschoben.
 - Reihenfolge bleibt nach Schliessen/Wiederoeffnen erhalten.
 - Hidden-State/Reihenfolge bleiben konsistent.
 
-## Abschnitt H - Panel-Stabilitaet
+## Abschnitt H - Timing Diagramm: Vollstaendig vs. Ausgewaehlt
+
+1. Eine synthetisierte FSM oder eine andere groessere sequentielle Schaltung
+   offen lassen.
+2. Timing Diagramm oeffnen.
+3. Den Dropdown `Ansicht` pruefen:
+   - `vollstaendig`
+   - `ausgewählt`
+4. Auf `ausgewählt` wechseln.
+5. `signale waehlen` oeffnen und nur einige Kanaele aktiv lassen.
+6. Panel schliessen und erneut oeffnen.
+
+Erwartung:
+- `vollstaendig` zeigt alle verfuegbaren Kanaele.
+- `ausgewählt` zeigt nur die markierten Kanaele.
+- Nicht markierte Kanaele tauchen nicht mehr als sichtbare oder eingeklappte
+  Zeilen auf.
+- Die Signalauswahl bleibt nach Schliessen/Wiederoeffnen erhalten.
+- Lange Signalnamen dürfen die Buttons nicht ueberdecken; sie sollen sauber
+  gekuerzt werden.
+
+## Abschnitt I - Timing Diagramm: Roh-Fallback mit Zusatzpfad
+
+1. Von Abschnitt E ausgehen oder erneut eine FSM mit manuellem `PUSH_BTN` +
+   `OUTPUT_LED` als Zusatzpfad aufbauen.
+2. Timing Diagramm oeffnen.
+3. Zuerst `vollstaendig` pruefen.
+4. Danach `ausgewählt` aktivieren.
+5. Im Menue `signale waehlen` gezielt nur die fachlich relevanten Kanaele
+   aktiv lassen.
+
+Erwartung:
+- Im Roh-/Fallback-Fall bleiben alle technischen Kanaele im Vollmodus sichtbar.
+- Ueber `ausgewählt` laesst sich die Anzeige wieder gezielt auf eine kleine,
+  lesbare Teilmenge reduzieren.
+- Das Diagramm bleibt klar entweder voll oder bewusst gefiltert und kippt
+  nicht in eine unklare Mischform.
+
+## Abschnitt J - Timing Diagramm: Taktzyklus-Achse
+
+1. Eine Schaltung mit sichtbarem Taktkanal offen lassen.
+2. Timing Diagramm oeffnen.
+3. Darauf achten, ob ueber der Wellenform kleine Zahlen erscheinen.
+4. Einige Taktzyklen laufen lassen.
+
+Erwartung:
+- Ueber dem Taktverlauf erscheint eine kleine Zyklusachse mit fortlaufenden
+  Nummern.
+- Die Zahlen bleiben ueber der Wellenform und helfen, einzelne Taktzyklen
+  leichter zuzaehlen.
+- Wenn kein Taktkanal sichtbar ist, darf die Achse auch fehlen.
+
+## Abschnitt K - Panel-Stabilitaet
 
 1. Zwischen Timing Diagramm, STT und ggf. HDL-Ansicht wechseln.
 2. Panels mehrfach schliessen und wieder oeffnen.
@@ -178,4 +239,4 @@ Der UI-Stand gilt manuell als sauber geprueft, wenn:
 - breite FSMs in der reduzierten STT lesbar bleiben
 - gemischte Faelle bewusst auf Fallback gehen
 - der Legacy-Download-Fall weiter funktioniert
-- Timing-Reihenfolge und Persistenz stabil bleiben
+- Timing-Reihenfolge, Auswahlmodus und Persistenz stabil bleiben
