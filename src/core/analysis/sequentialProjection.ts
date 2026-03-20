@@ -438,9 +438,6 @@ export function buildProjectedFsmSubsystemOptions(circuit: Circuit): ProjectedFs
     const projected = buildProjectedSequentialSttGates(subcircuit);
     if (!projected || projected.inputs.length === 0 || projected.outputs.length === 0) continue;
 
-    const channels = buildSequentialProjectionChannels(subcircuit);
-    if (channels.length === 0) continue;
-
     const inputLabels = projected.inputs.map((gate) => getProjectedSignalLabel(gate));
     const outputLabels = projected.outputs.map((gate) => getProjectedSignalLabel(gate));
     const label = outputLabels[0]

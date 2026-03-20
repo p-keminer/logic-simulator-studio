@@ -1,7 +1,8 @@
 import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json';
 import { describe, expect, it } from 'vitest';
-import type { Circuit } from '../../core/types';
+import type { Circuit, GateInstance, Wire } from '../../core/types';
 import {
+  buildStateTransitionProjection,
   buildProjectedFsmSubsystemOptions,
   buildProjectedSequentialSttGates,
   buildSequentialProjectionChannels,
@@ -9,6 +10,14 @@ import {
 import { synthesizeFsm } from '../../fsm/synthesis/synthesize';
 import type { FsmMachine } from '../../fsm/types';
 import { gateLabel } from '../../components/panels/truthTableAnalysis';
+import {
+  collectConnectedGateIds,
+  collectStateVarsForStt,
+  collectSttFeedbackGateIds,
+  INPUT_TYPES,
+  OUTPUT_TYPES,
+} from '../../components/panels/truthTableAnalysis';
+import { gateRegistry } from '../../core/registry/GateRegistry';
 
 function makeFsm(overrides?: Partial<FsmMachine>): FsmMachine {
   return {
@@ -349,6 +358,115 @@ describe('FSM projection metadata', () => {
     expect(buildProjectedSequentialSttGates(firstSubsystem!.circuit)?.outputs.map((gate) => gate.label)).toEqual(['Y']);
     expect(buildProjectedSequentialSttGates(secondSubsystem!.circuit)?.inputs.map((gate) => gate.label)).toEqual(['CLK_1', 'RST_1', 'A_1']);
     expect(buildProjectedSequentialSttGates(secondSubsystem!.circuit)?.outputs.map((gate) => gate.label)).toEqual(['Y_1']);
+  });
+
+  it('keeps raw push-button and LED additions inside the selected FSM subsystem and falls back to technical-full STT', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const fsm = makeFsm({
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const first = synthesizeFsm(fsm, emptyCircuit());
+    const firstCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: first.gates,
+      wires: first.wires,
+    };
+
+    const second = synthesizeFsm(fsm, firstCircuit);
+    const secondOutput = Object.values(second.gates).find((gate) => gate.typeId === 'OUTPUT_LED' && gate.label === 'Y_1');
+    expect(secondOutput).toBeTruthy();
+
+    const rawPush: GateInstance = {
+      id: 'raw-push',
+      typeId: 'PUSH_BTN',
+      x: 40,
+      y: 40,
+      label: 'RAW_BTN',
+      outputSignals: {},
+      isSelected: false,
+    };
+    const rawLed: GateInstance = {
+      id: 'raw-led',
+      typeId: 'OUTPUT_LED',
+      x: 160,
+      y: 40,
+      label: 'RAW_LED',
+      outputSignals: {},
+      isSelected: false,
+    };
+
+    const bridgeWire: Wire = {
+      id: 'raw-bridge',
+      from: { gateId: rawPush.id, portId: 'out' },
+      to: { gateId: secondOutput!.id, portId: 'in' },
+      signal: { value: 0, version: 0, lastChangedAt: 0 },
+      isSelected: false,
+    };
+    const rawWire: Wire = {
+      id: 'raw-wire',
+      from: { gateId: rawPush.id, portId: 'out' },
+      to: { gateId: rawLed.id, portId: 'in' },
+      signal: { value: 0, version: 0, lastChangedAt: 0 },
+      isSelected: false,
+    };
+
+    const mixedCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: { ...first.gates, ...second.gates, [rawPush.id]: rawPush, [rawLed.id]: rawLed },
+      wires: { ...first.wires, ...second.wires, [bridgeWire.id]: bridgeWire, [rawWire.id]: rawWire },
+    };
+
+    const subsystemOptions = buildProjectedFsmSubsystemOptions(mixedCircuit);
+    const secondSubsystem = subsystemOptions.find((option) => option.label === 'Y_1');
+    expect(secondSubsystem).toBeTruthy();
+
+    const connectedIds = collectConnectedGateIds(secondSubsystem!.circuit);
+    const subsystemInputs = Object.values(secondSubsystem!.circuit.gates)
+      .filter((gate) => INPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+      .map((gate) => gateLabel(gate))
+      .sort((a, b) => a.localeCompare(b));
+    const subsystemOutputs = Object.values(secondSubsystem!.circuit.gates)
+      .filter((gate) => OUTPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+      .map((gate) => gateLabel(gate))
+      .sort((a, b) => a.localeCompare(b));
+
+    expect(subsystemInputs).toEqual(['A_1', 'CLK_1', 'RAW_BTN', 'RST_1']);
+    expect(subsystemOutputs).toEqual(['Q0_1', 'RAW_LED', 'Y_1']);
+
+    const feedbackGateIds = collectSttFeedbackGateIds(
+      secondSubsystem!.circuit,
+      connectedIds,
+      [],
+      gateRegistry.get.bind(gateRegistry),
+    );
+    const stateVars = collectStateVarsForStt(
+      secondSubsystem!.circuit,
+      connectedIds,
+      feedbackGateIds,
+      gateRegistry.get.bind(gateRegistry),
+    );
+    const projectedView = buildStateTransitionProjection(
+      secondSubsystem!.circuit,
+      Object.values(secondSubsystem!.circuit.gates)
+        .filter((gate) => INPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+        .sort((a, b) => a.x - b.x),
+      stateVars,
+      Object.values(secondSubsystem!.circuit.gates)
+        .filter((gate) => OUTPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+        .sort((a, b) => a.x - b.x),
+    );
+
+    expect(projectedView.isProjectedFsmView).toBe(false);
+    expect(projectedView.projectionStatus).toMatch(/^fallback_partial_/);
   });
 
   it('keeps projected FSM state channels in canonical Q-order', () => {
