@@ -27,6 +27,15 @@ export interface ProjectedSequentialSttGates {
   outputs: GateInstance[];
 }
 
+export interface ProjectedFsmSubsystemOption {
+  key: string;
+  batchId: string;
+  label: string;
+  circuit: Circuit;
+  inputLabels: string[];
+  outputLabels: string[];
+}
+
 export interface StateTransitionProjectionStateVar {
   gateId: string;
   portId: string;
@@ -67,6 +76,63 @@ function getConnectedGateIds(circuit: Circuit): Set<string> {
     ids.add(wire.to.gateId);
   }
   return ids;
+}
+
+function getConnectedComponents(circuit: Circuit): Set<string>[] {
+  const connectedIds = [...getConnectedGateIds(circuit)];
+  if (connectedIds.length === 0) return [];
+
+  const adjacency = new Map<string, Set<string>>();
+  const ensure = (id: string) => {
+    if (!adjacency.has(id)) adjacency.set(id, new Set());
+    return adjacency.get(id)!;
+  };
+
+  for (const id of connectedIds) ensure(id);
+
+  for (const wire of Object.values(circuit.wires)) {
+    ensure(wire.from.gateId).add(wire.to.gateId);
+    ensure(wire.to.gateId).add(wire.from.gateId);
+  }
+
+  const seen = new Set<string>();
+  const components: Set<string>[] = [];
+  for (const startId of connectedIds) {
+    if (seen.has(startId)) continue;
+    const component = new Set<string>();
+    const stack = [startId];
+    seen.add(startId);
+
+    while (stack.length > 0) {
+      const gateId = stack.pop()!;
+      component.add(gateId);
+      for (const nextId of adjacency.get(gateId) ?? []) {
+        if (seen.has(nextId)) continue;
+        seen.add(nextId);
+        stack.push(nextId);
+      }
+    }
+
+    components.push(component);
+  }
+
+  return components;
+}
+
+function buildCircuitSubset(circuit: Circuit, gateIds: Set<string>): Circuit {
+  return {
+    ...circuit,
+    gates: Object.fromEntries(
+      Object.entries(circuit.gates)
+        .filter(([gateId]) => gateIds.has(gateId))
+        .map(([gateId, gate]) => [gateId, { ...gate }]),
+    ),
+    wires: Object.fromEntries(
+      Object.entries(circuit.wires)
+        .filter(([, wire]) => gateIds.has(wire.from.gateId) && gateIds.has(wire.to.gateId))
+        .map(([wireId, wire]) => [wireId, { ...wire }]),
+    ),
+  };
 }
 
 function trimLabel(gate: GateInstance): string {
@@ -342,6 +408,56 @@ function getProjectionBatchResolution(circuit: Circuit, projectionLookup: Projec
 export function getProjectedFsmBatchId(circuit: Circuit): string | null {
   const projectionLookup = getProjectionLookup(circuit);
   return getProjectionBatchResolution(circuit, projectionLookup).batchId;
+}
+
+export function buildProjectedFsmSubsystemOptions(circuit: Circuit): ProjectedFsmSubsystemOption[] {
+  const projectionLookup = getProjectionLookup(circuit);
+  const options: ProjectedFsmSubsystemOption[] = [];
+
+  for (const gateIds of getConnectedComponents(circuit)) {
+    const componentGates = [...gateIds]
+      .map((gateId) => circuit.gates[gateId])
+      .filter((gate): gate is GateInstance => Boolean(gate));
+
+    const projectedGates = componentGates.filter((gate) => {
+      const projection = projectionLookup.get(gate.id) ?? gate.projection;
+      return projection?.sourceSystem === 'fsm_synth';
+    });
+    if (projectedGates.length === 0) continue;
+
+    const batchIds = new Set(
+      projectedGates
+        .map((gate) => (projectionLookup.get(gate.id) ?? gate.projection)?.projectionBatchId)
+        .filter((batchId): batchId is string => Boolean(batchId)),
+    );
+    const hasMissingBatchId = projectedGates.some((gate) => !((projectionLookup.get(gate.id) ?? gate.projection)?.projectionBatchId));
+    if (batchIds.size !== 1 || hasMissingBatchId) continue;
+
+    const batchId = [...batchIds][0]!;
+    const subcircuit = buildCircuitSubset(circuit, gateIds);
+    const projected = buildProjectedSequentialSttGates(subcircuit);
+    if (!projected || projected.inputs.length === 0 || projected.outputs.length === 0) continue;
+
+    const channels = buildSequentialProjectionChannels(subcircuit);
+    if (channels.length === 0) continue;
+
+    const inputLabels = projected.inputs.map((gate) => getProjectedSignalLabel(gate));
+    const outputLabels = projected.outputs.map((gate) => getProjectedSignalLabel(gate));
+    const label = outputLabels[0]
+      ?? inputLabels.find((entry) => entry !== 'CLK' && entry !== 'RST')
+      ?? `FSM ${options.length + 1}`;
+
+    options.push({
+      key: batchId,
+      batchId,
+      label,
+      circuit: subcircuit,
+      inputLabels,
+      outputLabels,
+    });
+  }
+
+  return options.sort((a, b) => a.label.localeCompare(b.label));
 }
 
 export function buildProjectedSequentialSttGates(circuit: Circuit): ProjectedSequentialSttGates | null {

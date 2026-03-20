@@ -259,11 +259,17 @@ Erwartung:
    ebenfalls mit `CLK`, `RST`, `A`, `Q0`, `Y`.
 3. Sicherstellen, dass beide FSMs gleichzeitig auf dem Canvas liegen.
 4. Zustandsuebergangstabelle oeffnen.
-5. Timing Diagramm oeffnen.
+5. Den Dropdown `FSM-System` pruefen.
+6. Zwischen beiden Systemen umschalten.
+7. Timing Diagramm oeffnen.
 
 Erwartung:
 - Die zweite Synthese bekommt eindeutige kanonische Signalnamen, z. B.
   `CLK_1`, `RST_1`, `A_1`, `Q0_1`, `Y_1`.
+- In der STT erscheint fuer Mehrfach-FSM-Faelle ein `FSM-System`-Selektor,
+  damit jeweils ein vollstaendiges FSM-Subsystem isoliert analysiert wird.
+- Beim Umschalten auf das erste bzw. zweite System muessen Eingaenge, Zustandsbits
+  und Ausgaenge jeweils zu genau diesem FSM-Block passen.
 - In der STT duÌˆrfen keine kollidierenden Header wie `CLK / CLK` oder `Y / Y`
   mehr sichtbar sein.
 - Im Timing duÌˆrfen dieselben fachlichen Signale nicht mehr uneindeutig doppelt

@@ -2,6 +2,7 @@ import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/d
 import { describe, expect, it } from 'vitest';
 import type { Circuit } from '../../core/types';
 import {
+  buildProjectedFsmSubsystemOptions,
   buildProjectedSequentialSttGates,
   buildSequentialProjectionChannels,
 } from '../../core/analysis/sequentialProjection';
@@ -279,6 +280,75 @@ describe('FSM projection metadata', () => {
       .map((gate) => gateLabel(gate));
     expect(stateLabels).toEqual(['Q0', 'Q0_1']);
     expect(new Set(stateLabels).size).toBe(stateLabels.length);
+  });
+
+  it('keeps the single-FSM projection path unchanged when only one synthesized FSM is present', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const fsm = makeFsm({
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const result = synthesizeFsm(fsm, emptyCircuit());
+    const circuit: Circuit = {
+      ...emptyCircuit(),
+      gates: result.gates,
+      wires: result.wires,
+    };
+
+    const subsystemOptions = buildProjectedFsmSubsystemOptions(circuit);
+    expect(subsystemOptions).toHaveLength(1);
+    expect(subsystemOptions[0]?.label).toBe('Y');
+
+    const channels = buildSequentialProjectionChannels(circuit);
+    expect(channels.map((channel) => channel.label)).toEqual(['CLK', 'RST', 'A', 'Q0', 'Y']);
+  });
+
+  it('builds one projected STT subsystem per disconnected synthesized FSM batch', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const fsm = makeFsm({
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const first = synthesizeFsm(fsm, emptyCircuit());
+    const firstCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: first.gates,
+      wires: first.wires,
+    };
+    const second = synthesizeFsm(fsm, firstCircuit);
+
+    const mixedCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: { ...first.gates, ...second.gates },
+      wires: { ...first.wires, ...second.wires },
+    };
+
+    const subsystemOptions = buildProjectedFsmSubsystemOptions(mixedCircuit);
+    expect(subsystemOptions.map((option) => option.label)).toEqual(['Y', 'Y_1']);
+
+    const firstSubsystem = subsystemOptions.find((option) => option.label === 'Y');
+    const secondSubsystem = subsystemOptions.find((option) => option.label === 'Y_1');
+
+    expect(buildProjectedSequentialSttGates(firstSubsystem!.circuit)?.inputs.map((gate) => gate.label)).toEqual(['CLK', 'RST', 'A']);
+    expect(buildProjectedSequentialSttGates(firstSubsystem!.circuit)?.outputs.map((gate) => gate.label)).toEqual(['Y']);
+    expect(buildProjectedSequentialSttGates(secondSubsystem!.circuit)?.inputs.map((gate) => gate.label)).toEqual(['CLK_1', 'RST_1', 'A_1']);
+    expect(buildProjectedSequentialSttGates(secondSubsystem!.circuit)?.outputs.map((gate) => gate.label)).toEqual(['Y_1']);
   });
 
   it('keeps projected FSM state channels in canonical Q-order', () => {

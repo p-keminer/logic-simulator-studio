@@ -5,6 +5,7 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { topologicalSort } from '../../core/simulation/topologicalSort';
 import {
   buildStateTransitionProjection,
+  buildProjectedFsmSubsystemOptions,
   type StateTransitionProjectionStatus,
 } from '../../core/analysis/sequentialProjection';
 import {
@@ -76,6 +77,7 @@ interface Props { onClose: () => void; }
 export function TruthTableModal({ onClose }: Props) {
   const { circuit } = useCircuitContext();
   const [sttViewMode, setSttViewMode] = useState<StateTransitionDisplayMode>('fsm_compact');
+  const [selectedProjectedSubsystemKey, setSelectedProjectedSubsystemKey] = useState<string>('');
   const analysisKey = useMemo(() => buildStaticAnalysisKey(circuit), [circuit]);
   const analysisSnapshotRef = useRef<{ key: string; circuit: Circuit } | null>(null);
   if (!analysisSnapshotRef.current || analysisSnapshotRef.current.key !== analysisKey) {
@@ -85,16 +87,26 @@ export function TruthTableModal({ onClose }: Props) {
     };
   }
   const analysisCircuit = analysisSnapshotRef.current.circuit;
+  const projectedSubsystemOptions = useMemo(
+    () => buildProjectedFsmSubsystemOptions(analysisCircuit),
+    [analysisCircuit],
+  );
+  const activeProjectedSubsystem = projectedSubsystemOptions.find((option) => option.key === selectedProjectedSubsystemKey)
+    ?? projectedSubsystemOptions[0]
+    ?? null;
+  const analysisSourceCircuit = projectedSubsystemOptions.length > 1
+    ? (activeProjectedSubsystem?.circuit ?? analysisCircuit)
+    : analysisCircuit;
 
   // ── Hauptberechnung ────────────────────────────────────────────────────────
   const computed = useMemo((): Computed => {
-    const allGates = Object.values(analysisCircuit.gates);
+    const allGates = Object.values(analysisSourceCircuit.gates);
 
     // Verbundene Gate-IDs (haben mindestens einen Draht)
-    const connectedIds = collectConnectedGateIds(analysisCircuit);
+    const connectedIds = collectConnectedGateIds(analysisSourceCircuit);
 
     // Zyklenerkennung via Topologischer Sortierung
-    const { order: evalOrder, cycles } = topologicalSort(analysisCircuit);
+    const { order: evalOrder, cycles } = topologicalSort(analysisSourceCircuit);
     const hasCycles = cycles.length > 0;
 
     // Erkennung sequenzieller Gatter (Flip-Flops, Latches) auch ohne Draht-Zyklen.
@@ -172,9 +184,9 @@ export function TruthTableModal({ onClose }: Props) {
       const table: Array<{ ins: number[]; mids: number[]; outs: number[] }> = [];
       for (let mask = 0; mask < (1 << inputs.length); mask++) {
         const copy: Circuit = {
-          ...analysisCircuit,
+          ...analysisSourceCircuit,
           gates: Object.fromEntries(
-            Object.entries(analysisCircuit.gates).map(([id, g]) => {
+            Object.entries(analysisSourceCircuit.gates).map(([id, g]) => {
               const idx = inputs.findIndex(sw => sw.id === id);
               if (idx < 0) return [id, g];
               const val = (mask >> (inputs.length - 1 - idx)) & 1;
@@ -211,7 +223,7 @@ export function TruthTableModal({ onClose }: Props) {
     // Zustandsgatter = Gatter in Draht-Zyklen (Feedback) ODER synchrone
     // FF/Register ODER Gatter mit stateUpdate (z.B. SR-Latch, D-Latch).
     const feedbackGateIds = collectSttFeedbackGateIds(
-      analysisCircuit,
+      analysisSourceCircuit,
       connectedIds,
       cycles,
       gateRegistry.get.bind(gateRegistry),
@@ -219,7 +231,7 @@ export function TruthTableModal({ onClose }: Props) {
 
     // Zustandsvariablen = sichtbare State-Carriers der Zustandsgatter, x-sortiert
     const stateVars = collectStateVarsForStt(
-      analysisCircuit,
+      analysisSourceCircuit,
       connectedIds,
       feedbackGateIds,
       gateRegistry.get.bind(gateRegistry),
@@ -251,7 +263,7 @@ export function TruthTableModal({ onClose }: Props) {
       .filter(g => OUTPUT_TYPES.has(g.typeId) && connectedIds.has(g.id))
       .sort((a, b) => a.x - b.x);
 
-    const projectedView = buildStateTransitionProjection(analysisCircuit, inputs, stateVars, outputGates);
+    const projectedView = buildStateTransitionProjection(analysisSourceCircuit, inputs, stateVars, outputGates);
     const projectedInputs = projectedView.inputs;
     const projectedStateVars = projectedView.stateVars;
     const projectedOutputGates = projectedView.outputGates;
@@ -271,7 +283,7 @@ export function TruthTableModal({ onClose }: Props) {
       };
     }
     const staticTable = buildStaticStateTransitionTable({
-      circuit: analysisCircuit,
+      circuit: analysisSourceCircuit,
       feedbackGateIds,
       projectedInputs,
       projectedStateVars,
@@ -292,7 +304,7 @@ export function TruthTableModal({ onClose }: Props) {
       reducedMeta: staticTable.reducedMeta,
     };
 
-  }, [analysisCircuit]);
+  }, [analysisSourceCircuit]);
 
   const availableSttViewModes = computed.mode === 'state-transition'
     ? getAvailableStateTransitionDisplayModes({
@@ -399,10 +411,47 @@ export function TruthTableModal({ onClose }: Props) {
               </p>
             )}
           </div>
-          {showSttViewModeSelect && (
+          {computed.mode === 'state-transition' && projectedSubsystemOptions.length > 1 && activeProjectedSubsystem && (
             <label
               style={{
                 marginLeft: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                color: '#94a3b8',
+                fontSize: 11,
+                fontFamily: 'monospace',
+                marginRight: showSttViewModeSelect ? 12 : 0,
+              }}
+            >
+              <span>FSM-System</span>
+              <select
+                aria-label="FSM-System"
+                value={activeProjectedSubsystem.key}
+                onChange={(event) => setSelectedProjectedSubsystemKey(event.target.value)}
+                style={{
+                  minWidth: 180,
+                  padding: '6px 10px',
+                  borderRadius: 6,
+                  border: '1px solid #475569',
+                  background: '#0f172a',
+                  color: '#e2e8f0',
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                }}
+              >
+                {projectedSubsystemOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {showSttViewModeSelect && (
+            <label
+              style={{
+                marginLeft: projectedSubsystemOptions.length > 1 ? 0 : 'auto',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 4,
@@ -600,6 +649,23 @@ export function TruthTableModal({ onClose }: Props) {
                   lineHeight: 1.7,
                 }}>
                   {fallbackProjectionNote}
+                </div>
+              )}
+
+              {projectedSubsystemOptions.length > 1 && activeProjectedSubsystem && (
+                <div style={{
+                  marginBottom: 14,
+                  padding: '8px 12px',
+                  background: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: 6,
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: '#cbd5e1',
+                  lineHeight: 1.7,
+                }}>
+                  Analysiert isoliert das ausgewählte FSM-System <span style={{ color: '#f8fafc' }}>{activeProjectedSubsystem.label}</span>,
+                  damit mehrere getrennte FSM-Projektionsbatches nicht in eine gemeinsame technische Fallback-STT gedrückt werden.
                 </div>
               )}
 

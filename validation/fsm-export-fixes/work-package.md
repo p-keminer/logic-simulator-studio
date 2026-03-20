@@ -723,3 +723,8 @@ geloest die neuen Projektionsinvarianten absichern:
     State-Bits und Ausgaenge
   - technische Fallback-Ansichten von STT und Timing zeigen keine kollidierenden
     Mehrfach-Header wie `CLK / CLK` oder `Y / Y`
+- sm_projection_multi_export_subsystem_scope
+  - mehrere getrennte FSM-Batches werden in der STT nicht als gemeinsamer
+    Produktautomat reduziert
+  - stattdessen muss die STT ein einzelnes vollstaendiges FSM-Subsystem
+    auswaehlbar analysieren koennen
