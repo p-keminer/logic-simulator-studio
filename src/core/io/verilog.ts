@@ -15,6 +15,23 @@ function sanitize(id: string) {
   return id.replace(/[^a-zA-Z0-9_]/g, '_');
 }
 
+function getPreferredTopLevelSignalName(gate: GateInstance, fallback: string): string | null {
+  const projected = gate.projection?.sourceSystem === 'fsm_synth'
+    ? gate.projection.signalLabel?.trim()
+    : '';
+  const labeled = gate.label?.trim() ?? '';
+  const raw = projected || labeled;
+  if (!raw) return null;
+  return sanitizeVerilog(raw, 'signal') || sanitizeVerilog(fallback, 'signal');
+}
+
+function renameSignal(byPort: Record<string, string>, currentName: string, nextName: string) {
+  if (currentName === nextName) return;
+  for (const key of Object.keys(byPort)) {
+    if (byPort[key] === currentName) byPort[key] = nextName;
+  }
+}
+
 // Gate types that have no direct Verilog equivalent and should be excluded from logic
 const EXCLUDE_FROM_VERILOG = new Set([
   'CLOCK', 'PUSH_BTN', 'JUNCTION', 'TEXT_NOTE',
@@ -66,6 +83,19 @@ function buildWireMap(circuit: Circuit): WireMap {
       const raw  = gate.label ? sanitizeVerilog(gate.label, 'signal') : `sw_${swIdx++}`;
       const name = makeUnique(raw, usedPortNames);
       byPort[`${gate.id}:out`] = name;
+      continue;
+    }
+
+    if ((gate.typeId === 'CLOCK' || gate.typeId === 'PUSH_BTN')) {
+      const preferred = getPreferredTopLevelSignalName(
+        gate,
+        gate.typeId === 'CLOCK' ? 'clk' : 'btn',
+      );
+      if (!preferred) continue;
+      const outputId = gateRegistry.get(gate.typeId).outputs[0]?.id;
+      if (!outputId) continue;
+      const name = makeUnique(preferred, usedPortNames);
+      byPort[`${gate.id}:${outputId}`] = name;
     }
   }
 
@@ -104,8 +134,18 @@ function buildWireMap(circuit: Circuit): WireMap {
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'OUTPUT_LED') {
       const inKey = `${gate.id}:in`;
+      const preferred = gate.projection?.sourceSystem === 'fsm_synth'
+        ? getPreferredTopLevelSignalName(gate, `led_${ledIdx}`)
+        : null;
+
+      if (preferred && byPort[inKey]) {
+        const name = makeUnique(preferred, usedPortNames);
+        renameSignal(byPort, byPort[inKey], name);
+        continue;
+      }
+
       if (!byPort[inKey]) {
-        const raw  = gate.label ? sanitizeVerilog(gate.label, 'signal') : `led_${ledIdx++}`;
+        const raw = gate.label ? sanitizeVerilog(gate.label, 'signal') : `led_${ledIdx++}`;
         const name = makeUnique(raw, usedPortNames);
         byPort[inKey] = name;
       }
@@ -182,6 +222,7 @@ export function generateVerilog(circuit: Circuit): string {
 
   const inputs:  string[] = [];
   const outputs: string[] = [];
+  const outputAliases: Array<{ portName: string; signalName: string }> = [];
 
   // ── Pass 1: Collect all port names ───────────────────────────────────────────
   // MUST be a separate pass from signal classification (Pass 2).
@@ -194,7 +235,16 @@ export function generateVerilog(circuit: Circuit): string {
     if (gate.typeId === 'INPUT_SWITCH') {
       inputs.push(byPort[`${gate.id}:out`] ?? `sw_${gate.id}`);
     } else if (gate.typeId === 'OUTPUT_LED') {
-      outputs.push(byPort[`${gate.id}:in`] ?? `led_${gate.id}`);
+      const signalName = byPort[`${gate.id}:in`] ?? `led_${gate.id}`;
+      const preferredName = gate.projection?.sourceSystem === 'fsm_synth'
+        ? getPreferredTopLevelSignalName(gate, signalName) ?? signalName
+        : signalName;
+      if (preferredName === signalName) {
+        if (!outputs.includes(signalName)) outputs.push(signalName);
+      } else if (!outputs.includes(preferredName)) {
+        outputs.push(preferredName);
+        outputAliases.push({ portName: preferredName, signalName });
+      }
     }
   }
 
@@ -322,7 +372,8 @@ export function generateVerilog(circuit: Circuit): string {
   const portParts: string[] = [];
   for (const name of inputs)  portParts.push(`  input  wire ${name}`);
   for (const name of outputs) {
-    portParts.push(`  output ${procDriven.has(name) ? 'reg ' : 'wire'} ${name}`);
+    const isAlias = outputAliases.some((entry) => entry.portName === name);
+    portParts.push(`  output ${isAlias ? 'wire' : procDriven.has(name) ? 'reg ' : 'wire'} ${name}`);
   }
 
   const lines: string[] = [
@@ -340,6 +391,9 @@ export function generateVerilog(circuit: Circuit): string {
     ...(regs.size  > 0 ? [`  reg  ${[...regs].join(', ')};`,  ``] : []),
     ...renderVerilogExtraRegs(extraVerilogRegs),
     ...(extraVerilogRegs.length > 0 ? [``,] : []),
+    ...(outputAliases.length > 0
+      ? [...outputAliases.map(({ portName, signalName }) => `  assign ${portName} = ${signalName};`), ``]
+      : []),
     ...(gateLines.length > 0 ? [...gateLines, ``] : []),
     ...(ffLines.length > 0 ? [
       `  // Sequential logic`,

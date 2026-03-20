@@ -8,6 +8,23 @@ function sanitize(id: string) {
   return id.replace(/[^a-zA-Z0-9_]/g, '_');
 }
 
+function getPreferredTopLevelSignalName(gate: GateInstance, fallback: string): string | null {
+  const projected = gate.projection?.sourceSystem === 'fsm_synth'
+    ? gate.projection.signalLabel?.trim()
+    : '';
+  const labeled = gate.label?.trim() ?? '';
+  const raw = projected || labeled;
+  if (!raw) return null;
+  return sanitizeVHDL(raw, 'signal') || sanitizeVHDL(fallback, 'signal');
+}
+
+function renameSignal(byPort: Record<string, string>, currentName: string, nextName: string) {
+  if (currentName === nextName) return;
+  for (const key of Object.keys(byPort)) {
+    if (byPort[key] === currentName) byPort[key] = nextName;
+  }
+}
+
 // Gate types that have no direct VHDL equivalent and should be excluded from logic
 const EXCLUDE_FROM_VHDL = new Set([
   'CLOCK', 'PUSH_BTN', 'JUNCTION', 'TEXT_NOTE',
@@ -84,6 +101,18 @@ function buildPortMap(circuit: Circuit) {
     if (gate.typeId === 'INPUT_SWITCH') {
       const raw  = gate.label ? sanitizeVHDL(gate.label, 'signal') : `sw_${swIdx++}`;
       byPort[`${gate.id}:out`] = makeUnique(raw, usedPortNames);
+      continue;
+    }
+
+    if ((gate.typeId === 'CLOCK' || gate.typeId === 'PUSH_BTN')) {
+      const preferred = getPreferredTopLevelSignalName(
+        gate,
+        gate.typeId === 'CLOCK' ? 'clk' : 'btn',
+      );
+      if (!preferred) continue;
+      const outputId = gateRegistry.get(gate.typeId).outputs[0]?.id;
+      if (!outputId) continue;
+      byPort[`${gate.id}:${outputId}`] = makeUnique(preferred, usedPortNames);
     }
   }
   for (const wire of Object.values(circuit.wires)) {
@@ -116,6 +145,16 @@ function buildPortMap(circuit: Circuit) {
   for (const gate of Object.values(circuit.gates)) {
     if (gate.typeId === 'OUTPUT_LED') {
       const k = `${gate.id}:in`;
+      const preferred = gate.projection?.sourceSystem === 'fsm_synth'
+        ? getPreferredTopLevelSignalName(gate, `led_${ledIdx}`)
+        : null;
+
+      if (preferred && byPort[k]) {
+        const name = makeUnique(preferred, usedPortNames);
+        renameSignal(byPort, byPort[k], name);
+        continue;
+      }
+
       if (!byPort[k]) {
         const raw  = gate.label ? sanitizeVHDL(gate.label, 'signal') : `led_${ledIdx++}`;
         byPort[k] = makeUnique(raw, usedPortNames);
@@ -176,6 +215,7 @@ export function generateVHDL(circuit: Circuit): string {
 
   const inputs: string[]  = [];
   const outputs: string[] = [];
+  const outputAliases: Array<{ portName: string; signalName: string }> = [];
   const signals = new Set<string>();
   const logic: string[]   = [];
   const ffLogic: string[] = [];
@@ -189,7 +229,18 @@ export function generateVHDL(circuit: Circuit): string {
     if (gate.typeId === 'INPUT_SWITCH') {
       inputs.push(byPort[`${gate.id}:out`] ?? `sw_${gate.id}`);
     } else if (gate.typeId === 'OUTPUT_LED') {
-      outputs.push(byPort[`${gate.id}:in`] ?? `led_${gate.id}`);
+      const signalName = byPort[`${gate.id}:in`] ?? `led_${gate.id}`;
+      if (gate.projection?.sourceSystem === 'fsm_synth') {
+        const preferredName = getPreferredTopLevelSignalName(gate, signalName) ?? signalName;
+        if (preferredName === signalName) {
+          if (!outputs.includes(signalName)) outputs.push(signalName);
+        } else if (!outputs.includes(preferredName)) {
+          outputs.push(preferredName);
+          outputAliases.push({ portName: preferredName, signalName });
+        }
+      } else {
+        outputs.push(signalName);
+      }
     }
   }
 
@@ -277,6 +328,7 @@ export function generateVHDL(circuit: Circuit): string {
   // The process uses the _q signal; a concurrent assignment drives the port.
   const ffByPort = { ...byPort };      // modified port map used only for FF code generation
   const qAssignments: string[] = [];   // e.g. "  w_1 <= w_1_q;"
+  const shadowSignals: Record<string, string> = {};
 
   for (const gate of Object.values(exportCircuit.gates)) {
     if (EXCLUDE_FROM_VHDL.has(gate.typeId) || !gateRegistry.has(gate.typeId)) continue;
@@ -294,6 +346,7 @@ export function generateVHDL(circuit: Circuit): string {
         if (ffByPort[k] === s) ffByPort[k] = qName;
       }
       signals.add(qName);
+      shadowSignals[s] = qName;
       qAssignments.push(`  ${s} <= ${qName};`);
     }
   }
@@ -358,6 +411,9 @@ export function generateVHDL(circuit: Circuit): string {
     ...renderVHDLExtraSignals(extraVHDLSignals),
     `begin`,
     ``,
+    ...(outputAliases.length > 0
+      ? [...outputAliases.map(({ portName, signalName }) => `  ${portName} <= ${shadowSignals[signalName] ?? signalName};`), ``]
+      : []),
     ...(logic.length > 0 ? [...logic, ``] : []),
     ...(qAssignments.length > 0 ? [...qAssignments, ``] : []),
     ...(ffLogic.length > 0 ? [

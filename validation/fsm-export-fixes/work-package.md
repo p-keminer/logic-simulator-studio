@@ -131,17 +131,6 @@ Welle ausloesen:
   Subsystem-Grenzen; der naechste echte Mehrwert liegt jetzt weniger in noch
   mehr UI-Wiring, sondern in saubereren Subsystem-Grenzen fuer gemischte
   sequentielle Netze
-- beim HDL-Export die Top-Level-Schnittstelle fuer synthetisierte FSMs
-  nachziehen:
-  - Clock-Signale duerfen nicht mehr als generische `w_*`-Ports enden,
-    sondern muessen dieselbe kanonische Namensfamilie wie `RST`, Eingaenge
-    und projizierte Signale behalten (`CLK`, `CLK_1`, ...)
-  - fachliche FSM-Ausgaenge und State-Ausgaenge duerfen am Modul-/Entity-Rand
-    nicht hinter generischen `w_*`-Portnamen verschwinden, wenn bereits
-    kanonische Labels existieren
-  - Ziel ist ein exportseitig konsistentes Interface fuer Verilog und VHDL,
-    ohne die bereits funktionierende innere Logik der Einzelfall-FSMs
-    umzubauen
 - UI-Wiring weiter stabil lassen; keine grosse Refactor-Welle in
   `TruthTableModal` oder `TimingDiagram`
 - erst wenn der kleine Kern belastbar ist, den naechsten Schritt in Richtung
@@ -251,21 +240,25 @@ Folge:
 - Dieselbe Synthese ist fuer HDL okay, fuer UI-Projektionen aber nicht reich
   genug annotiert.
 
-### 3b. HDL-Export behaelt bei Mehrfach-FSMs die Logik, aber nicht die fachliche Top-Level-Schnittstelle
+### 3b. HDL-Export-Top-Level fuer Mehrfach-FSMs ist nachgezogen
 
-Beobachtung:
-- Die exportierten Mehrfach-FSMs sind in Verilog und VHDL logisch konsistent:
-  gleiche kombinatorische Logik, gleiche Register-/Reset-Semantik, keine
-  offensichtliche Vermischung der einzelnen FSM-Bloecke.
-- Die Top-Level-Ports bleiben aber noch unzureichend fachlich benannt.
-- Besonders auffaellig:
-  - Clock-Ports erscheinen als generische `w_*`-Signale statt als
-    `CLK`, `CLK_1`, ...
-  - fachliche Output-/State-Ports erscheinen am Modulkopf ebenfalls als
-    `w_*`-Namen, obwohl die Synthese intern bereits eindeutige kanonische
-    Labels vergibt
+Stand 2026-03-20:
+- behoben fuer den aktuellen Verilog-/VHDL-Exportpfad
+- neue Regressionen sichern mehrfach synthetisierte FSM-Exporte in
+  `src/__tests__/hdl/export.test.ts` ab
 
-Strukturelle Ursache:
+Ergebnis:
+- Die exportierten Mehrfach-FSMs bleiben in Verilog und VHDL logisch
+  konsistent.
+- Clock-Ports behalten ihre kanonische Namensfamilie
+  (`CLK`, `CLK_1`, ...).
+- fachliche FSM-Output-/State-Ports bleiben am Modul-/Entity-Rand lesbar und
+  fallen nicht mehr auf generische `w_*`-Portnamen zurueck.
+- Der generische Nicht-FSM-Exportpfad bleibt dabei unveraendert; die neue
+  Alias-/Top-Level-Namenslogik greift nur fuer projizierte `fsm_synth`-
+  Signale.
+
+Ursache des frueheren Fehlers:
 - In `src/fsm/synthesis/synthesize.ts` werden die FSM-Signale bereits sauber
   und eindeutig reserviert (`CLK`, `RST`, `A`, `Q0`, `Y`, plus Suffixe).
 - Die Exporter in `src/core/io/verilog.ts` und `src/core/io/vhdl.ts`
@@ -275,13 +268,10 @@ Strukturelle Ursache:
   verbundene Ausgaenge/State-Signale fallen dagegen noch auf generische
   `w_*`-Namen zurueck.
 
-Folge:
-- Der HDL-Export wirkt funktional weitgehend korrekt, ist aber an der
-  Schnittstelle noch nicht sauber genug fuer lesbare und stabile externe
-  Weiterverwendung.
-- Das ist kein reines Kosmetikthema, sondern ein echter Export-Interface-Bug:
-  bei mehreren synthetisierten FSMs soll die externe Portstruktur dieselbe
-  kanonische Signaltrennung tragen wie STT und Timing.
+Absicherung:
+- gezielte Regression fuer Mehrfach-FSM-Portnamen in
+  `src/__tests__/hdl/export.test.ts`
+- bestehende generische Export-Regressionen bleiben gruen
 
 ### 4. Die aktuelle Validation prueft den problematischen End-to-End-Pfad noch nicht hart genug
 

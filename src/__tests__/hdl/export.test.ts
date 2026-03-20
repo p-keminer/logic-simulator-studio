@@ -13,6 +13,8 @@ import { generateVerilog } from '../../core/io/verilog';
 import { generateVHDL } from '../../core/io/vhdl';
 import { sanitizeVerilog, sanitizeVHDL, makeUnique } from '../../core/io/identSanitize';
 import type { Circuit, GateInstance, Wire, SignalState } from '../../core/types';
+import { synthesizeFsm } from '../../fsm/synthesis/synthesize';
+import type { FsmMachine } from '../../fsm/types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -69,6 +71,30 @@ function makeCircuit(
     wires: Object.fromEntries(wires.map(w => [w.id, w])),
     viewport: { panX: 0, panY: 0, zoom: 1 },
     metadata: { createdAt: '2025-01-01', updatedAt: '2025-01-01' },
+  };
+}
+
+function emptyCircuit(name = 'fsm_export_test'): Circuit {
+  return makeCircuit(name, [], []);
+}
+
+function makeExportFsm(): FsmMachine {
+  return {
+    id: 'fsm-export-test',
+    name: 'Export Test FSM',
+    archType: 'moore',
+    inputCount: 1,
+    inputNames: ['A'],
+    outputCount: 1,
+    outputNames: ['Y'],
+    states: {
+      s0: { id: 's0', label: 'S0', x: 100, y: 100, isInitial: true, output: 0 },
+      s1: { id: 's1', label: 'S1', x: 300, y: 100, isInitial: false, output: 1 },
+    },
+    transitions: [
+      { id: 't0', fromId: 's0', toId: 's1', conditionText: 'A', mealyOutput: 0 },
+      { id: 't1', fromId: 's1', toId: 's0', conditionText: '!A', mealyOutput: 0 },
+    ],
   };
 }
 
@@ -257,6 +283,55 @@ describe('D-FF -- VHDL', () => {
   it('contains library and use declarations', () => {
     expect(vhdl).toContain('library IEEE;');
     expect(vhdl).toContain('use IEEE.STD_LOGIC_1164.ALL;');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5b. Synthesized multi-FSM export keeps canonical top-level signal names
+// ---------------------------------------------------------------------------
+describe('Synthesized multi-FSM exports keep canonical top-level names', () => {
+  const first = synthesizeFsm(makeExportFsm(), emptyCircuit());
+  const firstCircuit: Circuit = {
+    ...emptyCircuit('fsm_export_first'),
+    gates: first.gates,
+    wires: first.wires,
+  };
+  const second = synthesizeFsm(makeExportFsm(), firstCircuit);
+  const combined: Circuit = {
+    ...emptyCircuit('fsm_export_multi'),
+    gates: { ...first.gates, ...second.gates },
+    wires: { ...first.wires, ...second.wires },
+  };
+
+  const verilog = generateVerilog(combined);
+  const vhdl = generateVHDL(combined);
+
+  it('Verilog keeps clock ports canonical across multiple synthesized FSMs', () => {
+    expect(verilog).toMatch(/input\s+wire\s+CLK\b/);
+    expect(verilog).toMatch(/input\s+wire\s+CLK_1\b/);
+    expect(verilog).not.toMatch(/input\s+wire\s+w_\d+\b/);
+  });
+
+  it('Verilog keeps projected state and output ports canonical across multiple synthesized FSMs', () => {
+    expect(verilog).toMatch(/output\s+reg\s+Q0\b/);
+    expect(verilog).toMatch(/output\s+reg\s+Q0_1\b/);
+    expect(verilog).toMatch(/output\s+wire\s+Y\b/);
+    expect(verilog).toMatch(/output\s+wire\s+Y_1\b/);
+    expect(verilog).not.toMatch(/output\s+(?:reg|wire)\s+w_\d+\b/);
+  });
+
+  it('VHDL keeps clock ports canonical across multiple synthesized FSMs', () => {
+    expect(vhdl).toMatch(/CLK\s*:\s*in\s+STD_LOGIC/);
+    expect(vhdl).toMatch(/CLK_1\s*:\s*in\s+STD_LOGIC/);
+    expect(vhdl).not.toMatch(/w_\d+\s*:\s*in\s+STD_LOGIC/);
+  });
+
+  it('VHDL keeps projected state and output ports canonical across multiple synthesized FSMs', () => {
+    expect(vhdl).toMatch(/Q0\s*:\s*out\s+STD_LOGIC/);
+    expect(vhdl).toMatch(/Q0_1\s*:\s*out\s+STD_LOGIC/);
+    expect(vhdl).toMatch(/Y\s*:\s*out\s+STD_LOGIC/);
+    expect(vhdl).toMatch(/Y_1\s*:\s*out\s+STD_LOGIC/);
+    expect(vhdl).not.toMatch(/w_\d+\s*:\s*out\s+STD_LOGIC/);
   });
 });
 
