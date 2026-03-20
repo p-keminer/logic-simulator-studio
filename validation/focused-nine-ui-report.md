@@ -54,7 +54,7 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 
 ## Timing-System-Pruefung
 
-- `timing_subsystem_selector`: PASS - Timing system selector switches between disconnected subsystems and changes the visible channel set.
+- `timing_subsystem_selector`: PASS - Timing full view keeps the whole canvas, while selected view exposes the system selector and switches between disconnected subsystems.
 
 ## Semantische Timing-Pruefung (5 Fokusfaelle)
 

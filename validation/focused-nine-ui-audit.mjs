@@ -321,6 +321,7 @@ async function extractTimingSystemAudit(page) {
   await sleep(150);
 
   const snapshot = () => page.evaluate(() => {
+    const viewSelect = document.querySelector('select[aria-label="Timing-Ansicht"]');
     const select = document.querySelector('select[aria-label="Timing-System"]');
     const sidePanelHeader = [...document.querySelectorAll('div')]
       .find((node) => node.textContent?.trim() === 'SIGNAL-STEUERUNG');
@@ -330,6 +331,7 @@ async function extractTimingSystemAudit(page) {
       .filter(Boolean);
 
     return {
+      viewMode: viewSelect instanceof HTMLSelectElement ? viewSelect.value : null,
       selectExists: Boolean(select),
       selected: select instanceof HTMLSelectElement ? select.value : null,
       options: select instanceof HTMLSelectElement
@@ -339,8 +341,18 @@ async function extractTimingSystemAudit(page) {
     };
   });
 
-  const first = await snapshot();
+  const all = await snapshot();
+  let first = null;
   let second = null;
+
+  await page.evaluate(() => {
+    const select = document.querySelector('select[aria-label="Timing-Ansicht"]');
+    if (!(select instanceof HTMLSelectElement)) throw new Error('Timing-Ansicht select missing');
+    select.value = 'selected';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await sleep(150);
+  first = await snapshot();
 
   if (first.selectExists && first.options.length > 1) {
     const nextOption = first.options.find((option) => option.value !== first.selected) ?? first.options[0];
@@ -355,7 +367,7 @@ async function extractTimingSystemAudit(page) {
   }
 
   await clickButton(page, 'Timing');
-  return { first, second };
+  return { all, first, second };
 }
 
 function buildMixedLegacyFsmFallbackFixtureJson() {
@@ -796,24 +808,30 @@ function analyzeSttModeChecks(checks) {
 
 function analyzeTimingSystemChecks(checks) {
   return checks.map((check) => {
+    const all = check.all;
     const first = check.first;
     const second = check.second;
     const labelSetsDiffer = !!second
       && JSON.stringify(first.rowLabels) !== JSON.stringify(second.rowLabels);
     const clockVisibilityChanged = !!second
       && first.rowLabels.includes('CLK') !== second.rowLabels.includes('CLK');
-    const pass = first.selectExists
+    const fullShowsMoreThanSelected = all.rowLabels.length > first.rowLabels.length;
+    const pass = all.viewMode === 'all'
+      && !all.selectExists
+      && first.viewMode === 'selected'
+      && first.selectExists
       && first.options.length >= 2
       && !!second
       && second.selected !== first.selected
-      && (labelSetsDiffer || clockVisibilityChanged);
+      && (labelSetsDiffer || clockVisibilityChanged)
+      && fullShowsMoreThanSelected;
 
     return {
       ...check,
       status: pass ? 'pass' : 'fail',
       message: pass
-        ? 'Timing system selector switches between disconnected subsystems and changes the visible channel set.'
-        : 'Timing system selector is missing, exposes too few options, or does not change the visible timing channels.',
+        ? 'Timing full view keeps the whole canvas, while selected view exposes the system selector and switches between disconnected subsystems.'
+        : 'Timing full/selected separation regressed, or the system selector no longer switches the visible subsystem channels.',
     };
   });
 }

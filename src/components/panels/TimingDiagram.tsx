@@ -34,6 +34,7 @@ const SELECTED_KEYS_STORAGE_KEY = 'logic-sim:timing-diagram:selected-keys';
 //   Halbperiode = 250 Ticks / 25 = 10 Samples × 3px = 30px
 //   Vollperiode = 60px → auf 700px Breite ≈ 11 vollständige Zyklen sichtbar ✓
 const STEP_W = 3;
+const AUTO_PAUSE_CYCLE_LIMIT = 50;
 
 // Tick-basierte X-Achse (Gate-Delay): Jeder Tick bekommt TICK_PX Pixel.
 // Da im Gate-Delay-Modus pro CLK↑ mehrere Event-Batches gefeuert werden
@@ -166,10 +167,13 @@ function getRowControlMetrics(rowH: number) {
 // ── Hauptkomponente ──────────────────────────────────────────────────────────
 
 export function TimingDiagram({ history, onClose }: Props) {
-  const { circuit }   = useCircuitContext();
+  const { circuit, isClockPaused, setIsClockPaused } = useCircuitContext();
   const scrollRef                       = useRef<HTMLDivElement>(null);
   const signalMenuRef                   = useRef<HTMLDivElement>(null);
   const sidePanelBodyRef                = useRef<HTMLDivElement>(null);
+  const autoPauseTargetRef              = useRef(AUTO_PAUSE_CYCLE_LIMIT);
+  const previousClockKeyRef             = useRef<string | null>(null);
+  const previousHistoryLengthRef        = useRef(0);
   const initialSelection                = useMemo(() => readPersistedSelection(), []);
   const [hiddenKeys, setHiddenKeys]     = useState<Set<string>>(() => new Set(readPersistedKeys(HIDDEN_KEYS_STORAGE_KEY)));
   const [rowOrder, setRowOrder]         = useState<string[]>(() => readPersistedKeys(ROW_ORDER_STORAGE_KEY)); // channel keys in user-chosen order
@@ -223,7 +227,7 @@ export function TimingDiagram({ history, onClose }: Props) {
     ?? analysisSubsystemOptions[0]
     ?? null;
 
-  const analysisSourceCircuit = analysisSubsystemOptions.length > 1
+  const analysisSourceCircuit = viewMode === 'selected' && analysisSubsystemOptions.length > 1
     ? (activeAnalysisSubsystem?.circuit ?? circuit)
     : circuit;
 
@@ -400,6 +404,7 @@ export function TimingDiagram({ history, onClose }: Props) {
   }
 
   const displayHistory = history.slice(-MAX_ST);
+  const displayStartIndex = Math.max(0, history.length - displayHistory.length);
 
   // ── X-Positionsberechnung ──────────────────────────────────────────────
   // Zero-Delay: index-basiert (STEP_W pro Snapshot, gleichmaessig).
@@ -430,32 +435,76 @@ export function TimingDiagram({ history, onClose }: Props) {
   const visibleCount = renderedChannels.length - hiddenCount;
   const hasCustomRowOrder = channels.length > 0 && channels.some((channel, idx) => orderedChannels[idx]?.key !== channel.key);
   const hasNoSelectedSignals = viewMode === 'selected' && renderedChannels.length === 0 && channels.length > 0;
-  const clockChannel = renderedChannels.find((channel) => channel.role === 'clock' && !hiddenKeys.has(channel.key));
-  const cycleMarkers = useMemo(() => {
-    if (!clockChannel || displayHistory.length === 0) return [];
+  const visibleClockChannels = renderedChannels.filter((channel) => channel.role === 'clock' && !hiddenKeys.has(channel.key));
+  const clockChannel = visibleClockChannels.length === 1 ? visibleClockChannels[0] : null;
+  const hasAmbiguousClockAxis = visibleClockChannels.length > 1;
+  const fullCycleStarts = useMemo(() => {
+    if (!clockChannel || history.length === 0) return [];
 
-    const starts: Array<{ startIndex: number; cycle: number }> = [];
-    let prev = getVal(displayHistory[0], clockChannel.key);
+    const starts: Array<{ historyIndex: number; cycle: number }> = [];
+    let prev = getVal(history[0], clockChannel.key);
     if (prev === 1) {
-      starts.push({ startIndex: 0, cycle: 1 });
+      starts.push({ historyIndex: 0, cycle: 1 });
     }
 
-    for (let index = 1; index < displayHistory.length; index++) {
-      const current = getVal(displayHistory[index], clockChannel.key);
+    for (let index = 1; index < history.length; index++) {
+      const current = getVal(history[index], clockChannel.key);
       if (prev !== 1 && current === 1) {
-        starts.push({ startIndex: index, cycle: starts.length + 1 });
+        starts.push({ historyIndex: index, cycle: starts.length + 1 });
       }
       prev = current;
     }
 
-    return starts.map((entry, index) => {
-      const endIndex = starts[index + 1]?.startIndex ?? displayHistory.length - 1;
+    return starts;
+  }, [clockChannel, history]);
+
+  const currentCycleCount = fullCycleStarts.at(-1)?.cycle ?? 0;
+
+  useEffect(() => {
+    const currentClockKey = clockChannel?.key ?? null;
+    const historyLength = history.length;
+    const clockChanged = previousClockKeyRef.current !== currentClockKey;
+    const historyReset = historyLength === 0 || historyLength < previousHistoryLengthRef.current;
+
+    if (clockChanged || historyReset) {
+      autoPauseTargetRef.current = AUTO_PAUSE_CYCLE_LIMIT;
+    }
+
+    previousClockKeyRef.current = currentClockKey;
+    previousHistoryLengthRef.current = historyLength;
+  }, [clockChannel?.key, history.length]);
+
+  useEffect(() => {
+    if (!clockChannel || isClockPaused || currentCycleCount < autoPauseTargetRef.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setIsClockPaused(true);
+    }, 0);
+
+    autoPauseTargetRef.current += AUTO_PAUSE_CYCLE_LIMIT;
+    return () => window.clearTimeout(timeoutId);
+  }, [clockChannel, currentCycleCount, isClockPaused, setIsClockPaused]);
+
+  const cycleMarkers = useMemo(() => {
+    if (!clockChannel || displayHistory.length === 0) return [];
+
+    const visibleStarts = fullCycleStarts.filter(
+      (entry) => entry.historyIndex >= displayStartIndex && entry.historyIndex < history.length,
+    );
+
+    return visibleStarts.map((entry, index) => {
+      const nextHistoryStart = visibleStarts[index + 1]?.historyIndex ?? (history.length - 1);
+      const startIndex = entry.historyIndex - displayStartIndex;
+      const endIndex = Math.max(
+        startIndex,
+        Math.min(displayHistory.length - 1, nextHistoryStart - displayStartIndex),
+      );
       return {
         cycle: entry.cycle,
-        x: (xOf(entry.startIndex) + xOf(endIndex)) / 2,
+        x: (xOf(startIndex) + xOf(endIndex)) / 2,
       };
     });
-  }, [clockChannel, displayHistory, xOf]);
+  }, [clockChannel, displayHistory.length, displayStartIndex, fullCycleStarts, history.length, xOf]);
 
   function renderRowControls(
     key: string,
@@ -576,7 +625,7 @@ export function TimingDiagram({ history, onClose }: Props) {
             <option value="selected">ausgewählt</option>
           </select>
         </label>
-        {analysisSubsystemOptions.length > 1 && (
+        {viewMode === 'selected' && analysisSubsystemOptions.length > 1 && (
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}>
             <span>System</span>
             <select
@@ -601,6 +650,13 @@ export function TimingDiagram({ history, onClose }: Props) {
               ))}
             </select>
           </label>
+        )}
+        {analysisSubsystemOptions.length > 1 && (
+          <span style={{ color: '#64748b', fontSize: 10, fontFamily: 'monospace' }}>
+            {viewMode === 'selected'
+              ? 'ausgewählt = aktives System'
+              : 'vollständig = gesamter Canvas'}
+          </span>
         )}
         <div ref={signalMenuRef} style={{ position: 'relative' }}>
           <button
@@ -702,6 +758,16 @@ export function TimingDiagram({ history, onClose }: Props) {
         <span style={{ color: '#1e3a5f', fontSize: 9, fontFamily: 'monospace', marginLeft: 4 }}>
           (Label klicken = ein-/ausblenden, Pfeile = sortieren, ⇞/⇟ = ganz nach oben/unten)
         </span>
+        {clockChannel && (
+          <span style={{ color: '#64748b', fontSize: 9, fontFamily: 'monospace', marginLeft: 4 }}>
+            Auto-Stopp alle {AUTO_PAUSE_CYCLE_LIMIT} Takte, danach manuell fortsetzen
+          </span>
+        )}
+        {hasAmbiguousClockAxis && (
+          <span style={{ color: '#64748b', fontSize: 9, fontFamily: 'monospace', marginLeft: 4 }}>
+            Taktachse ausgeblendet: mehrere sichtbare Takte
+          </span>
+        )}
         <button
           onClick={onClose}
           style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}

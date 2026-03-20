@@ -170,8 +170,11 @@ Erwartung:
 6. Panel schliessen und erneut oeffnen.
 
 Erwartung:
-- `vollstaendig` zeigt alle verfuegbaren Kanaele.
+- `vollstaendig` zeigt wieder den gesamten Canvas statt nur das aktive
+  Subsystem.
 - `ausgewählt` zeigt nur die markierten Kanaele.
+- Bei mehreren getrennten Systemen greift die System-Auswahl nur im Modus
+  `ausgewählt`.
 - Nicht markierte Kanaele tauchen nicht mehr als sichtbare oder eingeklappte
   Zeilen auf.
 - Die Signalauswahl bleibt nach Schliessen/Wiederoeffnen erhalten.
@@ -207,7 +210,12 @@ Erwartung:
   Nummern.
 - Die Zahlen bleiben ueber der Wellenform und helfen, einzelne Taktzyklen
   leichter zuzaehlen.
+- Nach jeweils 50 Taktzyklen pausiert die Simulation automatisch; danach darf
+  erst nach manuellem Fortsetzen weitergezaehlt werden.
 - Wenn kein Taktkanal sichtbar ist, darf die Achse auch fehlen.
+- Wenn mehrere sichtbare Taktkanaele gleichzeitig vorhanden sind, darf die
+  Achse bewusst ausgeblendet werden statt eine falsche gemeinsame Skala zu
+  zeigen.
 
 ## Abschnitt J2 - Timing Diagramm: System-Selektor bei getrennten Subsystemen
 
@@ -215,16 +223,20 @@ Erwartung:
 2. Zusaetzlich eine komplett getrennte Rohschaltung bauen, z. B.
    `INPUT_SWITCH -> NOT -> OUTPUT_LED`.
 3. Timing Diagramm oeffnen.
-4. Pruefen, ob ein Dropdown `System` sichtbar ist.
-5. Zwischen:
+4. Sicherstellen, dass im Modus `vollstaendig` kein irrefuehrender
+   `System`-Selektor sichtbar ist.
+5. Auf `ausgewählt` wechseln.
+6. Pruefen, ob jetzt ein Dropdown `System` sichtbar ist.
+7. Zwischen:
    - FSM 1
    - FSM 2
    - Rohschaltung
    umschalten.
 
 Erwartung:
-- Das Timing-Diagramm zeigt immer nur die Kanaele des aktuell ausgewaehlten
-  verbundenen Systems.
+- `vollstaendig` zeigt den ganzen Canvas ohne Subsystem-Begrenzung.
+- `ausgewählt` zeigt nur die Kanaele des aktuell ausgewaehlten verbundenen
+  Systems.
 - Die getrennte Rohschaltung wird nicht mehr von den FSM-Kanaelen ueberlagert.
 - Die bestehende Kanal-Auswahl (`vollstaendig` / `ausgewählt`) bleibt dabei
   funktional.
