@@ -40,7 +40,7 @@ interface Props {
 }
 
 export function RacePanel({ onClose }: Props) {
-  const { races, circuit, dispatch } = useCircuitContext();
+  const { races, clearRaceMonitor, circuit, dispatch } = useCircuitContext();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -50,8 +50,9 @@ export function RacePanel({ onClose }: Props) {
 
   const handleFocus = (race: RaceInfo) => {
     // Find the position of any involved gate and zoom to it.
-    const gateId = race.gateIds[0];
-    const gate   = gateId ? circuit.gates[gateId] : undefined;
+    const gate = race.gateIds
+      .map((gateId) => circuit.gates[gateId])
+      .find((candidate) => candidate !== undefined);
     if (!gate) return;
 
     // Look up actual gate dimensions from registry.
@@ -204,6 +205,21 @@ export function RacePanel({ onClose }: Props) {
 
         {/* Footer */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, borderTop: '1px solid #1e293b', paddingTop: 10 }}>
+          <button
+            onClick={clearRaceMonitor}
+            style={{
+              fontSize: 11,
+              padding: '4px 12px',
+              background: '#111827',
+              border: '1px solid #334155',
+              borderRadius: 4,
+              color: '#fca5a5',
+              cursor: 'pointer',
+              fontFamily: 'monospace',
+            }}
+          >
+            Monitor reset
+          </button>
           <button
             onClick={onClose}
             style={{

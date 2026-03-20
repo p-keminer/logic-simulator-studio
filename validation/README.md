@@ -2,7 +2,7 @@
 
 **Projekt:** logic-gate-simulator
 **Stand:** 2026-03-20
-**Qualitaetsstand:** 868/868 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
+**Qualitaetsstand:** 883/883 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Metrik | Wert |
 |---|---|
-| Vitest-Suite | **868/868** pass |
+| Vitest-Suite | **883/883** pass |
 | Build | pass (`tsc -b` + `vite build`) |
 | Lint | pass |
 | Contract Runner v1 | **447 pass, 0 fail, 0 unsupported** (447 total) |
@@ -49,8 +49,8 @@ Drei Reifegrad-Stufen (Teaching Tool / Design Tool / Industry-Lite EDA) mit 6 Ar
 ### 8. Offenes FSM-Arbeitspaket -> fsm-export-fixes/work-package.md
 Strukturelles Arbeitspaket fuer alle aus dem FSM-Editor synthetisierten Exporte. Dokumentiert die aktuell bekannten UI-/STT-/Timing-Semantikbrueche, die ersten Architekturideen fuer eine allgemeine Loesung, den geplanten read-only Sequential-Projection-Layer fuer statische/verkuerzte STT und die offenen Unterpakete.
 
-### 9. Offenes Race-Arbeitspaket -> race-panel-fixes/work-package.md
-Strukturelles Arbeitspaket fuer Race-Panel, Race-Markierungen und Race-Lifecycle im Store. Dokumentiert Reset-, Prune- und Dedupe-Anforderungen sowie die geforderte Trennung von Race-Logik und reinem UI-Rendering.
+### 9. Race-Arbeitspaket -> race-panel-fixes/work-package.md
+Strukturelles Arbeitspaket fuer Race-Panel, Race-Markierungen und Race-Lifecycle im Store. Der erste verifizierte Slice ist jetzt umgesetzt: store-seitiges Pruning geloeschter Race-Ursachen, manueller Reset, signaturbasiertes Dedupe und eine kleine dedizierte Lifecycle-Helferschicht. Offene Restpunkte betreffen tiefere Incident-Metadaten und weitergehende Integrationstests.
 
 ---
 
@@ -85,7 +85,7 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | `industry-lite-roadmap.md` | Arbeitsstrom-Roadmap (W1-W6, Phasen A-D) |
 | `fsm-export-fixes/work-package.md` | Offenes Struktur-Arbeitspaket fuer FSM-Exportprojektionen (STT, Timing, Metadaten, Validation). Bereits umgesetzt sind Projektionsmetadaten, `projectionBatchId`, der zentrale `buildStateTransitionProjection(...)`-Pfad, ein kleiner Core-Helfer fuer statische/reduzierte STT, eine STT-Ansichtsumschaltung (`FSM kompakt` / `Technisch voll`) fuer projected FSMs, statusbasierte Mixed-Fallback-Regeln fuer partielle Projektionen und focused-nine UI-Audit-Checks fuer projected-vs.-fallback STT-Modi. Der naechste Schritt bleibt weiterhin klein: den neuen STT-Kern belastbar halten und erst danach feinere Subsystem-Grenzen planen. |
 | `fsm-export-fixes/README.md` | Einstiegspunkt fuer Repro-Faelle und Fix-Hierarchie rund um FSM-Exporte |
-| `race-panel-fixes/work-package.md` | Offenes Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik |
+| `race-panel-fixes/work-package.md` | Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik; erster verifizierter Slice ist umgesetzt |
 | `race-panel-fixes/README.md` | Einstiegspunkt fuer die Race-Fix-Hierarchie |
 | `verification-matrix.md` | Pflichtpruefmuster je Gate-Klasse und Freigaberegeln |
 | `ui-manual-verification-plan.md` | Manueller UI-Pruefplan fuer FSM-Projektion, STT, Timing und Panel-Persistenz |
@@ -159,7 +159,7 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
-- **P1/P2:** Das offene Race-Arbeitspaket abarbeiten (`validation/race-panel-fixes/work-package.md`): store-seitiges Pruning geloeschter Race-Ursachen, manueller Reset, signaturbasiertes Dedupe und entkoppelte Race-Lifecycle-Logik
+- **P1/P2:** Das Race-Arbeitspaket weiter vertiefen (`validation/race-panel-fixes/work-package.md`): auf dem verifizierten ersten Slice aufbauen und spaeter Incident-Metadaten, tiefere Integrationstests und ggf. feinere Reset-Semantik nachziehen
 - **P1/P2:** Das offene Struktur-Arbeitspaket fuer FSM-Exporte in kleinen Schritten weiterziehen (`validation/fsm-export-fixes/work-package.md`): den neuen STT-Core-Helfer und die expliziten Mixed-Fallbacks weiter ueber breite/gemischte Sequential-Faelle absichern und erst danach feinere Subsystem-Grenzen angehen, ohne das UI-Wiring gross umzubauen
 - **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster und tiefere Invarianten)
 - **P1/P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (laengere Traces statt nur kurzer Szenarien)

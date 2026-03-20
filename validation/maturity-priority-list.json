@@ -328,21 +328,24 @@
                       "title":  "Race panel lifecycle semantics missing for reset, pruning, and dedupe",
                       "priority":  "P1",
                       "area":  "ui, simulation-store, validation",
-                      "status":  "open",
+                      "status":  "partial",
                       "evidence":  [
-                                       "validation/race-panel-fixes/work-package.md: documented race lifecycle requirements and work packages",
-                                       "src/store/CircuitContext.tsx: races are appended as list state while raceNetIds are maintained separately via TTL and only fully cleared on circuit.id change",
-                                       "src/components/panels/RacePanel.tsx: panel currently exposes close/focus only, with no explicit reset path or incident coalescing"
+                                       "validation/race-panel-fixes/work-package.md: documented requirements plus the first implemented/verifizierter lifecycle slice",
+                                       "src/store/raceLifecycle.ts: central race signature, prune, dedupe, and active-net helpers",
+                                       "src/store/CircuitContext.tsx: store-side append dedupe, structure-prune effect, and clearRaceMonitor() reset path",
+                                       "src/components/panels/RacePanel.tsx: panel exposes Monitor reset and focuses the first still-existing affected gate",
+                                       "src/__tests__/core/raceLifecycle.test.ts: helper regressions for dedupe, signature stability, prune, and max-limit behavior"
                                    ],
-                      "symptom":  "Race-affected wires can be deleted while stale race incidents remain in the panel. The panel also lacks a manual reset action, and repeated identical race detections can keep filling the incident list instead of being coalesced.",
+                      "symptom":  "Before the first lifecycle slice, stale race incidents could survive structural deletes, the panel had no manual reset path, and repeated identical race detections could keep filling the incident list. A first store-side fix now addresses the core UX failures, but deeper incident semantics and integration coverage are still open.",
                       "affectedGates":  [
                                             "all circuits that can emit race or hazard incidents in gate-delay mode"
                                         ],
-                      "recommendedNextStep":  "Implement the structural work package in validation/race-panel-fixes/work-package.md: define a dedicated race lifecycle model, prune incidents/marks when affected gates or wires disappear, add a central manual reset action, and coalesce repeated identical incidents by signature instead of endlessly appending them.",
+                      "recommendedNextStep":  "Build on the implemented first slice in validation/race-panel-fixes/work-package.md: keep the store-side lifecycle helpers, then add deeper incident metadata/integration coverage and decide whether manual reset should remain a pure clear action or gain optional short-term suppression semantics for still-active hazards.",
                       "dependsOn":  [
 
                                     ],
-                      "riskIfUnfixed":  "The race monitor remains noisy and semantically stale. Users can see obsolete incidents after structural changes, and repeated identical races can drown out new findings."
+                      "riskIfUnfixed":  "Without the remaining integration hardening, the race monitor can still regress toward a noisy event log instead of a robust incident monitor. Future UI or scheduler changes could silently weaken prune/reset semantics without deeper coverage.",
+                      "partialResolutionNote":  "First slice implemented and verified: store-side pruning removes stale incidents when affected nets or all referenced gates disappear, clearRaceMonitor() clears panel state and wire markings through a single central path, repeated identical incidents are coalesced by normalized signature, and RacePanel exposes an explicit manual reset button. Remaining work is narrower: deeper incident metadata, integration tests around provider/reset paths, and any future policy about immediate rediscovery of still-active hazards after a manual reset."
                   },
                   {
                       "id":  "P2-1",

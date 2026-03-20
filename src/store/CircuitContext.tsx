@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useRef, useSta
 import type { Circuit, SignalValue, TimingSnapshot, RaceInfo, RaceSeverity } from '../core/types';
 import type { CircuitAction } from './actions';
 import { circuitReducer, createEmptyCircuit } from './circuitReducer';
+import { appendRaceHistory, collectActiveRaceNetIds, pruneRaceHistory } from './raceLifecycle';
 import {
   initBuffer, syncBuffer, buildWireMap,
   runUntilStable, isStable,
@@ -80,6 +81,7 @@ interface CircuitContextValue {
   stepOneClock: () => void;
   /** Race conditions detected in the last GATE_DELAY advance. */
   races: RaceInfo[];
+  clearRaceMonitor: () => void;
   /**
    * Map of netId → worst RaceSeverity for wires currently involved in a race.
    * Used by CanvasWire to highlight affected wires with severity-based colours.
@@ -144,6 +146,12 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   const prevWireKeysRef  = useRef<Set<string>>(new Set());
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
+  const clearRaceMonitor = useCallback(() => {
+    setRaces([]);
+    setRaceNetIds(new Map());
+    raceMarkRef.current.clear();
+    raceMarkDirtyRef.current = false;
+  }, []);
 
   // ── Auto-Save (debounced 500 ms) ──────────────────────────────────────────
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -511,12 +519,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         // ── Race panel list ──────────────────────────────────────────────
         if (detectedRaces.length > 0) {
           const MAX_RACES = 50;
-          setRaces(prev => {
-            const combined = [...prev, ...detectedRaces];
-            return combined.length > MAX_RACES
-              ? combined.slice(combined.length - MAX_RACES)
-              : combined;
-          });
+          setRaces(prev => appendRaceHistory(prev, detectedRaces, c, MAX_RACES));
         }
 
         // ── Timing history ───────────────────────────────────────────────
@@ -538,12 +541,31 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   // circuit.id changes whenever a new circuit is loaded or the canvas is reset.
   // Stale race entries from the previous circuit must not leak into the new one.
   useEffect(() => {
-    setRaces([]);
-    setRaceNetIds(new Map());
-    raceMarkRef.current.clear();
-    raceMarkDirtyRef.current = false;
+    clearRaceMonitor();
     // The scheduler will be re-seeded automatically on the next settle.
-  }, [circuit.id]);
+  }, [circuit.id, clearRaceMonitor]);
+
+  // ── Structure change: prune stale race history and wire markings ─────────
+  useEffect(() => {
+    const currentCircuit = circuitRef.current;
+    const activeNetIds = collectActiveRaceNetIds(currentCircuit);
+
+    let marksChanged = false;
+    for (const netId of [...raceMarkRef.current.keys()]) {
+      if (!activeNetIds.has(netId)) {
+        raceMarkRef.current.delete(netId);
+        marksChanged = true;
+      }
+    }
+
+    if (marksChanged) {
+      const next = new Map<string, RaceSeverity>();
+      for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
+      setRaceNetIds(next);
+    }
+
+    setRaces(prev => pruneRaceHistory(prev, currentCircuit));
+  }, [gateKeys, wireKeys]);
 
   return (
     <CircuitContext.Provider value={{
@@ -552,6 +574,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       isClockPaused, setIsClockPaused,
       stepOneClock,
       races,
+      clearRaceMonitor,
       raceNetIds,
       portToWireIdMap,
     }}>

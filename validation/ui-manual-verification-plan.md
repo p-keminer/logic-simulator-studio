@@ -23,6 +23,7 @@ Dieses Manual deckt die zuletzt veraenderten UI-relevanten Bereiche ab:
 - bewusster Fallback fuer gemischte Sequenzfaelle
 - Legacy-Bruecke fuer aeltere gespeicherte FSM-Exporte
 - Timing-Diagramm-Reihenfolge, echte Buttons, Persistenz
+- Race-Panel-Reset, Dedupe und Auto-Pruning geloeschter Race-Ursachen
 
 ## Abschnitt A - Basis-Smoketest
 
@@ -219,6 +220,38 @@ Erwartung:
 - Keine unerwarteten Duplikate nach erneutem Oeffnen.
 - Kein Umspringen in eine andere Darstellungslogik ohne Strukturwechsel.
 
+## Abschnitt L - Race-Panel: Dedupe wiederkehrender Funde
+
+1. In einem Gate-Delay-Fall bewusst wiederholt denselben Race/Hazard erzeugen.
+2. Race-Panel oeffnen und einige Wiederholungen abwarten.
+
+Erwartung:
+- Das Panel dokumentiert denselben Incident nicht endlos als neue Eintraege.
+- Wiederkehrende identische Funde bleiben koalesziert statt die Liste vollzuspammen.
+
+## Abschnitt M - Race-Panel: Auto-Prune bei geloeschter Ursache
+
+1. Einen Race-Fall erzeugen, sodass Panel-Eintrag und Wire-Markierung sichtbar sind.
+2. Danach die betroffene Verbindung oder das betroffene Gate loeschen.
+3. Race-Panel offen lassen oder erneut oeffnen.
+
+Erwartung:
+- Der stale Race-Eintrag verschwindet automatisch.
+- Die betroffene Wire-Markierung bleibt nicht haengen.
+- Es bleiben keine Focus-Ziele auf geloeschten Gates zurueck.
+
+## Abschnitt N - Race-Panel: Manueller Reset
+
+1. Einen Race-Fall erzeugen.
+2. Race-Panel oeffnen.
+3. `Monitor reset` klicken.
+
+Erwartung:
+- Race-Liste wird geleert.
+- Bestehende Race-Markierungen werden ebenfalls zurueckgesetzt.
+- Wenn die zugrunde liegende Race-Ursache weiterhin physisch aktiv ist, darf
+  sie spaeter erneut als neuer Fund auftauchen.
+
 ## Fehlerprotokoll
 
 Wenn etwas auffaellt, pro Befund notieren:
@@ -240,3 +273,4 @@ Der UI-Stand gilt manuell als sauber geprueft, wenn:
 - gemischte Faelle bewusst auf Fallback gehen
 - der Legacy-Download-Fall weiter funktioniert
 - Timing-Reihenfolge, Auswahlmodus und Persistenz stabil bleiben
+- Race-Dedupe, Auto-Prune und manueller Reset im Race-Panel sauber funktionieren

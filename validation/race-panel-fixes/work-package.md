@@ -2,7 +2,7 @@
 
 Datum: 2026-03-20
 Repo: `<repo-root>`
-Status: **offen**
+Status: **in Arbeit**
 Prioritaet: **P1/P2**
 Geltungsbereich: **Race-Panel, Race-Markierungen, Race-Lifecycle im Store**
 
@@ -71,6 +71,39 @@ Warum:
 
 ## Aktueller technischer Stand
 
+### Stand 2026-03-20: erster verifizierter Lifecycle-Slice umgesetzt
+
+Folgende Punkte sind inzwischen im Code verifiziert umgesetzt:
+
+- `src/store/raceLifecycle.ts`
+  - zentrale Helper fuer Signaturbildung, Dedupe, aktives Net-Sampling und
+    Pruning veralteter Eintraege
+- `src/store/CircuitContext.tsx`
+  - store-seitiges Dedupe beim Anhängen neuer Race-Funde
+  - Struktur-Pruning bei Gate-/Wire-Aenderungen
+  - zentraler `clearRaceMonitor()`-Pfad fuer Panel + Wire-Marking-State
+- `src/components/panels/RacePanel.tsx`
+  - expliziter Button `Monitor reset`
+  - Fokus springt auf das erste noch existierende beteiligte Gate statt blind
+    auf `gateIds[0]`
+- `src/__tests__/core/raceLifecycle.test.ts`
+  - Regressionen fuer Dedupe, Signaturstabilitaet, Pruning, Relevanz und
+    Max-Limit
+
+Verifizierter Status dieses Slices:
+
+- store-seitiges Pruning geloeschter Race-Ursachen: **ja**
+- manueller Reset-Button: **ja**
+- signaturbasiertes Incident-Dedupe statt endlosem Event-Append: **ja**
+- Lint / Build / Vitest / focused-nine-ui: **gruen**
+
+Restoffen fuer spaetere Vertiefung:
+
+- optionale Incident-Metriken wie `count`, `firstSeen`, `lastSeen`
+- explizite Integrationstests fuer `CircuitContext`-Resetpfade
+- Entscheidung, ob ein manueller Reset aktive weiter bestehende Races nur
+  leert oder zusaetzlich kurzzeitig unterdruecken soll
+
 ### Beobachtete Store-Struktur
 
 In `src/store/CircuitContext.tsx` existieren aktuell zwei relevante Ebenen:
@@ -84,16 +117,18 @@ In `src/store/CircuitContext.tsx` existieren aktuell zwei relevante Ebenen:
 
 Aktuelle Auffaelligkeit:
 - Die Drahtmarkierungen haben bereits ein eigenes TTL-/Cleanup-Verhalten.
-- Die Panel-Liste `races` ist davon getrennt und wird nur begrenzt gekappt.
-- Auf Strukturwechsel wie geloeschte betroffene Wires/Gates gibt es aktuell
-  keine gezielte Prune-Logik ausser beim kompletten `circuit.id`-Wechsel.
+- Die Panel-Liste `races` ist davon getrennt und wird inzwischen ueber eine
+  zentrale Lifecycle-Helferschicht dedupliziert und gegen die aktuelle
+  Struktur gepruned.
+- Ein kompletter kanonischer Incident-Store mit Zusatzmetadaten ist aber noch
+  nicht eingefuehrt.
 
 ### Beobachtetes UI-Verhalten
 
 In `src/components/panels/RacePanel.tsx`:
-- gibt es derzeit nur `Schließen`
-- keinen expliziten Reset-Button
-- keine Koaleszierung oder Gruppierung identischer Eintraege
+- gibt es jetzt einen expliziten `Monitor reset`-Button
+- Panel-Fokus springt auf das erste noch existente beteiligte Gate
+- Dedupe/Koaleszierung bleibt bewusst ausserhalb des Panels und liegt im Store
 
 ## Strukturelle Problembeschreibung
 
