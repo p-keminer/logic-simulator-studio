@@ -85,6 +85,20 @@ durch manuelles Nachpatchen einzelner Schaltungen gepflegt werden muss.
 - der focused-nine UI-Audit deckt jetzt auch die breite reduzierte projected
   FSM-Sicht browserseitig ab und prueft zusaetzlich die semantischen
   Erklaerungstexte fuer `FSM kompakt` sowie den technischen Fallback-Hinweis
+- der Copy/Paste-/Duplicate-Pfad behandelt synthetisierte FSMs jetzt
+  batch-sicher und konservativ:
+  - vollstaendige Kopien eines verbundenen projizierten FSM-Subsystems
+    erhalten eine neue `projectionBatchId`
+  - die kanonische Signalfamilie wird beim Paste gegen den bestehenden Circuit
+    neu und eindeutig benannt, z. B. `CLK_1`, `RST_1`, `A_1`, `Q0_1`, `Y_1`
+  - partielle Kopien verlieren ihre `projection` bewusst, damit keine
+    halbgeltige `FSM kompakt`-/STT-Projektion uebrig bleibt
+  - rohe, manuell angehaengte Zusatzgatter bleiben beim Vollkopie-Fall roh und
+    werden nur als normale, eindeutig benannte Gatter mitkopiert
+- direkte Regressionen sichern den neuen Paste-Helfer jetzt fuer:
+  - Vollkopie eines projizierten FSM-Subsystems
+  - partielle Kopie eines projizierten FSM-Subsystems
+  - Vollkopie eines projizierten FSM-Subsystems mit rohen Zusatzelementen
 
 Bewusst noch offen:
 - der neue STT-Kern ist absichtlich noch schmal und bildet nur den bereits
@@ -95,6 +109,10 @@ Bewusst noch offen:
 - die Legacy-Bruecke ist absichtlich streng und konservativ; fuer komplexere
   gespeicherte Altfaelle braucht es noch klarere Subsystem-Erkennung statt
   bloßer Signatur-Inferenz
+- direkt verkettete FSMs bleiben weiterhin der dokumentierte Tradeoff:
+  die aktuelle Trennung arbeitet ueber verbundene Subsysteme; eine voll
+  gekoppelte FSM-Kette wird deshalb als gemeinsames technisches System
+  behandelt statt als zwei frei waehlbare Teil-FSMs
 
 ## Naechster risikoarmer Schritt
 

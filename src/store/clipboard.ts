@@ -1,8 +1,11 @@
 import type { GateInstance, Wire } from '../core/types';
 
-interface ClipboardData {
+export type ClipboardProjectionBatchPolicy = 'regenerate' | 'drop';
+
+export interface ClipboardData {
   gates: GateInstance[];
   wires: Wire[];
+  fsmProjectionBatchPolicies?: Record<string, ClipboardProjectionBatchPolicy>;
 }
 
 let clipboard: ClipboardData | null = null;

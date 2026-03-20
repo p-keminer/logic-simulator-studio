@@ -283,6 +283,28 @@ Erwartung:
   verbundenes System und werden nicht als zwei getrennte `FSM-System`-Eintraege
   angeboten.
 
+## Abschnitt P - Copy/Paste und Duplicate von synthetisierten FSMs
+
+1. Eine einzelne synthetisierte FSM auf das Canvas legen.
+2. Den kompletten FSM-Block markieren und kopieren/einfuegen.
+3. STT fuer beide Kopien pruefen.
+4. Timing Diagramm fuer beide Kopien pruefen.
+5. Danach nur einen Teil derselben FSM markieren, z. B. nur einige
+   kanonische Signale oder sichtbare Teilgatter, und erneut kopieren/einfuegen.
+6. Optional eine FSM mit zusaetzlichem manuellem `PUSH_BTN` und
+   `OUTPUT_LED` als rohen Zusatzpfad vollstaendig kopieren/einfuegen.
+
+Erwartung:
+- Bei einer Vollkopie bekommt die eingefuegte FSM eine neue und eindeutige
+  Signalgruppe, z. B. `CLK_1`, `RST_1`, `A_1`, `Q0_1`, `Y_1`.
+- Die eingefuegte Vollkopie bleibt als eigenes, vollstaendiges `FSM-System`
+  fuer die STT analysierbar.
+- Die Original-FSM bleibt davon unberuehrt.
+- Bei einer Teilkopie darf keine halbgeltende `FSM kompakt`-Projektion
+  erhalten bleiben; der Teilkopie-Fall muss technisch/fallbackartig bleiben.
+- Rohe Zusatzgatter einer vollstaendig kopierten FSM bleiben roh und werden
+  nicht faelschlich als projizierte FSM-Signale behandelt.
+
 ## Fehlerprotokoll
 
 Wenn etwas auffaellt, pro Befund notieren:
@@ -306,3 +328,5 @@ Der UI-Stand gilt manuell als sauber geprueft, wenn:
 - Timing-Reihenfolge, Auswahlmodus und Persistenz stabil bleiben
 - Race-Dedupe, Auto-Prune und manueller Reset im Race-Panel sauber funktionieren
 - Mehrfach-FSM-Faelle im technischen Fallback eindeutige Signalnamen behalten
+- Vollkopien synthetisierter FSMs beim Paste/Duplicate neue, saubere
+  Projektionsbatches und eindeutige Signalnamen erhalten

@@ -13,7 +13,10 @@ import type { GateTypeId } from '../../core/types';
 import { findPortAt } from '../../utils/geometry';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRID_SIZE } from '../../utils/constants';
 import { setClipboard, getClipboard } from '../../store/clipboard';
-import { generateId } from '../../utils/idGenerator';
+import {
+  buildClipboardProjectionBatchPolicies,
+  buildPastedClipboardContent,
+} from '../../store/pasteClipboardProjection';
 
 const WIRE_COLORS = ['','#22c55e','#ef4444','#f59e0b','#3b82f6','#a855f7','#ec4899','#ffffff','#f97316'];
 interface WireCtxMenu { wireId: string; screenX: number; screenY: number; svgX: number; svgY: number; }
@@ -57,35 +60,28 @@ export function CircuitCanvas() {
     const wires = Object.values(circuit.wires).filter(
       (w) => selectedIds.has(w.from.gateId) && selectedIds.has(w.to.gateId)
     );
-    setClipboard({ gates, wires });
-  }, [circuit.gates, circuit.wires]);
+    setClipboard({
+      gates,
+      wires,
+      fsmProjectionBatchPolicies: buildClipboardProjectionBatchPolicies(circuit, selectedIds),
+    });
+  }, [circuit]);
 
   const pasteClipboard = useCallback((svgX?: number, svgY?: number) => {
     const cb = getClipboard();
     if (!cb || cb.gates.length === 0) return;
     const minX = Math.min(...cb.gates.map((g) => g.x));
     const minY = Math.min(...cb.gates.map((g) => g.y));
-    const idMap = new Map<string, string>();
-    for (const g of cb.gates) idMap.set(g.id, generateId());
     const offsetX = svgX !== undefined ? svgX - minX : 24;
     const offsetY = svgY !== undefined ? svgY - minY : 24;
-    const newGates = cb.gates.map((g) => ({
-      ...g,
-      id: idMap.get(g.id)!,
-      x: g.x + offsetX,
-      y: g.y + offsetY,
-      isSelected: true,
-      outputSignals: Object.fromEntries(Object.keys(g.outputSignals).map((k) => [k, { value: 0 as 0|1, version: 0, lastChangedAt: 0 }])),
-    }));
-    const newWires = cb.wires.map((w) => ({
-      ...w,
-      id: generateId(),
-      from: { ...w.from, gateId: idMap.get(w.from.gateId) ?? w.from.gateId },
-      to:   { ...w.to,   gateId: idMap.get(w.to.gateId)   ?? w.to.gateId },
-      isSelected: false,
-    }));
-    dispatch({ type: 'GATES_PASTE', payload: { gates: newGates, wires: newWires } });
-  }, [dispatch]);
+    const pasted = buildPastedClipboardContent({
+      clipboard: cb,
+      existingCircuit: circuit,
+      offsetX,
+      offsetY,
+    });
+    dispatch({ type: 'GATES_PASTE', payload: pasted });
+  }, [circuit, dispatch]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
