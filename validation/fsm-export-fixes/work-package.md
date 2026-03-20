@@ -717,3 +717,9 @@ geloest die neuen Projektionsinvarianten absichern:
   - eine bewusst gemischte FSM-/Nicht-FSM-Schaltung nutzt weiterhin die
     generische STT und bricht nicht in eine halb-projizierte Sonderansicht
     auseinander
+- sm_projection_multi_export_unique_labels
+  - mehrere getrennt synthetisierte FSMs auf demselben Canvas behalten
+    eindeutige kanonische Signalnamen fuer `CLK`, `RST`, fachliche Eingaenge,
+    State-Bits und Ausgaenge
+  - technische Fallback-Ansichten von STT und Timing zeigen keine kollidierenden
+    Mehrfach-Header wie `CLK / CLK` oder `Y / Y`

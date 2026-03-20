@@ -44,6 +44,33 @@ function mkProjection(
   };
 }
 
+function createUniqueSignalLabelAllocator(existingCircuit: Circuit): (baseLabel: string) => string {
+  const usedLabels = new Set<string>();
+
+  const remember = (label?: string | null) => {
+    const normalized = label?.trim();
+    if (!normalized) return;
+    usedLabels.add(normalized.toUpperCase());
+  };
+
+  for (const gate of Object.values(existingCircuit.gates)) {
+    remember(gate.label);
+    remember(gate.projection?.signalLabel);
+  }
+
+  return (baseLabel: string) => {
+    const trimmed = baseLabel.trim();
+    let candidate = trimmed;
+    let suffix = 1;
+    while (usedLabels.has(candidate.toUpperCase())) {
+      candidate = `${trimmed}_${suffix}`;
+      suffix++;
+    }
+    usedLabels.add(candidate.toUpperCase());
+    return candidate;
+  };
+}
+
 // ── state encoding ─────────────────────────────────────────────────────────────
 function getEncoding(fsm: FsmMachine): Map<string, number> {
   const list     = Object.values(fsm.states);
@@ -137,6 +164,7 @@ export function synthesizeFsm(
   const conn = (a: Sig, b: Sig)  => { const w = mkWire(a.gateId, a.portId, b.gateId, b.portId); wires[w.id] = w; };
   const warnings: string[] = [];
   const projectionBatchId = generateId();
+  const reserveSignalLabel = createUniqueSignalLabelAllocator(existingCircuit);
   const mkBatchProjection = (
     role: GateProjectionMetadata['role'],
     visibility: GateProjectionMetadata['visibility'],
@@ -174,21 +202,27 @@ export function synthesizeFsm(
   const startY = 60;
   const SW = 140;                           // column stride
 
+  const clockLabel = reserveSignalLabel('CLK');
+  const resetLabel = reserveSignalLabel('RST');
+  const inputLabels = inputNames.map((name) => reserveSignalLabel(name));
+  const stateLabels = Array.from({ length: N }, (_, i) => reserveSignalLabel(`Q${i}`));
+  const outputLabels = outputNames.map((name) => reserveSignalLabel(name));
+
   // ── Section A: control inputs (col 0) ──────────────────────────────────────
-  const clkG  = add(mkGate('CLOCK',        startX, startY,        'CLK', mkBatchProjection('clock', 'canonical', 'CLK', 'clock:CLK', 'clk')));
-  const rstG  = add(mkGate('INPUT_SWITCH', startX, startY + 80,   'RST', mkBatchProjection('reset', 'canonical', 'RST', 'reset:RST', 'out')));
-  const inGs  = inputNames.map((name, i) =>
-    add(mkGate('INPUT_SWITCH', startX, startY + 220 + i * 80, name, mkBatchProjection('input', 'canonical', name, `input:${name}`, 'out'))));
+  const clkG  = add(mkGate('CLOCK',        startX, startY,        clockLabel, mkBatchProjection('clock', 'canonical', clockLabel, `clock:${clockLabel}`, 'clk')));
+  const rstG  = add(mkGate('INPUT_SWITCH', startX, startY + 80,   resetLabel, mkBatchProjection('reset', 'canonical', resetLabel, `reset:${resetLabel}`, 'out')));
+  const inGs  = inputLabels.map((label, i) =>
+    add(mkGate('INPUT_SWITCH', startX, startY + 220 + i * 80, label, mkBatchProjection('input', 'canonical', label, `input:${label}`, 'out'))));
 
   // ── Section B: NOT gates for inputs (col 1) ────────────────────────────────
-  const notInGs = inputNames.map((name, i) =>
-    add(mkGate('NOT', startX + SW, startY + 220 + i * 80, `!${name}`, mkBatchProjection('internal_helper', 'derived', `!${name}`, `input:${name}`))));
+  const notInGs = inputLabels.map((label, i) =>
+    add(mkGate('NOT', startX + SW, startY + 220 + i * 80, `!${label}`, mkBatchProjection('internal_helper', 'derived', `!${label}`, `input:${label}`))));
   inGs.forEach((g, i) => conn({ gateId: g.id, portId: 'out' }, { gateId: notInGs[i].id, portId: 'a' }));
 
   // ── Section C: D_FF_R gates (col 1, below inputs) ─────────────────────────
   const dffY0 = startY + 220 + M * 80 + 80;
   const dffGs = Array.from({ length: N }, (_, i) =>
-    add(mkGate('D_FF_R', startX + SW, dffY0 + i * 120, `Q${i}`, mkBatchProjection('state', 'canonical', `Q${i}`, `state:Q${i}`, 'q'))));
+    add(mkGate('D_FF_R', startX + SW, dffY0 + i * 120, stateLabels[i], mkBatchProjection('state', 'canonical', stateLabels[i], `state:${stateLabels[i]}`, 'q'))));
   dffGs.forEach(dff => {
     conn({ gateId: clkG.id,  portId: 'clk' }, { gateId: dff.id, portId: 'clk' });
     conn({ gateId: rstG.id,  portId: 'out' }, { gateId: dff.id, portId: 'rst' });
@@ -196,7 +230,7 @@ export function synthesizeFsm(
 
   // ── Section D: NOT gates for Q (col 2) ────────────────────────────────────
   const notQGs = Array.from({ length: N }, (_, i) =>
-    add(mkGate('NOT', startX + SW * 2, dffY0 + i * 120, `!Q${i}`, mkBatchProjection('state_inverted', 'derived', `!Q${i}`, `state:Q${i}`))));
+    add(mkGate('NOT', startX + SW * 2, dffY0 + i * 120, `!${stateLabels[i]}`, mkBatchProjection('state_inverted', 'derived', `!${stateLabels[i]}`, `state:${stateLabels[i]}`))));
   dffGs.forEach((dff, i) =>
     conn({ gateId: dff.id, portId: 'q' }, { gateId: notQGs[i].id, portId: 'a' }));
 
@@ -366,13 +400,13 @@ export function synthesizeFsm(
   // ── Output LEDs ───────────────────────────────────────────────────────────
   const ledX = snap(sopX + V * SCOL + 80);
   for (let k = 0; k < K; k++) {
-    const led = add(mkGate('OUTPUT_LED', ledX, startY + k * 100, outputNames[k], mkBatchProjection('output', 'canonical', outputNames[k], `output:${outputNames[k]}`, '_display')));
+    const led = add(mkGate('OUTPUT_LED', ledX, startY + k * 100, outputLabels[k], mkBatchProjection('output', 'canonical', outputLabels[k], `output:${outputLabels[k]}`, '_display')));
     const sig = funcOutSigs[N + k];
     if (sig) conn(sig, { gateId: led.id, portId: 'in' });
   }
   // State Q output LEDs
   for (let i = 0; i < N; i++) {
-    const led = add(mkGate('OUTPUT_LED', ledX + 100, startY + i * 100, `Q${i}`, mkBatchProjection('display_mirror', 'derived', `Q${i}`, `state:Q${i}`, '_display')));
+    const led = add(mkGate('OUTPUT_LED', ledX + 100, startY + i * 100, stateLabels[i], mkBatchProjection('display_mirror', 'derived', stateLabels[i], `state:${stateLabels[i]}`, '_display')));
     conn({ gateId: dffGs[i].id, portId: 'q' }, { gateId: led.id, portId: 'in' });
   }
 

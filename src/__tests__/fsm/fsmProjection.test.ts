@@ -7,6 +7,7 @@ import {
 } from '../../core/analysis/sequentialProjection';
 import { synthesizeFsm } from '../../fsm/synthesis/synthesize';
 import type { FsmMachine } from '../../fsm/types';
+import { gateLabel } from '../../components/panels/truthTableAnalysis';
 
 function makeFsm(overrides?: Partial<FsmMachine>): FsmMachine {
   return {
@@ -164,6 +165,48 @@ describe('FSM projection metadata', () => {
     expect([...firstBatchIds][0]).not.toBe([...secondBatchIds][0]);
   });
 
+  it('assigns unique canonical signal labels when synthesizing into a circuit that already contains an FSM export', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const fsm = makeFsm({
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const first = synthesizeFsm(fsm, emptyCircuit());
+    const firstCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: first.gates,
+      wires: first.wires,
+    };
+
+    const second = synthesizeFsm(fsm, firstCircuit);
+    const secondCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: second.gates,
+      wires: second.wires,
+    };
+
+    const secondChannels = buildSequentialProjectionChannels(secondCircuit);
+    expect(secondChannels.map((channel) => channel.label)).toEqual(['CLK_1', 'RST_1', 'A_1', 'Q0_1', 'Y_1']);
+
+    const secondProjected = buildProjectedSequentialSttGates(secondCircuit);
+    expect(secondProjected?.inputs.map((gate) => gate.label)).toEqual(['CLK_1', 'RST_1', 'A_1']);
+    expect(secondProjected?.outputs.map((gate) => gate.label)).toEqual(['Y_1']);
+
+    const secondState = Object.values(second.gates).find((gate) => gate.typeId === 'D_FF_R');
+    expect(secondState?.projection).toMatchObject({ signalLabel: 'Q0_1', groupKey: 'state:Q0_1' });
+
+    const secondOutputLed = Object.values(second.gates).find((gate) => gate.typeId === 'OUTPUT_LED' && gate.label === 'Y_1');
+    expect(secondOutputLed?.projection).toMatchObject({ signalLabel: 'Y_1', groupKey: 'output:Y_1' });
+  });
+
   it('falls back to raw sequential projection when batches are mixed', () => {
     const sA = 'state-a';
     const sB = 'state-b';
@@ -188,6 +231,54 @@ describe('FSM projection metadata', () => {
 
     expect(buildProjectedSequentialSttGates(mixedCircuit)).toBeNull();
     expect(buildSequentialProjectionChannels(mixedCircuit)).toEqual([]);
+  });
+
+  it('keeps technical-full labels distinct when two synthesized FSMs share the same base signal names', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const fsm = makeFsm({
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const first = synthesizeFsm(fsm, emptyCircuit());
+    const firstCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: first.gates,
+      wires: first.wires,
+    };
+
+    const second = synthesizeFsm(fsm, firstCircuit);
+    const mixedCircuit: Circuit = {
+      ...emptyCircuit(),
+      gates: { ...first.gates, ...second.gates },
+      wires: { ...first.wires, ...second.wires },
+    };
+
+    const inputLabels = Object.values(mixedCircuit.gates)
+      .filter((gate) => gate.typeId === 'CLOCK' || gate.typeId === 'INPUT_SWITCH' || gate.typeId === 'PUSH_BTN')
+      .map((gate) => gateLabel(gate));
+    expect(inputLabels).toEqual(['CLK', 'RST', 'A', 'CLK_1', 'RST_1', 'A_1']);
+    expect(new Set(inputLabels).size).toBe(inputLabels.length);
+
+    const outputLabels = Object.values(mixedCircuit.gates)
+      .filter((gate) => gate.typeId === 'OUTPUT_LED')
+      .map((gate) => gateLabel(gate))
+      .sort((a, b) => a.localeCompare(b));
+    expect(outputLabels).toEqual(['Q0', 'Q0_1', 'Y', 'Y_1']);
+    expect(new Set(outputLabels).size).toBe(outputLabels.length);
+
+    const stateLabels = Object.values(mixedCircuit.gates)
+      .filter((gate) => gate.typeId === 'D_FF_R')
+      .map((gate) => gateLabel(gate));
+    expect(stateLabels).toEqual(['Q0', 'Q0_1']);
+    expect(new Set(stateLabels).size).toBe(stateLabels.length);
   });
 
   it('keeps projected FSM state channels in canonical Q-order', () => {

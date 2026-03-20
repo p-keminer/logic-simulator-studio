@@ -252,6 +252,25 @@ Erwartung:
 - Wenn die zugrunde liegende Race-Ursache weiterhin physisch aktiv ist, darf
   sie spaeter erneut als neuer Fund auftauchen.
 
+## Abschnitt O - Mehrfach-FSM: eindeutige Signalnamen im technischen Fallback
+
+1. Eine erste FSM synthetisieren und auf das Canvas uebernehmen.
+2. Eine zweite FSM mit ueberschneidenden Basisnamen synthetisieren, z. B.
+   ebenfalls mit `CLK`, `RST`, `A`, `Q0`, `Y`.
+3. Sicherstellen, dass beide FSMs gleichzeitig auf dem Canvas liegen.
+4. Zustandsuebergangstabelle oeffnen.
+5. Timing Diagramm oeffnen.
+
+Erwartung:
+- Die zweite Synthese bekommt eindeutige kanonische Signalnamen, z. B.
+  `CLK_1`, `RST_1`, `A_1`, `Q0_1`, `Y_1`.
+- In der STT duÌˆrfen keine kollidierenden Header wie `CLK / CLK` oder `Y / Y`
+  mehr sichtbar sein.
+- Im Timing duÌˆrfen dieselben fachlichen Signale nicht mehr uneindeutig doppelt
+  benannt auftauchen.
+- Der Single-FSM-Fall behaelt weiter die unveraenderten Basissignale
+  `CLK`, `RST`, `A`, `Q0`, `Y`.
+
 ## Fehlerprotokoll
 
 Wenn etwas auffaellt, pro Befund notieren:
@@ -274,3 +293,4 @@ Der UI-Stand gilt manuell als sauber geprueft, wenn:
 - der Legacy-Download-Fall weiter funktioniert
 - Timing-Reihenfolge, Auswahlmodus und Persistenz stabil bleiben
 - Race-Dedupe, Auto-Prune und manueller Reset im Race-Panel sauber funktionieren
+- Mehrfach-FSM-Faelle im technischen Fallback eindeutige Signalnamen behalten
