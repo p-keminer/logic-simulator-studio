@@ -3,6 +3,7 @@ import type { GateInstance, Wire, Circuit, GateProjectionMetadata } from '../../
 import type { FsmMachine, FsmStateNode } from '../types';
 import { parseCondition, evalCondition, validateVars } from '../conditionParser';
 import type { Expr } from '../conditionParser';
+import { requireFsmStructure } from '../analysis/structure';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 const SIG0 = { value: 0 as const, version: 0, lastChangedAt: 0 };
@@ -69,20 +70,6 @@ function createUniqueSignalLabelAllocator(existingCircuit: Circuit): (baseLabel:
     usedLabels.add(candidate.toUpperCase());
     return candidate;
   };
-}
-
-// ── state encoding ─────────────────────────────────────────────────────────────
-function getEncoding(fsm: FsmMachine): Map<string, number> {
-  const list     = Object.values(fsm.states);
-  const initials = list.filter(s => s.isInitial);
-  if (initials.length === 0) throw new Error('FSM hat keinen Startzustand');
-  if (initials.length > 1)   throw new Error('FSM hat mehrere Startzustände');
-  const initial = initials[0];
-  const others  = list.filter(s => !s.isInitial).sort((a, b) => a.label.localeCompare(b.label));
-  const ordered = [initial, ...others];
-  const enc     = new Map<string, number>();
-  ordered.forEach((s, i) => enc.set(s.id, i));
-  return enc;
 }
 
 // ── overlap detection ─────────────────────────────────────────────────────────
@@ -157,6 +144,7 @@ export function synthesizeFsm(
   fsm: FsmMachine,
   existingCircuit: Circuit,
 ): { gates: Record<string, GateInstance>; wires: Record<string, Wire>; warnings: string[] } {
+  const structure = requireFsmStructure(fsm);
 
   const gates: Record<string, GateInstance> = {};
   const wires: Record<string, Wire>         = {};
@@ -181,7 +169,13 @@ export function synthesizeFsm(
   );
 
   // ── Pre-validate all transition conditions (V3-M7 + FSM-M7) ────────────────
-  for (const t of fsm.transitions) {
+  if (structure.unreachableStates.length > 0) {
+    warnings.push(
+      `FSM: Unerreichbare Zustände werden nicht synthetisiert (${structure.unreachableStates.map((state) => state.label).join(', ')})`,
+    );
+  }
+
+  for (const t of structure.effectiveTransitions) {
     const { ast, error } = parseCondition(t.conditionText);
     if (error) throw new Error(`Transition "${t.conditionText}": ${error}`);
     if (ast) {
@@ -190,10 +184,14 @@ export function synthesizeFsm(
     }
   }
 
-  const { inputCount: M, outputCount: K, inputNames, outputNames, archType, states } = fsm;
+  const { inputCount: M, outputCount: K, inputNames, outputNames, archType } = fsm;
+  const states = Object.fromEntries(
+    structure.reachableStates.map((state) => [state.id, state]),
+  ) as Record<string, FsmStateNode>;
+  const transitions = structure.effectiveTransitions;
   if (M > 15) throw new Error(`Zu viele Eingänge für Synthese (${M}). Maximum: 15.`);
-  const encMap = getEncoding(fsm);
-  const N = Math.ceil(Math.log2(Math.max(2, Object.keys(states).length)));
+  const encMap = structure.encodingByStateId;
+  const N = structure.effectiveBitWidth;
   const V = N + M;                          // total variables for D functions
 
   // ── start position ──────────────────────────────────────────────────────────
@@ -250,12 +248,12 @@ export function synthesizeFsm(
   // minterms[N..N+K-1] = output functions
   const mintSets: Set<number>[] = Array.from({ length: N + K }, () => new Set<number>());
 
-  const stateList = Object.values(states);
+  const stateList = structure.reachableStates;
   const unmatchedStates = new Set<string>();
 
   // Pre-parse transition ASTs for O(1) lookup in the inner loop
   const transAstMap = new Map<string, Expr | null>();
-  for (const t of fsm.transitions) {
+  for (const t of transitions) {
     const { ast, error } = parseCondition(t.conditionText);
     transAstMap.set(t.id, (!error && ast) ? ast : null);
   }
@@ -275,7 +273,7 @@ export function synthesizeFsm(
       // Find matching transition
       let nextState: FsmStateNode | null = null;
       let mealyOut  = 0;
-      for (const t of fsm.transitions.filter(t => t.fromId === state.id)) {
+      for (const t of transitions.filter(t => t.fromId === state.id)) {
         const ast = transAstMap.get(t.id);
         if (ast && evalCondition(ast, vals)) {
           nextState = states[t.toId] ?? null;

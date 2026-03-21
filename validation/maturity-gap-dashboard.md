@@ -81,7 +81,7 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 | ~~**74HC373 Verilog always@(*) latch triggers Verilator LATCH warning-as-error**~~ | **RESOLVED P1-1 2026-03-07**  Verilog-2001 export with `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */` inline comments; all tools PASS | ~~P1~~ done |
 | MS_JK_FF HDL export uses `negedge clk` only  does not model master-slave behavior | gate-gap-analysis.md 4.2 | synthesis-risk |
 | D_LATCH Verilog `always @(*)` causes latch inference warnings in synthesis tools | gate-gap-analysis.md 4.4 | synthesis-risk |
-| Synthetisierte FSM-Exporte haben noch keine kanonische UI-Projektion; STT und Timing arbeiten dort noch auf Roh-Gate-/Port-Ebene und brauchen eine eigene read-only Sequential-Projection-Schicht mit statischer/verkuerzter STT | `validation/fsm-export-fixes/work-package.md` | P1/P2 |
+| Synthetisierte FSM-Exporte brauchen fuer die verbleibenden Misch- und Breitenfaelle noch weitere semantische Haertung; der aktive Plan liegt im FSM0-Strang | `validation/fsm0/work-package.md` | P1/P2 |
 | Race-Panel-Eintraege und Race-Markierungen haben jetzt einen ersten verifizierten Reset-/Prune-/Dedupe-Slice, aber noch keinen voll ausgearbeiteten Incident-Store mit Zusatzmetadaten und tiefer Integrationstestabdeckung | `validation/race-panel-fixes/work-package.md` | P1/P2 |
 | ~~17 basic gates (AND/OR/NOT/NAND/NOR/XOR/XNOR/BUFFER + multi-input variants) have no toVerilog/toVHDL~~ | **RESOLVED P0 2026-03-07**  all logic_basic and logic_multi gates now export | ~~P0 blocker~~ done |
 | AND_C/OR_C/XOR_C output naming (`q`, `q_n`) inverted vs NAND_C/NOR_C  inconsistency | gate-gap-analysis.md 7.3 | documentation-gap |
@@ -204,7 +204,7 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 | Custom ICs: no contracts, no static analysis possible | gate-gap-analysis.md 8 | P2 |
 | Golden Corpus v1 covers 24 circuits and now includes nine broader v2 pilot seeds, but hierarchy/custom-IC coverage is still only one-level and still narrow | `golden-corpus-v1.json`  24 reference circuits including `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`; two custom-IC HDL paths are covered via flattening and longer sequential traces have begun, but deeper hierarchy remains open | P2 |
 | ~~STT variable limit (max 8) blocks state inspection for all ICs with >8 inputs+state~~ | **PARTIALLY RESOLVED (post-P0):** STT now renders a "Reduzierte Ansicht" (reduced view) for wide sequentials  8-64 rows of meaningful data instead of error message | P2 (residual) |
-| FSM-Editor-Synthese skaliert strukturell, aber STT/Timing behandeln exportierte FSMs noch nicht als first-class kanonische Designs | `validation/fsm-export-fixes/work-package.md` | P1/P2 |
+| FSM-Editor-Synthese skaliert strukturell, aber die verbleibenden Misch- und Reduktionsfaelle fuer STT/Timing brauchen weitere Haertung im aktiven FSM0-Strang | `validation/fsm0/work-package.md` | P1/P2 |
 
 ### Resolved Blockers
 

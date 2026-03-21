@@ -1,7 +1,7 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 
-function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'x'; }
 
 // ── Helpers: packed integer ↔ individual bit state keys ──────────────────────
 // Reconstruct a packed integer from individual bit stateKeys (prefix0..prefixN-1).

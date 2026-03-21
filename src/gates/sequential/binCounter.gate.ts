@@ -3,7 +3,7 @@ import { BinCounter7SegShape } from '../shapes/BinCounter7SegShape';
 import { BinCounter7Seg2Shape } from '../shapes/BinCounter7Seg2Shape';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 
-function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'x'; }
 
 // ── Helpers: counter ↔ individual bit state keys ─────────────────────────────
 // stateKeys are individual bits (cnt0..cntN) for correct STT enumeration.

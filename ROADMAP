@@ -1,0 +1,497 @@
+# Logic Simulator Studio Roadmap
+
+Stand: 2026-03-21
+Repo: logic-gate-simulator
+
+## Zweck
+
+Diese Datei ist der zentrale Ablaufplan fuer die naechsten Arbeiten im Projekt.
+Sie beschreibt:
+- in welcher Reihenfolge Arbeitspakete umgesetzt werden sollen
+- wie gross ein einzelner Umsetzungsschnitt sein darf
+- welche Validierung an welcher Stelle Pflicht ist
+- welche Punkte manuell in der App gegengeprueft werden muessen
+
+Die Detailquellen bleiben die Dokumente unter validation/.
+Diese ROADMAP fasst sie als zentrale Steuerdatei zusammen.
+
+## Dokumentenrollen
+
+Aktive Steuerdateien:
+
+- `ROADMAP`
+  zentrales Steuerdokument fuer Reihenfolge, Slice-Groesse und Pflichtvalidierung
+- `validation/README.md`
+  kanonischer Einstiegspunkt in Reports, Runner und Validation-Artefakte
+- `validation/api_anbindung/work-package.md`
+  aktiver API-/Broker-Strang
+- `validation/fsm0/work-package.md`
+  aktiver FSM-Strang
+- `validation/race-panel-fixes/work-package.md`
+  aktiver Race-/Panel-Strang
+
+Historisch bzw. nachweisorientiert:
+
+- `validation/fsm-export-fixes/cases/`
+  Legacy-Fixtures und gespeicherte Repro-Faelle, keine aktive Planung
+
+## Aktueller Live-Stand dieser Arbeitskopie
+
+Stand dieser Datei:
+- bezogen auf die aktuelle WSL-Arbeitskopie
+- inklusive der zuletzt lokal verifizierten, noch nicht gepushten UI-Slices
+
+Zuletzt lokal verifiziert:
+- `npm test -- --run` -> `898 passed`
+- `npm run lint` -> gruen
+- `npm run build` -> gruen
+- `./scripts/ci/run_focused_nine_ui.sh` -> gruen
+
+Wichtig:
+- einige bestehende Validation-Dokumente unter `validation/` spiegeln noch den
+  zuletzt synchronisierten Stand und nicht jede aktuelle lokale UI-Aenderung
+  dieser Arbeitskopie
+- diese `ROADMAP` beschreibt deshalb bewusst den aktuellsten Arbeitsstand,
+  nicht nur den zuletzt nachgezogenen Doku-Stand
+
+## Aktuell laufender lokaler UI-Slice
+
+Der derzeit aktive, lokal verifizierte, aber noch nicht automatisch
+fortgeschriebene UI-Slice betrifft:
+
+- einklappbare linke Bauteil-/Hinweisleiste
+- responsive obere Toolbar mit Overflow-Menue auf kleinen Breiten
+- frueheres Schrumpfen des Titels `Logic Simulator Studio`
+- Timing-Diagramm-Polish:
+  - `vollstaendig` vs. `ausgewaehlt`
+  - Taktzyklus-Achse
+  - Auto-Stopp nach 50 Takten
+  - bessere Zeilenkopplung zwischen Signal-Steuerung und Wellenform
+
+Fuer diese lokale UI-Runde ist die Pflichtvalidierung:
+
+- `npm test -- --run`
+- `npm run lint`
+- `npm run build`
+- `./scripts/ci/run_focused_nine_ui.sh`
+- manueller Gegencheck der betroffenen UI-Pfade
+
+## Leitprinzipien
+
+1. Kleine verifizierbare Slices statt grosser Refactors.
+2. Bestehende stabile Pfade duerfen nicht fuer neue Sonderfaelle geopfert werden.
+3. Jede neue Semantik braucht mindestens eine automatische Regression.
+4. Jede sichtbare UI-Aenderung braucht einen manuellen Gegencheck.
+5. Core-Logik, Projektion, Export und UI nur dort koppeln, wo es fachlich noetig ist.
+6. Das WSL-Repo ist die massgebliche Arbeitskopie.
+
+## Standardablauf pro Abschnitt
+
+1. Ist-Zustand eingrenzen.
+2. Kleinsten sicheren Schnitt festlegen.
+3. Betroffene Tests und Audits vorab identifizieren.
+4. Aenderung lokal umsetzen.
+5. Automatische Verifikation laufen lassen.
+6. Manuellen Pruefpfad dokumentieren oder aktualisieren.
+7. Nach jedem Doku-Update `npm run roadmap:compl` ausfuehren, damit
+   `ROADMAP_COMPL/` synchron bleibt.
+8. Erst dann mit dem naechsten Abschnitt weitermachen.
+
+## Validierungsstufen
+
+### Stufe A - Pflicht nach fast jedem Slice
+
+- npm test -- --run
+- npm run lint
+- npm run build
+
+### Stufe B - Bereichsspezifische Zusatzvalidierung
+
+- ./scripts/ci/run_focused_nine_ui.sh
+  fuer STT, Timing, Toolbar, Panels, FSM-Projektion, Race-Panel
+- npm run contract:test
+  fuer Gate-, Signalmodell-, Bus- und Mehrtreiber-Semantik
+- npm run golden:test
+  fuer Export, Golden-Corpus, HDL-Konsistenz, Hierarchie und groessere Referenzschaltungen
+- gezielte Vitest-Dateien
+  fuer neue Core-Helfer, Clipboard-, Projection- und Export-Faelle
+
+### Stufe C - Manuelle UI-Pruefung
+
+Pflicht, wenn die Aenderung sichtbar in der App landet:
+- nach validation/ui-manual-verification-plan.md
+- plus neue konkrete Repro-Schritte, wenn ein neuer Fehlerfall hinzugekommen ist
+
+### Stufe D - Dokumentationsabgleich
+
+Pflicht, wenn sich Verhalten, Abdeckung oder Grenzen aendern:
+- validation/README.md
+- validation/fsm0/work-package.md
+- validation/race-panel-fixes/work-package.md
+- validation/verification-matrix.md
+- validation/ui-manual-verification-plan.md
+- bei Bedarf validation/maturity-gap-dashboard.md
+- bei Bedarf validation/industry-lite-roadmap.md
+- nach jeder Aenderung an Doku-Quellen: `npm run roadmap:compl`
+
+## Was wann validiert werden soll
+
+### 1. Core-Semantik
+
+Beispiele:
+- Signalmodell
+- STT-Kern
+- Sequential Projection
+- Race-Lifecycle
+- Clipboard-/Projection-Batch-Logik
+
+Pflicht:
+- gezielte Vitest-Regressionen
+- komplette npm test -- --run
+- npm run lint
+- npm run build
+
+Zusaetzlich bei Auswirkung auf Gates oder Export:
+- npm run contract:test
+- npm run golden:test
+
+### 2. UI-Projektionen und Panels
+
+Beispiele:
+- Truth Table / STT
+- Timing Diagram
+- Toolbar
+- GatePalette
+- Race-Panel
+
+Pflicht:
+- npm test -- --run
+- npm run lint
+- npm run build
+- ./scripts/ci/run_focused_nine_ui.sh
+- manueller UI-Gegencheck
+
+### 3. HDL-Export
+
+Beispiele:
+- Verilog-/VHDL-Portnamen
+- Mehrfach-FSM-Schnittstellen
+- Custom-IC-/Flattening-Pfade
+
+Pflicht:
+- Export-Regressionen in Vitest
+- npm test -- --run
+- npm run build
+- npm run golden:test
+- bei Gate-/Semantikbezug auch npm run contract:test
+
+### 4. Golden-, Focused- und Repro-Faelle
+
+Beispiele:
+- neue Referenzschaltungen
+- neue Fokusfaelle
+- neue UI-Audit-Erwartungen
+
+Pflicht:
+- neue Fixture oder Repro-Datei
+- Runner-/Audit-Anpassung
+- passender Report- oder Summary-Check
+- der jeweils betroffene Runner muss gruen sein
+
+## Priorisierte Reihenfolge
+
+### Phase 0 - Baseline halten
+
+Ziel:
+- den aktuell stabilen Stand nicht versehentlich zurueckbauen
+
+Pflicht vor groesseren Schritten:
+- bestehende UI-, FSM- und Race-Regressionen gruen halten
+- keine unnoetigen Strukturumbauten
+- bei jeder Aenderung den Single-FSM-Fall mitdenken
+- lokale, noch nicht synchronisierte UI-Slices nicht versehentlich mit
+  aelteren Validation-Dokumenten ueberschreiben
+
+### Phase 0b - Aktuellen UI-Slice sauber abschliessen
+
+Status:
+- aktuell aktiv
+
+Ziel:
+- die laufenden lokalen Responsive-/Toolbar-/Timing-Anpassungen stabil
+  abschliessen, bevor wieder tiefer in neue Semantik eingegriffen wird
+
+Enthaelt:
+- einklappbare GatePalette
+- responsive Toolbar mit Overflow-Menue
+- frueheres Titelschrumpfen
+- Timing-Diagramm-Polish fuer lange Listen und kleine Screens
+
+Automatisch validieren:
+- `npm test -- --run`
+- `npm run lint`
+- `npm run build`
+- `./scripts/ci/run_focused_nine_ui.sh`
+
+Manuell validieren:
+- responsive Toolbar auf kleiner Breite
+- GatePalette ein- und ausklappen
+- Timing-Diagramm mit langer Signalliste
+- Timing auf kleinen Viewports
+
+### Phase 1 - FSM-Projektion weiter absichern
+
+Quelle:
+- validation/fsm0/work-package.md
+
+Reihenfolge:
+1. STT-Core klein und stabil halten.
+2. Mixed- und Fallback-Grenzen weiter absichern.
+3. Timing- und STT-Systemgrenzen konsistent halten.
+4. Copy/Paste-/Duplicate-Pfade absichern.
+5. Mehrfach-FSM- und getrennte Rohsysteme sauber behandelbar halten.
+
+Automatisch validieren:
+- gezielte FSM- und STT-Tests
+- npm test -- --run
+- npm run lint
+- npm run build
+- ./scripts/ci/run_focused_nine_ui.sh
+
+Manuell validieren:
+- validation/ui-manual-verification-plan.md
+
+### Phase 2 - Direkte FSM-Ketten und feinere Subsystem-Grenzen
+
+Ziel:
+- direkt verkettete FSMs und komplex gemischte Netze sauberer behandeln,
+  ohne wieder halb-projizierte Sonderfaelle zu erzeugen
+
+Einbaulogik:
+1. zuerst rein analytisch Subsystem-Grenzen definieren
+2. dann nur einen kleinen Core-Schnitt bauen
+3. erst danach UI-Selektoren erweitern
+
+Automatisch validieren:
+- neue gezielte Projection- und Subsystem-Tests
+- npm test -- --run
+- ./scripts/ci/run_focused_nine_ui.sh
+
+Manuell validieren:
+- Mehrfach-FSM-Faelle
+- getrennte Rohschaltungen
+- direkt verkettete FSM-Ketten
+
+### Phase 3 - HDL-Export-Schnittstellen bereinigen
+
+Bekannter offener Punkt:
+- Mehrfach-FSM-Logik ist konsistent, aber die fachliche Top-Level-Schnittstelle muss ueberall sauber bleiben
+- insbesondere CLOCK-, RST-, Input-, Output- und State-Portnamen duerfen nicht auf generische w_*-Ports zurueckfallen
+
+Einbaulogik:
+1. Exporter-Port-Mapping isoliert anfassen
+2. Single-FSM-Export gegen Mehrfach-FSM-Export gegentesten
+3. dann erst Golden- und Export-Regressionen erweitern
+
+Automatisch validieren:
+- Export-Unit-Tests
+- npm test -- --run
+- npm run build
+- npm run golden:test
+
+Manuell validieren:
+- Single-FSM exportieren
+- Mehrfach-FSM exportieren
+- Portnamen in Verilog und VHDL vergleichen
+
+### Phase 4 - Race-Lifecycle fertigziehen
+
+Quelle:
+- validation/race-panel-fixes/work-package.md
+
+Reihenfolge:
+1. bestehendes Dedupe, Pruning und Reset stabil halten
+2. Incident-Metadaten verbessern
+3. tiefere Integrationsabsicherung fuer Store und Panel ergaenzen
+4. spaeter feinere Reset-Semantik nur falls fachlich noetig
+
+Automatisch validieren:
+- Race-Lifecycle-Tests
+- npm test -- --run
+- npm run lint
+- npm run build
+- ./scripts/ci/run_focused_nine_ui.sh falls Panel oder UI betroffen
+
+Manuell validieren:
+- Abschnitte L bis N in validation/ui-manual-verification-plan.md
+
+### Phase 5 - Timing-, Toolbar- und Layout-Polish
+
+Ziel:
+- responsive und lange Canvas- bzw. Signalfalle stabil halten
+
+Themen:
+- Timing-Diagramm-Steuerung
+- Vollstaendig/Ausgewaehlt
+- System-Selektoren
+- Taktachse
+- responsive Toolbar
+- einklappbare GatePalette
+- Scroll- und Layout-Stabilitaet bei langen Signal- und Systemlisten
+- kleine Viewports ohne ueberlappende Titel- oder Buttonzeilen
+
+Einbaulogik:
+1. nur lokale UI-Schnitte
+2. keine Semantik im Renderpfad verstecken
+3. focused-nine UI-Audit nachziehen, wenn sich Bedienpfade aendern
+
+Automatisch validieren:
+- npm test -- --run
+- npm run lint
+- npm run build
+- ./scripts/ci/run_focused_nine_ui.sh
+
+Manuell validieren:
+- Abschnitte G bis K sowie neue responsive Checks
+
+Aktueller Stand:
+- dieser Bereich ist nicht mehr nur geplant, sondern laeuft bereits lokal
+- weitere UI-Polish-Schritte sollten hier nur noch in sehr kleinen Schnitten
+  erfolgen und erst nach erfolgreichem manuellen Gegencheck weitergezogen werden
+
+### Phase 6 - Golden Corpus und Focused Suites verbreitern
+
+Ziel:
+- neue Verhalten nicht nur im UI, sondern ueber Referenzschaltungen absichern
+
+Reihenfolge:
+1. neue echte Repro-Faelle zuerst als gezielte Tests
+2. dann als focused-nine-Auditfall, wenn UI- oder Semantik-kritisch
+3. dann als Golden-Corpus-Fall, wenn Export, HDL oder groessere Referenz sinnvoll sind
+
+Automatisch validieren:
+- npm run golden:test
+- ./scripts/ci/run_focused_nine_ui.sh
+- npm test -- --run
+
+### Phase 7 - Contract Runner und tiefere Invarianten
+
+Ziel:
+- mehr als nur bestehende Gates abdecken; zusammengesetzte Muster und Invarianten staerker verifizieren
+
+Automatisch validieren:
+- npm run contract:test
+- gezielte Vitest-Regressionen
+
+### Phase 8 - Hierarchie und Custom-ICs
+
+Ziel:
+- mehr als die bereits verifizierten one-level Flattening-Pfade absichern
+
+Erster aktiver Einstiegsschnitt:
+- read-only `customIcStructure`-Layer fuer Boundary-/Statusbeschreibung pro Custom-IC
+- expliziter `customIcPolicy`-Layer fuer one-level kombinatorisch, one-level sequentiell und bewusst geblockte Nested-Hierarchie
+- read-only `customIcContract`-Layer fuer canonical/degraded/blocked Boundary-Vertraege; erkennt jetzt auch kaputte one-level-Faelle wie dead inputs, fehlende OUTPUT_LED-Treiber und Multi-Driver-Ausgaenge vor dem Flattening
+- read-only `customIcNestingReadiness`-Layer fuer die spaetere Nested-Entscheidung; klassifiziert one-level-Custom-ICs jetzt vorab in eligible kombinatorisch, eligible sequentiell, degraded, contract-blocked oder bereits nested
+- read-only `customIcNestedAllowPolicy`-Layer als naechster Planungsschnitt; leitet aus der Readiness jetzt explizit ab, welche one-level-Custom-ICs spaeter kontrolliert fuer Nested-Registrierung und Nested-Export freigegeben werden duerften, ohne das aktuelle Blockierverhalten schon zu lockern
+- Flattening und Custom-IC-Erzeugung im Editor nutzen dieselbe Policy bereits zentral; nested Custom-ICs bleiben vorerst bewusst harter Fallback mit explizitem Hinweis
+- Regression-Wall verbreitert: zusaetzliche Golden-/Hierarchie-Faelle fuer Tri-State-Custom-IC und 74HC194-Custom-IC mit verstecktem Registerzustand
+- Export-Modal und Custom-IC-Dialog zeigen die aktuelle Hierarchie-Policy jetzt explizit an, statt Nested-Grenzen nur indirekt ueber spaete Exportfehler oder Alerts erkennbar zu machen
+
+Automatisch validieren:
+- neue Export- und Golden-Faelle
+- npm run golden:test
+- npm test -- --run
+
+Manuell validieren:
+- Custom-IC erzeugen
+- in Oberbaugruppe verwenden
+- kombinatorischen und sequentiellen one-level Export gegentesten
+- Nested-Custom-IC im Dialog bewusst blockiert sehen
+
+### Phase 9 - CI- und Release-Haertung
+
+Ziel:
+- stabile Required Checks und schnellere CI
+
+Themen:
+- Branch Protection
+- Required Checks
+- Toolchain- und Dependency-Caching
+- Artefakt-Disziplin
+
+Automatisch validieren:
+- GitHub Actions selbst
+- Summary- und Report-Dateien
+
+## Wann welcher Testtyp ergaenzt werden soll
+
+### Neuer Produktfehler in Core oder Semantik
+
+Pflicht:
+- zuerst gezielte Vitest-Regression
+- dann gegebenenfalls Focused- oder Golden-Fall
+
+### Neuer sichtbarer UI-Fehler
+
+Pflicht:
+- manueller Repro im UI-Plan
+- wenn wiederholbar und klein genug: focused-nine UI-Audit erweitern
+
+### Neuer HDL- oder Export-Fehler
+
+Pflicht:
+- Export-Unit-Test
+- wenn es ein groesserer Referenzfall ist: Golden-Corpus-Erweiterung
+
+### Neuer komplexer Grenzfall
+
+Pflicht:
+- Repro-Schaltung unter validation/
+- Dokumentation im passenden Work-Package
+- Regression auf der niedrigsten sinnvollen Ebene
+
+## Manuelle Prueffolge vor groesseren Abschluessen
+
+1. Basis-Smoketest
+2. FSM-STT und Timing
+3. breite und gemischte FSM-Faelle
+4. Timing-Diagramm-Bedienung und Persistenz
+5. Race-Panel
+6. Export-Smoketest fuer Single- und Mehrfach-FSM
+7. Copy/Paste- und Duplicate-Faelle
+
+Referenz:
+- validation/ui-manual-verification-plan.md
+
+## Dokumentationspflicht pro fachlichem Slice
+
+Wenn ein Slice fachlich relevante Semantik aendert, muessen mindestens diese Stellen geprueft werden:
+- validation/README.md
+- passendes Work-Package unter validation/
+- validation/ui-manual-verification-plan.md
+- validation/verification-matrix.md
+
+Zusaetzlich bei groesserer Tragweite:
+- validation/maturity-gap-dashboard.md
+- validation/industry-lite-roadmap.md
+
+## Aktuelle offene Hauptpakete
+
+1. den laufenden lokalen UI-Responsive-/Timing-Slice sauber abschliessen und
+   dann dokumentationsseitig nachziehen
+2. FSM-Projektion in gemischten und direkt verketteten Netzen weiter haerten
+3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen
+4. Race-Lifecycle ueber den ersten Slice hinaus vervollstaendigen
+5. Golden-, Focused- und Contract-Validierung weiter verbreitern
+6. CI- und Release-Haertung abschliessen
+
+## Verweise
+
+- validation/README.md
+- validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json
+- validation/race-panel-fixes/work-package.md
+- validation/ui-manual-verification-plan.md
+- validation/verification-matrix.md
+- validation/industry-lite-roadmap.md
+- validation/maturity-gap-dashboard.md

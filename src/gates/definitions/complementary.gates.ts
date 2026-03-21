@@ -4,7 +4,7 @@
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { AndCShape, OrCShape, XorCShape } from '../shapes/MultiGateShapes';
 
-function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'x'; }
 
 /** VHDL concurrent assignment for a 2-input complementary gate. */
 function dualVHDL(op: string) {

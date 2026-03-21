@@ -6,6 +6,11 @@ import type {
   ProjectionSignalRole,
   ProjectionVisibility,
 } from '../types';
+import {
+  buildCircuitSubset,
+  collectSequentialSubsystemBoundaries,
+  getConnectedGateIds,
+} from './sequentialSubsystemBoundaries';
 
 const INPUT_TYPES = new Set(['INPUT_SWITCH', 'PUSH_BTN', 'CLOCK', 'CONST_HIGH', 'CONST_LOW']);
 const OUTPUT_TYPES = new Set(['OUTPUT_LED', 'SEG7', 'SEG7_BCD']);
@@ -40,6 +45,7 @@ export interface AnalysisSubsystemOption {
   label: string;
   circuit: Circuit;
   kind: 'projected_fsm' | 'generic';
+  projectionSemantics?: 'modified_projected_fsm';
 }
 
 export interface StateTransitionProjectionStateVar {
@@ -75,70 +81,108 @@ interface ProjectionBatchResolution {
   mode: ProjectionBatchResolutionMode;
 }
 
-function getConnectedGateIds(circuit: Circuit): Set<string> {
-  const ids = new Set<string>();
-  for (const wire of Object.values(circuit.wires)) {
-    ids.add(wire.from.gateId);
-    ids.add(wire.to.gateId);
+function isTrimSafeNonProjectedLeafGate(
+  gate: GateInstance,
+  projectionLookup: ProjectionLookup,
+  batchId: string,
+): boolean {
+  const projection = getResolvedProjection(projectionLookup, gate);
+  if (projection?.sourceSystem === 'fsm_synth' && projection.projectionBatchId === batchId) {
+    return false;
   }
-  return ids;
+
+  if (INPUT_TYPES.has(gate.typeId) || OUTPUT_TYPES.has(gate.typeId) || SKIP_TYPES.has(gate.typeId)) {
+    return true;
+  }
+
+  try {
+    const definition = gateRegistry.get(gate.typeId);
+    return !definition.isSynchronous && typeof definition.stateUpdate !== 'function';
+  } catch {
+    return true;
+  }
 }
 
-function getConnectedComponents(circuit: Circuit): Set<string>[] {
-  const connectedIds = [...getConnectedGateIds(circuit)];
-  if (connectedIds.length === 0) return [];
+function isProjectedObserverBoundaryGate(
+  gate: GateInstance,
+  projectionLookup: ProjectionLookup,
+  batchId: string,
+): boolean {
+  const projection = getResolvedProjection(projectionLookup, gate);
+  return !!projection
+    && projection.sourceSystem === 'fsm_synth'
+    && projection.projectionBatchId === batchId
+    && (projection.role === 'output' || projection.role === 'display_mirror');
+}
 
-  const adjacency = new Map<string, Set<string>>();
-  const ensure = (id: string) => {
-    if (!adjacency.has(id)) adjacency.set(id, new Set());
-    return adjacency.get(id)!;
-  };
+function trimProjectedSubsystemGateIds(
+  circuit: Circuit,
+  gateIds: Set<string>,
+  projectionLookup: ProjectionLookup,
+  batchId: string,
+): Set<string> {
+  const remainingGateIds = new Set(gateIds);
+  let changed = true;
 
-  for (const id of connectedIds) ensure(id);
+  while (changed) {
+    changed = false;
+    const edgeCount = new Map<string, number>();
+    for (const gateId of remainingGateIds) edgeCount.set(gateId, 0);
 
-  for (const wire of Object.values(circuit.wires)) {
-    ensure(wire.from.gateId).add(wire.to.gateId);
-    ensure(wire.to.gateId).add(wire.from.gateId);
-  }
-
-  const seen = new Set<string>();
-  const components: Set<string>[] = [];
-  for (const startId of connectedIds) {
-    if (seen.has(startId)) continue;
-    const component = new Set<string>();
-    const stack = [startId];
-    seen.add(startId);
-
-    while (stack.length > 0) {
-      const gateId = stack.pop()!;
-      component.add(gateId);
-      for (const nextId of adjacency.get(gateId) ?? []) {
-        if (seen.has(nextId)) continue;
-        seen.add(nextId);
-        stack.push(nextId);
-      }
+    for (const wire of Object.values(circuit.wires)) {
+      if (!remainingGateIds.has(wire.from.gateId) || !remainingGateIds.has(wire.to.gateId)) continue;
+      edgeCount.set(wire.from.gateId, (edgeCount.get(wire.from.gateId) ?? 0) + 1);
+      edgeCount.set(wire.to.gateId, (edgeCount.get(wire.to.gateId) ?? 0) + 1);
     }
 
-    components.push(component);
+    for (const gateId of [...remainingGateIds]) {
+      const gate = circuit.gates[gateId];
+      if (!gate) continue;
+
+      const projectedGate = { ...gate, projection: projectionLookup.get(gate.id) ?? gate.projection };
+      if (matchesBatchId(projectedGate, batchId)) continue;
+      const isLeafTrimSafe = (edgeCount.get(gateId) ?? 0) <= 1
+        && isTrimSafeNonProjectedLeafGate(gate, projectionLookup, batchId);
+      const hasRemainingOutgoingEdges = Object.values(circuit.wires).some((wire) =>
+        wire.from.gateId === gateId
+        && remainingGateIds.has(wire.from.gateId)
+        && remainingGateIds.has(wire.to.gateId),
+      );
+      const hasProtectedOutgoingEdges = Object.values(circuit.wires).some((wire) => {
+        if (wire.from.gateId !== gateId) return false;
+        if (!remainingGateIds.has(wire.from.gateId) || !remainingGateIds.has(wire.to.gateId)) return false;
+        const targetGate = circuit.gates[wire.to.gateId];
+        if (!targetGate) return false;
+        return !isProjectedObserverBoundaryGate(targetGate, projectionLookup, batchId);
+      });
+      if (hasProtectedOutgoingEdges) continue;
+      if (!isLeafTrimSafe && hasRemainingOutgoingEdges) continue;
+
+      remainingGateIds.delete(gateId);
+      changed = true;
+    }
   }
 
-  return components;
+  return remainingGateIds;
 }
 
-function buildCircuitSubset(circuit: Circuit, gateIds: Set<string>): Circuit {
-  return {
-    ...circuit,
-    gates: Object.fromEntries(
-      Object.entries(circuit.gates)
-        .filter(([gateId]) => gateIds.has(gateId))
-        .map(([gateId, gate]) => [gateId, { ...gate }]),
-    ),
-    wires: Object.fromEntries(
-      Object.entries(circuit.wires)
-        .filter(([, wire]) => gateIds.has(wire.from.gateId) && gateIds.has(wire.to.gateId))
-        .map(([wireId, wire]) => [wireId, { ...wire }]),
-    ),
-  };
+function hasNonProjectedMixedCoreContent(
+  circuit: Circuit,
+  projectionLookup: ProjectionLookup,
+  batchId: string,
+): boolean {
+  return Object.values(circuit.gates).some((gate) => {
+    const projectedGate = { ...gate, projection: projectionLookup.get(gate.id) ?? gate.projection };
+    if (matchesBatchId(projectedGate, batchId)) return false;
+    if (USER_INPUT_TYPES.has(gate.typeId)) return true;
+
+    try {
+      const definition = gateRegistry.get(gate.typeId);
+      return !!definition.isSynchronous || typeof definition.stateUpdate === 'function';
+    } catch {
+      return false;
+    }
+  });
 }
 
 function trimLabel(gate: GateInstance): string {
@@ -416,36 +460,34 @@ export function getProjectedFsmBatchId(circuit: Circuit): string | null {
   return getProjectionBatchResolution(circuit, projectionLookup).batchId;
 }
 
+function collectProjectionBoundaries(circuit: Circuit, projectionLookup: ProjectionLookup) {
+  return collectSequentialSubsystemBoundaries(
+    circuit,
+    (gate) => projectionLookup.get(gate.id) ?? gate.projection,
+  );
+}
+
 export function buildProjectedFsmSubsystemOptions(circuit: Circuit): ProjectedFsmSubsystemOption[] {
   const projectionLookup = getProjectionLookup(circuit);
   const options: ProjectedFsmSubsystemOption[] = [];
 
-  for (const gateIds of getConnectedComponents(circuit)) {
-    const componentGates = [...gateIds]
-      .map((gateId) => circuit.gates[gateId])
-      .filter((gate): gate is GateInstance => Boolean(gate));
+  for (const boundary of collectProjectionBoundaries(circuit, projectionLookup)) {
+    if (!boundary.hasProjectedContent || !boundary.singleProjectedBatchId) continue;
 
-    const projectedGates = componentGates.filter((gate) => {
-      const projection = projectionLookup.get(gate.id) ?? gate.projection;
-      return projection?.sourceSystem === 'fsm_synth';
-    });
-    if (projectedGates.length === 0) continue;
-
-    const batchIds = new Set(
-      projectedGates
-        .map((gate) => (projectionLookup.get(gate.id) ?? gate.projection)?.projectionBatchId)
-        .filter((batchId): batchId is string => Boolean(batchId)),
-    );
-    const hasMissingBatchId = projectedGates.some((gate) => !((projectionLookup.get(gate.id) ?? gate.projection)?.projectionBatchId));
-    if (batchIds.size !== 1 || hasMissingBatchId) continue;
-
-    const batchId = [...batchIds][0]!;
-    const subcircuit = buildCircuitSubset(circuit, gateIds);
+    const batchId = boundary.singleProjectedBatchId;
+    const trimmedGateIds = trimProjectedSubsystemGateIds(circuit, boundary.gateIds, projectionLookup, batchId);
+    let subcircuit = buildCircuitSubset(circuit, trimmedGateIds);
     const projected = buildProjectedSequentialSttGates(subcircuit);
-    if (!projected || projected.inputs.length === 0 || projected.outputs.length === 0) continue;
+    if ((!projected || projected.inputs.length === 0 || projected.outputs.length === 0) && trimmedGateIds.size !== boundary.gateIds.size) {
+      subcircuit = boundary.circuit;
+    }
+    const resolvedProjected = projected && projected.inputs.length > 0 && projected.outputs.length > 0
+      ? projected
+      : buildProjectedSequentialSttGates(subcircuit);
+    if (!resolvedProjected || resolvedProjected.inputs.length === 0 || resolvedProjected.outputs.length === 0) continue;
 
-    const inputLabels = projected.inputs.map((gate) => getProjectedSignalLabel(gate));
-    const outputLabels = projected.outputs.map((gate) => getProjectedSignalLabel(gate));
+    const inputLabels = resolvedProjected.inputs.map((gate) => getProjectedSignalLabel(gate));
+    const outputLabels = resolvedProjected.outputs.map((gate) => getProjectedSignalLabel(gate));
     const label = outputLabels[0]
       ?? inputLabels.find((entry) => entry !== 'CLK' && entry !== 'RST')
       ?? `FSM ${options.length + 1}`;
@@ -504,25 +546,21 @@ export function buildAnalysisSubsystemOptions(circuit: Circuit): AnalysisSubsyst
   const projectedOptions = buildProjectedFsmSubsystemOptions(circuit);
   const projectedOptionByBatchId = new Map(projectedOptions.map((option) => [option.batchId, option]));
   const projectionLookup = getProjectionLookup(circuit);
+  const boundaries = collectProjectionBoundaries(circuit, projectionLookup);
 
   const options: AnalysisSubsystemOption[] = [];
   let genericIndex = 1;
 
-  for (const gateIds of getConnectedComponents(circuit)) {
-    const subcircuit = buildCircuitSubset(circuit, gateIds);
-    const connectedIds = getConnectedGateIds(subcircuit);
-    const connectedGates = Object.values(subcircuit.gates).filter((gate) => connectedIds.has(gate.id));
-    if (connectedGates.length === 0) continue;
+  for (const boundary of boundaries) {
+    let projectionSemantics: AnalysisSubsystemOption['projectionSemantics'];
 
-    const batchIds = new Set(
-      connectedGates
-        .map((gate) => (projectionLookup.get(gate.id) ?? gate.projection)?.projectionBatchId)
-        .filter((batchId): batchId is string => Boolean(batchId)),
-    );
-
-    if (batchIds.size === 1) {
-      const projectedOption = projectedOptionByBatchId.get([...batchIds][0]!);
-      if (projectedOption) {
+    if (boundary.singleProjectedBatchId) {
+      const batchId = boundary.singleProjectedBatchId;
+      const projectedOption = projectedOptionByBatchId.get(batchId);
+      const hasMixedCoreContent = projectedOption
+        ? hasNonProjectedMixedCoreContent(projectedOption.circuit, projectionLookup, batchId)
+        : false;
+      if (projectedOption && !hasMixedCoreContent) {
         if (options.some((option) => option.key === projectedOption.key)) {
           continue;
         }
@@ -534,13 +572,17 @@ export function buildAnalysisSubsystemOptions(circuit: Circuit): AnalysisSubsyst
         });
         continue;
       }
+      if (projectedOption && hasMixedCoreContent) {
+        projectionSemantics = 'modified_projected_fsm';
+      }
     }
 
     options.push({
       key: `system:${genericIndex}`,
-      label: buildGenericSubsystemLabel(subcircuit, genericIndex),
-      circuit: subcircuit,
+      label: buildGenericSubsystemLabel(boundary.circuit, genericIndex),
+      circuit: boundary.circuit,
       kind: 'generic',
+      projectionSemantics,
     });
     genericIndex++;
   }

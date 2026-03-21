@@ -33,7 +33,7 @@ const CIRCUITS_DIR = path.join(ROOT, 'validation', 'generated-circuits-golden');
 const EXPORTS_DIR = path.join(ROOT, 'validation', 'generated-exports-golden');
 const SUMMARY_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-summary.json');
 const REPORT_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-report.md');
-const RUNNER_VERSION = '1.8.0';
+const RUNNER_VERSION = '1.9.0';
 
 // ── Export-determinism: loaded dynamically before the run loop ───────────────
 // When loaded successfully (vite-node), generateVerilog / generateVHDL are set.
@@ -344,6 +344,22 @@ const HDL_SIM_SCENARIOS = new Map([
   }],
   ['gc_v2_8_sequential_feedback', buildSequentialFeedbackScenario()],
   ['gc_v2_9_custom_reg4_pipeline', buildCustomReg4PipelineScenario()],
+  ['gc_v2_10_custom_tribuf_wrap', {
+    steps: [
+      { name: 'drive-one', set: { a: 1, oe: 0 }, expect: { w_0: 1 } },
+      { name: 'drive-zero', set: { a: 0, oe: 0 }, expect: { w_0: 0 } },
+      { name: 'high-z', set: { a: 1, oe: 1 }, expect: { w_0: 'Z' } },
+    ],
+  }],
+  ['gc_v2_11_custom_hc194_wrap', {
+    steps: [
+      { name: 'prepare-clear-edge', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 } },
+      { name: 'async-clear', set: { clk: 0, clrn: 0, s0: 0, s1: 0, sr: 0, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0 } },
+      { name: 'parallel-load-1010', set: { clk: 0, clrn: 1, s0: 1, s1: 1, sr: 0, sl: 0, d0: 0, d1: 1, d2: 0, d3: 1 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1 } },
+      { name: 'hold', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 1, d2: 1, d3: 1 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1 } },
+      { name: 'shift-right', set: { clk: 0, clrn: 1, s0: 1, s1: 0, sr: 1, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 1 } },
+    ],
+  }],
 ]);
 
 function parseRunnerArgs(argv) {

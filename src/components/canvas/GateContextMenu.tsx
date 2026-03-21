@@ -3,6 +3,7 @@ import { useCircuitContext } from '../../store/CircuitContext';
 import type { GateInstance } from '../../core/types';
 import { RomEditorModal } from '../panels/RomEditorModal';
 import { setClipboard } from '../../store/clipboard';
+import { buildClipboardDataForSelection } from '../../store/clipboardSelection';
 
 const LED_COLORS = ['#22c55e','#ef4444','#f59e0b','#3b82f6','#a855f7','#ec4899','#ffffff','#f97316'];
 
@@ -80,11 +81,9 @@ export function GateContextMenu({ gate, screenX, screenY, onClose }: Props) {
             const selectedIds = new Set(
               Object.values(circuit.gates).filter((g) => g.isSelected || g.id === gate.id).map((g) => g.id)
             );
-            const gates = Object.values(circuit.gates).filter((g) => selectedIds.has(g.id));
-            const wires = Object.values(circuit.wires).filter(
-              (w) => selectedIds.has(w.from.gateId) && selectedIds.has(w.to.gateId)
-            );
-            setClipboard({ gates, wires });
+            const clipboard = buildClipboardDataForSelection(circuit, selectedIds);
+            if (!clipboard) return;
+            setClipboard(clipboard);
             onClose();
           }}>
           📋 Kopieren

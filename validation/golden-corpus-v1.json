@@ -1,7 +1,7 @@
 {
-  "version": "1.8.0",
+  "version": "1.9.0",
   "createdAt": "2026-03-07",
-  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, now including nine Golden Corpus v2 pilot seeds",
+  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, now including eleven Golden Corpus v2 pilot seeds",
   "circuits": [
     {
       "slug": "gc_c1_basic_gates",
@@ -451,9 +451,9 @@
           "output wire w_11"
         ],
         "internalWires": ["w_0", "w_1", "w_2", "w_3", "w_4", "w_5"],
-        "verilogPattern": "xor g_ha0__xor1(w_0, a, b)",
+        "verilogPattern": "xor g_ha0_flat_xor1(w_0, a, b)",
         "verilog": "xor g_xor_sum_diff(w_10, w_6, w_7)",
-        "vhdl": "w_0 <= a xor b; -- ha0__xor1",
+        "vhdl": "w_0 <= a xor b; -- ha0_flat_xor1",
         "outputShadows": true
       },
       "rationale": "Seventh v2 pilot seed and first hierarchical/custom-IC corpus case: the proven gc_c2_half_adder subcircuit is registered as a reusable custom IC, instantiated twice to form a full-adder path, and compared against a flat raw-gate oracle. This verifies one-level custom-IC registration, port mapping, repeated reuse, structural HDL flattening, and exact custom-vs-raw agreement."
@@ -566,6 +566,65 @@
         "vhdl": "w_8_q <= w_0 xor w_4;"
       },
       "rationale": "Second v2 hierarchical/custom-IC seed: a reusable REG4 custom IC is instantiated twice as a pipeline pair, with a raw XOR tap comparing the delayed copies. This exercises custom-IC registration, flattening, enable/reset propagation, and staged state transfer without duplicating the half-adder case."
+    },
+    {
+      "slug": "gc_v2_10_custom_tribuf_wrap",
+      "class": "tristate",
+      "title": "Custom TRIBUF hierarchy with preserved Z semantics",
+      "gates": ["CIC_TRIBUF_WRAP"],
+      "inputs": ["a", "oe"],
+      "outputs": ["w_0"],
+      "initialState": {
+        "a": 1,
+        "oe": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire a",
+          "input wire oe",
+          "output wire w_0"
+        ],
+        "verilog": "assign w_0 = (~oe) ? a : 1'bz",
+        "vhdl": "w_0_q <= a when oe = '0' else 'Z'",
+        "outputShadows": true
+      },
+      "rationale": "Third dedicated hierarchy/custom-IC seed: the proven tri-state direct path is wrapped as a reusable custom IC and exported again. This closes the gap around one-level hierarchy plus Z/high-impedance semantics, rather than only plain boolean outputs."
+    },
+    {
+      "slug": "gc_v2_11_custom_hc194_wrap",
+      "class": "sequential",
+      "title": "Custom 74HC194 hierarchy with hidden register state",
+      "gates": ["CIC_HC194_WRAP"],
+      "inputs": ["clk", "clrn", "s0", "s1", "sr", "sl", "d0", "d1", "d2", "d3"],
+      "outputs": ["w_0", "w_1", "w_2", "w_3"],
+      "initialState": {
+        "clk": 0,
+        "clrn": 1,
+        "s0": 0,
+        "s1": 0,
+        "sr": 0,
+        "sl": 0,
+        "d0": 0,
+        "d1": 0,
+        "d2": 0,
+        "d3": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire clk",
+          "input wire clrn",
+          "input wire d0",
+          "input wire d3",
+          "output wire w_0",
+          "output wire w_3"
+        ],
+        "verilogPattern": "always @(posedge clk or negedge clrn)",
+        "verilog": "assign w_0 = reg_wrap_flat_dut[0]",
+        "verilogExtraReg": "reg [3:0] reg_wrap_flat_dut",
+        "vhdl": "w_0 <= reg_wrap_flat_dut(0)",
+        "vhdlExtraSignal": "signal reg_wrap_flat_dut : STD_LOGIC_VECTOR(3 downto 0)"
+      },
+      "rationale": "Fourth dedicated hierarchy/custom-IC seed: the existing 74HC194 modes circuit is wrapped as a reusable custom IC and re-exported. This verifies one-level sequential hierarchy for a gate with hidden state, async clear, multiple modes, and extra HDL register declarations."
     }
   ]
 }

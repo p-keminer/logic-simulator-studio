@@ -34,10 +34,10 @@ architecture Behavioral of gc_v2_6_custom_halfadder is
   signal w_11_q : STD_LOGIC := '0';
 begin
 
-  w_0 <= a xor b; -- ha0__xor1
-  w_1 <= a and b; -- ha0__and1
-  w_6_q <= w_0 xor cin; -- ha1__xor1
-  w_2 <= w_0 and cin; -- ha1__and1
+  w_0 <= a xor b; -- ha0_flat_xor1
+  w_1 <= a and b; -- ha0_flat_and1
+  w_6_q <= w_0 xor cin; -- ha1_flat_xor1
+  w_2 <= w_0 and cin; -- ha1_flat_and1
   w_8_q <= w_1 or w_2; -- or_custom
   w_3 <= a xor b; -- raw_xor_ab
   w_7_q <= w_3 xor cin; -- raw_sum

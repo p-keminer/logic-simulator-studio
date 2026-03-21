@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useFsm } from '../../fsm/FsmContext';
 import { FsmStateNode as FsmStateNodeComp, STATE_R } from './FsmStateNode';
 import { FsmTransitionArrow, FsmPreviewArrow } from './FsmTransitionArrow';
 import { FsmStateEditor } from './FsmStateEditor';
 import { FsmTransitionEditor } from './FsmTransitionEditor';
+import { analyzeFsmStructure } from '../../fsm/analysis/structure';
 
 export type CanvasMode = 'select' | 'connect';
 
@@ -68,6 +69,14 @@ interface Props { mode: CanvasMode; onModeChange: (m: CanvasMode) => void }
 export function FsmCanvas({ mode, onModeChange }: Props) {
   const { fsm, dispatch } = useFsm();
   const svgRef = useRef<SVGSVGElement>(null);
+  const structure = useMemo(() => {
+    if (Object.keys(fsm.states).length === 0) return null;
+    try {
+      return analyzeFsmStructure(fsm);
+    } catch {
+      return null;
+    }
+  }, [fsm]);
 
   // Selektion
   const [selectedIds,    setSelectedIds]    = useState<Set<string>>(new Set());
@@ -364,13 +373,36 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
   }, []);
 
   // ── Render ───────────────────────────────────────────────────────────────────
-  const stateList    = Object.values(fsm.states);
+  const stateList    = structure?.orderedStates ?? Object.values(fsm.states);
   const connectSrc   = connectFrom ? fsm.states[connectFrom] : null;
   const transformStr = `translate(${pan.x.toFixed(1)},${pan.y.toFixed(1)}) scale(${zoom.toFixed(4)})`;
   const sw           = 1 / zoom; // stroke-width für Lasso skaliert gegenmäßig
+  const unreachableStateLabels = structure?.unreachableStates.map((state) => state.label).join(', ') ?? '';
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+      {structure && structure.unreachableStates.length > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            zIndex: 2,
+            maxWidth: 'min(420px, calc(100% - 24px))',
+            padding: '6px 8px',
+            borderRadius: 6,
+            border: '1px solid #92400e',
+            background: 'rgba(69, 26, 3, 0.92)',
+            color: '#fdba74',
+            fontSize: 10,
+            fontFamily: 'monospace',
+            lineHeight: 1.45,
+            pointerEvents: 'none',
+          }}
+        >
+          Unerreichbar, nicht synthetisiert: {unreachableStateLabels}
+        </div>
+      )}
 
       {/* ── SVG-Canvas ─────────────────────────────────────────────────── */}
       <svg
@@ -441,6 +473,7 @@ export function FsmCanvas({ mode, onModeChange }: Props) {
               state={s}
               isSelected={selectedIds.has(s.id)}
               isConnectSource={connectFrom === s.id}
+              isUnreachable={structure?.unreachableStateIds.has(s.id) ?? false}
               archType={fsm.archType}
               outputNames={fsm.outputNames}
             />

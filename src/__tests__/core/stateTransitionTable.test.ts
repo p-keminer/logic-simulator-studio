@@ -1,5 +1,6 @@
 import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json';
 import { describe, expect, it } from 'vitest';
+import '../../gates/definitions/not.gate';
 import '../../gates/io/clock.gate';
 import '../../gates/io/inputSwitch.gate';
 import '../../gates/io/outputLed.gate';
@@ -12,6 +13,7 @@ import {
   OUTPUT_TYPES,
 } from '../../components/panels/truthTableAnalysis';
 import {
+  buildAnalysisSubsystemOptions,
   buildStateTransitionProjection,
 } from '../../core/analysis/sequentialProjection';
 import { gateRegistry } from '../../core/registry/GateRegistry';
@@ -22,6 +24,7 @@ import {
   buildStaticStateTransitionTable,
   getAvailableStateTransitionDisplayModes,
   getStateTransitionFallbackNote,
+  resolveStateTransitionViewState,
 } from '../../core/analysis/stateTransitionTable';
 import type { Circuit, GateInstance, SignalState, Wire } from '../../core/types';
 import { synthesizeFsm } from '../../fsm/synthesis/synthesize';
@@ -112,6 +115,51 @@ function buildLegacyFixtureTable(circuit: Circuit) {
     projectedOutputGates: projected.outputGates,
     isProjectedFsmView: projected.isProjectedFsmView,
   });
+}
+
+function buildProjectedViewForCircuit(circuit: Circuit) {
+  const connectedIds = collectConnectedGateIds(circuit);
+  const feedbackGateIds = collectSttFeedbackGateIds(
+    circuit,
+    connectedIds,
+    [],
+    gateRegistry.get.bind(gateRegistry),
+  );
+  const stateVars = collectStateVarsForStt(
+    circuit,
+    connectedIds,
+    feedbackGateIds,
+    gateRegistry.get.bind(gateRegistry),
+  );
+  const inputs = Object.values(circuit.gates)
+    .filter((gate) => INPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+    .sort((a, b) => a.x - b.x);
+  const outputGates = Object.values(circuit.gates)
+    .filter((gate) => OUTPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+    .sort((a, b) => a.x - b.x);
+
+  return buildStateTransitionProjection(circuit, inputs, stateVars, outputGates);
+}
+
+function buildProjectedTableForCircuit(circuit: Circuit) {
+  const connectedIds = collectConnectedGateIds(circuit);
+  const feedbackGateIds = collectSttFeedbackGateIds(
+    circuit,
+    connectedIds,
+    [],
+    gateRegistry.get.bind(gateRegistry),
+  );
+  const projected = buildProjectedViewForCircuit(circuit);
+  const table = buildStaticStateTransitionTable({
+    circuit,
+    feedbackGateIds,
+    projectedInputs: projected.inputs,
+    projectedStateVars: projected.stateVars,
+    projectedOutputGates: projected.outputGates,
+    isProjectedFsmView: projected.isProjectedFsmView,
+  });
+
+  return { projected, table };
 }
 
 function makeFsm(overrides?: Partial<FsmMachine>): FsmMachine {
@@ -395,6 +443,57 @@ describe('stateTransitionTable', () => {
     })).toEqual(['technical_full']);
   });
 
+  it('resolves the modal STT view state for narrow projected tables and preserves a valid requested mode', () => {
+    const resolved = resolveStateTransitionViewState({
+      requestedMode: 'technical_full',
+      projectionStatus: 'projected',
+      isProjectedFsmView: true,
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    });
+
+    expect(resolved.availableModes).toEqual(['fsm_compact', 'technical_full']);
+    expect(resolved.activeMode).toBe('technical_full');
+    expect(resolved.showModeSelect).toBe(true);
+    expect(resolved.showReducedCompactNote).toBe(false);
+    expect(resolved.fallbackNote).toBe('');
+  });
+
+  it('resolves the modal STT view state for reduced legacy projected tables by locking back to compact mode', () => {
+    const resolved = resolveStateTransitionViewState({
+      requestedMode: 'technical_full',
+      projectionStatus: 'legacy_projected',
+      isProjectedFsmView: true,
+      reducedMeta: {
+        fixedDataLabels: [],
+        totalStateBits: 3,
+        controlCount: 7,
+        cappedControls: true,
+      },
+      inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
+    });
+
+    expect(resolved.availableModes).toEqual(['fsm_compact']);
+    expect(resolved.activeMode).toBe('fsm_compact');
+    expect(resolved.showModeSelect).toBe(false);
+    expect(resolved.showReducedCompactNote).toBe(true);
+    expect(resolved.fallbackNote).toBe('');
+  });
+
+  it('resolves the modal STT view state for partial-output fallbacks as technical-only with note', () => {
+    const resolved = resolveStateTransitionViewState({
+      requestedMode: 'fsm_compact',
+      projectionStatus: 'fallback_partial_outputs',
+      isProjectedFsmView: false,
+      inputRoles: {},
+    });
+
+    expect(resolved.availableModes).toEqual(['technical_full']);
+    expect(resolved.activeMode).toBe('technical_full');
+    expect(resolved.showModeSelect).toBe(false);
+    expect(resolved.showReducedCompactNote).toBe(false);
+    expect(resolved.fallbackNote).toContain('Ausgänge sind gemischt oder nur teilweise projiziert');
+  });
+
   it('maps fallback projection statuses to stable explanatory notes', () => {
     expect(getStateTransitionFallbackNote('fallback_partial_state'))
       .toContain('nicht alle Zustandsbits');
@@ -405,6 +504,256 @@ describe('stateTransitionTable', () => {
     expect(getStateTransitionFallbackNote('fallback_mixed_batches'))
       .toContain('Mehrere FSM-Projektionsbatches erkannt');
     expect(getStateTransitionFallbackNote('projected')).toBe('');
+  });
+
+  it('keeps compact STT mode available for observer-trimmed projected analysis subsystems', () => {
+    const circuit = makeCircuit([
+      projectedInput('clk', 'CLK', 'clock', 'clk', 'batch-observer'),
+      projectedInput('rst', 'RST', 'reset', 'out', 'batch-observer'),
+      projectedInput('inA', 'A', 'input', 'out', 'batch-observer'),
+      projectedState('q0', 'Q0', 'batch-observer'),
+      projectedOutput('outY', 'Y', 'batch-observer'),
+      makeGate('rawSwitch', 'INPUT_SWITCH', { label: 'RAW_IN' }),
+      makeGate('rawAnd', 'AND'),
+      makeGate('rawLed', 'OUTPUT_LED', { label: 'RAW_LED' }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w3', 'inA', 'out', 'q0', 'd'),
+      makeWire('w4', 'q0', 'q', 'outY', 'in'),
+      makeWire('w5', 'q0', 'q', 'rawAnd', 'a'),
+      makeWire('w6', 'rawSwitch', 'out', 'rawAnd', 'b'),
+      makeWire('w7', 'rawAnd', 'out', 'rawLed', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const selectedOption = analysisOptions.find((option) => option.kind === 'projected_fsm');
+    expect(selectedOption).toBeTruthy();
+
+    const projected = buildProjectedViewForCircuit(selectedOption!.circuit);
+    expect(projected.projectionStatus).toBe('projected');
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: projected.projectionStatus,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    })).toEqual(['fsm_compact', 'technical_full']);
+    expect(getStateTransitionFallbackNote(projected.projectionStatus)).toBe('');
+  });
+
+  it('keeps only the technical STT mode for analysis-selected partial-input fallbacks', () => {
+    const circuit = makeCircuit([
+      projectedInput('clk', 'CLK', 'clock', 'clk', 'batch-upstream'),
+      projectedInput('rst', 'RST', 'reset', 'out', 'batch-upstream'),
+      projectedState('q0', 'Q0', 'batch-upstream'),
+      projectedOutput('outY', 'Y', 'batch-upstream'),
+      makeGate('rawSwitch', 'INPUT_SWITCH', { label: 'RAW_IN' }),
+      makeGate('rawNot', 'NOT'),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w3', 'rawSwitch', 'out', 'rawNot', 'a'),
+      makeWire('w4', 'rawNot', 'out', 'q0', 'd'),
+      makeWire('w5', 'q0', 'q', 'outY', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const selectedOption = analysisOptions.find((option) => Object.keys(option.circuit.gates).includes('rawSwitch'));
+    expect(selectedOption?.kind).toBe('generic');
+
+    const projected = buildProjectedViewForCircuit(selectedOption!.circuit);
+    expect(projected.projectionStatus).toBe('fallback_partial_inputs');
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: projected.projectionStatus,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    })).toEqual(['technical_full']);
+    expect(getStateTransitionFallbackNote(projected.projectionStatus)).toContain('Eingänge sind nur teilweise projiziert');
+  });
+
+  it('keeps only the technical STT mode for analysis-selected partial-state fallbacks', () => {
+    const circuit = makeCircuit([
+      projectedInput('clk', 'CLK', 'clock', 'clk', 'batch-state'),
+      projectedInput('rst', 'RST', 'reset', 'out', 'batch-state'),
+      projectedState('q0', 'Q0', 'batch-state'),
+      projectedOutput('outY', 'Y', 'batch-state'),
+      makeGate('rawReg', 'D_FF_R', { label: 'RAW_Q', customState: { q: 0, prevClk: 0 } }),
+      makeGate('rawAnd', 'AND'),
+      makeGate('rawLed', 'OUTPUT_LED', { label: 'RAW_LED' }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w3', 'q0', 'q', 'outY', 'in'),
+      makeWire('w4', 'clk', 'clk', 'rawReg', 'clk'),
+      makeWire('w5', 'rst', 'out', 'rawReg', 'rst'),
+      makeWire('w6', 'q0', 'q', 'rawAnd', 'a'),
+      makeWire('w7', 'rawReg', 'q', 'rawAnd', 'b'),
+      makeWire('w8', 'rawAnd', 'out', 'rawReg', 'd'),
+      makeWire('w9', 'rawReg', 'q', 'rawLed', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const selectedOption = analysisOptions.find((option) => Object.keys(option.circuit.gates).includes('rawReg'));
+    expect(selectedOption?.kind).toBe('generic');
+
+    const projected = buildProjectedViewForCircuit(selectedOption!.circuit);
+    expect(projected.projectionStatus).toBe('fallback_partial_state');
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: projected.projectionStatus,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    })).toEqual(['technical_full']);
+    expect(getStateTransitionFallbackNote(projected.projectionStatus)).toContain('nicht alle Zustandsbits');
+  });
+
+  it('keeps only the technical STT mode and note for partial-output fallbacks', () => {
+    const circuit = makeCircuit([
+      projectedInput('clk', 'CLK', 'clock', 'clk', 'batch-output'),
+      projectedState('q0', 'Q0', 'batch-output'),
+      projectedOutput('outY', 'Y', 'batch-output'),
+      makeGate('rawLed', 'OUTPUT_LED', { label: 'RAW' }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'q0', 'q', 'outY', 'in'),
+      makeWire('w3', 'q0', 'q', 'rawLed', 'in'),
+    ]);
+
+    const { projected, table } = buildProjectedTableForCircuit(circuit);
+    expect(projected.projectionStatus).toBe('fallback_partial_outputs');
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: projected.projectionStatus,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    })).toEqual(['technical_full']);
+    expect(getStateTransitionFallbackNote(projected.projectionStatus)).toContain('Ausgänge sind gemischt oder nur teilweise projiziert');
+
+    const displayed = buildDisplayedStateTransitionTable({
+      table,
+      mode: 'fsm_compact',
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    });
+
+    expect(displayed.mode).toBe('technical_full');
+    expect(displayed.inputs).toEqual(table.inputs);
+    expect(displayed.rows).toEqual(table.rows);
+    expect(displayed.notes).toEqual([]);
+  });
+
+  it('keeps compact STT mode available for analysis-selected legacy projected subsystems', () => {
+    const circuit = structuredClone(legacyFsmExportFixture as Circuit);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const selectedOption = analysisOptions.find((option) => option.kind === 'projected_fsm');
+    expect(selectedOption).toBeTruthy();
+
+    const projected = buildProjectedViewForCircuit(selectedOption!.circuit);
+    expect(projected.isProjectedFsmView).toBe(true);
+    expect(projected.projectionStatus).toBe('legacy_projected');
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: projected.projectionStatus,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    })).toEqual(['fsm_compact', 'technical_full']);
+    expect(getStateTransitionFallbackNote(projected.projectionStatus)).toBe('');
+  });
+
+  it('keeps reduced legacy-projected tables locked to compact mode', () => {
+    const clk = projectedInput('clk', 'CLK', 'clock', 'clk', 'batch-legacy-reduced');
+    const rst = projectedInput('rst', 'RST', 'reset', 'out', 'batch-legacy-reduced');
+    const inputs = Array.from({ length: 6 }, (_, index) =>
+      projectedInput(`in${index}`, `A${index}`, 'input', 'out', 'batch-legacy-reduced'),
+    );
+    const q0 = projectedState('q0', 'Q0', 'batch-legacy-reduced');
+    const q1 = projectedState('q1', 'Q1', 'batch-legacy-reduced');
+    const outY = projectedOutput('outY', 'Y', 'batch-legacy-reduced');
+    const circuit = makeCircuit(
+      [clk, rst, ...inputs, q0, q1, outY],
+      [
+        makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+        makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+        makeWire('w3', 'in0', 'out', 'q0', 'd'),
+        makeWire('w4', 'q0', 'q', 'q1', 'd'),
+        makeWire('w5', 'q0', 'q', 'outY', 'in'),
+      ],
+    );
+
+    const projected = buildStateTransitionProjection(
+      circuit,
+      [clk, rst, ...inputs],
+      [
+        { gateId: 'q0', portId: 'q', stateKey: 'q', label: 'Q0' },
+        { gateId: 'q1', portId: 'q', stateKey: 'q', label: 'Q1' },
+      ],
+      [outY],
+    );
+    expect(projected.isProjectedFsmView).toBe(true);
+
+    const table = buildStaticStateTransitionTable({
+      circuit,
+      feedbackGateIds: new Set(['q0', 'q1']),
+      projectedInputs: projected.inputs,
+      projectedStateVars: projected.stateVars,
+      projectedOutputGates: projected.outputGates,
+      isProjectedFsmView: projected.isProjectedFsmView,
+    });
+    expect(table.reducedMeta).toBeTruthy();
+
+    const availableModes = getAvailableStateTransitionDisplayModes({
+      projectionStatus: 'legacy_projected',
+      isProjectedFsmView: projected.isProjectedFsmView,
+      reducedMeta: table.reducedMeta,
+      inputRoles: projected.inputRoles,
+    });
+    expect(availableModes).toEqual(['fsm_compact']);
+
+    const displayed = buildDisplayedStateTransitionTable({
+      table,
+      mode: availableModes[0]!,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    });
+
+    expect(displayed.mode).toBe('fsm_compact');
+    expect(displayed.inputs.map((gate) => gate.label)).toEqual(['A0', 'A1', 'A2', 'A3', 'A4']);
+    expect(displayed.stateVars.map((stateVar) => stateVar.label)).toEqual(['Q0']);
+    expect(displayed.notes).toEqual([
+      'CLK wird als Übergangsereignis interpretiert.',
+      'RST=1 ist im Modus "Technisch voll" sichtbar.',
+    ]);
+    expect(getStateTransitionFallbackNote('legacy_projected')).toBe('');
+  });
+
+  it('keeps only the technical STT mode for analysis-selected mixed projection batches', () => {
+    const circuit = makeCircuit([
+      projectedInput('clkA', 'CLK', 'clock', 'clk', 'batch-a'),
+      projectedState('q0A', 'Q0', 'batch-a'),
+      projectedOutput('outYA', 'Y', 'batch-a'),
+      projectedInput('clkB', 'CLK_B', 'clock', 'clk', 'batch-b'),
+      projectedState('q0B', 'QB0', 'batch-b'),
+      projectedOutput('outYB', 'YB', 'batch-b'),
+    ], [
+      makeWire('w1', 'clkA', 'clk', 'q0A', 'clk'),
+      makeWire('w2', 'q0A', 'q', 'outYA', 'in'),
+      makeWire('w3', 'clkB', 'clk', 'q0B', 'clk'),
+      makeWire('w4', 'q0B', 'q', 'outYB', 'in'),
+      makeWire('w5', 'q0A', 'q', 'q0B', 'd'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const selectedOption = analysisOptions.find((option) =>
+      Object.keys(option.circuit.gates).includes('q0A') && Object.keys(option.circuit.gates).includes('q0B'),
+    );
+    expect(selectedOption?.kind).toBe('generic');
+
+    const projected = buildProjectedViewForCircuit(selectedOption!.circuit);
+    expect(projected.isProjectedFsmView).toBe(false);
+    expect(projected.projectionStatus).toBe('fallback_mixed_batches');
+    expect(getAvailableStateTransitionDisplayModes({
+      projectionStatus: projected.projectionStatus,
+      isProjectedFsmView: projected.isProjectedFsmView,
+      inputRoles: projected.inputRoles,
+    })).toEqual(['technical_full']);
+    expect(getStateTransitionFallbackNote(projected.projectionStatus)).toContain('Mehrere FSM-Projektionsbatches erkannt');
   });
 
   it('falls back to the technical view when compact mode is requested for a non-projected table', () => {
@@ -550,6 +899,43 @@ describe('stateTransitionTable', () => {
 
     expect(buildStaticAnalysisKey(polluted)).toEqual(buildStaticAnalysisKey(pristine));
     expect(pollutedTable.rows).toEqual(pristineTable.rows);
+  });
+
+  it('keeps post-tick follower outputs settled so q and inverted q stay complementary', () => {
+    const clk = makeGate('clk', 'CLOCK', { label: 'CLK' });
+    const a = makeGate('a', 'INPUT_SWITCH', { label: 'A' });
+    const ff = makeGate('ff', 'D_FF', { label: 'Q0' });
+    const inv = makeGate('inv', 'NOT', { label: '!Q0' });
+    const ledQ = makeGate('ledQ', 'OUTPUT_LED', { label: 'Q' });
+    const ledInv = makeGate('ledInv', 'OUTPUT_LED', { label: '!Q' });
+    const table = buildStaticStateTransitionTable({
+      circuit: makeCircuit(
+        [clk, a, ff, inv, ledQ, ledInv],
+        [
+          makeWire('w1', 'clk', 'clk', 'ff', 'clk'),
+          makeWire('w2', 'a', 'out', 'ff', 'd'),
+          makeWire('w3', 'ff', 'q', 'inv', 'a'),
+          makeWire('w4', 'ff', 'q', 'ledQ', 'in'),
+          makeWire('w5', 'inv', 'out', 'ledInv', 'in'),
+        ],
+      ),
+      feedbackGateIds: new Set(['ff']),
+      projectedInputs: [a, clk],
+      projectedStateVars: [{ gateId: 'ff', portId: 'q', stateKey: 'q', label: 'Q0' }],
+      projectedOutputGates: [ledQ, ledInv],
+      isProjectedFsmView: false,
+    });
+
+    for (const row of table.rows) {
+      expect(row.outputBits).toHaveLength(2);
+      expect(row.outputBits[1]).toBe((row.outputBits[0] ^ 1) as 0 | 1);
+    }
+
+    const risingWriteRow = table.rows.find((row) =>
+      row.inputBits.join('') === '11' && row.stateBits.join('') === '0',
+    );
+    expect(risingWriteRow?.nextState).toEqual([1]);
+    expect(risingWriteRow?.outputBits).toEqual([1, 0]);
   });
 });
 

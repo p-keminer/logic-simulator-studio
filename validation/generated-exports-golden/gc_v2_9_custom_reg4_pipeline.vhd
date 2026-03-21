@@ -51,7 +51,7 @@ begin
   w_8 <= w_8_q;
 
   -- Sequential / registered logic
-  -- REG4 reg_a__dut
+  -- REG4 reg_a_flat_dut
   process(clk, rst)
   begin
     if rst = '1' then
@@ -61,8 +61,8 @@ begin
         w_0_q <= d0; w_1_q <= d1; w_2_q <= d2; w_3_q <= d3;
       end if;
     end if;
-  end process; -- REG4 reg_a__dut
-  -- REG4 reg_b__dut
+  end process; -- REG4 reg_a_flat_dut
+  -- REG4 reg_b_flat_dut
   process(clk, rst)
   begin
     if rst = '1' then
@@ -72,6 +72,6 @@ begin
         w_4_q <= w_0_q; w_5_q <= w_1_q; w_6_q <= w_2_q; w_7_q <= w_3_q;
       end if;
     end if;
-  end process; -- REG4 reg_b__dut
+  end process; -- REG4 reg_b_flat_dut
 
 end Behavioral;

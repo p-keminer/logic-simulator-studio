@@ -6,6 +6,10 @@ import {
   buildSequentialProjectionChannels,
 } from '../../core/analysis/sequentialProjection';
 import type { TimingSnapshot } from '../../core/types';
+import {
+  resolveTimingPanelState,
+  shouldUseProjectedTimingChannels,
+} from './panelViewState';
 
 interface Props { history: TimingSnapshot[]; onClose: () => void; }
 type TimingViewMode = 'all' | 'selected';
@@ -19,7 +23,6 @@ const CH_MINI = 22;   // Zeilenhöhe (ausgeblendet / eingeklappt)
 const LBL_W   = 184;
 const AXIS_H  = 24;
 const WAVE_PAD = 12;
-const MAX_ST  = 200;  // Sichtbare Snapshots (letzte N)
 const ROW_ORDER_STORAGE_KEY = 'logic-sim:timing-diagram:row-order';
 const HIDDEN_KEYS_STORAGE_KEY = 'logic-sim:timing-diagram:hidden-keys';
 const VIEW_MODE_STORAGE_KEY = 'logic-sim:timing-diagram:view-mode';
@@ -222,14 +225,16 @@ export function TimingDiagram({ history, onClose }: Props) {
     () => buildAnalysisSubsystemOptions(circuit),
     [circuit],
   );
-
-  const activeAnalysisSubsystem = analysisSubsystemOptions.find((option) => option.key === selectedSubsystemKey)
-    ?? analysisSubsystemOptions[0]
-    ?? null;
-
-  const analysisSourceCircuit = viewMode === 'selected' && analysisSubsystemOptions.length > 1
-    ? (activeAnalysisSubsystem?.circuit ?? circuit)
-    : circuit;
+  const {
+    activeAnalysisSubsystem,
+    analysisSourceCircuit,
+    showSubsystemSelector,
+  } = resolveTimingPanelState(
+    circuit,
+    analysisSubsystemOptions,
+    selectedSubsystemKey,
+    viewMode,
+  );
 
   // ── Verbundene Gatter-IDs ermitteln ──────────────────────────────────────
   const connectedIds = useMemo(() => {
@@ -244,7 +249,9 @@ export function TimingDiagram({ history, onClose }: Props) {
   // ── Kanäle aufbauen ──────────────────────────────────────────────────────
   // Nur verbundene Gatter; Priorität: Eingänge → Logik → Ausgänge
   const channels = useMemo<TimingChannel[]>(() => {
-    const projectedChannels = buildSequentialProjectionChannels(analysisSourceCircuit);
+    const projectedChannels = shouldUseProjectedTimingChannels(viewMode)
+      ? buildSequentialProjectionChannels(analysisSourceCircuit)
+      : [];
     if (projectedChannels.length > 0) return projectedChannels;
 
     const chs: TimingChannel[] = [];
@@ -285,7 +292,7 @@ export function TimingDiagram({ history, onClose }: Props) {
     }
 
     return chs;
-  }, [analysisSourceCircuit, connectedIds]);
+  }, [analysisSourceCircuit, connectedIds, viewMode]);
 
   // Zeile nach oben/unten verschieben
   const moveRow = useCallback((key: string, direction: -1 | 1) => {
@@ -403,8 +410,11 @@ export function TimingDiagram({ history, onClose }: Props) {
     return snap.gateValues[key] ?? 0;
   }
 
-  const displayHistory = history.slice(-MAX_ST);
-  const displayStartIndex = Math.max(0, history.length - displayHistory.length);
+  // Render the full retained timing history. CircuitContext already caps the
+  // stored snapshot list, so trimming again here only makes early ticks
+  // unreachable in the scroll view.
+  const displayHistory = history;
+  const displayStartIndex = 0;
 
   // ── X-Positionsberechnung ──────────────────────────────────────────────
   // Zero-Delay: index-basiert (STEP_W pro Snapshot, gleichmaessig).
@@ -436,7 +446,7 @@ export function TimingDiagram({ history, onClose }: Props) {
   const hasCustomRowOrder = channels.length > 0 && channels.some((channel, idx) => orderedChannels[idx]?.key !== channel.key);
   const hasNoSelectedSignals = viewMode === 'selected' && renderedChannels.length === 0 && channels.length > 0;
   const visibleClockChannels = renderedChannels.filter((channel) => channel.role === 'clock' && !hiddenKeys.has(channel.key));
-  const clockChannel = visibleClockChannels.length === 1 ? visibleClockChannels[0] : null;
+  const clockChannel = visibleClockChannels[0] ?? null;
   const hasAmbiguousClockAxis = visibleClockChannels.length > 1;
   const fullCycleStarts = useMemo(() => {
     if (!clockChannel || history.length === 0) return [];
@@ -609,7 +619,11 @@ export function TimingDiagram({ history, onClose }: Props) {
           <select
             aria-label="Timing-Ansicht"
             value={viewMode}
-            onChange={(event) => setViewMode(event.target.value as TimingViewMode)}
+            onChange={(event) => {
+              const nextMode = event.target.value as TimingViewMode;
+              if (nextMode !== 'selected') setIsSignalMenuOpen(false);
+              setViewMode(nextMode);
+            }}
             style={{
               minWidth: 128,
               padding: '3px 8px',
@@ -625,7 +639,7 @@ export function TimingDiagram({ history, onClose }: Props) {
             <option value="selected">ausgewählt</option>
           </select>
         </label>
-        {viewMode === 'selected' && analysisSubsystemOptions.length > 1 && (
+        {showSubsystemSelector && (
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: 10, fontFamily: 'monospace' }}>
             <span>System</span>
             <select
@@ -658,81 +672,83 @@ export function TimingDiagram({ history, onClose }: Props) {
               : 'vollständig = gesamter Canvas'}
           </span>
         )}
-        <div ref={signalMenuRef} style={{ position: 'relative' }}>
-          <button
-            type="button"
-            onClick={() => setIsSignalMenuOpen((prev) => !prev)}
-            style={{ background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
-          >
-            signale waehlen ({effectiveSelectedKeys.length}/{channels.length})
-          </button>
-          {isSignalMenuOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 6px)',
-                left: 0,
-                zIndex: 5,
-                minWidth: 230,
-                maxWidth: 320,
-                border: '1px solid #334155',
-                borderRadius: 8,
-                background: '#0f172a',
-                boxShadow: '0 12px 24px rgba(0,0,0,0.35)',
-                padding: 10,
-              }}
-              onClick={(event) => event.stopPropagation()}
-              onMouseDown={(event) => event.stopPropagation()}
+        {viewMode === 'selected' && (
+          <div ref={signalMenuRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setIsSignalMenuOpen((prev) => !prev)}
+              style={{ background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 8 }}>
-                <span style={{ color: '#e2e8f0', fontSize: 11, fontFamily: 'monospace', fontWeight: 700 }}>
-                  Signalauswahl
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedKeysAndPersist(channels.map((channel) => channel.key))}
-                  style={{ marginLeft: 'auto', background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
-                >
-                  alle
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectedKeysAndPersist([])}
-                  style={{ background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
-                >
-                  keine
-                </button>
+              signale waehlen ({effectiveSelectedKeys.length}/{channels.length})
+            </button>
+            {isSignalMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 6px)',
+                  left: 0,
+                  zIndex: 5,
+                  minWidth: 230,
+                  maxWidth: 320,
+                  border: '1px solid #334155',
+                  borderRadius: 8,
+                  background: '#0f172a',
+                  boxShadow: '0 12px 24px rgba(0,0,0,0.35)',
+                  padding: 10,
+                }}
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 8 }}>
+                  <span style={{ color: '#e2e8f0', fontSize: 11, fontFamily: 'monospace', fontWeight: 700 }}>
+                    Signalauswahl
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedKeysAndPersist(channels.map((channel) => channel.key))}
+                    style={{ marginLeft: 'auto', background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
+                  >
+                    alle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedKeysAndPersist([])}
+                    style={{ background: 'none', border: '1px solid #334155', color: '#94a3b8', cursor: 'pointer', fontSize: 9, fontFamily: 'monospace', borderRadius: 3, padding: '1px 6px' }}
+                  >
+                    keine
+                  </button>
+                </div>
+                <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: 10, fontFamily: 'monospace' }}>
+                  Im Modus `ausgewählt` werden nur die markierten Kanäle gerendert.
+                </p>
+                <div style={{ maxHeight: 220, overflowY: 'auto', display: 'grid', gap: 6 }}>
+                  {orderedChannels.map((channel) => {
+                    const checked = effectiveSelectedKeys.includes(channel.key);
+                    return (
+                      <label
+                        key={channel.key}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#cbd5e1', fontSize: 11, fontFamily: 'monospace' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(event) => {
+                            const next = new Set(effectiveSelectedKeys);
+                            if (event.target.checked) next.add(channel.key);
+                            else next.delete(channel.key);
+                            setSelectedKeysAndPersist([...next]);
+                          }}
+                        />
+                        <span style={{ color: channel.color }}>■</span>
+                        <span>{channel.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-              <p style={{ margin: '0 0 8px', color: '#64748b', fontSize: 10, fontFamily: 'monospace' }}>
-                Im Modus `ausgewählt` werden nur die markierten Kanäle gerendert.
-              </p>
-              <div style={{ maxHeight: 220, overflowY: 'auto', display: 'grid', gap: 6 }}>
-                {orderedChannels.map((channel) => {
-                  const checked = effectiveSelectedKeys.includes(channel.key);
-                  return (
-                    <label
-                      key={channel.key}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#cbd5e1', fontSize: 11, fontFamily: 'monospace' }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) => {
-                          const next = new Set(effectiveSelectedKeys);
-                          if (event.target.checked) next.add(channel.key);
-                          else next.delete(channel.key);
-                          setSelectedKeysAndPersist([...next]);
-                        }}
-                      />
-                      <span style={{ color: channel.color }}>■</span>
-                      <span>{channel.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
         {hiddenCount > 0 && (
           <button
             onClick={() => setHiddenKeys(new Set())}
@@ -765,7 +781,7 @@ export function TimingDiagram({ history, onClose }: Props) {
         )}
         {hasAmbiguousClockAxis && (
           <span style={{ color: '#64748b', fontSize: 9, fontFamily: 'monospace', marginLeft: 4 }}>
-            Taktachse ausgeblendet: mehrere sichtbare Takte
+            Taktachse folgt dem ersten sichtbaren Takt
           </span>
         )}
         <button
@@ -929,7 +945,14 @@ export function TimingDiagram({ history, onClose }: Props) {
             >
               SIGNAL-STEUERUNG
             </div>
-            <div ref={sidePanelBodyRef} style={{ willChange: 'transform' }}>
+            <div
+              ref={sidePanelBodyRef}
+              style={{
+                willChange: 'transform',
+                position: 'relative',
+                height: totalH - AXIS_H,
+              }}
+            >
               {(() => {
                 const rows: React.ReactElement[] = [];
                 let yOffset = AXIS_H + 2;
@@ -947,6 +970,10 @@ export function TimingDiagram({ history, onClose }: Props) {
                     <div
                       key={ch.key}
                       style={{
+                        position: 'absolute',
+                        top: y0 - AXIS_H,
+                        left: 0,
+                        right: 0,
                         height: rowH - 1,
                         padding: '0 8px',
                         display: 'flex',
@@ -954,7 +981,6 @@ export function TimingDiagram({ history, onClose }: Props) {
                         gap: 8,
                         borderBottom: '1px solid #1e293b',
                         background: hidden ? 'rgba(0,0,0,0.12)' : 'transparent',
-                        marginTop: y0 === AXIS_H + 2 ? 2 : 0,
                       }}
                     >
                       <button

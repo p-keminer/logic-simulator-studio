@@ -10,15 +10,17 @@ import {
 } from '../../core/analysis/sequentialProjection';
 import {
   buildDisplayedStateTransitionTable,
-  getAvailableStateTransitionDisplayModes,
-  getStateTransitionFallbackNote,
   buildStaticAnalysisCircuit,
   buildStaticAnalysisKey,
   buildStaticStateTransitionTable,
+  resolveStateTransitionViewState,
   type ReducedStateTransitionMeta,
   type StateTransitionDisplayMode,
 } from '../../core/analysis/stateTransitionTable';
 import type { Circuit, GateInstance } from '../../core/types';
+import {
+  resolveTruthTablePanelState,
+} from './panelViewState';
 import {
   collectConnectedGateIds,
   collectStateVarsForStt,
@@ -91,12 +93,15 @@ export function TruthTableModal({ onClose }: Props) {
     () => buildAnalysisSubsystemOptions(analysisCircuit),
     [analysisCircuit],
   );
-  const activeAnalysisSubsystem = analysisSubsystemOptions.find((option) => option.key === selectedSubsystemKey)
-    ?? analysisSubsystemOptions[0]
-    ?? null;
-  const analysisSourceCircuit = analysisSubsystemOptions.length > 1
-    ? (activeAnalysisSubsystem?.circuit ?? analysisCircuit)
-    : analysisCircuit;
+  const {
+    activeAnalysisSubsystem,
+    analysisSourceCircuit,
+    showSubsystemSelector,
+  } = resolveTruthTablePanelState(
+    analysisCircuit,
+    analysisSubsystemOptions,
+    selectedSubsystemKey,
+  );
 
   // â”€â”€ Hauptberechnung â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const computed = useMemo((): Computed => {
@@ -306,19 +311,16 @@ export function TruthTableModal({ onClose }: Props) {
 
   }, [analysisSourceCircuit]);
 
-  const availableSttViewModes = computed.mode === 'state-transition'
-    ? getAvailableStateTransitionDisplayModes({
+  const sttViewState = computed.mode === 'state-transition'
+    ? resolveStateTransitionViewState({
+      requestedMode: sttViewMode,
       projectionStatus: computed.projectionStatus,
       isProjectedFsmView: computed.isProjectedFsmView,
       reducedMeta: computed.reducedMeta,
       inputRoles: computed.inputRoles,
     })
-    : [];
-
-  const activeSttViewMode: StateTransitionDisplayMode =
-    availableSttViewModes.find((mode) => mode === sttViewMode)
-    ?? availableSttViewModes[0]
-    ?? 'technical_full';
+    : null;
+  const activeSttViewMode: StateTransitionDisplayMode = sttViewState?.activeMode ?? 'technical_full';
 
   const displayedStateTransition = useMemo(() => {
     if (computed.mode !== 'state-transition') return null;
@@ -337,11 +339,13 @@ export function TruthTableModal({ onClose }: Props) {
     });
   }, [activeSttViewMode, computed]);
 
-  const showSttViewModeSelect = availableSttViewModes.length > 1;
-
-  const fallbackProjectionNote = computed.mode === 'state-transition'
-    ? getStateTransitionFallbackNote(computed.projectionStatus)
+  const showSttViewModeSelect = sttViewState?.showModeSelect ?? false;
+  const showReducedCompactNote = sttViewState?.showReducedCompactNote ?? false;
+  const fallbackProjectionNote = sttViewState?.fallbackNote ?? '';
+  const modifiedProjectedFsmNote = activeAnalysisSubsystem?.projectionSemantics === 'modified_projected_fsm'
+    ? 'Synthetisierte FSM wurde nachtraeglich veraendert oder ergaenzt. Die kompakte Ansicht ist dafuer nicht mehr verfuegbar; Ansicht bleibt technisch voll.'
     : '';
+  const effectiveFallbackProjectionNote = modifiedProjectedFsmNote || fallbackProjectionNote;
 
   // â”€â”€ Style-Funktionen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -411,7 +415,7 @@ export function TruthTableModal({ onClose }: Props) {
               </p>
             )}
           </div>
-          {analysisSubsystemOptions.length > 1 && activeAnalysisSubsystem && (
+          {showSubsystemSelector && activeAnalysisSubsystem && (
             <label
               style={{
                 marginLeft: 'auto',
@@ -451,7 +455,7 @@ export function TruthTableModal({ onClose }: Props) {
           {showSttViewModeSelect && (
             <label
               style={{
-                marginLeft: analysisSubsystemOptions.length > 1 ? 0 : 'auto',
+                marginLeft: showSubsystemSelector ? 0 : 'auto',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 4,
@@ -483,7 +487,7 @@ export function TruthTableModal({ onClose }: Props) {
           )}
           <button
             onClick={onClose}
-            style={{ marginLeft: (showSttViewModeSelect || analysisSubsystemOptions.length > 1) ? 12 : 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
+            style={{ marginLeft: (showSttViewModeSelect || showSubsystemSelector) ? 12 : 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}
           >x</button>
         </div>
 
@@ -620,7 +624,7 @@ export function TruthTableModal({ onClose }: Props) {
                 </div>
               )}
 
-              {computed.isProjectedFsmView && reducedMeta && (
+              {showReducedCompactNote && (
                 <div style={{
                   marginBottom: 14,
                   padding: '8px 12px',
@@ -636,7 +640,7 @@ export function TruthTableModal({ onClose }: Props) {
                 </div>
               )}
 
-              {fallbackProjectionNote && (
+              {effectiveFallbackProjectionNote && (
                 <div style={{
                   marginBottom: 14,
                   padding: '8px 12px',
@@ -648,7 +652,7 @@ export function TruthTableModal({ onClose }: Props) {
                   color: '#dbeafe',
                   lineHeight: 1.7,
                 }}>
-                  {fallbackProjectionNote}
+                  {effectiveFallbackProjectionNote}
                 </div>
               )}
 

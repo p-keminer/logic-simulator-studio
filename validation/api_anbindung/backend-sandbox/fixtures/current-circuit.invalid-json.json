@@ -1,0 +1,9 @@
+{
+  "bridgeVersion": "sandbox-app-bridge-v1",
+  "openCircuit": {
+    "circuitId": "broken-json",
+    "title": "Broken JSON snapshot",
+    "selection": {
+      "activeElementIds": ["gate-and-1"]
+    }
+  }

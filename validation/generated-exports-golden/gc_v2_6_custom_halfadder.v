@@ -16,10 +16,10 @@ module gc_v2_6_custom_halfadder (
 
   wire w_0, w_1, w_2, w_3, w_4, w_5;
 
-  xor g_ha0__xor1(w_0, a, b);
-  and g_ha0__and1(w_1, a, b);
-  xor g_ha1__xor1(w_6, w_0, cin);
-  and g_ha1__and1(w_2, w_0, cin);
+  xor g_ha0_flat_xor1(w_0, a, b);
+  and g_ha0_flat_and1(w_1, a, b);
+  xor g_ha1_flat_xor1(w_6, w_0, cin);
+  and g_ha1_flat_and1(w_2, w_0, cin);
   or g_or_custom(w_8, w_1, w_2);
   xor g_raw_xor_ab(w_3, a, b);
   xor g_raw_sum(w_7, w_3, cin);

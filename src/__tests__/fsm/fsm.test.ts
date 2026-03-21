@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { parseCondition, evalCondition, exprVars, getMinterms } from '../../fsm/conditionParser';
 import type { Expr } from '../../fsm/conditionParser';
 import { fsmReducer, createDefaultFsm, type FsmAction } from '../../fsm/fsmReducer';
 import type { FsmMachine } from '../../fsm/types';
 import { synthesizeFsm, detectOverlappingTransitions } from '../../fsm/synthesis/synthesize';
 import type { Circuit } from '../../core/types';
+import { analyzeFsmStructure } from '../../fsm/analysis/structure';
+import { FsmStateTableContent } from '../../components/fsm/FsmStateTable';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -626,10 +630,134 @@ describe('FSM Synthesis - synthesizeFsm', () => {
     const dffCount = gateTypes.filter(t => t === 'D_FF_R').length;
     expect(dffCount).toBe(2);
   });
+
+  it('ignores unreachable disconnected states when determining synthesis bit width', () => {
+    const s0 = 'state-0';
+    const s1 = 'state-1';
+    const s2 = 'state-2';
+    const s3 = 'state-3';
+    const dead = 'state-dead';
+    const fsm = makeFsm({
+      archType: 'moore',
+      inputCount: 1,
+      inputNames: ['A'],
+      outputCount: 1,
+      outputNames: ['Y'],
+      states: {
+        [s0]: { id: s0, label: 'S0', x: 100, y: 100, isInitial: true, output: 0 },
+        [s1]: { id: s1, label: 'S1', x: 300, y: 100, isInitial: false, output: 0 },
+        [s2]: { id: s2, label: 'S2', x: 100, y: 300, isInitial: false, output: 1 },
+        [s3]: { id: s3, label: 'S3', x: 300, y: 300, isInitial: false, output: 1 },
+        [dead]: { id: dead, label: 'DEAD', x: 520, y: 200, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't01', fromId: s0, toId: s1, conditionText: 'A', mealyOutput: 0 },
+        { id: 't10', fromId: s1, toId: s0, conditionText: '!A', mealyOutput: 0 },
+        { id: 't12', fromId: s1, toId: s2, conditionText: 'A', mealyOutput: 0 },
+        { id: 't23', fromId: s2, toId: s3, conditionText: 'A', mealyOutput: 0 },
+        { id: 't30', fromId: s3, toId: s0, conditionText: 'A', mealyOutput: 0 },
+        { id: 'tdead', fromId: dead, toId: dead, conditionText: 'A', mealyOutput: 0 },
+      ],
+    });
+
+    const result = synthesizeFsm(fsm, emptyCircuit());
+    const gates = Object.values(result.gates);
+    const gateTypes = gates.map((gate) => gate.typeId);
+    const dffCount = gateTypes.filter((typeId) => typeId === 'D_FF_R').length;
+    const labels = new Set(gates.map((gate) => gate.label).filter(Boolean));
+
+    expect(dffCount).toBe(2);
+    expect(labels.has('Q2')).toBe(false);
+    expect(labels.has('!Q2')).toBe(false);
+  });
+
+  it('ignores unreachable states and their malformed transitions during synthesis', () => {
+    const sA = 'state-a';
+    const sB = 'state-b';
+    const dead = 'state-dead';
+    const fsm = makeFsm({
+      archType: 'moore',
+      states: {
+        [sA]: { id: sA, label: 'SA', x: 100, y: 100, isInitial: true, output: 0 },
+        [sB]: { id: sB, label: 'SB', x: 300, y: 100, isInitial: false, output: 1 },
+        [dead]: { id: dead, label: 'DEAD', x: 520, y: 100, isInitial: false, output: 0 },
+      },
+      transitions: [
+        { id: 't1', fromId: sA, toId: sB, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: sB, toId: sA, conditionText: '!A', mealyOutput: 0 },
+        { id: 'tdead', fromId: dead, toId: dead, conditionText: 'A B', mealyOutput: 0 },
+      ],
+    });
+
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).not.toThrow();
+
+    const result = synthesizeFsm(fsm, emptyCircuit());
+    const dffCount = Object.values(result.gates).filter((gate) => gate.typeId === 'D_FF_R').length;
+
+    expect(dffCount).toBe(1);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Part 4: Overlap Detection
+// Part 4: FSM Structure Analysis
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('FSM Structure Analysis', () => {
+  it('marks unreachable states and computes the effective synthesis width from reachable states only', () => {
+    const s0 = 'state-0';
+    const s1 = 'state-1';
+    const dead = 'state-dead';
+    const fsm = makeFsm({
+      states: {
+        [s0]: { id: s0, label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        [s1]: { id: s1, label: 'S1', x: 100, y: 0, isInitial: false, output: 1 },
+        [dead]: { id: dead, label: 'DEAD', x: 200, y: 0, isInitial: false, output: 0 },
+      },
+      transitions: [
+        { id: 't1', fromId: s0, toId: s1, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: s1, toId: s0, conditionText: '!A', mealyOutput: 0 },
+        { id: 'tdead', fromId: dead, toId: dead, conditionText: 'A', mealyOutput: 0 },
+      ],
+    });
+
+    const analysis = analyzeFsmStructure(fsm);
+
+    expect(analysis.initialStateError).toBeNull();
+    expect(analysis.initialState?.id).toBe(s0);
+    expect([...analysis.reachableStateIds].sort()).toEqual([s0, s1].sort());
+    expect(analysis.unreachableStates.map((state) => state.label)).toEqual(['DEAD']);
+    expect(analysis.effectiveStateCount).toBe(2);
+    expect(analysis.effectiveBitWidth).toBe(1);
+    expect(analysis.encodingByStateId.get(dead)).toBeUndefined();
+  });
+
+  it('renders an explicit unreachable-state notice in the state table UI', () => {
+    const s0 = 'state-0';
+    const s1 = 'state-1';
+    const dead = 'state-dead';
+    const fsm = makeFsm({
+      states: {
+        [s0]: { id: s0, label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        [s1]: { id: s1, label: 'S1', x: 100, y: 0, isInitial: false, output: 1 },
+        [dead]: { id: dead, label: 'DEAD', x: 200, y: 0, isInitial: false, output: 0 },
+      },
+      transitions: [
+        { id: 't1', fromId: s0, toId: s1, conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: s1, toId: s0, conditionText: '!A', mealyOutput: 0 },
+        { id: 'tdead', fromId: dead, toId: dead, conditionText: 'A', mealyOutput: 0 },
+      ],
+    });
+
+    const markup = renderToStaticMarkup(createElement(FsmStateTableContent, { fsm }));
+
+    expect(markup).toContain('DEAD');
+    expect(markup).toContain('unreachable');
+    expect(markup).toContain('wird nicht synthetisiert');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Part 5: Overlap Detection
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('Overlap Detection - detectOverlappingTransitions', () => {
@@ -775,7 +903,7 @@ describe('Overlap Detection - detectOverlappingTransitions', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Part 5: FSM Audit Bug Fix Tests
+// Part 6: FSM Audit Bug Fix Tests
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('FSM Audit - getEncoding edge cases (K1)', () => {

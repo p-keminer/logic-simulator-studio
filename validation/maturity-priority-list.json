@@ -308,7 +308,7 @@
                       "area":  "ui, fsm-synthesis, validation",
                       "status":  "partial",
                       "evidence":  [
-                                       "validation/fsm-export-fixes/work-package.md: documented structural weaknesses, implemented first slice, and next validation objects",
+                                       "validation/fsm0/work-package.md: active FSM path with implemented foundation and next validation objects",
                                        "validation/verification-matrix.md: FSM export projection and reduced STT are now explicit required patterns",
                                        "validation/maturity-gap-dashboard.md: current open work summary"
                                    ],

@@ -1,16 +1,16 @@
 # Golden Corpus v1 Report
 
-Generated: 2026-03-19T19:48:53.277Z
-Runner version: 1.8.0
-Corpus version: 1.8.0
+Generated: 2026-03-21T16:16:39.124Z
+Runner version: 1.9.0
+Corpus version: 1.9.0
 
 ## Summary
 
 | Metric | Value |
 |---|---|
-| Total cases | 24 |
-| Executed | 24 |
-| Passed | 23 |
+| Total cases | 26 |
+| Executed | 26 |
+| Passed | 25 |
 | Failed | 0 |
 | Expected limit | 1 |
 | Unsupported | 0 |
@@ -22,8 +22,8 @@ Corpus version: 1.8.0
 | Class | Pass | Fail | Expected Limit | Unsupported | Total |
 |---|---|---|---|---|---|
 | combinational | 5 | 0 | 0 | 0 | 5 |
-| sequential | 8 | 0 | 0 | 0 | 8 |
-| tristate | 1 | 0 | 1 | 0 | 2 |
+| sequential | 9 | 0 | 0 | 0 | 9 |
+| tristate | 2 | 0 | 1 | 0 | 3 |
 | mixed | 9 | 0 | 0 | 0 | 9 |
 
 ## Per-Case Results
@@ -759,7 +759,7 @@ Corpus version: 1.8.0
 | verilog-checkpoint-ports | PASS | All 5 checkpoint ports found |
 | verilog-checkpoint-wires | PASS | All 6 internal wires found |
 | verilog-checkpoint-pattern | PASS | Checkpoint pattern found: xor g_xor_sum_diff(w_10, w_6, w_7) |
-| verilog-checkpoint-always-pattern | PASS | Always-block pattern found: xor g_ha0__xor1(w_0, a, b) |
+| verilog-checkpoint-always-pattern | PASS | Always-block pattern found: xor g_ha0_flat_xor1(w_0, a, b) |
 | verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.v |
 | verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.v |
 | verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.v |
@@ -884,6 +884,82 @@ Corpus version: 1.8.0
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.vhd |
 | verilog-external-sim | PASS | 4 scenario step(s) passed with iverilog/vvp |
 | vhdl-external-sim | PASS | 4 scenario step(s) passed with ghdl |
+| verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
+| vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
+
+### gc_v2_10_custom_tribuf_wrap — PASS
+
+- **Class:** tristate
+- **Title:** Custom TRIBUF hierarchy with preserved Z semantics
+- **Reason:** 28 checks passed
+
+| Check | Status | Detail |
+|---|---|---|
+| circuit-file-exists | PASS | validation/generated-circuits-golden/gc_v2_10_custom_tribuf_wrap.lgsc.json |
+| verilog-export-exists | PASS | validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v |
+| vhdl-export-exists | PASS | validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.vhd |
+| circuit-json-parseable | PASS | Valid JSON |
+| circuit-slug-match | PASS | id=gc_v2_10_custom_tribuf_wrap, name=gc_v2_10_custom_tribuf_wrap |
+| circuit-gate-types | PASS | All expected gates found: CIC_TRIBUF_WRAP |
+| circuit-inputs | PASS | All 2 inputs found |
+| circuit-outputs | PASS | Expected 1 output(s), found 1 LED(s) |
+| verilog-module-name | PASS | module gc_v2_10_custom_tribuf_wrap found |
+| verilog-endmodule | PASS | endmodule found |
+| verilog-input-ports | PASS | All 2 input ports declared |
+| verilog-output-ports | PASS | All 1 output port(s) declared |
+| verilog-checkpoint-ports | PASS | All 3 checkpoint ports found |
+| verilog-checkpoint-pattern | PASS | Checkpoint pattern found: assign w_0 = (~oe) ? a : 1'bz |
+| verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v |
+| verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v |
+| verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v |
+| vhdl-entity-name | PASS | entity gc_v2_10_custom_tribuf_wrap found |
+| vhdl-architecture | PASS | architecture block found |
+| vhdl-input-ports | PASS | All 2 input ports declared |
+| vhdl-output-ports | PASS | All 1 output port(s) declared |
+| vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
+| vhdl-checkpoint-output-shadows | PASS | Output shadow signals (_q) found in VHDL |
+| vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.vhd |
+| verilog-external-sim | PASS | 3 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 3 scenario step(s) passed with ghdl |
+| verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
+| vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
+
+### gc_v2_11_custom_hc194_wrap — PASS
+
+- **Class:** sequential
+- **Title:** Custom 74HC194 hierarchy with hidden register state
+- **Reason:** 30 checks passed
+
+| Check | Status | Detail |
+|---|---|---|
+| circuit-file-exists | PASS | validation/generated-circuits-golden/gc_v2_11_custom_hc194_wrap.lgsc.json |
+| verilog-export-exists | PASS | validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v |
+| vhdl-export-exists | PASS | validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.vhd |
+| circuit-json-parseable | PASS | Valid JSON |
+| circuit-slug-match | PASS | id=gc_v2_11_custom_hc194_wrap, name=gc_v2_11_custom_hc194_wrap |
+| circuit-gate-types | PASS | All expected gates found: CIC_HC194_WRAP |
+| circuit-inputs | PASS | All 10 inputs found |
+| circuit-outputs | PASS | Expected 4 output(s), found 4 LED(s) |
+| verilog-module-name | PASS | module gc_v2_11_custom_hc194_wrap found |
+| verilog-endmodule | PASS | endmodule found |
+| verilog-input-ports | PASS | All 10 input ports declared |
+| verilog-output-ports | PASS | All 4 output port(s) declared |
+| verilog-checkpoint-ports | PASS | All 6 checkpoint ports found |
+| verilog-checkpoint-pattern | PASS | Checkpoint pattern found: assign w_0 = reg_wrap_flat_dut[0] |
+| verilog-checkpoint-always-pattern | PASS | Always-block pattern found: always @(posedge clk or negedge clrn) |
+| verilog-checkpoint-extra-reg | PASS | Extra reg 'reg_wrap_flat_dut' found |
+| verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v |
+| verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v |
+| verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v |
+| vhdl-entity-name | PASS | entity gc_v2_11_custom_hc194_wrap found |
+| vhdl-architecture | PASS | architecture block found |
+| vhdl-input-ports | PASS | All 10 input ports declared |
+| vhdl-output-ports | PASS | All 4 output port(s) declared |
+| vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
+| vhdl-checkpoint-extra-signal | PASS | Extra signal 'reg_wrap_flat_dut' found |
+| vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.vhd |
+| verilog-external-sim | PASS | 5 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 5 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 

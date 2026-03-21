@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "preview": "vite preview",
+    "roadmap:compl": "node ./scripts/build-roadmap-compl.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "contract:test": "vite-node validation/run-contract-runner.mjs",

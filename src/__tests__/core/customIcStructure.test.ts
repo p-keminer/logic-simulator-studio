@@ -1,0 +1,175 @@
+import { describe, expect, it } from 'vitest';
+
+import '../../core/registry/index';
+
+import { analyzeCustomIcGate } from '../../core/analysis/customIcStructure';
+import { registerCustomIC } from '../../core/customIc/registerCustomIC';
+import { flattenCustomICs } from '../../core/io/flattenCustomIC';
+import type { Circuit, GateInstance, SignalState, Wire } from '../../core/types';
+
+const defaultSignal: SignalState = { value: 0, version: 0, lastChangedAt: 0 };
+
+function makeGate(
+  id: string,
+  typeId: string,
+  opts?: { customState?: Record<string, unknown>; label?: string },
+): GateInstance {
+  return {
+    id,
+    typeId,
+    x: 0,
+    y: 0,
+    outputSignals: {},
+    customState: opts?.customState ?? {},
+    isSelected: false,
+    label: opts?.label,
+  };
+}
+
+function makeWire(
+  id: string,
+  fromGate: string,
+  fromPort: string,
+  toGate: string,
+  toPort: string,
+): Wire {
+  return {
+    id,
+    from: { gateId: fromGate, portId: fromPort },
+    to: { gateId: toGate, portId: toPort },
+    signal: { ...defaultSignal },
+    waypoints: [],
+    isSelected: false,
+  };
+}
+
+function makeCircuit(name: string, gates: GateInstance[], wires: Wire[]): Circuit {
+  return {
+    id: `${name}-id`,
+    name,
+    version: '1.0.0',
+    gates: Object.fromEntries(gates.map((gate) => [gate.id, gate])),
+    wires: Object.fromEntries(wires.map((wire) => [wire.id, wire])),
+    viewport: { panX: 0, panY: 0, zoom: 1 },
+    metadata: { createdAt: '2026-03-21', updatedAt: '2026-03-21' },
+  };
+}
+
+function makeHalfAdderSubcircuit(): Circuit {
+  return makeCircuit('struct_half_adder_sub', [
+    makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+    makeGate('sw_b', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'b' }),
+    makeGate('xor1', 'XOR'),
+    makeGate('and1', 'AND'),
+    makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+    makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+  ], [
+    makeWire('w1', 'sw_a', 'out', 'xor1', 'a'),
+    makeWire('w2', 'sw_b', 'out', 'xor1', 'b'),
+    makeWire('w3', 'xor1', 'out', 'led_sum', 'in'),
+    makeWire('w4', 'sw_a', 'out', 'and1', 'a'),
+    makeWire('w5', 'sw_b', 'out', 'and1', 'b'),
+    makeWire('w6', 'and1', 'out', 'led_carry', 'in'),
+  ]);
+}
+
+function makeReg4Subcircuit(): Circuit {
+  return makeCircuit('struct_reg4_sub', [
+    makeGate('sw_d0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd0' }),
+    makeGate('sw_d1', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd1' }),
+    makeGate('sw_d2', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd2' }),
+    makeGate('sw_d3', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd3' }),
+    makeGate('sw_en', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'en' }),
+    makeGate('sw_clk', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'clk' }),
+    makeGate('sw_rst', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'rst' }),
+    makeGate('reg', 'REG4'),
+    makeGate('led_q0', 'OUTPUT_LED', { label: 'q0' }),
+    makeGate('led_q1', 'OUTPUT_LED', { label: 'q1' }),
+    makeGate('led_q2', 'OUTPUT_LED', { label: 'q2' }),
+    makeGate('led_q3', 'OUTPUT_LED', { label: 'q3' }),
+  ], [
+    makeWire('w1', 'sw_d0', 'out', 'reg', 'd0'),
+    makeWire('w2', 'sw_d1', 'out', 'reg', 'd1'),
+    makeWire('w3', 'sw_d2', 'out', 'reg', 'd2'),
+    makeWire('w4', 'sw_d3', 'out', 'reg', 'd3'),
+    makeWire('w5', 'sw_en', 'out', 'reg', 'en'),
+    makeWire('w6', 'sw_clk', 'out', 'reg', 'clk'),
+    makeWire('w7', 'sw_rst', 'out', 'reg', 'rst'),
+    makeWire('w8', 'reg', 'q0', 'led_q0', 'in'),
+    makeWire('w9', 'reg', 'q1', 'led_q1', 'in'),
+    makeWire('w10', 'reg', 'q2', 'led_q2', 'in'),
+    makeWire('w11', 'reg', 'q3', 'led_q3', 'in'),
+  ]);
+}
+
+function makeNestedHalfAdderSubcircuit(): Circuit {
+  return makeCircuit('struct_nested_half_adder_sub', [
+    makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+    makeGate('sw_b', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'b' }),
+    makeGate('ha', 'CIC_STRUCT_HALF_ADDER'),
+    makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+    makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+  ], [
+    makeWire('w1', 'sw_a', 'out', 'ha', 'i0'),
+    makeWire('w2', 'sw_b', 'out', 'ha', 'i1'),
+    makeWire('w3', 'ha', 'o0', 'led_sum', 'in'),
+    makeWire('w4', 'ha', 'o1', 'led_carry', 'in'),
+  ]);
+}
+
+function makeNestedTopLevel(): Circuit {
+  return makeCircuit('struct_nested_top', [
+    makeGate('src_a', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'a' }),
+    makeGate('src_b', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'b' }),
+    makeGate('parent', 'CIC_STRUCT_PARENT_HALF_ADDER'),
+    makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+    makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+  ], [
+    makeWire('w1', 'src_a', 'out', 'parent', 'i0'),
+    makeWire('w2', 'src_b', 'out', 'parent', 'i1'),
+    makeWire('w3', 'parent', 'o0', 'led_sum', 'in'),
+    makeWire('w4', 'parent', 'o1', 'led_carry', 'in'),
+  ]);
+}
+
+registerCustomIC('STRUCT_HALF_ADDER', makeHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
+registerCustomIC('STRUCT_REG4', makeReg4Subcircuit(), ['d0', 'd1', 'd2', 'd3', 'en', 'clk', 'rst', 'q0', 'q1', 'q2', 'q3']);
+registerCustomIC('STRUCT_PARENT_HALF_ADDER', makeNestedHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
+
+describe('customIcStructure', () => {
+  it('describes a combinational custom IC boundary without sequential metadata', () => {
+    const analysis = analyzeCustomIcGate(makeGate('ha', 'CIC_STRUCT_HALF_ADDER'));
+
+    expect(analysis.exportPolicy).toBe('flatten_one_level');
+    expect(analysis.stateful).toBe(false);
+    expect(analysis.clockRelevantInputPortIds).toEqual([]);
+    expect(analysis.resetRelevantInputPortIds).toEqual([]);
+    expect(analysis.nestedCustomGateIds).toEqual([]);
+    expect(analysis.maxHierarchyDepth).toBe(1);
+    expect(analysis.outputPorts.map((port) => port.driverKind)).toEqual(['inner_gate', 'inner_gate']);
+  });
+
+  it('marks sequential custom ICs with clock/reset relevant boundary inputs', () => {
+    const analysis = analyzeCustomIcGate(makeGate('reg_wrap', 'CIC_STRUCT_REG4'));
+
+    expect(analysis.exportPolicy).toBe('flatten_one_level');
+    expect(analysis.stateful).toBe(true);
+    expect(analysis.sequentialInnerGateIds).toEqual(['reg']);
+    expect(analysis.clockRelevantInputPortIds).toEqual(['i5']);
+    expect(analysis.resetRelevantInputPortIds).toEqual(['i6']);
+  });
+
+  it('blocks nested custom ICs via the shared export policy', () => {
+    const analysis = analyzeCustomIcGate(makeGate('parent', 'CIC_STRUCT_PARENT_HALF_ADDER'));
+
+    expect(analysis.exportPolicy).toBe('blocked_nested_custom_ic');
+    expect(analysis.nestedCustomGateIds).toEqual(['ha']);
+    expect(analysis.nestedCustomTypeIds).toEqual(['CIC_STRUCT_HALF_ADDER']);
+    expect(analysis.maxHierarchyDepth).toBeGreaterThanOrEqual(2);
+    expect(analysis.exportBlockReason).toContain('Nested custom IC "CIC_STRUCT_HALF_ADDER"');
+
+    expect(() => flattenCustomICs(makeNestedTopLevel())).toThrow(
+      'Nested custom IC "CIC_STRUCT_HALF_ADDER" inside "CIC_STRUCT_PARENT_HALF_ADDER" is not supported for HDL export.',
+    );
+  });
+});

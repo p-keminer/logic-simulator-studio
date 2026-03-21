@@ -2,7 +2,7 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { BusSplitterShape } from '../shapes/BusSplitterShape';
 import type { SignalValue } from '../../core/types';
 
-function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'x'; }
 
 // ─── 4-Bit Bus Splitter / Merger ─────────────────────────────────────────────
 gateRegistry.register({

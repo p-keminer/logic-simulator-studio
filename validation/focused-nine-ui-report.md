@@ -9,19 +9,22 @@ Rohdaten: `validation/focused-nine-ui-summary.json`
 
 Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist gegen den aktuellen P0-Stand gelaufen.
 
-- `0` echte UI-/Projektionsfehler
+- `3` echte UI-/Auditfehler ueber Smoke-, STT-Modus- und Timing-System-Pruefungen
+- `0` davon klassische UI-/Projektionsfehler im Smoke-Lauf
 - `0` erwartete UI-Limit-Faelle bei breiten sequenziellen Zustandsraeumen
 - `12` saubere UI-Smoke-Passes
 - `0` Infrastruktur-/Ladefehler
 - HDL-Modal war in allen erfolgreich geladenen Faellen textuell konsistent mit den generierten Exportdateien
 - Timing-Panel hat in allen erfolgreich geladenen Faellen geoeffnet
-- FSM-STT-Modus-Audit: `3` PASS, `0` FAIL
+- FSM-STT-Modus-Audit: `2` PASS, `3` FAIL
 - Timing-System-Audit: `1` PASS, `0` FAIL
 - Semantischer Timing-Check fuer 5 Fokusfaelle: `5` PASS, `0` WARN
 
-## Echte UI-Befunde
+## Echte UI-/Audit-Befunde
 
-- keine
+- `fsm_mixed_fallback`: Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation.
+- `fsm_projected_reduced`: Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints.
+- `fsm_partial_outputs_fallback`: Partial-output fallback no longer stays technical-full or lost its specific fallback explanation in the UI.
 
 ## Erwartete UI-Limits
 
@@ -49,8 +52,10 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 ## FSM-STT-Modus-Pruefung
 
 - `fsm_projected_modes`: PASS - Projected FSM exposes compact + technical STT modes with distinct table shapes.
-- `fsm_mixed_fallback`: PASS - Mixed FSM/raw case stays in technical-full mode and renders the fallback explanation without a misleading compact dropdown.
-- `fsm_projected_reduced`: PASS - Wide projected FSM stays in the reduced compact view and does not expose a misleading technical-full dropdown.
+- `fsm_mixed_fallback`: FAIL - Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation.
+- `fsm_projected_reduced`: FAIL - Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints.
+- `fsm_partial_inputs_fallback`: PASS - Partial-input FSM fallback stays technical-full in the UI and surfaces the specific partial-input explanation.
+- `fsm_partial_outputs_fallback`: FAIL - Partial-output fallback no longer stays technical-full or lost its specific fallback explanation in the UI.
 
 ## Timing-System-Pruefung
 
@@ -66,13 +71,12 @@ Fuer `tri_not_sanitized`, `dff_led`, `jkff_led`, `tff_led` und `multi_driver_sam
 
 ### `tri_not_sanitized` - PASS
 
-TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Z and X colored paths expected.
+TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Initial settle is sufficient for the timing history.
 
-Schritte: 8 Schritte
+Schritte: 0 Schritte (Simulation lief nicht oder kein RAF-Tick)
 
 Befunde:
   - Labels OK: [a, oe, y] all visible in timing SVG
-  - Steps > 0: 8 snapshots recorded (simulation settled and produced history)
   - Z-path (amber): present -- HI_Z signal visible in timing waveform
   - X-path (red): present -- conflict/X signal visible in timing waveform
 
@@ -117,6 +121,8 @@ Befunde:
   - Steps > 0: 4 snapshots recorded (simulation settled and produced history)
   - X-path (red): present -- conflict/X signal visible in timing waveform
 
+
+**Bekannte Grenze:** Bei 1 Faellen wurden 0 Schritte aufgezeichnet. Das Timing-Diagramm der App zeichnet nur bei tatsaechlichen Signalaenderungen (batchChangedNets > 0) auf. In headless Puppeteer kann der requestAnimationFrame-Tick ausbleiben bevor der Audit liest. Signal-Labels sind trotzdem pruefbar (SVG text-Elemente). Fuer Z/X-Pfad-Pruefung wird steps > 0 benoetigt.
 ## Wichtige Grenze dieses UI-Laufs
 
 Der semantische Timing-Check ist ein erster Schritt ueber den reinen Smoke-Test hinaus.

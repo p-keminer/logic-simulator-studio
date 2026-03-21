@@ -1,8 +1,8 @@
 # Golden Corpus v1
 
 **Created:** 2026-03-07
-**Updated:** 2026-03-19
-**Status:** executable baseline - 24 circuits, each with `.lgsc.json` + `.v` + `.vhd`
+**Updated:** 2026-03-21
+**Status:** executable baseline - 26 circuits, each with `.lgsc.json` + `.v` + `.vhd`
 
 ## Overview
 
@@ -14,15 +14,15 @@ Current class coverage:
 | Class | Count | Slugs |
 |---|---:|---|
 | combinational | 5 | `gc_c1_basic_gates`, `gc_c2_half_adder`, `gc_c3_sr_latch`, `gc_v2_1_mux_fabric`, `gc_v2_6_custom_halfadder` |
-| sequential | 8 | `gc_s1_dff_assr`, `gc_s2_jkff_toggle`, `gc_s3_74hc74`, `gc_s4_reg4_enable`, `gc_s5_dff_basic`, `gc_s7_hc161_vs_hc163`, `gc_s8_hc194_modes`, `gc_v2_8_sequential_feedback` |
-| tristate | 2 | `gc_t1_tribuf_direct`, `gc_t2_bus_mux` |
+| sequential | 9 | `gc_s1_dff_assr`, `gc_s2_jkff_toggle`, `gc_s3_74hc74`, `gc_s4_reg4_enable`, `gc_s5_dff_basic`, `gc_s7_hc161_vs_hc163`, `gc_s8_hc194_modes`, `gc_v2_8_sequential_feedback`, `gc_v2_11_custom_hc194_wrap` |
+| tristate | 3 | `gc_t1_tribuf_direct`, `gc_t2_bus_mux`, `gc_v2_10_custom_tribuf_wrap` |
 | mixed | 9 | `gc_m1_dff_chain`, `gc_m2_283_adder`, `gc_m3_counter_gate`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_7_bus_conflict_system`, `gc_v2_9_custom_reg4_pipeline` |
 
 ## Artifact Layout
 
 ```
-validation/generated-circuits-golden/   - 24 x .lgsc.json
-validation/generated-exports-golden/    - 24 x .v + 24 x .vhd
+validation/generated-circuits-golden/   - 26 x .lgsc.json
+validation/generated-exports-golden/    - 26 x .v + 26 x .vhd
 validation/golden-corpus-v1.json        - machine-readable corpus index
 validation/run-golden-corpus-v1.mjs     - executable runner
 validation/golden-corpus-v1-summary.json
@@ -64,6 +64,7 @@ For each corpus entry the runner checks:
 | `gc_s5_dff_basic` | plain D-FF with `Q` and `Qn` |
 | `gc_s7_hc161_vs_hc163` | async-vs-sync clear distinction |
 | `gc_s8_hc194_modes` | all four `74HC194` operating modes |
+| `gc_v2_11_custom_hc194_wrap` | custom-IC wrapper around `74HC194` with preserved hidden register state and one-level flattening |
 | `gc_v2_8_sequential_feedback` | three-stage feedback mesh with seed-load mode and XOR feedback evolution over multiple clocks |
 
 ### Tristate
@@ -72,6 +73,7 @@ For each corpus entry the runner checks:
 |---|---|
 | `gc_t1_tribuf_direct` | single tri-state output with clean `Z` behavior |
 | `gc_t2_bus_mux` | documented exporter boundary for a two-driver bus |
+| `gc_v2_10_custom_tribuf_wrap` | custom-IC wrapper around `TRIBUF` with preserved high-impedance export semantics |
 
 ### Mixed
 
@@ -106,6 +108,8 @@ The following Golden Corpus v2 pilot seeds are now part of the accepted v1 basel
 - `gc_v2_7_bus_conflict_system`
 - `gc_v2_8_sequential_feedback`
 - `gc_v2_9_custom_reg4_pipeline`
+- `gc_v2_10_custom_tribuf_wrap`
+- `gc_v2_11_custom_hc194_wrap`
 
 Together they extend v1 beyond the original medium-sized cases into:
 
@@ -115,6 +119,8 @@ Together they extend v1 beyond the original medium-sized cases into:
 - memory-to-register integration
 - decode/encode trees with independent latch and edge-capture observation
 - one-level custom-IC hierarchy with structural HDL flattening and raw-oracle comparison
+- one-level custom-IC hierarchy with preserved tri-state/Z semantics
+- one-level custom-IC hierarchy with hidden sequential register state and extra HDL declarations
 - larger shared-bus conflict semantics
 - multi-cycle sequential feedback meshes with explicit seed-load and XOR feedback behavior
 - sequential custom-IC pipelines with enable/reset propagation and staged comparison taps
@@ -134,4 +140,4 @@ Golden Corpus v1 complements it by providing:
 The next logical Golden Corpus v2 growth steps are:
 
 - broader and deeper HDL traces on the landed v2 seeds
-- deeper or nested hierarchy/custom-IC cases beyond the two landed one-level flattening paths
+- deeper or nested hierarchy/custom-IC cases beyond the four landed one-level flattening paths

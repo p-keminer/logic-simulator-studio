@@ -5,7 +5,7 @@ import { flattenCustomICs } from './flattenCustomIC';
 
 /** Fast sanitize for internal gate IDs (always safe — never keywords, never start with digit). */
 function sanitize(id: string) {
-  return id.replace(/[^a-zA-Z0-9_]/g, '_');
+  return id.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'x';
 }
 
 function getPreferredTopLevelSignalName(gate: GateInstance, fallback: string): string | null {

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFsm } from '../../fsm/FsmContext';
+import { analyzeFsmStructure } from '../../fsm/analysis/structure';
 import type { FsmStateNode } from '../../fsm/types';
 
 interface Props { state: FsmStateNode; onClose: () => void }
@@ -8,6 +9,13 @@ const BTN = { padding:'4px 12px', borderRadius:4, cursor:'pointer', fontSize:12,
 
 export function FsmStateEditor({ state, onClose }: Props) {
   const { fsm, dispatch } = useFsm();
+  const isUnreachable = useMemo(() => {
+    try {
+      return analyzeFsmStructure(fsm).unreachableStateIds.has(state.id);
+    } catch {
+      return false;
+    }
+  }, [fsm, state.id]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -75,6 +83,21 @@ export function FsmStateEditor({ state, onClose }: Props) {
           <input type="checkbox" checked={initial} onChange={e=>setInitial(e.target.checked)}/>
           Anfangszustand
         </label>
+
+        {isUnreachable && (
+          <div style={{
+            marginTop: 12,
+            padding: '8px 10px',
+            background: '#431407',
+            border: '1px solid #9a3412',
+            borderRadius: 6,
+            color: '#fdba74',
+            fontSize: 10,
+            fontFamily: 'monospace',
+          }}>
+            Dieser Zustand ist vom Startzustand aus unerreichbar und wird nicht synthetisiert.
+          </div>
+        )}
 
         <div style={{ display:'flex',justifyContent:'space-between',marginTop:20,gap:8 }}>
           <button onClick={del}

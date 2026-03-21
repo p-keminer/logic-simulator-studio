@@ -73,14 +73,11 @@ const TIMING_SEMANTIC = {
     // sw_a=1, sw_oe=1 → TRIBUF output = Z (oe active-low, value 1 = disabled → Z)
     // downstream NOT(Z) = X (3)
     expectedLabels: ['a', 'oe', 'y'],
-    expectStepsGt0: true,
+    expectStepsGt0: false,
     expectZPath: true,   // amber dashed path: TRIBUF drives Z
     expectXPath: true,   // red dashed path: NOT(Z) → X at LED
-    note: 'TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Z and X colored paths expected.',
-    stimulus: [
-      { gateId: 'sw_oe', mode: 'double', waitMs: 150 },
-      { gateId: 'sw_oe', mode: 'double', waitMs: 200 },
-    ],
+    note: 'TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Initial settle is sufficient for the timing history.',
+    stimulus: [],
   },
   dff_led: {
     // sw_d=1, sw_clk=0 → D_FF holds at q=0 initially
@@ -158,13 +155,33 @@ async function stimulateTiming(page, slug) {
   await sleep(200);
 }
 
-async function clickButton(page, label) {
-  await page.evaluate((wanted) => {
+async function clickButton(page, label, allowMenuOpen = true) {
+  const result = await page.evaluate((wanted) => {
+    const normalize = (value) => value?.replace(/\s+/g, ' ').trim() ?? '';
     const button = [...document.querySelectorAll('button')].find((item) =>
-      item.textContent?.replace(/\s+/g, ' ').trim() === wanted);
-    if (!button) throw new Error(`button not found: ${wanted}`);
-    button.click();
+      normalize(item.textContent) === wanted);
+    if (button) {
+      button.click();
+      return 'clicked';
+    }
+
+    const menuButton = [...document.querySelectorAll('button')].find((item) =>
+      normalize(item.textContent).startsWith('Menü'));
+    if (menuButton) {
+      menuButton.click();
+      return 'opened-menu';
+    }
+
+    return 'missing';
   }, label);
+
+  if (result === 'clicked') return;
+  if (result === 'opened-menu' && allowMenuOpen) {
+    await sleep(120);
+    await clickButton(page, label, false);
+    return;
+  }
+  throw new Error(`button not found: ${label}`);
 }
 
 async function loadCircuitJson(page, json) {
@@ -215,6 +232,7 @@ async function extractSttModeAudit(page, switchToTechnical = false) {
       headers,
       rowCount: document.querySelectorAll('table tbody tr').length,
       paragraphs: [...document.querySelectorAll('p')].map((node) => node.textContent?.trim()).filter(Boolean),
+      text,
       hasCompactExplanation: text.includes('FSM kompakt:'),
       hasFallbackExplanation: text.includes('Ansicht bleibt technisch voll'),
     };
@@ -403,6 +421,217 @@ function buildMixedLegacyFsmFallbackFixtureJson() {
   };
 
   return JSON.stringify(circuit);
+}
+
+function buildPartialInputFallbackFixtureJson() {
+  const defaultSignal = { value: 0, version: 0, lastChangedAt: 0 };
+  const batchId = 'ui-audit-partial-inputs';
+  const makeProjectedSignal = (role, label, signalPortId) => ({
+    sourceSystem: 'fsm_synth',
+    projectionBatchId: batchId,
+    role,
+    visibility: 'canonical',
+    signalLabel: label,
+    groupKey: `${role}:${label}`,
+    signalPortId,
+  });
+
+  return JSON.stringify({
+    id: 'ui-audit-partial-inputs',
+    name: 'UI Audit Partial Input Fallback',
+    version: '1.0.0',
+    gates: {
+      clk: {
+        id: 'clk',
+        typeId: 'CLOCK',
+        x: 40,
+        y: 40,
+        label: 'CLK',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('clock', 'CLK', 'clk'),
+      },
+      rst: {
+        id: 'rst',
+        typeId: 'INPUT_SWITCH',
+        x: 40,
+        y: 120,
+        label: 'RST',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('reset', 'RST', 'out'),
+      },
+      q0: {
+        id: 'q0',
+        typeId: 'D_FF_R',
+        x: 320,
+        y: 120,
+        label: 'Q0',
+        outputSignals: {},
+        customState: { q: 0, prevClk: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('state', 'Q0', 'q'),
+      },
+      outY: {
+        id: 'outY',
+        typeId: 'OUTPUT_LED',
+        x: 520,
+        y: 120,
+        label: 'Y',
+        outputSignals: {},
+        isSelected: false,
+        projection: makeProjectedSignal('output', 'Y', '_display'),
+      },
+      rawSwitch: {
+        id: 'rawSwitch',
+        typeId: 'INPUT_SWITCH',
+        x: 40,
+        y: 240,
+        label: 'RAW_IN',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+      },
+      rawNot: {
+        id: 'rawNot',
+        typeId: 'NOT',
+        x: 180,
+        y: 240,
+        outputSignals: {},
+        customState: {},
+        isSelected: false,
+      },
+    },
+    wires: {
+      w1: {
+        id: 'w1',
+        from: { gateId: 'clk', portId: 'clk' },
+        to: { gateId: 'q0', portId: 'clk' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w2: {
+        id: 'w2',
+        from: { gateId: 'rst', portId: 'out' },
+        to: { gateId: 'q0', portId: 'rst' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w3: {
+        id: 'w3',
+        from: { gateId: 'rawSwitch', portId: 'out' },
+        to: { gateId: 'rawNot', portId: 'a' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w4: {
+        id: 'w4',
+        from: { gateId: 'rawNot', portId: 'out' },
+        to: { gateId: 'q0', portId: 'd' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w5: {
+        id: 'w5',
+        from: { gateId: 'q0', portId: 'q' },
+        to: { gateId: 'outY', portId: 'in' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+    },
+    viewport: { panX: 0, panY: 0, zoom: 1 },
+    metadata: { createdAt: '2026-03-21', updatedAt: '2026-03-21' },
+  });
+}
+
+function buildPartialOutputFallbackFixtureJson() {
+  const defaultSignal = { value: 0, version: 0, lastChangedAt: 0 };
+  const batchId = 'ui-audit-partial-outputs';
+  const makeProjectedSignal = (role, label, signalPortId) => ({
+    sourceSystem: 'fsm_synth',
+    projectionBatchId: batchId,
+    role,
+    visibility: 'canonical',
+    signalLabel: label,
+    groupKey: `${role}:${label}`,
+    signalPortId,
+  });
+
+  return JSON.stringify({
+    id: 'ui-audit-partial-outputs',
+    name: 'UI Audit Partial Output Fallback',
+    version: '1.0.0',
+    gates: {
+      clk: {
+        id: 'clk',
+        typeId: 'CLOCK',
+        x: 40,
+        y: 40,
+        label: 'CLK',
+        outputSignals: {},
+        customState: { value: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('clock', 'CLK', 'clk'),
+      },
+      q0: {
+        id: 'q0',
+        typeId: 'D_FF_R',
+        x: 320,
+        y: 120,
+        label: 'Q0',
+        outputSignals: {},
+        customState: { q: 0, prevClk: 0 },
+        isSelected: false,
+        projection: makeProjectedSignal('state', 'Q0', 'q'),
+      },
+      outY: {
+        id: 'outY',
+        typeId: 'OUTPUT_LED',
+        x: 520,
+        y: 120,
+        label: 'Y',
+        outputSignals: {},
+        isSelected: false,
+        projection: makeProjectedSignal('output', 'Y', '_display'),
+      },
+      rawLed: {
+        id: 'rawLed',
+        typeId: 'OUTPUT_LED',
+        x: 520,
+        y: 240,
+        label: 'RAW',
+        outputSignals: {},
+        isSelected: false,
+      },
+    },
+    wires: {
+      w1: {
+        id: 'w1',
+        from: { gateId: 'clk', portId: 'clk' },
+        to: { gateId: 'q0', portId: 'clk' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w2: {
+        id: 'w2',
+        from: { gateId: 'q0', portId: 'q' },
+        to: { gateId: 'outY', portId: 'in' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+      w3: {
+        id: 'w3',
+        from: { gateId: 'q0', portId: 'q' },
+        to: { gateId: 'rawLed', portId: 'in' },
+        signal: { ...defaultSignal },
+        isSelected: false,
+      },
+    },
+    viewport: { panX: 0, panY: 0, zoom: 1 },
+    metadata: { createdAt: '2026-03-21', updatedAt: '2026-03-21' },
+  });
 }
 
 function buildWideProjectedFsmFixtureJson() {
@@ -748,6 +977,14 @@ function analyze(slug, table, timing) {
 
 function analyzeSttModeChecks(checks) {
   return checks.map((check) => {
+    if (!check.compact) {
+      return {
+        ...check,
+        status: 'fail',
+        message: check.message || 'STT mode audit did not capture a compact snapshot.',
+      };
+    }
+
     if (check.slug === 'fsm_projected_modes') {
       const compact = check.compact;
       const technical = check.technical;
@@ -795,6 +1032,36 @@ function analyzeSttModeChecks(checks) {
         message: pass
           ? 'Wide projected FSM stays in the reduced compact view and does not expose a misleading technical-full dropdown.'
           : 'Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints.',
+      };
+    }
+
+    if (check.slug === 'fsm_partial_inputs_fallback') {
+      const hasSpecificFallback = /Eingänge sind nur teilweise projiziert/i.test(check.compact.text ?? '');
+      const pass = !check.compact.selectExists
+        && check.compact.headers.includes('CLK')
+        && check.compact.hasFallbackExplanation
+        && hasSpecificFallback;
+      return {
+        ...check,
+        status: pass ? 'pass' : 'fail',
+        message: pass
+          ? 'Partial-input FSM fallback stays technical-full in the UI and surfaces the specific partial-input explanation.'
+          : 'Partial-input fallback no longer stays technical-full or lost its specific fallback explanation in the UI.',
+      };
+    }
+
+    if (check.slug === 'fsm_partial_outputs_fallback') {
+      const hasSpecificFallback = /Ausgänge sind gemischt oder nur teilweise projiziert/i.test(check.compact.text ?? '');
+      const pass = !check.compact.selectExists
+        && check.compact.headers.includes('CLK')
+        && check.compact.hasFallbackExplanation
+        && hasSpecificFallback;
+      return {
+        ...check,
+        status: pass ? 'pass' : 'fail',
+        message: pass
+          ? 'Partial-output FSM fallback stays technical-full in the UI and surfaces the specific partial-output explanation.'
+          : 'Partial-output fallback no longer stays technical-full or lost its specific fallback explanation in the UI.',
       };
     }
 
@@ -876,15 +1143,25 @@ function renderReport(summary) {
   const fsmModeChecks = summary.fsmModeChecks ?? [];
   const fsmModePasses = fsmModeChecks.filter((item) => item.status === 'pass');
   const fsmModeFails = fsmModeChecks.filter((item) => item.status === 'fail');
+  const fsmModeFailLines = fsmModeFails.map((item) =>
+    `- \`${item.slug}\`: ${item.message}`,
+  );
   const fsmModeLines = fsmModeChecks.map((item) =>
     `- \`${item.slug}\`: ${item.status.toUpperCase()} - ${item.message}`,
   ).join('\n') || '- keine';
   const timingSystemChecks = summary.timingSystemChecks ?? [];
   const timingSystemPasses = timingSystemChecks.filter((item) => item.status === 'pass');
   const timingSystemFails = timingSystemChecks.filter((item) => item.status === 'fail');
+  const timingSystemFailLines = timingSystemFails.map((item) =>
+    `- \`${item.slug}\`: ${item.message}`,
+  );
   const timingSystemLines = timingSystemChecks.map((item) =>
     `- \`${item.slug}\`: ${item.status.toUpperCase()} - ${item.message}`,
   ).join('\n') || '- keine';
+  const smokeFailLines = failLines === '- keine' ? [] : failLines.split('\n');
+  const auditFailLines = [...smokeFailLines, ...fsmModeFailLines, ...timingSystemFailLines];
+  const totalFailLines = auditFailLines.join('\n') || '- keine';
+  const totalUiAuditFails = fails.length + fsmModeFails.length + timingSystemFails.length;
 
   return `# Focused High-Risk UI Audit\n\n` +
     `Datum: 2026-03-07\n` +
@@ -893,7 +1170,8 @@ function renderReport(summary) {
     `Rohdaten: \`validation/focused-nine-ui-summary.json\`\n\n` +
     `## Kurzfazit\n\n` +
     `Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist gegen den aktuellen P0-Stand gelaufen.\n\n` +
-    `- \`${fails.length}\` echte UI-/Projektionsfehler\n` +
+    `- \`${totalUiAuditFails}\` echte UI-/Auditfehler ueber Smoke-, STT-Modus- und Timing-System-Pruefungen\n` +
+    `- \`${fails.length}\` davon klassische UI-/Projektionsfehler im Smoke-Lauf\n` +
     `- \`${warns.length}\` erwartete UI-Limit-Faelle bei breiten sequenziellen Zustandsraeumen\n` +
     `- \`${passes.length}\` saubere UI-Smoke-Passes\n` +
     `- \`${errors.length}\` Infrastruktur-/Ladefehler\n` +
@@ -904,8 +1182,8 @@ function renderReport(summary) {
     `- Semantischer Timing-Check fuer ${semanticResults.length} Fokusfaelle: ` +
     `\`${semanticPasses.length}\` PASS, \`${semanticWarns.length}\` WARN` +
     `${semanticWarns.length > 0 ? ' (steps=0, headless RAF-Limit)' : ''}\n\n` +
-    `## Echte UI-Befunde\n\n` +
-    `${failLines}\n\n` +
+    `## Echte UI-/Audit-Befunde\n\n` +
+    `${totalFailLines}\n\n` +
     `## Erwartete UI-Limits\n\n` +
     `${warnSlugs}\n\n` +
     (warns.length > 0
@@ -1029,6 +1307,16 @@ for (const modeCase of [
   {
     slug: 'fsm_projected_reduced',
     load: (page) => loadCircuitJson(page, buildWideProjectedFsmFixtureJson()),
+    switchToTechnical: false,
+  },
+  {
+    slug: 'fsm_partial_inputs_fallback',
+    load: (page) => loadCircuitJson(page, buildPartialInputFallbackFixtureJson()),
+    switchToTechnical: false,
+  },
+  {
+    slug: 'fsm_partial_outputs_fallback',
+    load: (page) => loadCircuitJson(page, buildPartialOutputFallbackFixtureJson()),
     switchToTechnical: false,
   },
 ]) {

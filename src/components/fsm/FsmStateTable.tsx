@@ -1,19 +1,8 @@
 import { useMemo } from 'react';
 import { useFsm } from '../../fsm/FsmContext';
-import type { FsmStateNode } from '../../fsm/types';
 import { parseCondition, evalCondition } from '../../fsm/conditionParser';
+import { analyzeFsmStructure, formatStateEncoding } from '../../fsm/analysis/structure';
 import { detectOverlappingTransitions } from '../../fsm/synthesis/synthesize';
-
-function getStateEncoding(states: Record<string, FsmStateNode>): Map<string, string> {
-  const list    = Object.values(states);
-  const initial = list.find(s => s.isInitial);
-  const others  = list.filter(s => !s.isInitial).sort((a, b) => a.label.localeCompare(b.label));
-  const ordered = initial ? [initial, ...others] : others;
-  const bits    = Math.ceil(Math.log2(Math.max(2, list.length)));
-  const enc     = new Map<string, string>();
-  ordered.forEach((s, i) => enc.set(s.id, i.toString(2).padStart(bits, '0')));
-  return enc;
-}
 
 const HDR: React.CSSProperties = {
   background: '#1e293b', color: '#64748b', fontSize: 10,
@@ -26,16 +15,37 @@ const CELL: React.CSSProperties = {
 
 export function FsmStateTable() {
   const { fsm } = useFsm();
+  return <FsmStateTableContent fsm={fsm} />;
+}
+
+interface Props {
+  fsm: ReturnType<typeof useFsm>['fsm'];
+}
+
+export function FsmStateTableContent({ fsm }: Props) {
   const { states, transitions, inputNames, outputNames, archType, inputCount, outputCount } = fsm;
+  const stateCount = Object.keys(states).length;
+  const { structure, structureError } = useMemo(() => {
+    if (stateCount === 0) {
+      return { structure: null, structureError: null };
+    }
 
-  const encoding = useMemo(() => getStateEncoding(states), [states]);
-
-  const stateList = useMemo(() => {
-    const initial = Object.values(states).find(s => s.isInitial);
-    const others  = Object.values(states).filter(s => !s.isInitial)
-      .sort((a, b) => a.label.localeCompare(b.label));
-    return initial ? [initial, ...others] : others;
-  }, [states]);
+    const nextStructure = analyzeFsmStructure(fsm);
+    if (nextStructure.initialStateError) {
+      return { structure: null, structureError: nextStructure.initialStateError };
+    }
+    return { structure: nextStructure, structureError: null };
+  }, [fsm, stateCount]);
+  const encoding = useMemo(() => {
+    const next = new Map<string, string>();
+    if (!structure) return next;
+    structure.orderedStates.forEach((state) => {
+      const value = formatStateEncoding(structure, state.id);
+      if (value) next.set(state.id, value);
+    });
+    return next;
+  }, [structure]);
+  const stateList = structure?.orderedStates ?? [];
 
   const inputCombos = useMemo(() => {
     const n = inputCount;
@@ -70,10 +80,28 @@ export function FsmStateTable() {
     return { ns: null, mealyOut: null };
   };
 
-  if (stateList.length === 0) {
+  if (stateCount === 0) {
     return (
       <div style={{ padding:12, color:'#475569', fontSize:11, fontFamily:'monospace' }}>
         Keine Zustände definiert.
+      </div>
+    );
+  }
+
+  if (!structure) {
+    return (
+      <div style={{ padding:'10px 12px' }}>
+        <div style={{
+          padding: '8px 10px',
+          background: '#431407',
+          border: '1px solid #9a3412',
+          borderRadius: 6,
+          color: '#fdba74',
+          fontSize: 10,
+          fontFamily: 'monospace',
+        }}>
+          FSM-Strukturfehler: {structureError ?? 'Analyse nicht verfuegbar'}
+        </div>
       </div>
     );
   }
@@ -86,6 +114,25 @@ export function FsmStateTable() {
           ({inputNames.join('')} / {outputNames.join('')})
         </span>
       </div>
+      <div style={{ color:'#64748b', fontFamily:'monospace', fontSize:10, marginBottom:8 }}>
+        Synthese: {structure.effectiveStateCount}/{stateList.length} Zustände erreichbar · {structure.effectiveBitWidth} Bit
+      </div>
+      {structure.unreachableStates.length > 0 && (
+        <div style={{
+          marginBottom: 8, padding: '6px 8px', background: '#431407',
+          border: '1px solid #9a3412', borderRadius: 4,
+          color: '#fdba74', fontSize: 10, fontFamily: 'monospace',
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 2 }}>
+            Nicht synthetisiert
+          </div>
+          {structure.unreachableStates.map((state) => (
+            <div key={state.id}>
+              {state.label}: dieser Zustand ist unerreichbar und wird nicht synthetisiert
+            </div>
+          ))}
+        </div>
+      )}
       <div style={{ overflowX:'auto' }}>
         <table style={{ borderCollapse:'collapse', width:'100%' }}>
           <thead>
@@ -102,6 +149,8 @@ export function FsmStateTable() {
             {stateList.map(s =>
               inputCombos.map((combo, ci) => {
                 const { ns, mealyOut } = findNext(s.id, combo.vals);
+                const isUnreachable = structure.unreachableStateIds.has(s.id);
+                const nextIsUnreachable = ns ? structure.unreachableStateIds.has(ns.id) : false;
                 // Display MSB-first to match the column header (outputNames[0] = MSB)
                 const toBitStr = (v: number) =>
                   outputNames.map((_, i) => ((v >> (outputCount - 1 - i)) & 1)).join('');
@@ -111,25 +160,42 @@ export function FsmStateTable() {
                 return (
                   <tr key={`${s.id}-${ci}`}
                     style={ci===0 ? { borderTop:'1px solid #1e293b' } : {}}>
-                    <td style={{ ...CELL, color:'#e2e8f0', fontWeight: ci===0?700:400 }}>
+                    <td style={{
+                      ...CELL,
+                      color: isUnreachable ? '#fdba74' : '#e2e8f0',
+                      fontWeight: ci===0 ? 700 : 400,
+                    }}>
                       {ci===0 ? s.label : ''}
                       {ci===0 && statesWithOverlaps.has(s.id) && (
                         <span style={{ color:'#f59e0b', marginLeft:4, fontSize:9 }} title="Overlapping transitions">
                           !! overlap
                         </span>
                       )}
+                      {ci===0 && isUnreachable && (
+                        <span
+                          style={{ color:'#fb923c', marginLeft:4, fontSize:9 }}
+                          title="Dieser Zustand ist unerreichbar und wird nicht synthetisiert"
+                        >
+                          unreachable
+                        </span>
+                      )}
+                      {ci===0 && isUnreachable && (
+                        <div style={{ color:'#fdba74', fontSize:9, fontWeight:400, marginTop:2 }}>
+                          wird nicht synthetisiert
+                        </div>
+                      )}
                     </td>
                     <td style={{ ...CELL, color:'#7dd3fc' }}>
-                      {ci===0 ? (encoding.get(s.id)??'?') : ''}
+                      {ci===0 ? (encoding.get(s.id) ?? '—') : ''}
                     </td>
                     <td style={{ ...CELL, borderLeft:'1px solid #1e293b' }}>
                       {combo.label}
                     </td>
-                    <td style={{ ...CELL, color: ns ? '#94a3b8' : '#f87171' }}>
+                    <td style={{ ...CELL, color: ns ? (nextIsUnreachable ? '#fdba74' : '#94a3b8') : '#f87171' }}>
                       {ns ? ns.label : '—'}
                     </td>
-                    <td style={{ ...CELL, color:'#7dd3fc' }}>
-                      {ns ? (encoding.get(ns.id)??'?') : ''}
+                    <td style={{ ...CELL, color: nextIsUnreachable ? '#fdba74' : '#7dd3fc' }}>
+                      {ns ? (encoding.get(ns.id) ?? '—') : ''}
                     </td>
                     <td style={{ ...CELL, color:'#a3e635' }}>
                       {outStr}

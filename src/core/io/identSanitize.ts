@@ -95,10 +95,14 @@ function applyRules(
   // Rule 1: Replace forbidden characters
   let s = raw.replace(/[^A-Za-z0-9_]/g, '_');
 
-  // Rule 2: Strip leading underscores
+  // Rule 1b: Collapse underscore runs so VHDL identifiers never contain "__"
+  s = s.replace(/_+/g, '_');
+
+  // Rule 2: Strip leading/trailing underscores
   const stripped = s.replace(/^_+/, '');
-  // Keep stripped version only if it's non-empty; otherwise keep the underscores
-  if (stripped) s = stripped;
+  const trimmed = stripped.replace(/_+$/, '');
+  // Keep trimmed version only if it's non-empty; otherwise keep the original
+  if (trimmed) s = trimmed;
 
   // Rule 3: Empty result → 'x' (deterministic fallback)
   if (!s) return `${digitPrefix}x`;

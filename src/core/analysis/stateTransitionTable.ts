@@ -43,6 +43,14 @@ export interface DisplayedStateTransitionTable {
   notes: string[];
 }
 
+export interface ResolvedStateTransitionViewState {
+  availableModes: StateTransitionDisplayMode[];
+  activeMode: StateTransitionDisplayMode;
+  showModeSelect: boolean;
+  showReducedCompactNote: boolean;
+  fallbackNote: string;
+}
+
 export function getAvailableStateTransitionDisplayModes(args: {
   projectionStatus?: StateTransitionProjectionStatus;
   isProjectedFsmView: boolean;
@@ -75,6 +83,27 @@ export function getStateTransitionFallbackNote(
     default:
       return '';
   }
+}
+
+export function resolveStateTransitionViewState(args: {
+  requestedMode: StateTransitionDisplayMode;
+  projectionStatus?: StateTransitionProjectionStatus;
+  isProjectedFsmView: boolean;
+  reducedMeta?: ReducedStateTransitionMeta;
+  inputRoles?: Record<string, StateTransitionInputRole>;
+}): ResolvedStateTransitionViewState {
+  const availableModes = getAvailableStateTransitionDisplayModes(args);
+  const activeMode = availableModes.find((mode) => mode === args.requestedMode)
+    ?? availableModes[0]
+    ?? 'technical_full';
+
+  return {
+    availableModes,
+    activeMode,
+    showModeSelect: availableModes.length > 1,
+    showReducedCompactNote: activeMode === 'fsm_compact' && args.isProjectedFsmView && Boolean(args.reducedMeta),
+    fallbackNote: getStateTransitionFallbackNote(args.projectionStatus),
+  };
 }
 
 export function isDataPortId(portId: string): boolean {
@@ -527,22 +556,24 @@ export function buildStaticStateTransitionTable(args: {
       }
     }
 
+    const { buffer: settledNextBuffer } = runUntilStable(circuit, nextBuffer, wireMap);
+
     const nextState = activeStateVars.map((stateVar) => {
       try {
         const gateTypeId = circuit.gates[stateVar.gateId]?.typeId ?? '';
         if (gateRegistry.get(gateTypeId).isSynchronous) {
-          return (nextBuffer.customStates[stateVar.gateId]?.[stateVar.stateKey] ?? 0) as number;
+          return (settledNextBuffer.customStates[stateVar.gateId]?.[stateVar.stateKey] ?? 0) as number;
         }
       } catch {
         // fall through to output-based fallback
       }
-      return (nextBuffer.outputs[stateVar.gateId]?.[stateVar.portId] ?? 0) as number;
+      return (settledNextBuffer.outputs[stateVar.gateId]?.[stateVar.portId] ?? 0) as number;
     });
 
     const outputBits = projectedOutputGates.map((gate) => {
       const wire = Object.values(circuit.wires).find((candidate) => candidate.to.gateId === gate.id);
       if (!wire) return 0;
-      return (nextBuffer.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as number;
+      return (settledNextBuffer.outputs[wire.from.gateId]?.[wire.from.portId] ?? 0) as number;
     });
 
     rows.push({ inputBits, stateBits, nextState, outputBits });

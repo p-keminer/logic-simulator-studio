@@ -8,7 +8,7 @@ import { gateRegistry } from '../../core/registry/GateRegistry';
 import { FlipFlopShape } from '../shapes/FlipFlopShape';
 import type { SignalValue } from '../../core/types';
 
-function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_'); }
+function sanitize(id: string) { return id.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '') || 'x'; }
 
 // ─── PISO4 ───────────────────────────────────────────────────────────────────
 gateRegistry.register({

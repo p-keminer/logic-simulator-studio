@@ -7,6 +7,7 @@ import { flattenCustomICs } from '../../core/io/flattenCustomIC';
 import { generateVerilog } from '../../core/io/verilog';
 import { generateVHDL } from '../../core/io/vhdl';
 import { runSimulation } from '../../core/simulation/engine';
+import { HI_Z } from '../../core/types';
 import type { Circuit, GateInstance, SignalState, Wire } from '../../core/types';
 
 const defaultSignal: SignalState = { value: 0, version: 0, lastChangedAt: 0 };
@@ -127,6 +128,123 @@ function makePassthroughTopLevel(value: 0 | 1): Circuit {
   ]);
 }
 
+function makeTriBufSubcircuit(): Circuit {
+  return makeCircuit('tribuf_sub', [
+    makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+    makeGate('sw_oe', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'oe' }),
+    makeGate('tri', 'TRIBUF'),
+    makeGate('led_y', 'OUTPUT_LED', { label: 'y' }),
+  ], [
+    makeWire('w1', 'sw_a', 'out', 'tri', 'a'),
+    makeWire('w2', 'sw_oe', 'out', 'tri', 'oe'),
+    makeWire('w3', 'tri', 'y', 'led_y', 'in'),
+  ]);
+}
+
+function makeTriBufTopLevel(a: 0 | 1, oe: 0 | 1): Circuit {
+  return makeCircuit('tribuf_top', [
+    makeGate('src_a', 'INPUT_SWITCH', { customState: { value: a }, label: 'a' }),
+    makeGate('src_oe', 'INPUT_SWITCH', { customState: { value: oe }, label: 'oe' }),
+    makeGate('wrap', 'CIC_TEST_TRIBUF'),
+    makeGate('led_y', 'OUTPUT_LED', { label: 'y' }),
+  ], [
+    makeWire('w1', 'src_a', 'out', 'wrap', 'i0'),
+    makeWire('w2', 'src_oe', 'out', 'wrap', 'i1'),
+    makeWire('w3', 'wrap', 'o0', 'led_y', 'in'),
+  ]);
+}
+
+function makeBrokenOutputSubcircuit(): Circuit {
+  return makeCircuit('broken_output_sub', [
+    makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+    makeGate('not1', 'NOT'),
+    makeGate('led_y', 'OUTPUT_LED', { label: 'y' }),
+  ], [
+    makeWire('w1', 'sw_a', 'out', 'not1', 'a'),
+  ]);
+}
+
+function makeBrokenOutputTopLevel(value: 0 | 1): Circuit {
+  return makeCircuit('broken_output_top', [
+    makeGate('src_a', 'INPUT_SWITCH', { customState: { value }, label: 'a' }),
+    makeGate('wrap', 'CIC_TEST_BROKEN_OUTPUT'),
+    makeGate('led_y', 'OUTPUT_LED', { label: 'y' }),
+  ], [
+    makeWire('w1', 'src_a', 'out', 'wrap', 'i0'),
+    makeWire('w2', 'wrap', 'o0', 'led_y', 'in'),
+  ]);
+}
+
+function makeHc194Subcircuit(): Circuit {
+  return makeCircuit('hc194_sub', [
+    makeGate('sw_clk', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'clk' }),
+    makeGate('sw_clrn', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'clrn' }),
+    makeGate('sw_s0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 's0' }),
+    makeGate('sw_s1', 'INPUT_SWITCH', { customState: { value: 0 }, label: 's1' }),
+    makeGate('sw_sr', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'sr' }),
+    makeGate('sw_sl', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'sl' }),
+    makeGate('sw_d0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd0' }),
+    makeGate('sw_d1', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd1' }),
+    makeGate('sw_d2', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd2' }),
+    makeGate('sw_d3', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd3' }),
+    makeGate('dut', '74HC194'),
+    makeGate('led_q0', 'OUTPUT_LED', { label: 'q0' }),
+    makeGate('led_q1', 'OUTPUT_LED', { label: 'q1' }),
+    makeGate('led_q2', 'OUTPUT_LED', { label: 'q2' }),
+    makeGate('led_q3', 'OUTPUT_LED', { label: 'q3' }),
+  ], [
+    makeWire('w1', 'sw_clk', 'out', 'dut', 'clk'),
+    makeWire('w2', 'sw_clrn', 'out', 'dut', 'clrn'),
+    makeWire('w3', 'sw_s0', 'out', 'dut', 's0'),
+    makeWire('w4', 'sw_s1', 'out', 'dut', 's1'),
+    makeWire('w5', 'sw_sr', 'out', 'dut', 'sr'),
+    makeWire('w6', 'sw_sl', 'out', 'dut', 'sl'),
+    makeWire('w7', 'sw_d0', 'out', 'dut', 'd0'),
+    makeWire('w8', 'sw_d1', 'out', 'dut', 'd1'),
+    makeWire('w9', 'sw_d2', 'out', 'dut', 'd2'),
+    makeWire('w10', 'sw_d3', 'out', 'dut', 'd3'),
+    makeWire('w11', 'dut', 'q0', 'led_q0', 'in'),
+    makeWire('w12', 'dut', 'q1', 'led_q1', 'in'),
+    makeWire('w13', 'dut', 'q2', 'led_q2', 'in'),
+    makeWire('w14', 'dut', 'q3', 'led_q3', 'in'),
+  ]);
+}
+
+function makeHc194TopLevel(): Circuit {
+  return makeCircuit('hc194_top', [
+    makeGate('src_clk', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'clk' }),
+    makeGate('src_clrn', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'clrn' }),
+    makeGate('src_s0', 'INPUT_SWITCH', { customState: { value: 1 }, label: 's0' }),
+    makeGate('src_s1', 'INPUT_SWITCH', { customState: { value: 1 }, label: 's1' }),
+    makeGate('src_sr', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'sr' }),
+    makeGate('src_sl', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'sl' }),
+    makeGate('src_d0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd0' }),
+    makeGate('src_d1', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'd1' }),
+    makeGate('src_d2', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd2' }),
+    makeGate('src_d3', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'd3' }),
+    makeGate('wrap', 'CIC_TEST_HC194'),
+    makeGate('led_q0', 'OUTPUT_LED', { label: 'q0' }),
+    makeGate('led_q1', 'OUTPUT_LED', { label: 'q1' }),
+    makeGate('led_q2', 'OUTPUT_LED', { label: 'q2' }),
+    makeGate('led_q3', 'OUTPUT_LED', { label: 'q3' }),
+  ], [
+    makeWire('w1', 'src_clk', 'out', 'wrap', 'i0'),
+    makeWire('w2', 'src_clrn', 'out', 'wrap', 'i1'),
+    makeWire('w3', 'src_s0', 'out', 'wrap', 'i2'),
+    makeWire('w4', 'src_s1', 'out', 'wrap', 'i3'),
+    makeWire('w5', 'src_sr', 'out', 'wrap', 'i4'),
+    makeWire('w6', 'src_sl', 'out', 'wrap', 'i5'),
+    makeWire('w7', 'src_d0', 'out', 'wrap', 'i6'),
+    makeWire('w8', 'src_d1', 'out', 'wrap', 'i7'),
+    makeWire('w9', 'src_d2', 'out', 'wrap', 'i8'),
+    makeWire('w10', 'src_d3', 'out', 'wrap', 'i9'),
+    makeWire('w11', 'wrap', 'o0', 'led_q0', 'in'),
+    makeWire('w12', 'wrap', 'o1', 'led_q1', 'in'),
+    makeWire('w13', 'wrap', 'o2', 'led_q2', 'in'),
+    makeWire('w14', 'wrap', 'o3', 'led_q3', 'in'),
+  ]);
+}
+
 function makePisoSubcircuit(): Circuit {
   return makeCircuit('piso_sub', [
     makeGate('sw_p0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'p0' }),
@@ -171,6 +289,9 @@ function makePisoTopLevel(): Circuit {
 
 registerCustomIC('TEST_HALF_ADDER', makeHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
 registerCustomIC('TEST_PASSTHROUGH', makePassthroughSubcircuit(), ['in', 'out']);
+registerCustomIC('TEST_TRIBUF', makeTriBufSubcircuit(), ['a', 'oe', 'y']);
+registerCustomIC('TEST_BROKEN_OUTPUT', makeBrokenOutputSubcircuit(), ['a', 'y']);
+registerCustomIC('TEST_HC194', makeHc194Subcircuit(), ['clk', 'clrn', 's0', 's1', 'sr', 'sl', 'd0', 'd1', 'd2', 'd3', 'q0', 'q1', 'q2', 'q3']);
 registerCustomIC('TEST_PISO', makePisoSubcircuit(), ['p0', 'p1', 'p2', 'p3', 'load', 'clk', 'q']);
 
 describe('Custom IC runtime and HDL export', () => {
@@ -192,13 +313,13 @@ describe('Custom IC runtime and HDL export', () => {
 
     expect(verilog).not.toContain('HDL EXPORT BLOCKED');
     expect(verilog).not.toContain('CIC_TEST_HALF_ADDER');
-    expect(verilog).toContain('xor g_ha__xor1');
-    expect(verilog).toContain('and g_ha__and1');
+    expect(verilog).toContain('xor g_ha_flat_xor1');
+    expect(verilog).toContain('and g_ha_flat_and1');
 
     expect(vhdl).not.toContain('HDL EXPORT BLOCKED');
     expect(vhdl).not.toContain('CIC_TEST_HALF_ADDER');
-    expect(vhdl).toContain('-- ha__xor1');
-    expect(vhdl).toContain('-- ha__and1');
+    expect(vhdl).toContain('-- ha_flat_xor1');
+    expect(vhdl).toContain('-- ha_flat_and1');
   });
 
   it('loads golden custom ICs from the file-based manifest', async () => {
@@ -235,7 +356,77 @@ describe('Custom IC runtime and HDL export', () => {
 
     expect(verilog).not.toContain('HDL EXPORT BLOCKED');
     expect(verilog).not.toContain('CIC_TEST_PISO');
-    expect(verilog).toContain('reg [3:0] sr_wrap__piso;');
+    expect(verilog).toContain('reg [3:0] sr_wrap_flat_piso;');
     expect(verilog).toContain('always @(posedge clk)');
+  });
+
+  it('preserves tri-state semantics and HDL flattening for custom TRIBUF wrappers', () => {
+    const result = runSimulation(makeTriBufTopLevel(1, 1));
+    const verilog = generateVerilog(makeTriBufTopLevel(1, 0));
+    const vhdl = generateVHDL(makeTriBufTopLevel(1, 0));
+
+    expect(result.gateSignals.led_y._display.value).toBe(HI_Z);
+    expect(verilog).not.toContain('HDL EXPORT BLOCKED');
+    expect(verilog).not.toContain('CIC_TEST_TRIBUF');
+    expect(verilog).toContain("assign w_0 = (~oe) ? a : 1'bz");
+    expect(vhdl).toContain("w_0_q <= a when oe = '0' else 'Z'");
+  });
+
+  it('blocks malformed custom IC exports early when a boundary output is undriven', () => {
+    const verilog = generateVerilog(makeBrokenOutputTopLevel(1));
+    const vhdl = generateVHDL(makeBrokenOutputTopLevel(1));
+
+    expect(verilog).toContain('HDL EXPORT BLOCKED');
+    expect(verilog).toContain('output o0 has no driven OUTPUT_LED');
+    expect(vhdl).toContain('HDL EXPORT BLOCKED');
+    expect(vhdl).toContain('output o0 has no driven OUTPUT_LED');
+  });
+
+  it('keeps inner 74HC194 extra-reg declarations after custom IC flattening', () => {
+    const verilog = generateVerilog(makeHc194TopLevel());
+    const vhdl = generateVHDL(makeHc194TopLevel());
+
+    expect(verilog).not.toContain('HDL EXPORT BLOCKED');
+    expect(verilog).not.toContain('CIC_TEST_HC194');
+    expect(verilog).toContain('reg [3:0] reg_wrap_flat_dut;');
+    expect(verilog).toContain('always @(posedge clk or negedge clrn)');
+    expect(vhdl).toContain('signal reg_wrap_flat_dut : STD_LOGIC_VECTOR(3 downto 0)');
+    expect(vhdl).toContain("case STD_LOGIC_VECTOR'(s1 & s0) is");
+  });
+
+  it('blocks nested custom IC HDL export with the shared structure policy', () => {
+    const nestedSubcircuit = makeCircuit('nested_half_adder_sub', [
+      makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+      makeGate('sw_b', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'b' }),
+      makeGate('ha', 'CIC_TEST_HALF_ADDER'),
+      makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+      makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+    ], [
+      makeWire('w1', 'sw_a', 'out', 'ha', 'i0'),
+      makeWire('w2', 'sw_b', 'out', 'ha', 'i1'),
+      makeWire('w3', 'ha', 'o0', 'led_sum', 'in'),
+      makeWire('w4', 'ha', 'o1', 'led_carry', 'in'),
+    ]);
+    registerCustomIC('TEST_PARENT_HALF_ADDER', nestedSubcircuit, ['a', 'b', 'sum', 'carry']);
+
+    const circuit = makeCircuit('nested_half_adder_top', [
+      makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'a' }),
+      makeGate('sw_b', 'INPUT_SWITCH', { customState: { value: 1 }, label: 'b' }),
+      makeGate('parent', 'CIC_TEST_PARENT_HALF_ADDER'),
+      makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+      makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+    ], [
+      makeWire('w1', 'sw_a', 'out', 'parent', 'i0'),
+      makeWire('w2', 'sw_b', 'out', 'parent', 'i1'),
+      makeWire('w3', 'parent', 'o0', 'led_sum', 'in'),
+      makeWire('w4', 'parent', 'o1', 'led_carry', 'in'),
+    ]);
+
+    expect(generateVerilog(circuit)).toContain(
+      'Nested custom IC "CIC_TEST_HALF_ADDER" inside "CIC_TEST_PARENT_HALF_ADDER" is not supported for HDL export.',
+    );
+    expect(generateVHDL(circuit)).toContain(
+      'Nested custom IC "CIC_TEST_HALF_ADDER" inside "CIC_TEST_PARENT_HALF_ADDER" is not supported for HDL export.',
+    );
   });
 });

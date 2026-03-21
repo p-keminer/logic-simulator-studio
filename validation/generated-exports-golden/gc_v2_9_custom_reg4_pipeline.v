@@ -24,22 +24,22 @@ module gc_v2_9_custom_reg4_pipeline (
   xor g_cmp_xor(w_8, w_0, w_4);
 
   // Sequential logic
-  // REG4 reg_a__dut
+  // REG4 reg_a_flat_dut
   always @(posedge clk or posedge rst) begin
     if (rst) begin
       w_0 <= 1'b0; w_1 <= 1'b0; w_2 <= 1'b0; w_3 <= 1'b0;
     end else if (en) begin
       w_0 <= d0; w_1 <= d1; w_2 <= d2; w_3 <= d3;
     end
-  end // REG4 reg_a__dut
-  // REG4 reg_b__dut
+  end // REG4 reg_a_flat_dut
+  // REG4 reg_b_flat_dut
   always @(posedge clk or posedge rst) begin
     if (rst) begin
       w_4 <= 1'b0; w_5 <= 1'b0; w_6 <= 1'b0; w_7 <= 1'b0;
     end else if (en) begin
       w_4 <= w_0; w_5 <= w_1; w_6 <= w_2; w_7 <= w_3;
     end
-  end // REG4 reg_b__dut
+  end // REG4 reg_b_flat_dut
 
 endmodule // gc_v2_9_custom_reg4_pipeline
 `default_nettype wire

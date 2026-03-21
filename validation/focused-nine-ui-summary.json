@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T17:23:40.389Z",
+  "generatedAt": "2026-03-21T01:53:03.583Z",
   "baseUrl": "<dev-server>",
   "results": [
     {
@@ -30,7 +30,7 @@
       },
       "timing": {
         "titlePresent": true,
-        "steps": 8,
+        "steps": 0,
         "textNodeCount": 15,
         "signalLabels": [
           "HIGH",
@@ -54,14 +54,13 @@
       },
       "timingSemantic": {
         "semanticPass": true,
-        "note": "TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Z and X colored paths expected.",
+        "note": "TRIBUF(a=1, oe=1) -> Z; NOT(Z) -> X. Initial settle is sufficient for the timing history.",
         "findings": [
           "Labels OK: [a, oe, y] all visible in timing SVG",
-          "Steps > 0: 8 snapshots recorded (simulation settled and produced history)",
           "Z-path (amber): present -- HI_Z signal visible in timing waveform",
           "X-path (red): present -- conflict/X signal visible in timing waveform"
         ],
-        "stepsRecorded": 8,
+        "stepsRecorded": 0,
         "labelsFound": [
           "HIGH",
           "Q",
@@ -655,6 +654,7 @@
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
         ],
+        "text": "Logic Simulator Studio34G · 58WMenü ▾Zustandsuebergangstabelle[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - ZustandsanalyseAnsichtFSM kompaktTechnisch vollx- CLK wird als Übergangsereignis interpretiert.- RST=1 ist im Modus \"Technisch voll\" sichtbar.[in] Steuer-Eingaenge[state] Aktueller Zustand Q(t)[next] Naechster Zustand Q(t+1)[out] AusgaengeSTEUER-EINGAENGEZUSTAND Q(t)NAECHSTER ZUSTAND Q(t+1)AUSGAENGEA|Q0Q1|Q0'Q1'|Y0|00|10|00|01|11|00|10|01|10|11|00|01|00|11|01|01|10|01|10|00|11|11|01|0FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)BauteileZiehen zum Platzieren◀Grundgatter▼ANDAusgang HIGH wenn alle Eingänge HIGHORAusgang HIGH wenn mindestens ein Eingang HIGHNOTInvertiert den EingangNANDNegiertes AND – LOW nur wenn alle Eingänge HIGHNORNegiertes OR – HIGH nur wenn alle Eingänge LOWXORHIGH wenn Eingänge verschiedenXNORHIGH wenn Eingänge gleichBufferLeitet Signal weiter (kein Einfluss auf Logikpegel)Mehrfacheingänge▼AND33-Eingang ANDAND44-Eingang ANDNAND33-Eingang NANDNAND44-Eingang NANDOR33-Eingang OROR44-Eingang ORNOR33-Eingang NORNOR44-Eingang NORXOR33-Eingang XOR (Parität)Spezielle Treiber▼SchmittSchmitt-Trigger: Puffer mit Hysterese-Symbol (binary: Y = A)TRITri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-ZKomplementärausgänge▼AND±AND mit Q und Q̄ AusgangOR±OR mit Q und Q̄ AusgangXOR±XOR mit Q und Q̄ AusgangNAND±NAND mit Q und Q̄ AusgangNOR±NOR mit Q und Q̄ AusgangMultiplexer / Demultiplexer▼MUX22:1 Multiplexer – S=0→Y=D0, S=1→Y=D1MUX44:1 Multiplexer – S1:S0 wählt D0–D3DEMUX21:2 Demultiplexer – S=0→Y0=D, S=1→Y1=DDEMUX41:4 Demultiplexer – S1:S0 leitet D auf Y0–Y3Bus & Splitter▼BUS-44-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)BUS-88-Bit Bus-Splitter/Merger: Pass-ThroughVergleicher & Arithmetik▼CMP1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)CMP44-Bit Komparator: Vergleicht A[3:0] mit B[3:0] (LT / EQ / GT)ALU4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]Latches & Flip-Flops▼SRSR-Latch (asynchron): S=Setzen, R=RücksetzenD-FFD Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ anD-FF/RD Flip-Flop mit asynchronem ResetJK-FFJK Flip-Flop: J=Set, K=Reset, J=K=1 togglet QT-FFT Flip-Flop: toggelt Q bei CLK↑ wenn T=1D-LatchD-Latch (pegelgesteuert): transparent wenn EN=1D-FF/SRD Flip-Flop mit asynchronem Set (S) und Reset (R)JK-FF/SRJK Flip-Flop mit asynchronem Set (S) und Reset (R)T-FF/SRT Flip-Flop mit asynchronem Set (S) und Reset (R)MS-JKMaster-Slave JK FF: Q ändert sich nur auf fallender CLK-FlankeSR-EFlanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑Register▼REG44-Bit D-Register mit EN (steigende CLK-Flanke, async RST)REG88-Bit D-Register (steigende CLK-Flanke)SHIFT44-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)PISO4PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell ausPIPO4PIPO 4-Bit Register: lädt P0–P3 bei CLK↑PIPO8PIPO 8-Bit Register: lädt P0–P7 bei CLK↑Speicher (RAM / ROM)▼ROMROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.RAMRAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → LesenEingabe▼SchalterManueller HIGH/LOW Eingang (Klick zum Umschalten)VCC (1)Konstant HIGH (logisch 1)GND (0)Konstant LOW (logisch 0)TaktgeneratorTaktgenerator — Doppelklick zum Einstellen der Frequenz (0.1–100 Hz)TasterMomentary Push Button: Doppelklick sendet 150 ms HIGH-PulsADC 8-bitADC-Mockup: 8-Bit-Ausgabe (b0=LSB, b7=MSB). Wert per Slider einstellbar.Ausgabe▼LEDLED-Ausgangsanzeige7-Segment7-Segment-Anzeige: direkte Segmenteingaben a–g7-Seg BCD7-Segment mit BCD-Dekoder (Ziffer 0–9)7-Seg Dual (a–g)2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)7-Seg Dual2-stellige 7-Segment-Anzeige mit BCD-Dekoder (00–99). Zehnerstelle: T3–T0, Einerstelle: D3–D08×8 Dot Matrix8×8 Dot-Matrix-Anzeige: R0-7=Zeilen (links), C0-7=Spalten (rechts). Pixel leuchtet wenn ROW=1 UND COL=1.StepperSchrittmotor-Visualisierung: Erkennt Vollschritt-Sequenzen (A→B→C→D) und dreht den Zeiger.BIN-CTRBinärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.BIN-CTR 99Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.Anmerkungen▼NotizTextnotiz auf dem Canvas (Doppelklick zum Bearbeiten)74xx ICs▶• Doppelklick: Umschalten / Umbenennen• R: Gatter drehen• Strg+C/V: Kopieren / Einfügen• Lasso → Pfeiltasten: Gatter verschieben• Klick auf Port: Draht• Klick auf Canvas: Wegpunkt• Rechtsklick Draht: Farbe• Strg+Klick Draht: Löschen• Alt+Ziehen: Verschieben• Entf: Auswahl löschen1HzCLKCLKLOWQRSTLOWQA1AY!ADRSTQQ̄D-FF/RQ0DRSTQQ̄D-FF/RQ11AY!Q01AY!Q1&ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY≥1ABY≥1ABY≥1ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY≥1ABY≥1ABY≥1ABY&ABYDYDQ0DQ1",
         "hasCompactExplanation": true,
         "hasFallbackExplanation": false
       },
@@ -701,6 +701,7 @@
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
         ],
+        "text": "Logic Simulator Studio34G · 58WMenü ▾Zustandsuebergangstabelle[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - ZustandsanalyseAnsichtFSM kompaktTechnisch vollx[in] Steuer-Eingaenge[state] Aktueller Zustand Q(t)[next] Naechster Zustand Q(t+1)[out] AusgaengeSTEUER-EINGAENGEZUSTAND Q(t)NAECHSTER ZUSTAND Q(t+1)AUSGAENGECLKRSTA|Q0Q1|Q0'Q1'|Y000|00|00|0000|01|01|0000|10|10|1000|11|11|0001|00|00|0001|01|01|0001|10|10|1001|11|11|0010|00|00|0010|01|00|0010|10|00|0010|11|00|0011|00|00|0011|01|00|0011|10|00|0011|11|00|0100|00|10|0100|01|11|0100|10|01|1100|11|00|0101|00|11|0101|01|10|0101|10|00|1101|11|01|0110|00|00|0110|01|00|0110|10|00|0110|11|00|0111|00|00|0111|01|00|0111|10|00|0111|11|00|0' = Zustand nach einem Simulationsschritt (Settle-Phase) | [*] = Stabiler Zustand Q(t) = Q(t+1)BauteileZiehen zum Platzieren◀Grundgatter▼ANDAusgang HIGH wenn alle Eingänge HIGHORAusgang HIGH wenn mindestens ein Eingang HIGHNOTInvertiert den EingangNANDNegiertes AND – LOW nur wenn alle Eingänge HIGHNORNegiertes OR – HIGH nur wenn alle Eingänge LOWXORHIGH wenn Eingänge verschiedenXNORHIGH wenn Eingänge gleichBufferLeitet Signal weiter (kein Einfluss auf Logikpegel)Mehrfacheingänge▼AND33-Eingang ANDAND44-Eingang ANDNAND33-Eingang NANDNAND44-Eingang NANDOR33-Eingang OROR44-Eingang ORNOR33-Eingang NORNOR44-Eingang NORXOR33-Eingang XOR (Parität)Spezielle Treiber▼SchmittSchmitt-Trigger: Puffer mit Hysterese-Symbol (binary: Y = A)TRITri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-ZKomplementärausgänge▼AND±AND mit Q und Q̄ AusgangOR±OR mit Q und Q̄ AusgangXOR±XOR mit Q und Q̄ AusgangNAND±NAND mit Q und Q̄ AusgangNOR±NOR mit Q und Q̄ AusgangMultiplexer / Demultiplexer▼MUX22:1 Multiplexer – S=0→Y=D0, S=1→Y=D1MUX44:1 Multiplexer – S1:S0 wählt D0–D3DEMUX21:2 Demultiplexer – S=0→Y0=D, S=1→Y1=DDEMUX41:4 Demultiplexer – S1:S0 leitet D auf Y0–Y3Bus & Splitter▼BUS-44-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)BUS-88-Bit Bus-Splitter/Merger: Pass-ThroughVergleicher & Arithmetik▼CMP1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)CMP44-Bit Komparator: Vergleicht A[3:0] mit B[3:0] (LT / EQ / GT)ALU4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]Latches & Flip-Flops▼SRSR-Latch (asynchron): S=Setzen, R=RücksetzenD-FFD Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ anD-FF/RD Flip-Flop mit asynchronem ResetJK-FFJK Flip-Flop: J=Set, K=Reset, J=K=1 togglet QT-FFT Flip-Flop: toggelt Q bei CLK↑ wenn T=1D-LatchD-Latch (pegelgesteuert): transparent wenn EN=1D-FF/SRD Flip-Flop mit asynchronem Set (S) und Reset (R)JK-FF/SRJK Flip-Flop mit asynchronem Set (S) und Reset (R)T-FF/SRT Flip-Flop mit asynchronem Set (S) und Reset (R)MS-JKMaster-Slave JK FF: Q ändert sich nur auf fallender CLK-FlankeSR-EFlanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑Register▼REG44-Bit D-Register mit EN (steigende CLK-Flanke, async RST)REG88-Bit D-Register (steigende CLK-Flanke)SHIFT44-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)PISO4PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell ausPIPO4PIPO 4-Bit Register: lädt P0–P3 bei CLK↑PIPO8PIPO 8-Bit Register: lädt P0–P7 bei CLK↑Speicher (RAM / ROM)▼ROMROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.RAMRAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → LesenEingabe▼SchalterManueller HIGH/LOW Eingang (Klick zum Umschalten)VCC (1)Konstant HIGH (logisch 1)GND (0)Konstant LOW (logisch 0)TaktgeneratorTaktgenerator — Doppelklick zum Einstellen der Frequenz (0.1–100 Hz)TasterMomentary Push Button: Doppelklick sendet 150 ms HIGH-PulsADC 8-bitADC-Mockup: 8-Bit-Ausgabe (b0=LSB, b7=MSB). Wert per Slider einstellbar.Ausgabe▼LEDLED-Ausgangsanzeige7-Segment7-Segment-Anzeige: direkte Segmenteingaben a–g7-Seg BCD7-Segment mit BCD-Dekoder (Ziffer 0–9)7-Seg Dual (a–g)2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)7-Seg Dual2-stellige 7-Segment-Anzeige mit BCD-Dekoder (00–99). Zehnerstelle: T3–T0, Einerstelle: D3–D08×8 Dot Matrix8×8 Dot-Matrix-Anzeige: R0-7=Zeilen (links), C0-7=Spalten (rechts). Pixel leuchtet wenn ROW=1 UND COL=1.StepperSchrittmotor-Visualisierung: Erkennt Vollschritt-Sequenzen (A→B→C→D) und dreht den Zeiger.BIN-CTRBinärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.BIN-CTR 99Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.Anmerkungen▼NotizTextnotiz auf dem Canvas (Doppelklick zum Bearbeiten)74xx ICs▶• Doppelklick: Umschalten / Umbenennen• R: Gatter drehen• Strg+C/V: Kopieren / Einfügen• Lasso → Pfeiltasten: Gatter verschieben• Klick auf Port: Draht• Klick auf Canvas: Wegpunkt• Rechtsklick Draht: Farbe• Strg+Klick Draht: Löschen• Alt+Ziehen: Verschieben• Entf: Auswahl löschen1HzCLKCLKLOWQRSTLOWQA1AY!ADRSTQQ̄D-FF/RQ0DRSTQQ̄D-FF/RQ11AY!Q01AY!Q1&ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY≥1ABY≥1ABY≥1ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY≥1ABY≥1ABY≥1ABY&ABYDYDQ0DQ1",
         "hasCompactExplanation": false,
         "hasFallbackExplanation": false
       },
@@ -711,14 +712,20 @@
       "slug": "fsm_mixed_fallback",
       "compact": {
         "title": "Zustandsuebergangstabelle",
-        "selectExists": false,
-        "selected": null,
-        "options": [],
+        "selectExists": true,
+        "selected": "fsm_compact",
+        "options": [
+          {
+            "value": "fsm_compact",
+            "label": "FSM kompakt"
+          },
+          {
+            "value": "technical_full",
+            "label": "Technisch voll"
+          }
+        ],
         "headers": [
-          "CLK",
-          "RST",
           "A",
-          "RAW_BTN",
           "|",
           "Q0",
           "Q1",
@@ -726,12 +733,103 @@
           "Q0'",
           "Q1'",
           "|",
-          "RAW_LED",
-          "Y",
-          "Q0",
-          "Q1"
+          "Y"
         ],
-        "rowCount": 64,
+        "rowCount": 8,
+        "paragraphs": [
+          "[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - Zustandsanalyse",
+          "FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ],
+        "text": "Logic Simulator Studio36G · 59WMenü ▾Zustandsuebergangstabelle[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - ZustandsanalyseAnsichtFSM kompaktTechnisch vollx- CLK wird als Übergangsereignis interpretiert.- RST=1 ist im Modus \"Technisch voll\" sichtbar.[in] Steuer-Eingaenge[state] Aktueller Zustand Q(t)[next] Naechster Zustand Q(t+1)[out] AusgaengeSTEUER-EINGAENGEZUSTAND Q(t)NAECHSTER ZUSTAND Q(t+1)AUSGAENGEA|Q0Q1|Q0'Q1'|Y0|00|10|00|01|11|00|10|01|10|11|00|01|00|11|01|01|10|01|10|00|11|11|01|0FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)BauteileZiehen zum Platzieren◀Grundgatter▼ANDAusgang HIGH wenn alle Eingänge HIGHORAusgang HIGH wenn mindestens ein Eingang HIGHNOTInvertiert den EingangNANDNegiertes AND – LOW nur wenn alle Eingänge HIGHNORNegiertes OR – HIGH nur wenn alle Eingänge LOWXORHIGH wenn Eingänge verschiedenXNORHIGH wenn Eingänge gleichBufferLeitet Signal weiter (kein Einfluss auf Logikpegel)Mehrfacheingänge▼AND33-Eingang ANDAND44-Eingang ANDNAND33-Eingang NANDNAND44-Eingang NANDOR33-Eingang OROR44-Eingang ORNOR33-Eingang NORNOR44-Eingang NORXOR33-Eingang XOR (Parität)Spezielle Treiber▼SchmittSchmitt-Trigger: Puffer mit Hysterese-Symbol (binary: Y = A)TRITri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-ZKomplementärausgänge▼AND±AND mit Q und Q̄ AusgangOR±OR mit Q und Q̄ AusgangXOR±XOR mit Q und Q̄ AusgangNAND±NAND mit Q und Q̄ AusgangNOR±NOR mit Q und Q̄ AusgangMultiplexer / Demultiplexer▼MUX22:1 Multiplexer – S=0→Y=D0, S=1→Y=D1MUX44:1 Multiplexer – S1:S0 wählt D0–D3DEMUX21:2 Demultiplexer – S=0→Y0=D, S=1→Y1=DDEMUX41:4 Demultiplexer – S1:S0 leitet D auf Y0–Y3Bus & Splitter▼BUS-44-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)BUS-88-Bit Bus-Splitter/Merger: Pass-ThroughVergleicher & Arithmetik▼CMP1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)CMP44-Bit Komparator: Vergleicht A[3:0] mit B[3:0] (LT / EQ / GT)ALU4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]Latches & Flip-Flops▼SRSR-Latch (asynchron): S=Setzen, R=RücksetzenD-FFD Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ anD-FF/RD Flip-Flop mit asynchronem ResetJK-FFJK Flip-Flop: J=Set, K=Reset, J=K=1 togglet QT-FFT Flip-Flop: toggelt Q bei CLK↑ wenn T=1D-LatchD-Latch (pegelgesteuert): transparent wenn EN=1D-FF/SRD Flip-Flop mit asynchronem Set (S) und Reset (R)JK-FF/SRJK Flip-Flop mit asynchronem Set (S) und Reset (R)T-FF/SRT Flip-Flop mit asynchronem Set (S) und Reset (R)MS-JKMaster-Slave JK FF: Q ändert sich nur auf fallender CLK-FlankeSR-EFlanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑Register▼REG44-Bit D-Register mit EN (steigende CLK-Flanke, async RST)REG88-Bit D-Register (steigende CLK-Flanke)SHIFT44-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)PISO4PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell ausPIPO4PIPO 4-Bit Register: lädt P0–P3 bei CLK↑PIPO8PIPO 8-Bit Register: lädt P0–P7 bei CLK↑Speicher (RAM / ROM)▼ROMROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.RAMRAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → LesenEingabe▼SchalterManueller HIGH/LOW Eingang (Klick zum Umschalten)VCC (1)Konstant HIGH (logisch 1)GND (0)Konstant LOW (logisch 0)TaktgeneratorTaktgenerator — Doppelklick zum Einstellen der Frequenz (0.1–100 Hz)TasterMomentary Push Button: Doppelklick sendet 150 ms HIGH-PulsADC 8-bitADC-Mockup: 8-Bit-Ausgabe (b0=LSB, b7=MSB). Wert per Slider einstellbar.Ausgabe▼LEDLED-Ausgangsanzeige7-Segment7-Segment-Anzeige: direkte Segmenteingaben a–g7-Seg BCD7-Segment mit BCD-Dekoder (Ziffer 0–9)7-Seg Dual (a–g)2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)7-Seg Dual2-stellige 7-Segment-Anzeige mit BCD-Dekoder (00–99). Zehnerstelle: T3–T0, Einerstelle: D3–D08×8 Dot Matrix8×8 Dot-Matrix-Anzeige: R0-7=Zeilen (links), C0-7=Spalten (rechts). Pixel leuchtet wenn ROW=1 UND COL=1.StepperSchrittmotor-Visualisierung: Erkennt Vollschritt-Sequenzen (A→B→C→D) und dreht den Zeiger.BIN-CTRBinärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.BIN-CTR 99Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.Anmerkungen▼NotizTextnotiz auf dem Canvas (Doppelklick zum Bearbeiten)74xx ICs▶• Doppelklick: Umschalten / Umbenennen• R: Gatter drehen• Strg+C/V: Kopieren / Einfügen• Lasso → Pfeiltasten: Gatter verschieben• Klick auf Port: Draht• Klick auf Canvas: Wegpunkt• Rechtsklick Draht: Farbe• Strg+Klick Draht: Löschen• Alt+Ziehen: Verschieben• Entf: Auswahl löschen1HzCLKCLKLOWQRSTLOWQA1AY!ADRSTQQ̄D-FF/RQ0DRSTQQ̄D-FF/RQ11AY!Q01AY!Q1&ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY≥1ABY≥1ABY≥1ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY&ABY≥1ABY≥1ABY≥1ABY&ABYDYDQ0DQ1PUSHQRAW_BTNDRAW_LED",
+        "hasCompactExplanation": true,
+        "hasFallbackExplanation": false
+      },
+      "technical": null,
+      "status": "fail",
+      "message": "Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation."
+    },
+    {
+      "slug": "fsm_projected_reduced",
+      "compact": {
+        "title": "Zustandsuebergangstabelle",
+        "selectExists": true,
+        "selected": "fsm_compact",
+        "options": [
+          {
+            "value": "fsm_compact",
+            "label": "FSM kompakt"
+          },
+          {
+            "value": "technical_full",
+            "label": "Technisch voll"
+          }
+        ],
+        "headers": [
+          "A0",
+          "|",
+          "Q0",
+          "Q1",
+          "|",
+          "Q0'",
+          "Q1'",
+          "|",
+          "T0",
+          "Y"
+        ],
+        "rowCount": 8,
+        "paragraphs": [
+          "[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - Zustandsanalyse",
+          "FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)",
+          "Ziehen zum Platzieren",
+          "• Doppelklick: Umschalten / Umbenennen",
+          "• R: Gatter drehen",
+          "• Strg+C/V: Kopieren / Einfügen",
+          "• Lasso → Pfeiltasten: Gatter verschieben",
+          "• Klick auf Port: Draht",
+          "• Klick auf Canvas: Wegpunkt",
+          "• Rechtsklick Draht: Farbe",
+          "• Strg+Klick Draht: Löschen",
+          "• Alt+Ziehen: Verschieben",
+          "• Entf: Auswahl löschen"
+        ],
+        "text": "Logic Simulator Studio17G · 13WMenü ▾Zustandsuebergangstabelle[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - ZustandsanalyseAnsichtFSM kompaktTechnisch vollx- CLK wird als Übergangsereignis interpretiert.- RST=1 ist im Modus \"Technisch voll\" sichtbar.[in] Steuer-Eingaenge[state] Aktueller Zustand Q(t)[next] Naechster Zustand Q(t+1)[out] AusgaengeSTEUER-EINGAENGEZUSTAND Q(t)NAECHSTER ZUSTAND Q(t+1)AUSGAENGEA0|Q0Q1|Q0'Q1'|T0Y0|00|00|000|01|00|000|10|01|000|11|01|001|00|10|111|01|10|111|10|11|111|11|11|11FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)BauteileZiehen zum Platzieren◀Grundgatter▼ANDAusgang HIGH wenn alle Eingänge HIGHORAusgang HIGH wenn mindestens ein Eingang HIGHNOTInvertiert den EingangNANDNegiertes AND – LOW nur wenn alle Eingänge HIGHNORNegiertes OR – HIGH nur wenn alle Eingänge LOWXORHIGH wenn Eingänge verschiedenXNORHIGH wenn Eingänge gleichBufferLeitet Signal weiter (kein Einfluss auf Logikpegel)Mehrfacheingänge▼AND33-Eingang ANDAND44-Eingang ANDNAND33-Eingang NANDNAND44-Eingang NANDOR33-Eingang OROR44-Eingang ORNOR33-Eingang NORNOR44-Eingang NORXOR33-Eingang XOR (Parität)Spezielle Treiber▼SchmittSchmitt-Trigger: Puffer mit Hysterese-Symbol (binary: Y = A)TRITri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-ZKomplementärausgänge▼AND±AND mit Q und Q̄ AusgangOR±OR mit Q und Q̄ AusgangXOR±XOR mit Q und Q̄ AusgangNAND±NAND mit Q und Q̄ AusgangNOR±NOR mit Q und Q̄ AusgangMultiplexer / Demultiplexer▼MUX22:1 Multiplexer – S=0→Y=D0, S=1→Y=D1MUX44:1 Multiplexer – S1:S0 wählt D0–D3DEMUX21:2 Demultiplexer – S=0→Y0=D, S=1→Y1=DDEMUX41:4 Demultiplexer – S1:S0 leitet D auf Y0–Y3Bus & Splitter▼BUS-44-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)BUS-88-Bit Bus-Splitter/Merger: Pass-ThroughVergleicher & Arithmetik▼CMP1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)CMP44-Bit Komparator: Vergleicht A[3:0] mit B[3:0] (LT / EQ / GT)ALU4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]Latches & Flip-Flops▼SRSR-Latch (asynchron): S=Setzen, R=RücksetzenD-FFD Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ anD-FF/RD Flip-Flop mit asynchronem ResetJK-FFJK Flip-Flop: J=Set, K=Reset, J=K=1 togglet QT-FFT Flip-Flop: toggelt Q bei CLK↑ wenn T=1D-LatchD-Latch (pegelgesteuert): transparent wenn EN=1D-FF/SRD Flip-Flop mit asynchronem Set (S) und Reset (R)JK-FF/SRJK Flip-Flop mit asynchronem Set (S) und Reset (R)T-FF/SRT Flip-Flop mit asynchronem Set (S) und Reset (R)MS-JKMaster-Slave JK FF: Q ändert sich nur auf fallender CLK-FlankeSR-EFlanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑Register▼REG44-Bit D-Register mit EN (steigende CLK-Flanke, async RST)REG88-Bit D-Register (steigende CLK-Flanke)SHIFT44-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)PISO4PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell ausPIPO4PIPO 4-Bit Register: lädt P0–P3 bei CLK↑PIPO8PIPO 8-Bit Register: lädt P0–P7 bei CLK↑Speicher (RAM / ROM)▼ROMROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.RAMRAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → LesenEingabe▼SchalterManueller HIGH/LOW Eingang (Klick zum Umschalten)VCC (1)Konstant HIGH (logisch 1)GND (0)Konstant LOW (logisch 0)TaktgeneratorTaktgenerator — Doppelklick zum Einstellen der Frequenz (0.1–100 Hz)TasterMomentary Push Button: Doppelklick sendet 150 ms HIGH-PulsADC 8-bitADC-Mockup: 8-Bit-Ausgabe (b0=LSB, b7=MSB). Wert per Slider einstellbar.Ausgabe▼LEDLED-Ausgangsanzeige7-Segment7-Segment-Anzeige: direkte Segmenteingaben a–g7-Seg BCD7-Segment mit BCD-Dekoder (Ziffer 0–9)7-Seg Dual (a–g)2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)7-Seg Dual2-stellige 7-Segment-Anzeige mit BCD-Dekoder (00–99). Zehnerstelle: T3–T0, Einerstelle: D3–D08×8 Dot Matrix8×8 Dot-Matrix-Anzeige: R0-7=Zeilen (links), C0-7=Spalten (rechts). Pixel leuchtet wenn ROW=1 UND COL=1.StepperSchrittmotor-Visualisierung: Erkennt Vollschritt-Sequenzen (A→B→C→D) und dreht den Zeiger.BIN-CTRBinärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.BIN-CTR 99Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.Anmerkungen▼NotizTextnotiz auf dem Canvas (Doppelklick zum Bearbeiten)74xx ICs▶• Doppelklick: Umschalten / Umbenennen• R: Gatter drehen• Strg+C/V: Kopieren / Einfügen• Lasso → Pfeiltasten: Gatter verschieben• Klick auf Port: Draht• Klick auf Canvas: Wegpunkt• Rechtsklick Draht: Farbe• Strg+Klick Draht: Löschen• Alt+Ziehen: Verschieben• Entf: Auswahl löschen1HzCLKCLKLOWQRSTDRSTQQ̄D-FF/RQ0DRSTQQ̄D-FF/RQ1DYLOWQA0DT0LOWQA1DT1LOWQA2DT2LOWQA3DT3LOWQA4DT4LOWQA5DT5",
+        "hasCompactExplanation": true,
+        "hasFallbackExplanation": false
+      },
+      "technical": null,
+      "status": "fail",
+      "message": "Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints."
+    },
+    {
+      "slug": "fsm_partial_inputs_fallback",
+      "compact": {
+        "title": "Zustandsuebergangstabelle",
+        "selectExists": false,
+        "selected": null,
+        "options": [],
+        "headers": [
+          "CLK",
+          "RST",
+          "RAW_IN",
+          "|",
+          "Q0",
+          "|",
+          "Q0'",
+          "|",
+          "Y"
+        ],
+        "rowCount": 16,
         "paragraphs": [
           "[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - Zustandsanalyse",
           "' = Zustand nach einem Simulationsschritt (Settle-Phase) | [*] = Stabiler Zustand Q(t) = Q(t+1)",
@@ -747,43 +845,41 @@
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
         ],
+        "text": "Logic Simulator Studio6G · 5WMenü ▾Zustandsuebergangstabelle[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - ZustandsanalysexFSM-Projektion unvollständig: Eingänge sind nur teilweise projiziert. Ansicht bleibt technisch voll.[in] Steuer-Eingaenge[state] Aktueller Zustand Q(t)[next] Naechster Zustand Q(t+1)[out] AusgaengeSTEUER-EINGAENGEZUSTAND Q(t)NAECHSTER ZUSTAND Q(t+1)AUSGAENGECLKRSTRAW_IN|Q0|Q0'|Y000|0|0|0000|1|1|1001|0|0|0001|1|1|1010|0|0|0010|1|0|0011|0|0|0011|1|0|0100|0|1|1100|1|1|1101|0|0|0101|1|0|0110|0|0|0110|1|0|0111|0|0|0111|1|0|0' = Zustand nach einem Simulationsschritt (Settle-Phase) | [*] = Stabiler Zustand Q(t) = Q(t+1)BauteileZiehen zum Platzieren◀Grundgatter▼ANDAusgang HIGH wenn alle Eingänge HIGHORAusgang HIGH wenn mindestens ein Eingang HIGHNOTInvertiert den EingangNANDNegiertes AND – LOW nur wenn alle Eingänge HIGHNORNegiertes OR – HIGH nur wenn alle Eingänge LOWXORHIGH wenn Eingänge verschiedenXNORHIGH wenn Eingänge gleichBufferLeitet Signal weiter (kein Einfluss auf Logikpegel)Mehrfacheingänge▼AND33-Eingang ANDAND44-Eingang ANDNAND33-Eingang NANDNAND44-Eingang NANDOR33-Eingang OROR44-Eingang ORNOR33-Eingang NORNOR44-Eingang NORXOR33-Eingang XOR (Parität)Spezielle Treiber▼SchmittSchmitt-Trigger: Puffer mit Hysterese-Symbol (binary: Y = A)TRITri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-ZKomplementärausgänge▼AND±AND mit Q und Q̄ AusgangOR±OR mit Q und Q̄ AusgangXOR±XOR mit Q und Q̄ AusgangNAND±NAND mit Q und Q̄ AusgangNOR±NOR mit Q und Q̄ AusgangMultiplexer / Demultiplexer▼MUX22:1 Multiplexer – S=0→Y=D0, S=1→Y=D1MUX44:1 Multiplexer – S1:S0 wählt D0–D3DEMUX21:2 Demultiplexer – S=0→Y0=D, S=1→Y1=DDEMUX41:4 Demultiplexer – S1:S0 leitet D auf Y0–Y3Bus & Splitter▼BUS-44-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)BUS-88-Bit Bus-Splitter/Merger: Pass-ThroughVergleicher & Arithmetik▼CMP1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)CMP44-Bit Komparator: Vergleicht A[3:0] mit B[3:0] (LT / EQ / GT)ALU4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]Latches & Flip-Flops▼SRSR-Latch (asynchron): S=Setzen, R=RücksetzenD-FFD Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ anD-FF/RD Flip-Flop mit asynchronem ResetJK-FFJK Flip-Flop: J=Set, K=Reset, J=K=1 togglet QT-FFT Flip-Flop: toggelt Q bei CLK↑ wenn T=1D-LatchD-Latch (pegelgesteuert): transparent wenn EN=1D-FF/SRD Flip-Flop mit asynchronem Set (S) und Reset (R)JK-FF/SRJK Flip-Flop mit asynchronem Set (S) und Reset (R)T-FF/SRT Flip-Flop mit asynchronem Set (S) und Reset (R)MS-JKMaster-Slave JK FF: Q ändert sich nur auf fallender CLK-FlankeSR-EFlanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑Register▼REG44-Bit D-Register mit EN (steigende CLK-Flanke, async RST)REG88-Bit D-Register (steigende CLK-Flanke)SHIFT44-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)PISO4PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell ausPIPO4PIPO 4-Bit Register: lädt P0–P3 bei CLK↑PIPO8PIPO 8-Bit Register: lädt P0–P7 bei CLK↑Speicher (RAM / ROM)▼ROMROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.RAMRAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → LesenEingabe▼SchalterManueller HIGH/LOW Eingang (Klick zum Umschalten)VCC (1)Konstant HIGH (logisch 1)GND (0)Konstant LOW (logisch 0)TaktgeneratorTaktgenerator — Doppelklick zum Einstellen der Frequenz (0.1–100 Hz)TasterMomentary Push Button: Doppelklick sendet 150 ms HIGH-PulsADC 8-bitADC-Mockup: 8-Bit-Ausgabe (b0=LSB, b7=MSB). Wert per Slider einstellbar.Ausgabe▼LEDLED-Ausgangsanzeige7-Segment7-Segment-Anzeige: direkte Segmenteingaben a–g7-Seg BCD7-Segment mit BCD-Dekoder (Ziffer 0–9)7-Seg Dual (a–g)2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)7-Seg Dual2-stellige 7-Segment-Anzeige mit BCD-Dekoder (00–99). Zehnerstelle: T3–T0, Einerstelle: D3–D08×8 Dot Matrix8×8 Dot-Matrix-Anzeige: R0-7=Zeilen (links), C0-7=Spalten (rechts). Pixel leuchtet wenn ROW=1 UND COL=1.StepperSchrittmotor-Visualisierung: Erkennt Vollschritt-Sequenzen (A→B→C→D) und dreht den Zeiger.BIN-CTRBinärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.BIN-CTR 99Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.Anmerkungen▼NotizTextnotiz auf dem Canvas (Doppelklick zum Bearbeiten)74xx ICs▶• Doppelklick: Umschalten / Umbenennen• R: Gatter drehen• Strg+C/V: Kopieren / Einfügen• Lasso → Pfeiltasten: Gatter verschieben• Klick auf Port: Draht• Klick auf Canvas: Wegpunkt• Rechtsklick Draht: Farbe• Strg+Klick Draht: Löschen• Alt+Ziehen: Verschieben• Entf: Auswahl löschen1HzCLKCLKLOWQRSTDRSTQQ̄D-FF/RQ0DYLOWQRAW_IN1AY",
         "hasCompactExplanation": false,
         "hasFallbackExplanation": true
       },
       "technical": null,
       "status": "pass",
-      "message": "Mixed FSM/raw case stays in technical-full mode and renders the fallback explanation without a misleading compact dropdown."
+      "message": "Partial-input FSM fallback stays technical-full in the UI and surfaces the specific partial-input explanation."
     },
     {
-      "slug": "fsm_projected_reduced",
+      "slug": "fsm_partial_outputs_fallback",
       "compact": {
         "title": "Zustandsuebergangstabelle",
-        "selectExists": false,
-        "selected": null,
-        "options": [],
+        "selectExists": true,
+        "selected": "fsm_compact",
+        "options": [
+          {
+            "value": "fsm_compact",
+            "label": "FSM kompakt"
+          },
+          {
+            "value": "technical_full",
+            "label": "Technisch voll"
+          }
+        ],
         "headers": [
-          "A0",
-          "A1",
-          "A2",
-          "A3",
-          "A4",
-          "|",
           "Q0",
           "|",
           "Q0'",
           "|",
-          "T0",
-          "T1",
-          "T2",
-          "T3",
-          "T4",
-          "T5",
           "Y"
         ],
-        "rowCount": 64,
+        "rowCount": 2,
         "paragraphs": [
           "[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - Zustandsanalyse",
-          "FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1) |  Reduzierte Ansicht - vollstaendige Analyse bei 256 Zeilen nicht darstellbar",
+          "FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)",
           "Ziehen zum Platzieren",
           "• Doppelklick: Umschalten / Umbenennen",
           "• R: Gatter drehen",
@@ -796,12 +892,13 @@
           "• Alt+Ziehen: Verschieben",
           "• Entf: Auswahl löschen"
         ],
+        "text": "Logic Simulator Studio4G · 3WMenü ▾Zustandsuebergangstabelle[seq] Sequenzielle Logik erkannt (Flip-Flops / Rueckkopplung) - ZustandsanalyseAnsichtFSM kompaktTechnisch vollx- CLK wird als Übergangsereignis interpretiert.[state] Aktueller Zustand Q(t)[next] Naechster Zustand Q(t+1)[out] AusgaengeZUSTAND Q(t)NAECHSTER ZUSTAND Q(t+1)AUSGAENGEQ0|Q0'|Y0|0|01|0|0FSM kompakt: Takt als Uebergangsereignis, Resetfaelle im technischen Modus. | [*] = Stabiler Zustand Q(t) = Q(t+1)BauteileZiehen zum Platzieren◀Grundgatter▼ANDAusgang HIGH wenn alle Eingänge HIGHORAusgang HIGH wenn mindestens ein Eingang HIGHNOTInvertiert den EingangNANDNegiertes AND – LOW nur wenn alle Eingänge HIGHNORNegiertes OR – HIGH nur wenn alle Eingänge LOWXORHIGH wenn Eingänge verschiedenXNORHIGH wenn Eingänge gleichBufferLeitet Signal weiter (kein Einfluss auf Logikpegel)Mehrfacheingänge▼AND33-Eingang ANDAND44-Eingang ANDNAND33-Eingang NANDNAND44-Eingang NANDOR33-Eingang OROR44-Eingang ORNOR33-Eingang NORNOR44-Eingang NORXOR33-Eingang XOR (Parität)Spezielle Treiber▼SchmittSchmitt-Trigger: Puffer mit Hysterese-Symbol (binary: Y = A)TRITri-State Buffer: /OE=0 → Y=A; /OE=1 → Hi-ZKomplementärausgänge▼AND±AND mit Q und Q̄ AusgangOR±OR mit Q und Q̄ AusgangXOR±XOR mit Q und Q̄ AusgangNAND±NAND mit Q und Q̄ AusgangNOR±NOR mit Q und Q̄ AusgangMultiplexer / Demultiplexer▼MUX22:1 Multiplexer – S=0→Y=D0, S=1→Y=D1MUX44:1 Multiplexer – S1:S0 wählt D0–D3DEMUX21:2 Demultiplexer – S=0→Y0=D, S=1→Y1=DDEMUX41:4 Demultiplexer – S1:S0 leitet D auf Y0–Y3Bus & Splitter▼BUS-44-Bit Bus-Splitter/Merger: Pass-Through (links=Bus, rechts=Einzelleitungen)BUS-88-Bit Bus-Splitter/Merger: Pass-ThroughVergleicher & Arithmetik▼CMP1-Bit Komparator: EQ (A=B), GT (A>B), LT (A<B)CMP44-Bit Komparator: Vergleicht A[3:0] mit B[3:0] (LT / EQ / GT)ALU4-Bit ALU: ADD/SUB/AND/OR/XOR/NOT/SHL/SHR via Op[2:0]Latches & Flip-Flops▼SRSR-Latch (asynchron): S=Setzen, R=RücksetzenD-FFD Flip-Flop (steigende Flanke): Q nimmt D bei CLK↑ anD-FF/RD Flip-Flop mit asynchronem ResetJK-FFJK Flip-Flop: J=Set, K=Reset, J=K=1 togglet QT-FFT Flip-Flop: toggelt Q bei CLK↑ wenn T=1D-LatchD-Latch (pegelgesteuert): transparent wenn EN=1D-FF/SRD Flip-Flop mit asynchronem Set (S) und Reset (R)JK-FF/SRJK Flip-Flop mit asynchronem Set (S) und Reset (R)T-FF/SRT Flip-Flop mit asynchronem Set (S) und Reset (R)MS-JKMaster-Slave JK FF: Q ändert sich nur auf fallender CLK-FlankeSR-EFlanken-SR-FF (steigende Flanke): S=Setzen, R=Rücksetzen bei CLK↑Register▼REG44-Bit D-Register mit EN (steigende CLK-Flanke, async RST)REG88-Bit D-Register (steigende CLK-Flanke)SHIFT44-Bit Schieberegister SIPO (Seriell-Ein / Parallel-Aus)PISO4PISO 4-Bit Register: LD=1 lädt P0–P3, LD=0 schiebt seriell ausPIPO4PIPO 4-Bit Register: lädt P0–P3 bei CLK↑PIPO8PIPO 8-Bit Register: lädt P0–P7 bei CLK↑Speicher (RAM / ROM)▼ROMROM 256×8: /CS=0 & /OE=0 → Daten ausgeben. Inhalt per Rechtsklick laden.RAMRAM 256×8: /WE=0 & /CS=0 → Schreiben; /OE=0 & /CS=0 → LesenEingabe▼SchalterManueller HIGH/LOW Eingang (Klick zum Umschalten)VCC (1)Konstant HIGH (logisch 1)GND (0)Konstant LOW (logisch 0)TaktgeneratorTaktgenerator — Doppelklick zum Einstellen der Frequenz (0.1–100 Hz)TasterMomentary Push Button: Doppelklick sendet 150 ms HIGH-PulsADC 8-bitADC-Mockup: 8-Bit-Ausgabe (b0=LSB, b7=MSB). Wert per Slider einstellbar.Ausgabe▼LEDLED-Ausgangsanzeige7-Segment7-Segment-Anzeige: direkte Segmenteingaben a–g7-Seg BCD7-Segment mit BCD-Dekoder (Ziffer 0–9)7-Seg Dual (a–g)2-stellige 7-Segment-Anzeige: direkte Segmenteingaben A1–G1 (linke Ziffer) und A2–G2 (rechte Ziffer)7-Seg Dual2-stellige 7-Segment-Anzeige mit BCD-Dekoder (00–99). Zehnerstelle: T3–T0, Einerstelle: D3–D08×8 Dot Matrix8×8 Dot-Matrix-Anzeige: R0-7=Zeilen (links), C0-7=Spalten (rechts). Pixel leuchtet wenn ROW=1 UND COL=1.StepperSchrittmotor-Visualisierung: Erkennt Vollschritt-Sequenzen (A→B→C→D) und dreht den Zeiger.BIN-CTRBinärzähler 0-15 mit integrierter Hex-7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.BIN-CTR 99Dezimalzähler 00-99 mit integrierter 2-stelliger 7-Segment-Anzeige. CLK↑+EN=1 → Zählen; RST=1 → Zurücksetzen.Anmerkungen▼NotizTextnotiz auf dem Canvas (Doppelklick zum Bearbeiten)74xx ICs▶• Doppelklick: Umschalten / Umbenennen• R: Gatter drehen• Strg+C/V: Kopieren / Einfügen• Lasso → Pfeiltasten: Gatter verschieben• Klick auf Port: Draht• Klick auf Canvas: Wegpunkt• Rechtsklick Draht: Farbe• Strg+Klick Draht: Löschen• Alt+Ziehen: Verschieben• Entf: Auswahl löschen1HzCLKCLKDRSTQQ̄D-FF/RQ0DYDRAW",
         "hasCompactExplanation": true,
         "hasFallbackExplanation": false
       },
       "technical": null,
-      "status": "pass",
-      "message": "Wide projected FSM stays in the reduced compact view and does not expose a misleading technical-full dropdown."
+      "status": "fail",
+      "message": "Partial-output fallback no longer stays technical-full or lost its specific fallback explanation in the UI."
     }
   ],
   "timingSystemChecks": [

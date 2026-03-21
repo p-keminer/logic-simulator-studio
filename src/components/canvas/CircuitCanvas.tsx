@@ -13,10 +13,8 @@ import type { GateTypeId } from '../../core/types';
 import { findPortAt } from '../../utils/geometry';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, GRID_SIZE } from '../../utils/constants';
 import { setClipboard, getClipboard } from '../../store/clipboard';
-import {
-  buildClipboardProjectionBatchPolicies,
-  buildPastedClipboardContent,
-} from '../../store/pasteClipboardProjection';
+import { buildPastedClipboardContent } from '../../store/pasteClipboardProjection';
+import { buildClipboardDataForSelection } from '../../store/clipboardSelection';
 
 const WIRE_COLORS = ['','#22c55e','#ef4444','#f59e0b','#3b82f6','#a855f7','#ec4899','#ffffff','#f97316'];
 interface WireCtxMenu { wireId: string; screenX: number; screenY: number; svgX: number; svgY: number; }
@@ -54,17 +52,12 @@ export function CircuitCanvas() {
   );
 
   const copySelected = useCallback(() => {
-    const gates = Object.values(circuit.gates).filter((g) => g.isSelected);
-    if (gates.length === 0) return;
-    const selectedIds = new Set(gates.map((g) => g.id));
-    const wires = Object.values(circuit.wires).filter(
-      (w) => selectedIds.has(w.from.gateId) && selectedIds.has(w.to.gateId)
+    const selectedIds = new Set(
+      Object.values(circuit.gates).filter((gate) => gate.isSelected).map((gate) => gate.id),
     );
-    setClipboard({
-      gates,
-      wires,
-      fsmProjectionBatchPolicies: buildClipboardProjectionBatchPolicies(circuit, selectedIds),
-    });
+    const clipboard = buildClipboardDataForSelection(circuit, selectedIds);
+    if (!clipboard) return;
+    setClipboard(clipboard);
   }, [circuit]);
 
   const pasteClipboard = useCallback((svgX?: number, svgY?: number) => {

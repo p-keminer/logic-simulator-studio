@@ -85,6 +85,7 @@ export function RacePanel({ onClose }: Props) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 12,
         zIndex: 3000,
       }}
       onMouseDown={onClose}
@@ -94,10 +95,10 @@ export function RacePanel({ onClose }: Props) {
           background: '#0f172a',
           border: '1px solid #ef4444',
           borderRadius: 8,
-          padding: '16px 20px',
-          minWidth: 420,
+          padding: '16px',
+          width: 'min(600px, calc(100vw - 24px))',
           maxWidth: 600,
-          maxHeight: '70vh',
+          maxHeight: 'calc(100vh - 24px)',
           display: 'flex',
           flexDirection: 'column',
           gap: 12,
@@ -107,8 +108,8 @@ export function RacePanel({ onClose }: Props) {
         onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', minWidth: 0 }}>
             Race / Hazard Monitor — Gate-Delay-Modus
           </span>
           <button
@@ -121,6 +122,7 @@ export function RacePanel({ onClose }: Props) {
               fontSize: 16,
               lineHeight: 1,
               padding: '0 4px',
+              flexShrink: 0,
             }}
           >
             ×
@@ -134,7 +136,7 @@ export function RacePanel({ onClose }: Props) {
         </p>
 
         {/* Race list */}
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {races.length === 0 ? (
             <span style={{ fontSize: 12, color: '#64748b', textAlign: 'center', padding: '12px 0' }}>
               Keine Races erkannt.
@@ -162,8 +164,8 @@ export function RacePanel({ onClose }: Props) {
                     color: '#e2e8f0',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11 }}>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, fontSize: 11 }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span
                         style={{
                           background: color,
@@ -179,14 +181,14 @@ export function RacePanel({ onClose }: Props) {
                       </span>
                       <span style={{ color: '#f59e0b', fontWeight: 600 }}>t = {race.time}</span>
                     </div>
-                    <span style={{ color: '#64748b' }}>{race.netId}</span>
+                    <span style={{ color: '#64748b', overflowWrap: 'anywhere' }}>{race.netId}</span>
                   </div>
                   {race.type && (
                     <div style={{ fontSize: 10, color: '#64748b', fontStyle: 'italic' }}>
                       {TYPE_DESC[race.type] ?? race.type}
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                  <div style={{ fontSize: 11, color: '#94a3b8', overflowWrap: 'anywhere' }}>
                     Gate: {race.gateIds.map(id => {
                       const g = circuit.gates[id];
                       return g?.label ? `${g.label} (${id.slice(0, 8)})` : id.slice(0, 12);
@@ -204,7 +206,7 @@ export function RacePanel({ onClose }: Props) {
         </div>
 
         {/* Footer */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, borderTop: '1px solid #1e293b', paddingTop: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8, borderTop: '1px solid #1e293b', paddingTop: 10 }}>
           <button
             onClick={clearRaceMonitor}
             style={{

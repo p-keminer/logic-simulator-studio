@@ -1,0 +1,28 @@
+{
+  "name": "@logic-gate-simulator/backend-sandbox",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Isoliertes Backend-Scaffold fuer die spaetere sichere API-Anbindung der aktuell geoeffneten Schaltung.",
+  "scripts": {
+    "dev": "tsx watch src/app/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "npm run typecheck",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.0.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

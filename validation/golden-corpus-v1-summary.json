@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-19T19:48:53.275Z",
-  "runnerVersion": "1.8.0",
-  "corpusVersion": "1.8.0",
-  "totalCases": 24,
-  "passed": 23,
+  "generatedAt": "2026-03-21T16:16:39.115Z",
+  "runnerVersion": "1.9.0",
+  "corpusVersion": "1.9.0",
+  "totalCases": 26,
+  "passed": 25,
   "failed": 0,
   "expectedLimit": 1,
   "unsupported": 0,
@@ -17,18 +17,18 @@
       "total": 5
     },
     "sequential": {
-      "pass": 8,
+      "pass": 9,
       "fail": 0,
       "expected_limit": 0,
       "unsupported": 0,
-      "total": 8
+      "total": 9
     },
     "tristate": {
-      "pass": 1,
+      "pass": 2,
       "fail": 0,
       "expected_limit": 1,
       "unsupported": 0,
-      "total": 2
+      "total": 3
     },
     "mixed": {
       "pass": 9,
@@ -278,6 +278,26 @@
       "checksPassed": 27,
       "checksFailed": 0,
       "reason": "27 checks passed"
+    },
+    {
+      "slug": "gc_v2_10_custom_tribuf_wrap",
+      "class": "tristate",
+      "title": "Custom TRIBUF hierarchy with preserved Z semantics",
+      "status": "pass",
+      "checksRun": 28,
+      "checksPassed": 28,
+      "checksFailed": 0,
+      "reason": "28 checks passed"
+    },
+    {
+      "slug": "gc_v2_11_custom_hc194_wrap",
+      "class": "sequential",
+      "title": "Custom 74HC194 hierarchy with hidden register state",
+      "status": "pass",
+      "checksRun": 30,
+      "checksPassed": 30,
+      "checksFailed": 0,
+      "reason": "30 checks passed"
     }
   ],
   "results": [
@@ -3185,7 +3205,7 @@
         {
           "checkId": "verilog-checkpoint-always-pattern",
           "status": "pass",
-          "detail": "Always-block pattern found: xor g_ha0__xor1(w_0, a, b)"
+          "detail": "Always-block pattern found: xor g_ha0_flat_xor1(w_0, a, b)"
         },
         {
           "checkId": "verilog-iverilog-syntax",
@@ -3711,6 +3731,314 @@
         }
       ],
       "reason": "27 checks passed"
+    },
+    {
+      "slug": "gc_v2_10_custom_tribuf_wrap",
+      "class": "tristate",
+      "title": "Custom TRIBUF hierarchy with preserved Z semantics",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_10_custom_tribuf_wrap.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_10_custom_tribuf_wrap, name=gc_v2_10_custom_tribuf_wrap"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: CIC_TRIBUF_WRAP"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 2 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 1 output(s), found 1 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_10_custom_tribuf_wrap found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 2 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 1 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 3 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: assign w_0 = (~oe) ? a : 1'bz"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_10_custom_tribuf_wrap found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 2 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 1 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-checkpoint-output-shadows",
+          "status": "pass",
+          "detail": "Output shadow signals (_q) found in VHDL"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "3 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "28 checks passed"
+    },
+    {
+      "slug": "gc_v2_11_custom_hc194_wrap",
+      "class": "sequential",
+      "title": "Custom 74HC194 hierarchy with hidden register state",
+      "status": "pass",
+      "checks": [
+        {
+          "checkId": "circuit-file-exists",
+          "status": "pass",
+          "detail": "validation/generated-circuits-golden/gc_v2_11_custom_hc194_wrap.lgsc.json"
+        },
+        {
+          "checkId": "verilog-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v"
+        },
+        {
+          "checkId": "vhdl-export-exists",
+          "status": "pass",
+          "detail": "validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.vhd"
+        },
+        {
+          "checkId": "circuit-json-parseable",
+          "status": "pass",
+          "detail": "Valid JSON"
+        },
+        {
+          "checkId": "circuit-slug-match",
+          "status": "pass",
+          "detail": "id=gc_v2_11_custom_hc194_wrap, name=gc_v2_11_custom_hc194_wrap"
+        },
+        {
+          "checkId": "circuit-gate-types",
+          "status": "pass",
+          "detail": "All expected gates found: CIC_HC194_WRAP"
+        },
+        {
+          "checkId": "circuit-inputs",
+          "status": "pass",
+          "detail": "All 10 inputs found"
+        },
+        {
+          "checkId": "circuit-outputs",
+          "status": "pass",
+          "detail": "Expected 4 output(s), found 4 LED(s)"
+        },
+        {
+          "checkId": "verilog-module-name",
+          "status": "pass",
+          "detail": "module gc_v2_11_custom_hc194_wrap found"
+        },
+        {
+          "checkId": "verilog-endmodule",
+          "status": "pass",
+          "detail": "endmodule found"
+        },
+        {
+          "checkId": "verilog-input-ports",
+          "status": "pass",
+          "detail": "All 10 input ports declared"
+        },
+        {
+          "checkId": "verilog-output-ports",
+          "status": "pass",
+          "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "verilog-checkpoint-ports",
+          "status": "pass",
+          "detail": "All 6 checkpoint ports found"
+        },
+        {
+          "checkId": "verilog-checkpoint-pattern",
+          "status": "pass",
+          "detail": "Checkpoint pattern found: assign w_0 = reg_wrap_flat_dut[0]"
+        },
+        {
+          "checkId": "verilog-checkpoint-always-pattern",
+          "status": "pass",
+          "detail": "Always-block pattern found: always @(posedge clk or negedge clrn)"
+        },
+        {
+          "checkId": "verilog-checkpoint-extra-reg",
+          "status": "pass",
+          "detail": "Extra reg 'reg_wrap_flat_dut' found"
+        },
+        {
+          "checkId": "verilog-iverilog-syntax",
+          "status": "pass",
+          "detail": "iverilog accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v"
+        },
+        {
+          "checkId": "verilog-verilator-lint",
+          "status": "pass",
+          "detail": "verilator accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v"
+        },
+        {
+          "checkId": "verilog-yosys-read",
+          "status": "pass",
+          "detail": "yosys accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.v"
+        },
+        {
+          "checkId": "vhdl-entity-name",
+          "status": "pass",
+          "detail": "entity gc_v2_11_custom_hc194_wrap found"
+        },
+        {
+          "checkId": "vhdl-architecture",
+          "status": "pass",
+          "detail": "architecture block found"
+        },
+        {
+          "checkId": "vhdl-input-ports",
+          "status": "pass",
+          "detail": "All 10 input ports declared"
+        },
+        {
+          "checkId": "vhdl-output-ports",
+          "status": "pass",
+          "detail": "All 4 output port(s) declared"
+        },
+        {
+          "checkId": "vhdl-checkpoint-pattern",
+          "status": "pass",
+          "detail": "VHDL checkpoint tokens verified"
+        },
+        {
+          "checkId": "vhdl-checkpoint-extra-signal",
+          "status": "pass",
+          "detail": "Extra signal 'reg_wrap_flat_dut' found"
+        },
+        {
+          "checkId": "vhdl-ghdl-analyze",
+          "status": "pass",
+          "detail": "ghdl accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.vhd"
+        },
+        {
+          "checkId": "verilog-external-sim",
+          "status": "pass",
+          "detail": "5 scenario step(s) passed with iverilog/vvp"
+        },
+        {
+          "checkId": "vhdl-external-sim",
+          "status": "pass",
+          "detail": "5 scenario step(s) passed with ghdl"
+        },
+        {
+          "checkId": "verilog-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported Verilog matches golden artifact exactly"
+        },
+        {
+          "checkId": "vhdl-reexport-diff",
+          "status": "pass",
+          "detail": "Re-exported VHDL matches golden artifact exactly"
+        }
+      ],
+      "reason": "30 checks passed"
     }
   ]
 }

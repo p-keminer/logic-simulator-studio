@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { gateRegistry } from '../../core/registry/index';
 import type { Circuit, GateInstance, SignalState, Wire } from '../../core/types';
 import {
+  buildAnalysisSubsystemOptions,
   buildSequentialProjectionChannels,
   buildStateTransitionProjection,
 } from '../../core/analysis/sequentialProjection';
 import {
+  INPUT_TYPES,
+  OUTPUT_TYPES,
   chooseRepresentativeStateVar,
   classifyStateTransitionInputs,
   collectConnectedGateIds,
@@ -67,6 +70,39 @@ function makeCircuit(gates: GateInstance[], wires: Wire[]): Circuit {
     viewport: { panX: 0, panY: 0, zoom: 1 },
     metadata: { createdAt: '2026-03-08', updatedAt: '2026-03-08' },
   };
+}
+
+function makeProjection(
+  batchId: string,
+  role: NonNullable<GateInstance['projection']>['role'],
+  signalLabel: string,
+  signalPortId?: string,
+): NonNullable<GateInstance['projection']> {
+  return {
+    sourceSystem: 'fsm_synth',
+    projectionBatchId: batchId,
+    role,
+    visibility: role === 'output' || role === 'input' || role === 'clock' || role === 'reset' || role === 'state'
+      ? 'canonical'
+      : 'derived',
+    signalLabel,
+    groupKey: `${role}:${signalLabel}`,
+    signalPortId,
+  };
+}
+
+function analyzeProjectionForCircuit(circuit: Circuit) {
+  const connectedIds = collectConnectedGateIds(circuit);
+  const feedbackGateIds = collectSttFeedbackGateIds(circuit, connectedIds, [], gateRegistry.get.bind(gateRegistry));
+  const stateVars = collectStateVarsForStt(circuit, connectedIds, feedbackGateIds, gateRegistry.get.bind(gateRegistry));
+  const inputs = Object.values(circuit.gates)
+    .filter((gate) => INPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+    .sort((a, b) => a.x - b.x);
+  const outputGates = Object.values(circuit.gates)
+    .filter((gate) => OUTPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+    .sort((a, b) => a.x - b.x);
+
+  return buildStateTransitionProjection(circuit, inputs, stateVars, outputGates);
 }
 
 describe('truthTableAnalysis', () => {
@@ -270,6 +306,143 @@ describe('truthTableAnalysis', () => {
     expect(projected.inputs.map((gate) => gate.label)).toEqual(['CLK', 'RST', 'A']);
     expect(projected.stateVars.map((stateVar) => stateVar.label)).toEqual(['Q0']);
     expect(projected.outputGates.map((gate) => gate.label)).toEqual(['Y']);
+  });
+
+  it('keeps observer-only mixed branches on the projected analysis path', () => {
+    const circuit = makeCircuit([
+      makeGate('clk', 'CLOCK', { label: 'CLK', projection: makeProjection('batch-observer', 'clock', 'CLK', 'clk') }),
+      makeGate('rst', 'INPUT_SWITCH', { label: 'RST', projection: makeProjection('batch-observer', 'reset', 'RST', 'out') }),
+      makeGate('inA', 'INPUT_SWITCH', { label: 'A', projection: makeProjection('batch-observer', 'input', 'A', 'out') }),
+      makeGate('q0', 'D_FF_R', { label: 'Q0', projection: makeProjection('batch-observer', 'state', 'Q0', 'q') }),
+      makeGate('outY', 'OUTPUT_LED', { label: 'Y', projection: makeProjection('batch-observer', 'output', 'Y', '_display') }),
+      makeGate('rawSwitch', 'INPUT_SWITCH', { label: 'RAW_IN' }),
+      makeGate('rawAnd', 'AND'),
+      makeGate('rawLed', 'OUTPUT_LED', { label: 'RAW_LED' }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w3', 'inA', 'out', 'q0', 'd'),
+      makeWire('w4', 'q0', 'q', 'outY', 'in'),
+      makeWire('w5', 'q0', 'q', 'rawAnd', 'a'),
+      makeWire('w6', 'rawSwitch', 'out', 'rawAnd', 'b'),
+      makeWire('w7', 'rawAnd', 'out', 'rawLed', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const projectedOption = analysisOptions.find((option) => option.kind === 'projected_fsm');
+    expect(projectedOption).toBeTruthy();
+    expect(Object.keys(projectedOption!.circuit.gates).sort()).not.toContain('rawSwitch');
+    expect(Object.keys(projectedOption!.circuit.gates).sort()).not.toContain('rawAnd');
+    expect(Object.keys(projectedOption!.circuit.gates).sort()).not.toContain('rawLed');
+
+    const projected = analyzeProjectionForCircuit(projectedOption!.circuit);
+    expect(projected.isProjectedFsmView).toBe(true);
+    expect(projected.projectionStatus).toBe('projected');
+    expect(buildSequentialProjectionChannels(projectedOption!.circuit).map((channel) => channel.label)).toEqual(['CLK', 'RST', 'A', 'Q0', 'Y']);
+  });
+
+  it('falls back via partial inputs for a multi-stage raw upstream driver in the analysis path', () => {
+    const circuit = makeCircuit([
+      makeGate('clk', 'CLOCK', { label: 'CLK', projection: makeProjection('batch-upstream', 'clock', 'CLK', 'clk') }),
+      makeGate('rst', 'INPUT_SWITCH', { label: 'RST', projection: makeProjection('batch-upstream', 'reset', 'RST', 'out') }),
+      makeGate('q0', 'D_FF_R', { label: 'Q0', projection: makeProjection('batch-upstream', 'state', 'Q0', 'q') }),
+      makeGate('outY', 'OUTPUT_LED', { label: 'Y', projection: makeProjection('batch-upstream', 'output', 'Y', '_display') }),
+      makeGate('rawSwitch', 'INPUT_SWITCH', { label: 'RAW_IN' }),
+      makeGate('rawNot', 'NOT'),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w3', 'rawSwitch', 'out', 'rawNot', 'a'),
+      makeWire('w4', 'rawNot', 'out', 'q0', 'd'),
+      makeWire('w5', 'q0', 'q', 'outY', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const mixedOption = analysisOptions.find((option) => Object.keys(option.circuit.gates).includes('rawSwitch'));
+    expect(mixedOption).toBeTruthy();
+    expect(mixedOption?.kind).toBe('generic');
+
+    const projected = analyzeProjectionForCircuit(mixedOption!.circuit);
+    expect(projected.isProjectedFsmView).toBe(false);
+    expect(projected.projectionStatus).toBe('fallback_partial_inputs');
+    expect(buildSequentialProjectionChannels(mixedOption!.circuit)).toEqual([]);
+  });
+
+  it('falls back via partial state for an extra raw state-carrier in the analysis path', () => {
+    const circuit = makeCircuit([
+      makeGate('clk', 'CLOCK', { label: 'CLK', projection: makeProjection('batch-state', 'clock', 'CLK', 'clk') }),
+      makeGate('rst', 'INPUT_SWITCH', { label: 'RST', projection: makeProjection('batch-state', 'reset', 'RST', 'out') }),
+      makeGate('q0', 'D_FF_R', { label: 'Q0', projection: makeProjection('batch-state', 'state', 'Q0', 'q') }),
+      makeGate('outY', 'OUTPUT_LED', { label: 'Y', projection: makeProjection('batch-state', 'output', 'Y', '_display') }),
+      makeGate('rawReg', 'D_FF_R', { label: 'RAW_Q', customState: { q: 0, prevClk: 0 } }),
+      makeGate('rawAnd', 'AND'),
+      makeGate('rawLed', 'OUTPUT_LED', { label: 'RAW_LED' }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w3', 'q0', 'q', 'outY', 'in'),
+      makeWire('w4', 'clk', 'clk', 'rawReg', 'clk'),
+      makeWire('w5', 'rst', 'out', 'rawReg', 'rst'),
+      makeWire('w6', 'q0', 'q', 'rawAnd', 'a'),
+      makeWire('w7', 'rawReg', 'q', 'rawAnd', 'b'),
+      makeWire('w8', 'rawAnd', 'out', 'rawReg', 'd'),
+      makeWire('w9', 'rawReg', 'q', 'rawLed', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const mixedOption = analysisOptions.find((option) => Object.keys(option.circuit.gates).includes('rawReg'));
+    expect(mixedOption).toBeTruthy();
+    expect(mixedOption?.kind).toBe('generic');
+
+    const projected = analyzeProjectionForCircuit(mixedOption!.circuit);
+    expect(projected.isProjectedFsmView).toBe(false);
+    expect(projected.projectionStatus).toBe('fallback_partial_state');
+    expect(buildSequentialProjectionChannels(mixedOption!.circuit)).toEqual([]);
+  });
+
+  it('keeps broad projected analysis paths canonical and ordered', () => {
+    const circuit = makeCircuit([
+      makeGate('clk', 'CLOCK', { x: 0, label: 'CLK', projection: makeProjection('batch-wide', 'clock', 'CLK', 'clk') }),
+      makeGate('rst', 'INPUT_SWITCH', { x: 40, label: 'RST', projection: makeProjection('batch-wide', 'reset', 'RST', 'out') }),
+      makeGate('inA', 'INPUT_SWITCH', { x: 80, label: 'A', projection: makeProjection('batch-wide', 'input', 'A', 'out') }),
+      makeGate('inB', 'INPUT_SWITCH', { x: 120, label: 'B', projection: makeProjection('batch-wide', 'input', 'B', 'out') }),
+      makeGate('q0', 'D_FF_R', { x: 200, label: 'Q0', projection: makeProjection('batch-wide', 'state', 'Q0', 'q') }),
+      makeGate('q1', 'D_FF_R', { x: 260, label: 'Q1', projection: makeProjection('batch-wide', 'state', 'Q1', 'q') }),
+      makeGate('outY', 'OUTPUT_LED', { x: 340, label: 'Y', projection: makeProjection('batch-wide', 'output', 'Y', '_display') }),
+      makeGate('outZ', 'OUTPUT_LED', { x: 400, label: 'Z', projection: makeProjection('batch-wide', 'output', 'Z', '_display') }),
+      makeGate('stateLed', 'OUTPUT_LED', { x: 460, label: 'Q1', projection: makeProjection('batch-wide', 'display_mirror', 'Q1', '_display') }),
+    ], [
+      makeWire('w1', 'clk', 'clk', 'q0', 'clk'),
+      makeWire('w2', 'clk', 'clk', 'q1', 'clk'),
+      makeWire('w3', 'rst', 'out', 'q0', 'rst'),
+      makeWire('w4', 'rst', 'out', 'q1', 'rst'),
+      makeWire('w5', 'inA', 'out', 'q0', 'd'),
+      makeWire('w6', 'inB', 'out', 'q1', 'd'),
+      makeWire('w7', 'q0', 'q', 'outY', 'in'),
+      makeWire('w8', 'q1', 'q', 'outZ', 'in'),
+      makeWire('w9', 'q1', 'q', 'stateLed', 'in'),
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    const projectedOption = analysisOptions.find((option) => option.kind === 'projected_fsm');
+    expect(projectedOption).toBeTruthy();
+
+    const projected = analyzeProjectionForCircuit(projectedOption!.circuit);
+    expect(projected.isProjectedFsmView).toBe(true);
+    expect(projected.projectionStatus).toBe('projected');
+    expect(projected.inputs.map((gate) => gate.label)).toEqual(['CLK', 'RST', 'A', 'B']);
+    expect(projected.stateVars.map((stateVar) => stateVar.label)).toEqual(['Q0', 'Q1']);
+    expect(projected.outputGates.map((gate) => gate.label)).toEqual(['Y', 'Z']);
+    expect(buildSequentialProjectionChannels(projectedOption!.circuit).map((channel) => channel.label)).toEqual([
+      'CLK',
+      'RST',
+      'A',
+      'B',
+      'Q0',
+      'Q1',
+      'Y',
+      'Z',
+    ]);
   });
 
   it('falls back to generic STT view when projected and non-projected state gates are mixed', () => {

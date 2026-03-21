@@ -1,14 +1,21 @@
 import type { Circuit, GateDefinition, GateInstance, Wire, WireEndpoint } from '../types';
+import { getCustomIcGatePolicy } from '../analysis/customIcPolicy';
+import { analyzeCustomIcGate, type CustomIcGateStructure } from '../analysis/customIcStructure';
 import { gateRegistry } from '../registry/GateRegistry';
 
 interface FlattenPlan {
   gate: GateInstance;
   definition: GateDefinition;
+  structure: CustomIcGateStructure;
   idMap: Record<string, string>;
   inputFanout: Record<string, WireEndpoint[]>;
   inputDrivers: Record<string, WireEndpoint[]>;
   outputDrivers: Record<string, WireEndpoint>;
   outputPassthroughs: Record<string, string>;
+}
+
+function makeFlattenedElementId(outerGateId: string, innerElementId: string): string {
+  return `${outerGateId}_flat_${innerElementId}`;
 }
 
 function cloneJson<T>(value: T): T {
@@ -33,7 +40,11 @@ function cloneWire(wire: Wire): Wire {
   };
 }
 
-function buildFlattenPlan(gate: GateInstance, definition: GateDefinition): FlattenPlan {
+function buildFlattenPlan(
+  gate: GateInstance,
+  definition: GateDefinition,
+  structure: CustomIcGateStructure,
+): FlattenPlan {
   const meta = definition.customIC;
   if (!meta) {
     throw new Error(`Custom IC "${gate.typeId}" is missing export metadata.`);
@@ -43,55 +54,46 @@ function buildFlattenPlan(gate: GateInstance, definition: GateDefinition): Flatt
   const idMap: Record<string, string> = {};
   for (const [innerGateId, innerGate] of Object.entries(subcircuit.gates)) {
     if (innerGate.typeId === 'INPUT_SWITCH' || innerGate.typeId === 'OUTPUT_LED') continue;
-    if (innerGate.typeId.startsWith('CIC_')) {
-      throw new Error(`Nested custom IC "${innerGate.typeId}" inside "${gate.typeId}" is not supported for HDL export.`);
-    }
-    idMap[innerGateId] = `${gate.id}__${innerGateId}`;
+    idMap[innerGateId] = makeFlattenedElementId(gate.id, innerGateId);
   }
 
   const inputFanout: Record<string, WireEndpoint[]> = {};
-  const inputPortsByGateId: Record<string, string> = {};
-  for (let i = 0; i < meta.inputGateIds.length; i++) {
-    const inputGateId = meta.inputGateIds[i];
-    const portId = `i${i}`;
-    inputPortsByGateId[inputGateId] = portId;
-    inputFanout[portId] = Object.values(subcircuit.wires)
-      .filter((wire) => wire.from.gateId === inputGateId && wire.from.portId === 'out')
-      .map((wire) => ({ gateId: idMap[wire.to.gateId], portId: wire.to.portId }))
+  for (const inputPort of structure.inputPorts) {
+    inputFanout[inputPort.portId] = inputPort.fanout
+      .map((target) => ({ gateId: idMap[target.innerGateId], portId: target.innerPortId }))
       .filter((endpoint) => endpoint.gateId !== undefined);
   }
 
   const outputDrivers: Record<string, WireEndpoint> = {};
   const outputPassthroughs: Record<string, string> = {};
-  for (let i = 0; i < meta.outputGateIds.length; i++) {
-    const outputGateId = meta.outputGateIds[i];
-    const driver = Object.values(subcircuit.wires).find(
-      (wire) => wire.to.gateId === outputGateId && wire.to.portId === 'in',
-    );
-    if (!driver) {
-      throw new Error(`Custom IC "${gate.typeId}" output o${i} has no driven OUTPUT_LED in its subcircuit.`);
+  for (const outputPort of structure.outputPorts) {
+    if (outputPort.driverKind === 'missing') {
+      throw new Error(
+        `Custom IC "${gate.typeId}" output ${outputPort.portId} has no driven OUTPUT_LED in its subcircuit.`,
+      );
     }
-    const passthroughPort = inputPortsByGateId[driver.from.gateId];
-    if (passthroughPort) {
-      outputPassthroughs[`o${i}`] = passthroughPort;
+
+    if (outputPort.driverKind === 'passthrough') {
+      outputPassthroughs[outputPort.portId] = outputPort.passthroughInputPortId!;
       continue;
     }
 
-    const flattenedDriverGateId = idMap[driver.from.gateId];
+    const flattenedDriverGateId = idMap[outputPort.innerDriverGateId!];
     if (!flattenedDriverGateId) {
       throw new Error(
-        `Custom IC "${gate.typeId}" output o${i} is driven by unsupported inner source "${driver.from.gateId}".`,
+        `Custom IC "${gate.typeId}" output ${outputPort.portId} is driven by unsupported inner source "${outputPort.innerDriverGateId}".`,
       );
     }
-    outputDrivers[`o${i}`] = {
+    outputDrivers[outputPort.portId] = {
       gateId: flattenedDriverGateId,
-      portId: driver.from.portId,
+      portId: outputPort.innerDriverPortId!,
     };
   }
 
   return {
     gate,
     definition,
+    structure,
     idMap,
     inputFanout,
     inputDrivers: {},
@@ -142,16 +144,15 @@ export function flattenCustomICs(circuit: Circuit): Circuit {
   const customGates = Object.values(circuit.gates).filter(isFlattenableCustomGate);
   if (customGates.length === 0) return circuit;
 
-  for (const gate of customGates) {
-    if (!gateRegistry.has(gate.typeId)) {
-      throw new Error(`Custom IC "${gate.typeId}" is not registered. Reload saved custom ICs before exporting.`);
-    }
-  }
-
   const plans = new Map<string, FlattenPlan>();
   for (const gate of customGates) {
+    const policy = getCustomIcGatePolicy(gate);
+    const structure = analyzeCustomIcGate(gate);
+    if (!policy.exportAllowed) {
+      throw new Error(policy.exportReason ?? `Custom IC "${gate.typeId}" cannot be flattened for HDL export.`);
+    }
     const definition = gateRegistry.get(gate.typeId);
-    plans.set(gate.id, buildFlattenPlan(gate, definition));
+    plans.set(gate.id, buildFlattenPlan(gate, definition, structure));
   }
 
   for (const wire of Object.values(circuit.wires)) {
@@ -226,7 +227,7 @@ export function flattenCustomICs(circuit: Circuit): Circuit {
       if (toGate.typeId === 'INPUT_SWITCH' || toGate.typeId === 'OUTPUT_LED') continue;
 
       const flattenedWire = cloneWire(innerWire);
-      flattenedWire.id = `${plan.gate.id}__${innerWireId}`;
+      flattenedWire.id = makeFlattenedElementId(plan.gate.id, innerWireId);
       flattenedWire.from = {
         gateId: plan.idMap[innerWire.from.gateId],
         portId: innerWire.from.portId,

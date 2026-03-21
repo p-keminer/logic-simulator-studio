@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useCircuitContext } from '../../store/CircuitContext';
+import { getCustomIcEditorSavePolicy } from '../../core/analysis/customIcPolicy';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { registerCustomIC } from '../../core/customIc/registerCustomIC';
 import type { Circuit } from '../../core/types';
@@ -41,6 +42,7 @@ export function CustomICModal({ onClose }: Props) {
 
   const inputs  = Object.values(circuit.gates).filter((g) => g.typeId === 'INPUT_SWITCH');
   const outputs = Object.values(circuit.gates).filter((g) => g.typeId === 'OUTPUT_LED');
+  const savePolicy = getCustomIcEditorSavePolicy(circuit);
 
   const handleNext = () => {
     const name = newName.trim();
@@ -49,9 +51,8 @@ export function CustomICModal({ onClose }: Props) {
       alert('Die aktuelle Schaltung braucht mind. einen Schalter und eine LED.');
       return;
     }
-    const hasCICGates = Object.values(circuit.gates).some(g => g.typeId.startsWith('CIC_'));
-    if (hasCICGates) {
-      alert('Die Schaltung enthält ein Custom IC. Verschachtelte Custom ICs werden nicht unterstützt (Rekursionsgefahr).');
+    if (!savePolicy.allowed) {
+      alert(savePolicy.reason);
       return;
     }
     // Pre-fill port names from existing labels
@@ -126,13 +127,45 @@ export function CustomICModal({ onClose }: Props) {
             <p style={{ color:'#64748b', fontSize:11, fontFamily:'monospace', margin:'0 0 16px' }}>
               Aktuelle Schaltung als wiederverwendbares IC speichern. Schalter → Eingänge, LEDs → Ausgänge.
             </p>
+            {!savePolicy.allowed && (
+              <div style={{
+                marginBottom: 16,
+                border: '1px solid #b45309',
+                background: 'rgba(120, 53, 15, 0.35)',
+                borderRadius: 8,
+                padding: '10px 12px',
+                color: '#fde68a',
+                fontSize: 11,
+                fontFamily: 'monospace',
+                lineHeight: 1.45,
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Nested Custom IC aktuell bewusst deaktiviert</div>
+                <div>{savePolicy.reason}</div>
+                {savePolicy.customGateTypeIds.length > 0 && (
+                  <div style={{ marginTop: 6, color: '#fbbf24' }}>
+                    Bereits enthaltene Custom-IC-Typen: {savePolicy.customGateTypeIds.join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ display:'flex', gap:8, marginBottom:20 }}>
               <input value={newName} onChange={(e) => setNewName(e.target.value)}
                 placeholder="IC-Name..." onKeyDown={(e) => e.key === 'Enter' && handleNext()}
                 style={{ flex:1, background:'#0f172a', border:'1px solid #334155', borderRadius:6, padding:'6px 10px', color:'#e2e8f0', fontFamily:'monospace', fontSize:12 }} />
               <button onClick={handleNext}
-                style={{ background:'#1d4ed8', color:'#fff', border:'none', borderRadius:6, padding:'6px 14px', cursor:'pointer', fontFamily:'monospace', fontSize:12 }}>
-                Weiter →
+                disabled={!savePolicy.allowed}
+                style={{
+                  background: savePolicy.allowed ? '#1d4ed8' : '#334155',
+                  color: savePolicy.allowed ? '#fff' : '#94a3b8',
+                  border:'none',
+                  borderRadius:6,
+                  padding:'6px 14px',
+                  cursor: savePolicy.allowed ? 'pointer' : 'not-allowed',
+                  fontFamily:'monospace',
+                  fontSize:12,
+                  opacity: savePolicy.allowed ? 1 : 0.8,
+                }}>
+                {savePolicy.allowed ? 'Weiter →' : 'Nested deaktiviert'}
               </button>
             </div>
 

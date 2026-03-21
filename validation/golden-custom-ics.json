@@ -12,5 +12,19 @@
       "circuitSlug": "gc_s4_reg4_enable",
       "portNames": ["d0", "d1", "d2", "d3", "en", "clk", "rst", "q0", "q1", "q2", "q3"]
     }
+  ],
+  "gc_v2_10_custom_tribuf_wrap": [
+    {
+      "name": "TRIBUF_WRAP",
+      "circuitSlug": "gc_t1_tribuf_direct",
+      "portNames": ["a", "oe", "y"]
+    }
+  ],
+  "gc_v2_11_custom_hc194_wrap": [
+    {
+      "name": "HC194_WRAP",
+      "circuitSlug": "gc_s8_hc194_modes",
+      "portNames": ["clk", "clrn", "s0", "s1", "sr", "sl", "d0", "d1", "d2", "d3", "q0", "q1", "q2", "q3"]
+    }
   ]
 }

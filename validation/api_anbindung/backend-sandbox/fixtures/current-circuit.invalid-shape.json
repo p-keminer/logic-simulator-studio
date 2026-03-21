@@ -1,0 +1,17 @@
+{
+  "bridgeVersion": "sandbox-app-bridge-v1",
+  "openCircuit": {
+    "circuitId": "invalid-shape-circuit",
+    "selection": {
+      "activeElementIds": [42]
+    },
+    "elements": {
+      "nodes": [],
+      "gates": [],
+      "wires": []
+    },
+    "annotations": {
+      "notes": "This snapshot is missing required fields on purpose."
+    }
+  }
+}
