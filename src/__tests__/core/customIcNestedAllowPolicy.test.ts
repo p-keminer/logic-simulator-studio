@@ -196,7 +196,7 @@ describe('customIcNestedAllowPolicy', () => {
     expect(policy.futureNestedPolicy).toBe('block_existing_nested');
     expect(policy.futureNestedRegistrationAllowed).toBe(false);
     expect(policy.futureNestedExportAllowed).toBe(false);
-    expect(policy.futureNestedReason).toContain('Nested custom IC "CIC_NESTED_ALLOW_HALF_ADDER"');
+    expect(policy.futureNestedReason).toBeUndefined();
   });
 
   it('summarizes which custom ICs would be future nested candidates without changing current runtime behavior', () => {
@@ -218,6 +218,6 @@ describe('customIcNestedAllowPolicy', () => {
     expect(summary.blockedExistingNestedCount).toBe(1);
     expect(summary.blockedReasons.some((reason) => reason.includes('input i1 has no fanout'))).toBe(true);
     expect(summary.blockedReasons.some((reason) => reason.includes('output o0 has no driven OUTPUT_LED'))).toBe(true);
-    expect(summary.blockedReasons.some((reason) => reason.includes('Nested custom IC "CIC_NESTED_ALLOW_HALF_ADDER"'))).toBe(true);
+    expect(summary.blockedReasons.some((reason) => reason.includes('Nested custom IC "CIC_NESTED_ALLOW_HALF_ADDER"'))).toBe(false);
   });
 });

@@ -58,7 +58,7 @@ Pflegeregel:
 | Build | pass (`tsc -b` + `vite build`) |
 | Lint | pass |
 | Contract Runner v1 | **447 pass, 0 fail, 0 unsupported** (447 total) |
-| Golden Corpus v1 | **23 pass, 0 fail, 1 expected_limit, 0 unsupported** (24 total) |
+| Golden Corpus v1 | **28 pass, 0 fail, 2 expected_limit, 0 unsupported** (30 total) |
 | Focused-Nine Core | **12/12** pass, 0 HDL-Fails, 0 Tooling-Warnungen |
 | CI-Jobs | 6 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain |
 | Harte Restfehler (Simulation) | **0** |
@@ -78,8 +78,9 @@ Maschinenlesbare Eintraege (P0/P1/P2) mit Status, Evidenz, betroffenen Gates und
 ### 3. Contract Runner -> contract-runner-report.md + contract-runner-summary.json
 Automatisierter Vertragslaeufer fuer 86 Gate-Contracts (447 Einzelfaelle). Verifiziert Gate-Verhalten gegen maschinenlesbare Spezifikationen. Laeuft als eigenes CI-Gate. Status: 447 pass, 0 unsupported. Multi-Driver-Konflikte fuer TRIBUF, 74HC373, 74HC374 und RAM256 werden jetzt mit shared-bus-Resolution wirklich ausgefuehrt statt nur dokumentiert.
 
-### 4. Golden Corpus v1 -> golden-corpus-v1-report.md + golden-corpus-v1-summary.json
-Basis-Regressionssuite mit 26 Referenzschaltungen ueber alle 4 Klassen (combinational, sequential, tristate, mixed), jetzt inklusive der elf v2-Pilot-Seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, `gc_v2_9_custom_reg4_pipeline`, `gc_v2_10_custom_tribuf_wrap` und `gc_v2_11_custom_hc194_wrap`. Prueft Datei-/Slug-Konsistenz, JSON-Parsebarkeit, Gate-Typen, Ein-/Ausgaenge, Verilog-/VHDL-Struktursanity, Checkpoint-Matching, externe HDL-Syntax/Lint-Checks (iverilog, verilator, yosys, ghdl), szenariobasierte externe HDL-Simulation und live Re-Export-Diffs. `gc_t2_bus_mux` ist bewusst `expected_limit` (dokumentierte Exporter-Grenze: Multi-Driver-Tri-State-Bus, last-wire-wins). `gc_v2_6_custom_halfadder`, `gc_v2_9_custom_reg4_pipeline`, `gc_v2_10_custom_tribuf_wrap` und `gc_v2_11_custom_hc194_wrap` bilden jetzt vier verifizierte one-level-Hierarchie/custom-IC-Pfade via strukturellem Flattening ab. `gc_v2_8_sequential_feedback` erweitert die Basis zusaetzlich um einen mehrtaktigen sequentiellen Feedback-Fall mit Seed-Load und XOR-Rueckkopplung. Laeuft als eigenes CI-Gate.
+### 4. Golden Corpus v1 -> golden-corpus-v1-report.md + golden-corpus-v1-summary.json + golden-corpus-v1-acceptance.json
+Basis-Regressionssuite mit 30 Referenzschaltungen ueber alle 4 Klassen (combinational, sequential, tristate, mixed), jetzt inklusive der fuenfzehn v2-Pilot-Seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, `gc_v2_9_custom_reg4_pipeline`, `gc_v2_10_custom_tribuf_wrap`, `gc_v2_11_custom_hc194_wrap`, `gc_v2_12_nested_halfadder_parent`, `gc_v2_13_deep_nested_halfadder_boundary`, `gc_v2_14_mixed_datapath_extended` und `gc_v2_15_ram_decode_capture_bus`. Prueft Datei-/Slug-Konsistenz, JSON-Parsebarkeit, Gate-Typen, Ein-/Ausgaenge, Verilog-/VHDL-Struktursanity, Checkpoint-Matching, externe HDL-Syntax/Lint-Checks (iverilog, verilator, yosys, ghdl), szenariobasierte externe HDL-Simulation und live Re-Export-Diffs. `gc_t2_bus_mux` und `gc_v2_13_deep_nested_halfadder_boundary` sind bewusst `expected_limit` (dokumentierte Exporter-Grenzen fuer Multi-Driver-Tri-State-Bus bzw. tiefere Nested-Custom-IC-Hierarchie). `gc_v2_6_custom_halfadder`, `gc_v2_9_custom_reg4_pipeline`, `gc_v2_10_custom_tribuf_wrap` und `gc_v2_11_custom_hc194_wrap` bilden vier verifizierte one-level-Hierarchie/custom-IC-Pfade via strukturellem Flattening ab; `gc_v2_12_nested_halfadder_parent` erweitert den Corpus um den ersten direkten nested-combinational-Custom-IC-Pfad mit rekursiver Flattening-Pruefung, `gc_v2_13_deep_nested_halfadder_boundary` dokumentiert die derzeit bewusst geblockte tiefere Hierarchie als stabile Regression statt als stillen Fehler, `gc_v2_14_mixed_datapath_extended` hebt einen groesseren state-heavy Datapath-Fall mit laengerer Mehrtakt-Sequenz aus dem Focused-Bereich in die Golden-Baseline, und `gc_v2_15_ram_decode_capture_bus` verankert erstmals einen integrierten RAM-/Decode-/Bit-Select-/Hold-/Capture-Systempfad als gemeinsame Golden-Regression. `gc_v2_8_sequential_feedback` erweitert die Basis zusaetzlich um einen mehrtaktigen sequentiellen Feedback-Fall mit Seed-Load und XOR-Rueckkopplung. Laeuft als eigenes CI-Gate.
+Das kanonische Acceptance-Artefakt `golden-corpus-v1-acceptance.json` wird jetzt aus demselben Runner-Lauf wie Summary und Report erzeugt; partielle `--slug`-Runs duerfen diese kanonischen Dateien nicht mehr ueberschreiben. Der Golden-Strang gilt damit im aktuellen Scope als abgeschlossen; weitere Breite oder tiefere Hierarchie sind nur noch optionale Folgeexpansion.
 
 ### 5. Focused-Nine Core -> focused-nine-report.md + focused-nine-summary.json
 Hochrisiko-Suite fuer 12 Schaltungen. Simulationslauf + HDL-Toolchain-Verifikation (iverilog, ghdl, yosys, verilator). Laeuft als eigenes CI-Gate mit HDL-Tool-Installation.
@@ -94,7 +95,7 @@ Drei Reifegrad-Stufen (Teaching Tool / Design Tool / Industry-Lite EDA) mit 6 Ar
 Der aktive FSM-Strang liegt jetzt als ein zusammenhaengendes Arbeitspaket-Dokument unter `fsm0/work-package.md`. Es fuehrt `FSM0-1` bis `FSM0-7` in einem einzigen Strang mit Reihenfolge, Mehrwert- und Aufwandseinschaetzung. Echte Legacy-Repros liegen weiter unter `fsm-export-fixes/cases/`.
 
 ### 9. Race-Arbeitspaket -> race-panel-fixes/work-package.md
-Strukturelles Arbeitspaket fuer Race-Panel, Race-Markierungen und Race-Lifecycle im Store. Der erste verifizierte Slice ist jetzt umgesetzt: store-seitiges Pruning geloeschter Race-Ursachen, manueller Reset, signaturbasiertes Dedupe und eine kleine dedizierte Lifecycle-Helferschicht. Offene Restpunkte betreffen tiefere Incident-Metadaten und weitergehende Integrationstests.
+Strukturelles Arbeitspaket fuer Race-Panel, Race-Markierungen und Race-Lifecycle im Store. Der Strang ist fuer den aktuellen Produktumfang abgeschlossen: store-seitiges Pruning geloeschter Race-Ursachen, manueller Reset, signaturbasiertes Incident-Dedupe, gemeinsame Monitor-State-Helferschicht, Incident-Metadaten sowie konservatives Struktur-Fingerprint-Pruning sind umgesetzt und verifiziert. Weitere Arbeit waere hier nur noch spaetere optionale Vertiefung, nicht mehr noetige Grundstruktur.
 
 ---
 
@@ -123,12 +124,13 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 |---|---|
 | `maturity-gap-dashboard.md` | Reifegrad nach 7 Kriterien, offene Blocker, Prioritaetssummary |
 | `maturity-priority-list.json` | Maschinenlesbare Eintraege P0/P1/P2 mit Status und Evidenz |
-| `golden-corpus-v1.md` | Reale Golden-Corpus-v1-Suite mit 24 Referenzschaltungen |
+| `golden-corpus-v1.md` | Reale Golden-Corpus-v1-Suite mit 30 Referenzschaltungen |
 | `golden-corpus-v1.json` | Maschinenlesbarer Index fuer Golden-Corpus v1 |
+| `golden-corpus-v1-acceptance.md` | Akzeptanzkriterien und kanonischer fachlicher Baseline-Text fuer Golden Corpus v1 |
 | `golden-corpus-plan.md` | Plan fuer 25 Referenzschaltungen in 5 Tracks |
 | `industry-lite-roadmap.md` | Arbeitsstrom-Roadmap (W1-W6, Phasen A-D) |
 | `fsm0/work-package.md` | Aktiver FSM-Strang als ein einziges Arbeitspaket-Dokument. Enthaelt `FSM0-1` bis `FSM0-7` mit Reihenfolge, Nutzen, Aufwand und Abgrenzung; `FSM0-8` bleibt bewusst zurueckgestellt. |
-| `race-panel-fixes/work-package.md` | Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik; erster verifizierter Slice ist umgesetzt |
+| `race-panel-fixes/work-package.md` | Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik; fuer den aktuellen Scope abgeschlossen und nur noch optional vertiefbar |
 | `race-panel-fixes/README.md` | Einstiegspunkt fuer die Race-Fix-Hierarchie |
 | `verification-matrix.md` | Pflichtpruefmuster je Gate-Klasse und Freigaberegeln |
 | `ui-manual-verification-plan.md` | Manueller UI-Pruefplan fuer FSM-Projektion, STT, Timing und Panel-Persistenz |
@@ -141,11 +143,12 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | Datei | Inhalt |
 |---|---|
 | `run-contract-runner.mjs` | Contract Runner v1  verifiziert 86 Gate-Contracts (447 Faelle) |
-| `run-golden-corpus-v1.mjs` | Golden Corpus v1 Runner  verifiziert 24 Referenzschaltungen |
+| `run-golden-corpus-v1.mjs` | Golden Corpus v1 Runner  verifiziert 30 Referenzschaltungen |
 | `contract-runner-summary.json` | Ergebnis des Contract Runners (maschinenlesbar) |
 | `contract-runner-report.md` | Ergebnis des Contract Runners (menschenlesbar) |
 | `golden-corpus-v1-summary.json` | Ergebnis des Golden Corpus Runners (maschinenlesbar) |
 | `golden-corpus-v1-report.md` | Ergebnis des Golden Corpus Runners (menschenlesbar) |
+| `golden-corpus-v1-acceptance.json` | Maschinenlesbare Acceptance-Baseline; wird synchron mit Summary und Report erzeugt |
 
 ### Audit-Rohdaten und -Berichte (fokussierter Lauf, 12 Schaltungen)
 
@@ -166,8 +169,8 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | `generated-circuits-focused/` | 12 Schaltungsdefinitionen (.lgsc.json)  Focused-Nine |
 | `generated-exports-focused/` | 12 x Verilog + VHDL Exporte  Focused-Nine |
 | `generated-ui-focused/` | 8 UI-Screenshots  Focused-Nine |
-| `generated-circuits-golden/` | 26 Schaltungsdefinitionen (.lgsc.json)  Golden Corpus v1 |
-| `generated-exports-golden/` | 26 x Verilog + 26 x VHDL Exporte  Golden Corpus v1 |
+| `generated-circuits-golden/` | 30 Schaltungsdefinitionen (.lgsc.json)  Golden Corpus v1 |
+| `generated-exports-golden/` | 30 x Verilog + 30 x VHDL Exporte  Golden Corpus v1 |
 
 ### Gate-Spezifikation und Inventar
 
@@ -202,11 +205,10 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
-- **P1/P2:** Das Race-Arbeitspaket weiter vertiefen (`validation/race-panel-fixes/work-package.md`): auf dem verifizierten ersten Slice aufbauen und spaeter Incident-Metadaten, tiefere Integrationstests und ggf. feinere Reset-Semantik nachziehen
 - **P1/P2:** Den aktiven FSM0-Strang in kleinen Schritten weiterziehen (`validation/fsm0/work-package.md`): zuerst Boundary-/Semantik-Themen, dann Regressionswand und verbleibende UI-/Legacy-Abschluesse; Netzlisten-Minimierung bleibt bewusst nachgelagert
 - **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster und tiefere Invarianten)
-- **P1/P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (laengere Traces statt nur kurzer Szenarien)
-- **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, tiefere HDL-Traces, zweite Hierarchie-Stufe, groessere Designs)
+- **P1/P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (Trace-Depth-Hardening ist jetzt ueber alle gelandeten `gc_v2_*`-Seeds verbreitert; als Naechstes besonders grosse oder stateful Seeds weiter verdichten und spaeter aus der neuen tieferen Hierarchie-Grenze wieder in echte Pass-Faelle uebergehen)
+- **P2 optional:** Golden Corpus spaeter weiter ausbauen (mehr Schaltungen, tiefere HDL-Traces, zweite Hierarchie-Stufe, groessere Designs), falls dieser Strang wieder aktiv aufgenommen wird
 - **P2:** Den neuen Custom-IC-HDL-Pfad weiter absichern (mehr Hierarchiefaelle, explizite Grenzen fuer Nested-Custom-ICs)
 - **P2:** Branch Protection / Required Checks in GitHub Settings konfigurieren (externer Schritt)
 - **P2:** CI-Performance (HDL-Tool-Caching, Docker-Image)

@@ -1,8 +1,12 @@
 import type { Circuit } from '../types';
+import { collectEmbeddedCustomIcLibrary } from '../customIc/embeddedLibrary';
 
 const SCHEMA_VERSION = '1.0.0';
 
-export function serializeCircuit(circuit: Circuit): string {
+function createSerializableCircuit(
+  circuit: Circuit,
+  options?: { includeEmbeddedCustomIcLibrary?: boolean },
+): Circuit {
   const payload: Circuit = {
     ...circuit,
     version: SCHEMA_VERSION,
@@ -32,7 +36,25 @@ export function serializeCircuit(circuit: Circuit): string {
       ])
     ),
   };
-  return JSON.stringify(payload, null, 2);
+
+  if (options?.includeEmbeddedCustomIcLibrary) {
+    payload.customIcLibrary = collectEmbeddedCustomIcLibrary(circuit).map((entry) => ({
+      ...entry,
+      circuit: createSerializableCircuit(entry.circuit, { includeEmbeddedCustomIcLibrary: false }),
+    }));
+  } else {
+    delete payload.customIcLibrary;
+  }
+
+  return payload;
+}
+
+export function serializeCircuit(circuit: Circuit): string {
+  return JSON.stringify(
+    createSerializableCircuit(circuit, { includeEmbeddedCustomIcLibrary: true }),
+    null,
+    2,
+  );
 }
 
 export function downloadCircuit(circuit: Circuit, filename?: string): void {

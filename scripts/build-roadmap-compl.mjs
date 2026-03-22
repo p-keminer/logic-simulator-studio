@@ -19,6 +19,7 @@ const SUPPORTING_PATH_PREFIXES = [
   'validation/api_anbindung/',
   'validation/archive/pre-p0/',
   'validation/fsm0/',
+  'validation/golden-corpus-v2-expansion/',
   'validation/race-panel-fixes/',
 ];
 

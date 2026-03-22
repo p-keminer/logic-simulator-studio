@@ -41,9 +41,14 @@ export function ExportModal({ onClose }: Props) {
   const baseName = circuit.name.replace(/\s+/g, '_') || 'circuit';
   const hasCustomIcHierarchy = customIcSummary.totalCustomIcInstances > 0;
   const customIcHierarchyBlocked = customIcSummary.blockedInstanceCount > 0;
+  const nestedCombinationalExportActive = customIcSummary.boundaries.some(
+    (boundary) => boundary.boundaryPolicy === 'nested_combinational',
+  );
   const customIcSummaryTitle = customIcHierarchyBlocked
     ? 'Custom-IC-Hierarchie blockiert den strukturellen HDL-Export'
-    : 'Custom-ICs werden fuer den HDL-Export strukturell aufgeloest';
+    : nestedCombinationalExportActive
+      ? 'Kanonische kombinatorische Nested-Custom-ICs werden rekursiv strukturell aufgeloest'
+      : 'Custom-ICs werden fuer den HDL-Export strukturell aufgeloest';
   const customIcSummaryStats = [
     `${customIcSummary.totalCustomIcInstances} Instanz(en)`,
     `${customIcSummary.combinationalInstanceCount} kombinatorisch`,
@@ -139,8 +144,9 @@ export function ExportModal({ onClose }: Props) {
               )}
               {!customIcHierarchyBlocked && (
                 <div className="mt-2 text-[11px] leading-relaxed text-cyan-100">
-                  Die aktuelle Schaltung bleibt innerhalb der kanonisch abgesicherten one-level Grenze;
-                  der Export loest die Instanzen deshalb strukturell auf statt rohe `CIC_*`-Bloecke stehenzulassen.
+                  {nestedCombinationalExportActive
+                    ? 'Die aktuelle Schaltung bleibt innerhalb der aktuell freigegebenen kanonischen kombinatorischen Nested-Grenze; der Export loest die Hierarchie deshalb rekursiv strukturell auf statt rohe `CIC_*`-Bloecke stehenzulassen.'
+                    : 'Die aktuelle Schaltung bleibt innerhalb der kanonisch abgesicherten one-level Grenze; der Export loest die Instanzen deshalb strukturell auf statt rohe `CIC_*`-Bloecke stehenzulassen.'}
                 </div>
               )}
             </div>

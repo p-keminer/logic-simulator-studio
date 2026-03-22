@@ -1,7 +1,7 @@
 /**
  * Race Condition Debug Panel.
  *
- * Displays detected race conditions from GATE_DELAY simulation mode.
+ * Displays detected race conditions from the discrete-event simulation path.
  * Clicking an entry focuses the affected area on the canvas via viewport dispatch.
  */
 import { useEffect } from 'react';
@@ -110,7 +110,7 @@ export function RacePanel({ onClose }: Props) {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: '#ef4444', minWidth: 0 }}>
-            Race / Hazard Monitor — Gate-Delay-Modus
+            Race / Hazard Monitor
           </span>
           <button
             onClick={onClose}
@@ -131,7 +131,7 @@ export function RacePanel({ onClose }: Props) {
 
         {/* Explanation */}
         <p style={{ fontSize: 11, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>
-          Erkannte Hazards im Gate-Delay-Modus. Betroffene Leitungen werden farblich markiert:
+          Erkannte Hazards aus der diskreten Ereignissimulation. Betroffene Leitungen werden farblich markiert:
           rot = Wertekonflikt, lila = Setup/Hold-Risiko, orange = Glitch, gelb = Mehrtreiber, pink = Schleife.
         </p>
 
@@ -180,8 +180,26 @@ export function RacePanel({ onClose }: Props) {
                         {SEVERITY_LABEL[sev]}
                       </span>
                       <span style={{ color: '#f59e0b', fontWeight: 600 }}>t = {race.time}</span>
+                      {race.occurrenceCount > 1 && (
+                        <span
+                          style={{
+                            background: '#1f2937',
+                            color: '#93c5fd',
+                            fontWeight: 700,
+                            fontSize: 9,
+                            padding: '1px 5px',
+                            borderRadius: 3,
+                            letterSpacing: '0.05em',
+                          }}
+                        >
+                          ×{race.occurrenceCount}
+                        </span>
+                      )}
                     </div>
                     <span style={{ color: '#64748b', overflowWrap: 'anywhere' }}>{race.netId}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#64748b' }}>
+                    zuerst t = {race.firstSeenTime} · zuletzt t = {race.lastSeenTime}
                   </div>
                   {race.type && (
                     <div style={{ fontSize: 10, color: '#64748b', fontStyle: 'italic' }}>

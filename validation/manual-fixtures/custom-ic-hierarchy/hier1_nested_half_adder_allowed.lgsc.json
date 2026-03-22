@@ -1,0 +1,21 @@
+{
+  "id": "hier1_nested_half_adder_allowed",
+  "name": "hier1_nested_half_adder_allowed",
+  "version": "1.0.0",
+  "gates": {
+    "sw_a": { "id": "sw_a", "typeId": "INPUT_SWITCH", "x": 60, "y": 140, "label": "a", "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
+    "sw_b": { "id": "sw_b", "typeId": "INPUT_SWITCH", "x": 60, "y": 240, "label": "b", "customState": { "value": 0 }, "outputSignals": {}, "isSelected": false },
+    "ha0": { "id": "ha0", "typeId": "CIC_HIER0_HALF_ADDER", "x": 320, "y": 170, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "or_any": { "id": "or_any", "typeId": "OR", "x": 600, "y": 190, "customState": {}, "outputSignals": {}, "isSelected": false },
+    "led_any": { "id": "led_any", "typeId": "OUTPUT_LED", "x": 860, "y": 190, "label": "sum_or_carry", "customState": {}, "outputSignals": {}, "isSelected": false }
+  },
+  "wires": {
+    "w1": { "id": "w1", "from": { "gateId": "sw_a", "portId": "out" }, "to": { "gateId": "ha0", "portId": "i0" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w2": { "id": "w2", "from": { "gateId": "sw_b", "portId": "out" }, "to": { "gateId": "ha0", "portId": "i1" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w3": { "id": "w3", "from": { "gateId": "ha0", "portId": "o0" }, "to": { "gateId": "or_any", "portId": "a" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w4": { "id": "w4", "from": { "gateId": "ha0", "portId": "o1" }, "to": { "gateId": "or_any", "portId": "b" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false },
+    "w5": { "id": "w5", "from": { "gateId": "or_any", "portId": "out" }, "to": { "gateId": "led_any", "portId": "in" }, "signal": { "value": 0, "version": 0, "lastChangedAt": 0 }, "waypoints": [], "isSelected": false }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-21", "updatedAt": "2026-03-21" }
+}

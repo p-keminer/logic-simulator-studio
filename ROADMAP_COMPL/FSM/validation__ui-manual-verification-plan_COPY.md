@@ -225,14 +225,20 @@ Erwartung:
 ## Abschnitt L - Race-Panel: Dedupe, Auto-Prune, Reset
 
 1. Einen wiederholbaren Race/Hazard-Fall erzeugen.
-2. Race-Panel oeffnen und denselben Vorfall mehrfach ausloesen.
-3. Danach die betroffene Ursache loeschen.
-4. Danach `Monitor reset` pruefen.
+   Empfohlene Fixture: `validation/manual-fixtures/race-monitor/race_reconvergent_glitch_repeatable.lgsc.json`
+2. Den Schalter `a` einmal umlegen; ein separater Gate-Delay-Umschalter ist aktuell nicht noetig.
+3. Sobald oben in der Toolbar `⚠ N` erscheint, das Race-Panel oeffnen und denselben Vorfall durch weiteres Umschalten von `a` mehrfach ausloesen.
+4. Danach die betroffene Ursache loeschen.
+5. Danach `Monitor reset` pruefen.
 
 Erwartung:
 
 - identische Race-Funde werden nicht endlos dupliziert
-- stale Eintraege verschwinden, wenn die Ursache geloescht wurde
+- derselbe Incident zeigt stattdessen eine steigende Wiederholungszahl (`×N`)
+- `zuerst` / `zuletzt` im Panel bewegen sich sinnvoll mit den Wiederholungen
+- stale Eintraege und stale Drahtmarkierungen verschwinden, wenn die Ursache
+  geloescht wurde; bei dem empfohlenen reconvergenten Glitch-Fall gilt das
+  jetzt auch beim Loeschen eines vorgelagerten NOT-Gatters des delayed-Branches
 - `Monitor reset` leert Liste und Markierungen
 - weiterhin physisch aktive Ursachen duerfen spaeter erneut auftauchen
 
@@ -244,53 +250,94 @@ Vorbereitete Lade-Dateien:
 - `validation/manual-fixtures/custom-ic-hierarchy/hier0_half_adder_host.lgsc.json`
 - `validation/manual-fixtures/custom-ic-hierarchy/hier0_reg4_raw.lgsc.json`
 - `validation/manual-fixtures/custom-ic-hierarchy/hier0_reg4_host.lgsc.json`
-- `validation/manual-fixtures/custom-ic-hierarchy/hier0_nested_half_adder_attempt.lgsc.json`
+- `validation/manual-fixtures/custom-ic-hierarchy/hier1_nested_half_adder_allowed.lgsc.json`
+- `validation/manual-fixtures/custom-ic-hierarchy/hier1_nested_half_adder_host.lgsc.json`
+- `validation/manual-fixtures/custom-ic-hierarchy/hier1_nested_reg4_blocked.lgsc.json`
 
 Wichtige feste Namen beim Speichern:
 
 - den Half-Adder exakt als `HIER0_HALF_ADDER` speichern
 - den REG4-Wrapper exakt als `HIER0_REG4_WRAP` speichern
-- die Host-Dateien referenzieren genau diese beiden Custom-IC-Typen
+- den direkten Nested-Parent exakt als `HIER1_PARENT_HALF_ADDER` speichern
+- die Host-Dateien referenzieren genau diese drei Custom-IC-Typen
 
 1. Eine kleine Rohgatter-Schaltung bauen, z. B. einen Half-Adder mit zwei
    `INPUT_SWITCH`, `XOR`, `AND` und zwei `OUTPUT_LED`.
 2. Diese ueber `Custom IC` als neues IC mit dem exakten Namen
    `HIER0_HALF_ADDER` speichern, Portnamen bewusst setzen und das IC
    anschliessend aus der Palette wieder auf die Leinwand legen.
-3. Das neue IC in einer kleinen Oberbaugruppe verwenden, z. B. mit zwei
-   Schaltern an den Eingaengen und zwei LEDs an den Ausgaengen.
-4. Das HDL-Modal fuer Verilog und VHDL oeffnen und pruefen, dass oberhalb des
+3. Danach `hier0_half_adder_host.lgsc.json` laden. Die Datei ist bewusst nur
+   ein Canvas-Scaffold ohne eingebettetes `CIC_*`.
+4. `CIC_HIER0_HALF_ADDER` aus der Palette auf die Leinwand ziehen und mit den
+   beiden Schaltern sowie den beiden LEDs verdrahten.
+5. Das HDL-Modal fuer Verilog und VHDL oeffnen und pruefen, dass oberhalb des
    Exporttexts ein expliziter Hinweis erscheint, dass one-level Custom-ICs
    strukturell aufgeloest werden.
-5. Danach die vorbereitete REG4-Datei laden und diese als Custom IC mit dem
+6. Danach die vorbereitete REG4-Datei laden und diese als Custom IC mit dem
    exakten Namen `HIER0_REG4_WRAP` speichern, wieder platzieren und ebenfalls
-   in einer Oberbaugruppe exportieren. Im HDL-Modal den Hinweis fuer den
-   sequentiellen one-level-Fall ebenfalls pruefen.
-6. Anschliessend eine Schaltung oeffnen, die bereits ein Custom IC auf dem
-   Canvas enthaelt, und erneut den `Custom IC`-Dialog oeffnen.
-7. Bereits vor dem Speichern pruefen, dass im Dialog ein gelber Inline-Hinweis
-   zur deaktivierten Nested-Hierarchie sichtbar ist und der Weiter-Button nicht
-   den normalen aktiven Zustand hat.
-8. Danach trotzdem versuchen, diese Schaltung erneut als neues Custom IC zu
-   speichern.
-9. Den angezeigten Hinweistext genau pruefen.
+   in einer Oberbaugruppe exportieren.
+7. Danach `hier0_reg4_host.lgsc.json` laden, `CIC_HIER0_REG4_WRAP` aus der
+   Palette platzieren, vollstaendig verdrahten und im HDL-Modal den Hinweis
+   fuer den sequentiellen one-level-Fall ebenfalls pruefen.
+8. Danach die vorbereitete Datei
+   `hier1_nested_half_adder_allowed.lgsc.json` laden. Sie enthaelt bereits
+   genau ein bestehendes Custom IC (`CIC_HIER0_HALF_ADDER`) plus rohe
+   Kombinationslogik.
+9. Den `Custom IC`-Dialog oeffnen und bereits vor dem Speichern pruefen, dass
+   jetzt ein tuerkiser Inline-Hinweis fuer den freigegebenen direkten
+   kombinatorischen Nested-Fall erscheint und der Weiter-Button aktiv bleibt.
+10. Diese Schaltung exakt als `HIER1_PARENT_HALF_ADDER` speichern.
+11. Danach `hier1_nested_half_adder_host.lgsc.json` laden. Auch diese Datei ist
+   bewusst nur ein Host-Scaffold ohne eingebettetes Parent-IC.
+12. `HIER1_PARENT_HALF_ADDER` aus der Palette platzieren und die sichtbaren
+   Ports `a` und `b` mit den beiden Schaltern sowie `sum_or_carry` mit der
+   einzelnen LED verdrahten.
+13. Das HDL-Modal oeffnen und pruefen, dass jetzt explizit von rekursiver
+   struktureller Aufloesung innerhalb der freigegebenen kombinatorischen
+   Nested-Grenze gesprochen wird.
+14. Im Exporttext selbst pruefen, dass weder `CIC_HIER1_PARENT_HALF_ADDER`
+   noch `CIC_HIER0_HALF_ADDER` als rohe Bloecke stehenbleiben und stattdessen
+   nur primitive Logik fuer `sum_or_carry` erscheint.
+15. Anschliessend `hier1_nested_reg4_blocked.lgsc.json` laden und erneut den
+   `Custom IC`-Dialog oeffnen.
+16. Bereits vor dem Speichern pruefen, dass der stateful Nested-Fall weiter
+   gelb/orange blockiert bleibt und der Weiter-Button nicht aktiv ist.
+17. Den angezeigten Hinweistext genau pruefen.
+18. Zusaetzlich den erfolgreich aufgebauten `HIER1_PARENT_HALF_ADDER`-Host ganz
+    normal ueber die Toolbar speichern.
+19. Danach die gespeicherten Custom ICs loeschen oder die App frisch starten und
+    sicherstellen, dass `HIER0_HALF_ADDER` und `HIER1_PARENT_HALF_ADDER` nicht
+    mehr lokal vorregistriert sind.
+20. Die eben gespeicherte Host-Datei wieder laden.
+21. Erwartung: Die Schaltung laedt trotzdem ohne "Unbekannter Gattertyp", weil
+    die eingebettete Custom-IC-Library vor der Gate-Validierung rehydriert wird.
+22. Direkt danach das HDL-Modal erneut oeffnen und bestaetigen, dass der Export
+    weiterhin ohne rohe `CIC_*`-Bloecke funktioniert.
 
 Erwartung:
 
 - one-level kombinatorische Custom-ICs bleiben exportierbar
 - one-level sequentielle Custom-ICs bleiben exportierbar
+- direkte kanonische kombinatorische Nested-Custom-ICs koennen jetzt bewusst
+  gespeichert werden
+- der Export loest diesen direkten Nested-Kombinationsfall rekursiv strukturell
+  auf
 - das HDL-Modal benennt fuer one-level-Faelle explizit, dass strukturelles
   Flattening statt roher `CIC_*`-Bloecke verwendet wird
-- verschachtelte Custom-ICs werden nicht still oder zufaellig zugelassen
-- der Dialog zeigt die Nested-Sperre schon vor dem Speichern sichtbar an und
-  versteckt sie nicht nur hinter einem spaeten Alert
-- der Dialog blockiert die Erzeugung verschachtelter Custom-ICs mit einem
-  expliziten Hinweis, dass aktuell nur one-level Custom-IC-Grenzen kanonisch
-  abgesichert sind
-- der Blockierhinweis benennt klar, dass verschachtelte Custom-ICs vorerst
-  bewusst deaktiviert bleiben
-- es darf kein Fall entstehen, in dem eine nested Oberbaugruppe scheinbar
-  gespeichert wird, spaeter aber erst beim Export scheitert
+- das HDL-Modal benennt fuer den freigegebenen Nested-Kombinationsfall
+  explizit, dass rekursiv strukturell aufgeloest wird
+- gespeicherte Host-/Hierarchie-Dateien bleiben auch nach geloeschter lokaler
+  Custom-IC-Palette wieder ladbar, solange die benoetigte Library im Dateiinhalt
+  eingebettet ist
+- stateful Nested-Custom-ICs werden nicht still oder zufaellig zugelassen
+- der Dialog zeigt die Teilfreigabe und die verbleibenden Blockfaelle schon vor
+  dem Speichern sichtbar an und versteckt sie nicht nur hinter einem spaeten
+  Alert
+- stateful oder tiefere Nested-Faelle bleiben mit einem expliziten Hinweis
+  blockiert, dass aktuell nur kanonische kombinatorische Nested-Kinder
+  freigegeben sind
+- es darf kein Fall entstehen, in dem ein eigentlich geblockter Nested-Fall
+  scheinbar gespeichert wird, spaeter aber erst beim Export scheitert
 
 ## Fehlerprotokoll
 

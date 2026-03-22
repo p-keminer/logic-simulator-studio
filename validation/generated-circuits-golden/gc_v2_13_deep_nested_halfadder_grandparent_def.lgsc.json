@@ -1,0 +1,74 @@
+{
+  "id": "gc_v2_13_deep_nested_halfadder_grandparent_def",
+  "name": "gc_v2_13_deep_nested_halfadder_grandparent_def",
+  "version": "1.0.0",
+  "gates": {
+    "sw_a": {
+      "id": "sw_a",
+      "typeId": "INPUT_SWITCH",
+      "x": 60,
+      "y": 140,
+      "label": "a",
+      "customState": { "value": 0 },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "sw_b": {
+      "id": "sw_b",
+      "typeId": "INPUT_SWITCH",
+      "x": 60,
+      "y": 240,
+      "label": "b",
+      "customState": { "value": 0 },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "parent0": {
+      "id": "parent0",
+      "typeId": "CIC_PARENT_HALF_ADDER",
+      "x": 360,
+      "y": 170,
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "led_any": {
+      "id": "led_any",
+      "typeId": "OUTPUT_LED",
+      "x": 720,
+      "y": 190,
+      "label": "sum_or_carry",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    }
+  },
+  "wires": {
+    "w1": {
+      "id": "w1",
+      "from": { "gateId": "sw_a", "portId": "out" },
+      "to": { "gateId": "parent0", "portId": "i0" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w2": {
+      "id": "w2",
+      "from": { "gateId": "sw_b", "portId": "out" },
+      "to": { "gateId": "parent0", "portId": "i1" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w3": {
+      "id": "w3",
+      "from": { "gateId": "parent0", "portId": "o0" },
+      "to": { "gateId": "led_any", "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-22", "updatedAt": "2026-03-22" }
+}

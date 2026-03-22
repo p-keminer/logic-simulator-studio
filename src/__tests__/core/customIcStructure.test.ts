@@ -168,8 +168,8 @@ describe('customIcStructure', () => {
     expect(analysis.maxHierarchyDepth).toBeGreaterThanOrEqual(2);
     expect(analysis.exportBlockReason).toContain('Nested custom IC "CIC_STRUCT_HALF_ADDER"');
 
-    expect(() => flattenCustomICs(makeNestedTopLevel())).toThrow(
-      'Nested custom IC "CIC_STRUCT_HALF_ADDER" inside "CIC_STRUCT_PARENT_HALF_ADDER" is not supported for HDL export.',
-    );
+    const flattened = flattenCustomICs(makeNestedTopLevel());
+
+    expect(Object.values(flattened.gates).some((gate) => gate.typeId.startsWith('CIC_'))).toBe(false);
   });
 });

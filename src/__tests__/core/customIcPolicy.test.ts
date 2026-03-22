@@ -128,6 +128,39 @@ function makeNestedHalfAdderSubcircuit(): Circuit {
   );
 }
 
+function makeNestedReg4Subcircuit(): Circuit {
+  return makeCircuit(
+    'policy_nested_reg4_sub',
+    [
+      makeGate('sw_d0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd0' }),
+      makeGate('sw_d1', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd1' }),
+      makeGate('sw_d2', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd2' }),
+      makeGate('sw_d3', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd3' }),
+      makeGate('sw_en', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'en' }),
+      makeGate('sw_clk', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'clk' }),
+      makeGate('sw_rst', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'rst' }),
+      makeGate('reg_wrap', 'CIC_POLICY_REG4'),
+      makeGate('led_q0', 'OUTPUT_LED', { label: 'q0' }),
+      makeGate('led_q1', 'OUTPUT_LED', { label: 'q1' }),
+      makeGate('led_q2', 'OUTPUT_LED', { label: 'q2' }),
+      makeGate('led_q3', 'OUTPUT_LED', { label: 'q3' }),
+    ],
+    [
+      makeWire('w1', 'sw_d0', 'out', 'reg_wrap', 'i0'),
+      makeWire('w2', 'sw_d1', 'out', 'reg_wrap', 'i1'),
+      makeWire('w3', 'sw_d2', 'out', 'reg_wrap', 'i2'),
+      makeWire('w4', 'sw_d3', 'out', 'reg_wrap', 'i3'),
+      makeWire('w5', 'sw_en', 'out', 'reg_wrap', 'i4'),
+      makeWire('w6', 'sw_clk', 'out', 'reg_wrap', 'i5'),
+      makeWire('w7', 'sw_rst', 'out', 'reg_wrap', 'i6'),
+      makeWire('w8', 'reg_wrap', 'o0', 'led_q0', 'in'),
+      makeWire('w9', 'reg_wrap', 'o1', 'led_q1', 'in'),
+      makeWire('w10', 'reg_wrap', 'o2', 'led_q2', 'in'),
+      makeWire('w11', 'reg_wrap', 'o3', 'led_q3', 'in'),
+    ],
+  );
+}
+
 registerCustomIC('POLICY_HALF_ADDER', makeHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
 registerCustomIC('POLICY_REG4', makeReg4Subcircuit(), ['d0', 'd1', 'd2', 'd3', 'en', 'clk', 'rst', 'q0', 'q1', 'q2', 'q3']);
 registerCustomIC('POLICY_PARENT_HALF_ADDER', makeNestedHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
@@ -155,19 +188,28 @@ describe('customIcPolicy', () => {
     expect(policy.requiresStatefulBoundaryHandling).toBe(true);
   });
 
-  it('blocks nested custom IC export and editor save through one shared policy layer', () => {
+  it('allows direct canonical combinational nested custom ICs through the shared policy layer', () => {
     const gatePolicy = getCustomIcGatePolicy(makeGate('parent', 'CIC_POLICY_PARENT_HALF_ADDER'));
     const editorPolicy = getCustomIcEditorSavePolicy(makeNestedHalfAdderSubcircuit());
 
-    expect(gatePolicy.boundaryPolicy).toBe('nested_blocked');
-    expect(gatePolicy.exportAllowed).toBe(false);
-    expect(gatePolicy.exportReason).toContain('Nested custom IC "CIC_POLICY_HALF_ADDER"');
+    expect(gatePolicy.boundaryPolicy).toBe('nested_combinational');
+    expect(gatePolicy.exportAllowed).toBe(true);
+    expect(gatePolicy.exportReason).toBeUndefined();
     expect(gatePolicy.futureNestedPolicy).toBe('block_existing_nested');
     expect(gatePolicy.futureNestedRegistrationAllowed).toBe(false);
 
+    expect(editorPolicy.allowed).toBe(true);
+    expect(editorPolicy.policy).toBe('allow_nested_combinational');
+    expect(editorPolicy.reason).toContain('direkte Nested-Fall ist im aktuellen Rollout freigegeben');
+    expect(editorPolicy.customGateTypeIds).toEqual(['CIC_POLICY_HALF_ADDER']);
+  });
+
+  it('keeps nested stateful custom ICs blocked in the editor rollout', () => {
+    const editorPolicy = getCustomIcEditorSavePolicy(makeNestedReg4Subcircuit());
+
     expect(editorPolicy.allowed).toBe(false);
     expect(editorPolicy.policy).toBe('block_nested_custom_ic');
-    expect(editorPolicy.reason).toContain('one-level Custom-IC-Grenzen');
-    expect(editorPolicy.customGateTypeIds).toEqual(['CIC_POLICY_HALF_ADDER']);
+    expect(editorPolicy.reason).toContain('sequentielles Custom IC');
+    expect(editorPolicy.customGateTypeIds).toEqual(['CIC_POLICY_REG4']);
   });
 });

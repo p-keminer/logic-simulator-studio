@@ -6,7 +6,7 @@ Dieser Ordner enthaelt pfadcodierte Kopien der repo-eigenen Ablauf- und Fortschr
 - `FSM/`: inhaltlich hauptsaechlich FSM-/STT-/Timing-/Synthese-Strang
 - Root: verbleibende allgemeine Ablauf- und Verifikationsdokumente
 
-Dokumente: 59
+Dokumente: 61
 
 | Originalpfad | Zielpfad | Kategorie | Dokumentklasse | Status-Hinweis |
 |---|---|---|---|---|
@@ -63,9 +63,11 @@ Dokumente: 59
 | `validation/archive/pre-p0/README.md` | `validation__archive__pre-p0__README_COPY.md` | root | readme | - |
 | `validation/fsm0/work-package.md` | `FSM/validation__fsm0__work-package_COPY.md` | fsm | work-package | in Arbeit |
 | `validation/golden-corpus-plan.md` | `validation__golden-corpus-plan_COPY.md` | root | plan | - |
+| `validation/golden-corpus-v2-expansion/README.md` | `validation__golden-corpus-v2-expansion__README_COPY.md` | root | readme | aktueller Scope abgeschlossen; weiterfuehrende Expansion optional |
+| `validation/golden-corpus-v2-expansion/work-package.md` | `validation__golden-corpus-v2-expansion__work-package_COPY.md` | root | work-package | aktueller Scope abgeschlossen; weiterfuehrende Expansion optional |
 | `validation/industry-lite-roadmap.md` | `validation__industry-lite-roadmap_COPY.md` | root | roadmap | ABGESCHLOSSEN (P0 2026-03-07) |
 | `validation/race-panel-fixes/README.md` | `validation__race-panel-fixes__README_COPY.md` | root | readme | offen |
-| `validation/race-panel-fixes/work-package.md` | `validation__race-panel-fixes__work-package_COPY.md` | root | work-package | in Arbeit |
+| `validation/race-panel-fixes/work-package.md` | `validation__race-panel-fixes__work-package_COPY.md` | root | work-package | abgeschlossen im aktuellen Scope |
 | `validation/README.md` | `validation__README_COPY.md` | root | readme | 2026-03-21 |
 | `validation/ui-manual-verification-plan.md` | `FSM/validation__ui-manual-verification-plan_COPY.md` | fsm | verification | aktuell |
 | `validation/verification-matrix.md` | `validation__verification-matrix_COPY.md` | root | verification | - |

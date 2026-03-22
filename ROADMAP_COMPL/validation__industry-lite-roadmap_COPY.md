@@ -23,16 +23,19 @@ Zielbild:
 - `npm run build` ist gruen.
 - `npm run lint` ist gruen.
 - Contract Runner v1: **447 pass, 0 fail, 0 unsupported** (447 total) - in CI als eigenes Gate.
-- Golden Corpus v1 Runner: **23 pass, 0 fail, 1 expected_limit** (24 total) - in CI als eigenes Gate.
+- Golden Corpus v1 Runner: **28 pass, 0 fail, 2 expected_limit** (30 total) - in CI als eigenes Gate.
 - Focused-Nine Core: **12/12** funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen - in CI als eigenes Gate.
 - CI hat 6 Jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain.
 - Tri-State-Ausgaenge propagieren korrekt: downstream-Gates sehen `Z`, nicht `0`.
 - Multi-Treiber-Konflikte auf demselben Netz ergeben `X` (3) - kein stilles Last-Write-Wins mehr.
 - Alle logic_basic- und logic_multi-Gatter exportieren nach Verilog und VHDL.
-- `gc_t2_bus_mux` ist bewusst als `expected_limit` klassifiziert - dokumentierte Exporter-Grenze, nicht als pass verkauft.
+- `gc_t2_bus_mux` und `gc_v2_13_deep_nested_halfadder_boundary` sind bewusst als `expected_limit` klassifiziert - dokumentierte Exporter-Grenzen, nicht als pass verkauft.
 - Report-Artefakte (JSON + Markdown) werden von allen vier fachlichen CI-Jobs hochgeladen.
 - Fuer aus dem FSM-Editor synthetisierte Schaltungen fehlt noch eine kanonische Projektion in STT und Timing: die aktuelle UI arbeitet dort noch zu stark auf Roh-Gate-/Port-Ebene statt auf semantischen FSM-Signalen. Der naechste Schritt bleibt bewusst klein und zieht nur den statischen/reduzierten STT-Kern weiter in den Core, ohne das UI-Wiring gross umzubauen.
-- Das Race-Panel und die Race-Markierungen haben noch keine saubere Lifecycle-Logik fuer Reset, Strukturpruning und Dedupe identischer Wiederholungen.
+- Der Race-Monitor ist fuer den aktuellen Produktumfang strukturell
+  abgesichert: Reset, Strukturpruning, signaturbasiertes Incident-Dedupe,
+  gemeinsame Helferschicht fuer Liste/Markierungen sowie konservatives
+  Upstream-Pruning fuer Glitch-Faelle sind vorhanden.
 
 ### Fachlich relevante Restluecken
 
@@ -71,14 +74,17 @@ Abgeschlossen:
 - ~~fehlende HDL-Export-Abdeckung fuer Basisgatter~~ - RESOLVED P0 2026-03-07
 - ~~Verilator-LATCH-Warnung bei `74HC373`~~ - RESOLVED P1-1 2026-03-07
 - ~~Kein automatisierter Contract-Runner~~ - RESOLVED / EXPANDED P1-5 2026-03-20 (447 pass, 0 unsupported)
-- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED / EXPANDED P1-6 2026-03-20 (23 pass, 1 expected_limit, externe HDL-Pruefung aktiv)
+- ~~Golden Corpus nicht ausfuehrbar~~ - RESOLVED / EXPANDED P1-6 2026-03-20 (28 pass, 2 expected_limit, externe HDL-Pruefung aktiv)
 
 Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
 - STT-Variablenlimit blockiert UI-Verifikation fuer breite sequenzielle Schaltungen: P2 (Reduzierte Ansicht implementiert)
 - UI-Timing-Audit ist funktional gruen und als CI-Gate verdrahtet; offen bleibt nur ein breiterer Waveform-/Visual-Diff
 - Synthetisierte FSM-Exporte haben fuer gemischte und breite Restfaelle noch keinen vollstaendig abgeschlossenen semantischen Projektionspfad fuer STT/Timing; der aktive Restplan liegt in `validation/fsm0/work-package.md`
-- Race-Panel/Race-Monitor braucht eine eigene strukturierte Lifecycle-Logik fuer Auto-Reset, manuellen Reset und Incident-Dedupe; siehe `validation/race-panel-fixes/work-package.md`
+- Race-Panel/Race-Monitor ist fuer den aktuellen Scope strukturell
+  abgeschlossen; manueller Reset ist explizit als `clear only` definiert und
+  aktive physische Ursachen duerfen spaeter wieder auftauchen. Details siehe
+  `validation/race-panel-fixes/work-package.md`
 
 ### Stufe 3: Industry-Lite EDA
 
@@ -94,17 +100,17 @@ Status:
 
 Erreicht:
 - Formales 0/1/Z/X-Signalmodell (W1, W2)
-- Golden Corpus v1 als ausfuehrbare Regression mit 24 Referenzschaltungen inklusive neun v2-Pilot-Seeds (W3)
+- Golden Corpus v1 als ausfuehrbare Regression mit 30 Referenzschaltungen inklusive fuenfzehn v2-Pilot-Seeds (W3)
 - Contract Runner v1 fuer 86 Gate-Contracts (W3)
 - Reproduzierbare JSON-/Markdown-Reports fuer alle drei fachlichen Suiten
 - CI mit 6 Jobs, davon 5 blockierende Qualitaets-/Regressionsgates (W6)
 - Report-Artefakte als CI-Uploads
 
 Noch offen:
-- Externe HDL-Pruefung im Golden Corpus ist aktiv; offen bleibt die Ausweitung auf groessere/hierarchische Designs und breitere Trace-Tiefen
+- Externe HDL-Pruefung im Golden Corpus ist aktiv; der aktuelle Pilot-v2-Scope ist damit abgeschlossen, spaetere Ausweitung auf noch groessere/hierarchische Designs und breitere Trace-Tiefen bleibt optionaler Folgeausbau
 - Export-Determinismus (Re-Export + Byte-Diff) - erledigt
 - UI-Timing-Semantik (W4) - fokussierte Faelle in CI verifiziert; voller Waveform-/Visual-Diff bleibt offen
-- Hierarchie-/Custom-IC-Absicherung (W5) - zwei einlagige Flattening-Pfade verifiziert, breitere/nestbare Hierarchie bleibt offen
+- Hierarchie-/Custom-IC-Absicherung (W5) - vier one-level-Faelle, ein direkter nested Pass-Pfad und jetzt eine explizit dokumentierte tiefere Boundary sind verifiziert; breitere/nestbare Hierarchie bleibt offen
 - Branch-Protection in GitHub Settings - manueller externer Schritt
 
 ## Arbeitsstroeme
@@ -132,17 +138,18 @@ Status: **ABGESCHLOSSEN** (P0 2026-03-07)
 Status: **TEILWEISE ERREICHT**
 
 Erreicht:
-- Golden Corpus v1 mit 24 Referenzschaltungen inklusive `GC-V2-1`, `GC-V2-2`, `GC-V2-3`, `GC-V2-4`, `GC-V2-5`, `GC-V2-6`, `GC-V2-7`, `GC-V2-8` und `GC-V2-9`
+- Golden Corpus v1 mit 30 Referenzschaltungen inklusive `GC-V2-1` bis `GC-V2-15`
 - Ausfuehrbarer Runner (`validation/run-golden-corpus-v1.mjs`) mit 11 check-Kategorien pro Fall
 - Contract Runner v1 (`validation/run-contract-runner.mjs`) fuer 86 Gate-Contracts
 - Checkpoint-Verifikation gegen Verilog/VHDL-Quelltext
 - Externe HDL-Syntax/Lint-Checks plus szenariobasierte iverilog/vvp- und ghdl-Simulation fuer alle nicht-boundary Faelle
+- Maschinenlesbare Acceptance-Baseline wird jetzt synchron mit Summary und Report erzeugt; partielle `--slug`-Runs duerfen die kanonischen Golden-Artefakte nicht mehr ueberschreiben
 - Beide als CI-Gate verdrahtet
-- `gc_t2_bus_mux` bewusst als `expected_limit` klassifiziert
+- `gc_t2_bus_mux` und `gc_v2_13_deep_nested_halfadder_boundary` bewusst als `expected_limit` klassifiziert
 
 Noch offen:
 - Tiefere und breitere HDL-Traces statt nur kuratierter Szenarien
-- Erweiterung auf weitere v2-Seeds (mehr Schaltungen, Hierarchie, bus-/memory-lastige Designs)
+- Erweiterung auf weitere v2-Seeds (mehr Schaltungen, Hierarchie, bus-/memory-lastige Designs) sowie spaetere Ueberfuehrung der neuen tieferen Hierarchie-Grenze in kontrollierte Pass-Pfade bleiben jetzt bewusster Folgeausbau; die Scope-Abschlussbewertung des aktuellen erweiterten Corpus ist erfolgt
 
 ### W4. UI als Projektion des Kerns
 
@@ -180,6 +187,13 @@ Bewusst nach hinten geschobener Optimierungstrack:
 Zusaetzliches offenes Struktur-Arbeitspaket:
 - `validation/race-panel-fixes/work-package.md`
 - Kernidee: Race-Lifecycle als eigene Store-Logik behandeln, nicht als lokaler Panel-Hotfix
+- erster und zweiter verifizierter Slice sind umgesetzt: Dedupe/Pruning/Reset,
+  Incident-Metadaten `count`, `firstSeen`, `lastSeen` sowie gemeinsame
+  Helferschicht fuer Race-Liste und Markierungen
+- aktueller Abschluss: konservatives Struktur-Fingerprint-Pruning fuer
+  Glitch-Ursachen und explizit dokumentierte Reset-Semantik schliessen den
+  Race-Lifecycle fuer den aktuellen Scope ab; weitere Arbeit waere nur noch
+  spaetere optionale Vertiefung
 
 ### W5. Hierarchie und Exportierbarkeit
 
@@ -192,9 +206,10 @@ Status: **TEILWEISE ERREICHT** (2026-03-21)
 - Ein zusaetzlicher read-only Contract-Layer stuft Custom-IC-Grenzen jetzt als canonical, degraded oder blocked ein und faengt kaputte one-level-Faelle wie tote Eingangsports, ungetriebene OUTPUT_LED-Grenzen oder Multi-Driver-Ausgaenge zentral ab
 - Ein weiterer read-only Nested-Readiness-Layer klassifiziert jetzt, welche one-level-Custom-ICs spaeter ueberhaupt fuer eine kontrollierte Nested-Freigabe taugen wuerden: eligible kombinatorisch, eligible sequentiell, degraded contract, blocked contract oder bereits nested
 - Ein zusaetzlicher read-only Nested-Allow-Policy-Layer leitet daraus jetzt explizit ab, welche one-level-Custom-ICs spaeter ueberhaupt als kontrollierte Nested-Kandidaten fuer Registrierung und Export gelten duerften; das aktuelle Produktverhalten bleibt dabei unveraendert bewusst blockierend
-- Flattening und Custom-IC-Erzeugung im Editor greifen dabei auf dieselbe Policy-Semantik zurueck; nestbare Custom-ICs bleiben vorerst bewusst hart geblockt statt implizit oder heuristisch behandelt zu werden
+- Ein kleiner Rollout-Schnitt nutzt diese Vorarbeit jetzt praktisch: direkte kanonische kombinatorische Nested-Custom-ICs koennen gespeichert und fuer HDL rekursiv strukturell aufgeloest werden; stateful und tiefere Nested-Faelle bleiben weiter bewusst blockiert
+- Der Datei-/Persistenzpfad haengt jetzt nicht mehr stumm an lokal registrierten Custom-ICs: gespeicherte Schaltungen betten ihre verwendeten Custom-IC-Definitionen rekursiv ein und rehydrieren sie beim Laden vor der Gate-Validierung
 - Es gibt jetzt gezielte Unit-Regressionen fuer kombinatorische, sequentielle und bewusst geblockte verschachtelte Custom-IC-Faelle
-- Die Golden-Regression wurde fuer Hierarchie ebenfalls verbreitert: zusaetzlich zu Half-Adder und REG4 gibt es jetzt einen one-level Tri-State-Fall und einen one-level 74HC194-Fall mit verstecktem Registerzustand
+- Die Golden-Regression wurde fuer Hierarchie ebenfalls verbreitert: zusaetzlich zu Half-Adder und REG4 gibt es jetzt einen one-level Tri-State-Fall, einen one-level 74HC194-Fall mit verstecktem Registerzustand, einen ersten direkten nested-combinational-Custom-IC-Passfall und nun auch einen ersten expliziten tieferen Nested-Boundary-Fall
 - Export-Modal und Custom-IC-Dialog spiegeln diese Policy jetzt explizit im UI: one-level-Faelle als strukturell aufloesbar, Nested-Faelle als bewusst geblockt
 - Offene Entscheidung bleibt: tiefere/nestbare Hierarchie first-class exportierbar machen oder bewusst begrenzen
 
@@ -244,7 +259,7 @@ Umfang:
 - W3 Grundgeruest fertig
 
 Erreicht:
-- Golden Corpus v1 mit 24 Referenzschaltungen  ausfuehrbar + CI
+- Golden Corpus v1 mit 27 Referenzschaltungen  ausfuehrbar + CI
 - Contract Runner v1 mit 86 Gate-Contracts  ausfuehrbar + CI
 
 Noch offen:
@@ -275,7 +290,7 @@ Status:
 - UI-Timing-Semantik ist fokussiert in CI abgesichert; naechster Schritt ist ein breiterer Waveform-/Visual-Diff
 - Hierarchie/Custom-IC-Absicherung hat mit `GC-V2-6` und `GC-V2-9` zwei one-level-Pfade; naechster Schritt ist tiefere/nestbare Absicherung
 - Fuer FSM-Exporte ist zusaetzlich das Struktur-Arbeitspaket offen: semantische Projektion fuer STT/Timing statt Roh-Gate-Anzeige, inklusive read-only Sequential-Projection-Layer und statischer/verkuerzter STT
-- Fuer Race-/Hazard-Monitoring ist zusaetzlich das Struktur-Arbeitspaket offen: entkoppelter Race-Lifecycle mit Pruning, Reset und Dedupe
+- Fuer Race-/Hazard-Monitoring ist das Struktur-Arbeitspaket fuer den aktuellen Scope abgeschlossen; spaetere Erweiterungen waeren nur noch optionale Vertiefung
 
 ### Phase D  Teilweise erreicht
 
@@ -321,10 +336,10 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 
 ## Naechster empfohlener Fokus (Stand 2026-03-20)
 
-1. **P2:** Funktionale Schaltungssimulation im Golden Corpus vertiefen (laengere und dichtere HDL-Traces)
+1. **P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (Trace-Depth-Hardening ist jetzt ueber alle gelandeten `GC-V2-*`-Seeds verbreitert; als Naechstes besonders grosse oder stateful Seeds weiter verdichten)
 2. **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster)
 3. **P2:** Golden Corpus v2 ausbauen (mehr Schaltungen, Hierarchie, grosse Designs)
-  Acht v2-Pilot-Seeds `GC-V2-1`, `GC-V2-2`, `GC-V2-3`, `GC-V2-4`, `GC-V2-5`, `GC-V2-6`, `GC-V2-7` und `GC-V2-8` sind jetzt integriert; als Naechstes folgen breitere HDL-Traces und ein zweiter Hierarchie-/Custom-IC-Fall
+Fuenfzehn v2-Pilot-Seeds bis `GC-V2-15` sind jetzt integriert; als naechster sauberer Abschluss-Schritt folgt zuerst die Akzeptanz-/Report-Haertung des erweiterten Corpus, bevor spaeter weitere Grossfaelle oder die kontrollierte Aufweitung der jetzt dokumentierten tieferen Hierarchie-Grenze nachgezogen werden
 4. **P2:** Branch Protection / Required Checks in GitHub Settings konfigurieren (externer Schritt)
 5. **P2:** CI-Performance (HDL-Tool-Caching, Docker-Image)
 

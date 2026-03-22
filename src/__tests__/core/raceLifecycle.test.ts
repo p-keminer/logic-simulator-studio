@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   appendRaceHistory,
   buildRaceSignature,
+  buildRaceStructuralSignature,
   collectActiveRaceNetIds,
   isRaceStillRelevant,
   pruneRaceHistory,
@@ -97,6 +98,9 @@ describe('raceLifecycle', () => {
     expect(result[0]).toMatchObject({
       raceId: 'race-new',
       time: 9,
+      firstSeenTime: 3,
+      lastSeenTime: 9,
+      occurrenceCount: 2,
       netId: 'src:out',
     });
   });
@@ -142,5 +146,86 @@ describe('raceLifecycle', () => {
 
     expect(isRaceStillRelevant(race, circuit)).toBe(false);
     expect(pruneRaceHistory([race], circuit)).toEqual([]);
+  });
+
+  it('coalesces a seeded incident with new repeats and preserves first/last seen metadata', () => {
+    const circuit = makeCircuit(
+      [makeGate('src'), makeGate('dst', 'OUTPUT_LED')],
+      [makeWire('w1', 'src', 'out', 'dst', 'in')],
+    );
+    const seeded = appendRaceHistory([], [makeRace('race-1', 4, 'src:out', ['src'], [1])], circuit, 50);
+    const updated = appendRaceHistory(
+      seeded,
+      [
+        makeRace('race-2', 9, 'src:out', ['src'], [1]),
+        makeRace('race-3', 12, 'src:out', ['src'], [1]),
+      ],
+      circuit,
+      50,
+    );
+
+    expect(updated).toHaveLength(1);
+    expect(updated[0]).toMatchObject({
+      raceId: 'race-3',
+      time: 12,
+      firstSeenTime: 4,
+      lastSeenTime: 12,
+      occurrenceCount: 3,
+    });
+  });
+
+  it('stores a structural signature for seeded incidents', () => {
+    const circuit = makeCircuit(
+      [makeGate('src'), makeGate('dst', 'OUTPUT_LED')],
+      [makeWire('w1', 'src', 'out', 'dst', 'in')],
+    );
+
+    const seeded = appendRaceHistory([], [makeRace('race-1', 4, 'src:out', ['src'], [1])], circuit, 50);
+
+    expect(seeded[0].structuralSignature).toBe(buildRaceStructuralSignature(seeded[0], circuit));
+  });
+
+  it('prunes a glitch incident when the upstream reconvergent branch changes even if the output net still exists', () => {
+    const liveCircuit = makeCircuit(
+      [
+        makeGate('sw_a'),
+        makeGate('not_1', 'NOT'),
+        makeGate('not_2', 'NOT'),
+        makeGate('xor', 'XOR'),
+        makeGate('led', 'OUTPUT_LED'),
+      ],
+      [
+        makeWire('w_direct', 'sw_a', 'out', 'xor', 'a'),
+        makeWire('w_delay_1', 'sw_a', 'out', 'not_1', 'a'),
+        makeWire('w_delay_2', 'not_1', 'out', 'not_2', 'a'),
+        makeWire('w_delay_3', 'not_2', 'out', 'xor', 'b'),
+        makeWire('w_out', 'xor', 'out', 'led', 'in'),
+      ],
+    );
+    const changedCircuit = makeCircuit(
+      [
+        makeGate('sw_a'),
+        makeGate('not_2', 'NOT'),
+        makeGate('xor', 'XOR'),
+        makeGate('led', 'OUTPUT_LED'),
+      ],
+      [
+        makeWire('w_direct', 'sw_a', 'out', 'xor', 'a'),
+        makeWire('w_delay_3', 'not_2', 'out', 'xor', 'b'),
+        makeWire('w_out', 'xor', 'out', 'led', 'in'),
+      ],
+    );
+
+    const seeded = appendRaceHistory(
+      [],
+      [makeRace('glitch-1', 6, 'xor:out', ['xor'], [1], 'glitch', 'reconvergent_glitch')],
+      liveCircuit,
+      50,
+    );
+
+    expect(seeded).toHaveLength(1);
+    expect(isRaceStillRelevant(seeded[0], liveCircuit)).toBe(true);
+    expect(isRaceStillRelevant(seeded[0], changedCircuit)).toBe(false);
+    expect(pruneRaceHistory(seeded, changedCircuit)).toEqual([]);
   });
 });

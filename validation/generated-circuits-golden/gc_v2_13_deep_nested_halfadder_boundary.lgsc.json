@@ -1,0 +1,160 @@
+{
+  "id": "gc_v2_13_deep_nested_halfadder_boundary",
+  "name": "gc_v2_13_deep_nested_halfadder_boundary",
+  "version": "1.0.0",
+  "gates": {
+    "sw_a": {
+      "id": "sw_a",
+      "typeId": "INPUT_SWITCH",
+      "x": 40,
+      "y": 120,
+      "label": "a",
+      "customState": { "value": 0 },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "sw_b": {
+      "id": "sw_b",
+      "typeId": "INPUT_SWITCH",
+      "x": 40,
+      "y": 220,
+      "label": "b",
+      "customState": { "value": 0 },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "grandparent": {
+      "id": "grandparent",
+      "typeId": "CIC_GRANDPARENT_HALF_ADDER",
+      "x": 300,
+      "y": 150,
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "raw_or": {
+      "id": "raw_or",
+      "typeId": "OR",
+      "x": 300,
+      "y": 390,
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "xor_diff": {
+      "id": "xor_diff",
+      "typeId": "XOR",
+      "x": 600,
+      "y": 280,
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "led_nested": {
+      "id": "led_nested",
+      "typeId": "OUTPUT_LED",
+      "x": 860,
+      "y": 150,
+      "label": "deep_nested_sum_or_carry",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "led_raw": {
+      "id": "led_raw",
+      "typeId": "OUTPUT_LED",
+      "x": 860,
+      "y": 250,
+      "label": "raw_or",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "led_diff": {
+      "id": "led_diff",
+      "typeId": "OUTPUT_LED",
+      "x": 860,
+      "y": 350,
+      "label": "diff",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    }
+  },
+  "wires": {
+    "w1": {
+      "id": "w1",
+      "from": { "gateId": "sw_a", "portId": "out" },
+      "to": { "gateId": "grandparent", "portId": "i0" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w2": {
+      "id": "w2",
+      "from": { "gateId": "sw_b", "portId": "out" },
+      "to": { "gateId": "grandparent", "portId": "i1" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w3": {
+      "id": "w3",
+      "from": { "gateId": "grandparent", "portId": "o0" },
+      "to": { "gateId": "led_nested", "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w4": {
+      "id": "w4",
+      "from": { "gateId": "sw_a", "portId": "out" },
+      "to": { "gateId": "raw_or", "portId": "a" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w5": {
+      "id": "w5",
+      "from": { "gateId": "sw_b", "portId": "out" },
+      "to": { "gateId": "raw_or", "portId": "b" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w6": {
+      "id": "w6",
+      "from": { "gateId": "raw_or", "portId": "out" },
+      "to": { "gateId": "led_raw", "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w7": {
+      "id": "w7",
+      "from": { "gateId": "grandparent", "portId": "o0" },
+      "to": { "gateId": "xor_diff", "portId": "a" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w8": {
+      "id": "w8",
+      "from": { "gateId": "raw_or", "portId": "out" },
+      "to": { "gateId": "xor_diff", "portId": "b" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w9": {
+      "id": "w9",
+      "from": { "gateId": "xor_diff", "portId": "out" },
+      "to": { "gateId": "led_diff", "portId": "in" },
+      "signal": { "value": 0, "version": 0, "lastChangedAt": 0 },
+      "waypoints": [],
+      "isSelected": false
+    }
+  },
+  "viewport": { "panX": 0, "panY": 0, "zoom": 1 },
+  "metadata": { "createdAt": "2026-03-22", "updatedAt": "2026-03-22" }
+}

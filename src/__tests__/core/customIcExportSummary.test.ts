@@ -128,9 +128,43 @@ function makeNestedHalfAdderSubcircuit(): Circuit {
   );
 }
 
+function makeNestedReg4Subcircuit(): Circuit {
+  return makeCircuit(
+    'summary_nested_reg4_sub',
+    [
+      makeGate('sw_d0', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd0' }),
+      makeGate('sw_d1', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd1' }),
+      makeGate('sw_d2', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd2' }),
+      makeGate('sw_d3', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'd3' }),
+      makeGate('sw_en', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'en' }),
+      makeGate('sw_clk', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'clk' }),
+      makeGate('sw_rst', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'rst' }),
+      makeGate('reg_wrap', 'CIC_SUMMARY_REG4'),
+      makeGate('led_q0', 'OUTPUT_LED', { label: 'q0' }),
+      makeGate('led_q1', 'OUTPUT_LED', { label: 'q1' }),
+      makeGate('led_q2', 'OUTPUT_LED', { label: 'q2' }),
+      makeGate('led_q3', 'OUTPUT_LED', { label: 'q3' }),
+    ],
+    [
+      makeWire('w1', 'sw_d0', 'out', 'reg_wrap', 'i0'),
+      makeWire('w2', 'sw_d1', 'out', 'reg_wrap', 'i1'),
+      makeWire('w3', 'sw_d2', 'out', 'reg_wrap', 'i2'),
+      makeWire('w4', 'sw_d3', 'out', 'reg_wrap', 'i3'),
+      makeWire('w5', 'sw_en', 'out', 'reg_wrap', 'i4'),
+      makeWire('w6', 'sw_clk', 'out', 'reg_wrap', 'i5'),
+      makeWire('w7', 'sw_rst', 'out', 'reg_wrap', 'i6'),
+      makeWire('w8', 'reg_wrap', 'o0', 'led_q0', 'in'),
+      makeWire('w9', 'reg_wrap', 'o1', 'led_q1', 'in'),
+      makeWire('w10', 'reg_wrap', 'o2', 'led_q2', 'in'),
+      makeWire('w11', 'reg_wrap', 'o3', 'led_q3', 'in'),
+    ],
+  );
+}
+
 registerCustomIC('SUMMARY_HALF_ADDER', makeHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
 registerCustomIC('SUMMARY_REG4', makeReg4Subcircuit(), ['d0', 'd1', 'd2', 'd3', 'en', 'clk', 'rst', 'q0', 'q1', 'q2', 'q3']);
 registerCustomIC('SUMMARY_PARENT_HALF_ADDER', makeNestedHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
+registerCustomIC('SUMMARY_PARENT_REG4', makeNestedReg4Subcircuit(), ['d0', 'd1', 'd2', 'd3', 'en', 'clk', 'rst', 'q0', 'q1', 'q2', 'q3']);
 
 describe('customIcExportSummary', () => {
   it('returns an empty summary when the circuit has no custom ICs', () => {
@@ -166,7 +200,7 @@ describe('customIcExportSummary', () => {
     ]);
   });
 
-  it('surfaces blocked nested custom IC boundaries with deduplicated reasons', () => {
+  it('marks direct canonical combinational nested boundaries as exportable', () => {
     const circuit = makeCircuit(
       'summary_nested_top',
       [
@@ -179,12 +213,29 @@ describe('customIcExportSummary', () => {
     const summary = analyzeCircuitCustomIcExportSummary(circuit);
 
     expect(summary.totalCustomIcInstances).toBe(2);
-    expect(summary.exportableInstanceCount).toBe(0);
-    expect(summary.blockedInstanceCount).toBe(2);
+    expect(summary.exportableInstanceCount).toBe(2);
+    expect(summary.blockedInstanceCount).toBe(0);
     expect(summary.maxHierarchyDepth).toBeGreaterThanOrEqual(2);
     expect(summary.nestedCustomTypeIds).toEqual(['CIC_SUMMARY_HALF_ADDER']);
-    expect(summary.blockedReasons).toHaveLength(1);
-    expect(summary.blockedReasons[0]).toContain('Nested custom IC "CIC_SUMMARY_HALF_ADDER"');
-    expect(summary.boundaries.every((boundary) => boundary.boundaryPolicy === 'nested_blocked')).toBe(true);
+    expect(summary.blockedReasons).toEqual([]);
+    expect(summary.boundaries.every((boundary) => boundary.boundaryPolicy === 'nested_combinational')).toBe(true);
+  });
+
+  it('keeps nested stateful custom IC boundaries blocked with a clear rollout reason', () => {
+    const circuit = makeCircuit(
+      'summary_nested_stateful_top',
+      [
+        makeGate('parent_reg', 'CIC_SUMMARY_PARENT_REG4'),
+      ],
+      [],
+    );
+
+    const summary = analyzeCircuitCustomIcExportSummary(circuit);
+
+    expect(summary.totalCustomIcInstances).toBe(1);
+    expect(summary.exportableInstanceCount).toBe(0);
+    expect(summary.blockedInstanceCount).toBe(1);
+    expect(summary.blockedReasons[0]).toContain('stateful');
+    expect(summary.boundaries[0].boundaryPolicy).toBe('nested_blocked');
   });
 });

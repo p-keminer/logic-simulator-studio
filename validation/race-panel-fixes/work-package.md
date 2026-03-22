@@ -2,7 +2,7 @@
 
 Datum: 2026-03-20
 Repo: `<repo-root>`
-Status: **in Arbeit**
+Status: **abgeschlossen im aktuellen Scope**
 Prioritaet: **P1/P2**
 Geltungsbereich: **Race-Panel, Race-Markierungen, Race-Lifecycle im Store**
 
@@ -84,6 +84,12 @@ Folgende Punkte sind inzwischen im Code verifiziert umgesetzt:
 - `src/store/raceLifecycle.ts`
   - zentrale Helper fuer Signaturbildung, Dedupe, aktives Net-Sampling und
     Pruning veralteter Eintraege
+  - zusaetzlicher lokaler Struktur-Fingerprint fuer Incident-Ursachen, damit
+    Glitch-/Hazard-Eintraege auch dann stale werden, wenn das beobachtete Netz
+    noch existiert, aber die relevante Upstream-Struktur veraendert wurde
+- `src/store/raceMonitorState.ts`
+  - gemeinsame pure Helferschicht fuer Race-Liste und Canvas-Markierungen:
+    Reset, Struktur-Pruning, TTL-Ablauf und Projektion auf `raceNetIds`
 - `src/store/CircuitContext.tsx`
   - store-seitiges Dedupe beim Anhängen neuer Race-Funde
   - Struktur-Pruning bei Gate-/Wire-Aenderungen
@@ -95,20 +101,33 @@ Folgende Punkte sind inzwischen im Code verifiziert umgesetzt:
 - `src/__tests__/core/raceLifecycle.test.ts`
   - Regressionen fuer Dedupe, Signaturstabilitaet, Pruning, Relevanz und
     Max-Limit
+  - zusaetzliche Regression fuer reconvergenten Glitch, der nach Loeschen eines
+    vorgelagerten NOT-Gatters korrekt gepruned wird
+- `src/__tests__/core/raceMonitorState.test.ts`
+  - Regressionen fuer Reset, gemeinsames Incident-/Marking-Pruning und
+    TTL-Ablauf
 
 Verifizierter Status dieses Slices:
 
 - store-seitiges Pruning geloeschter Race-Ursachen: **ja**
 - manueller Reset-Button: **ja**
 - signaturbasiertes Incident-Dedupe statt endlosem Event-Append: **ja**
+- Incident-Metadaten `count`, `firstSeen`, `lastSeen`: **ja**
+- Race-Liste und Canvas-Markierungen werden jetzt ueber eine gemeinsame
+  Helferschicht zusammen gepruned und zurueckgesetzt: **ja**
+- Incident-Pruning prueft jetzt nicht mehr nur `netId` und vorhandene Gates,
+  sondern auch einen konservativen lokalen Upstream-Struktur-Fingerprint: **ja**
+- manueller Reset ist jetzt semantisch explizit als **clear only** festgelegt:
+  aktuelle Monitorzustände werden geleert, physisch weiter bestehende Ursachen
+  duerfen bei der naechsten Erkennung wieder auftauchen
 - Lint / Build / Vitest / focused-nine-ui: **gruen**
 
-Restoffen fuer spaetere Vertiefung:
+Aktueller Abschluss fuer diesen Scope:
 
-- optionale Incident-Metriken wie `count`, `firstSeen`, `lastSeen`
-- explizite Integrationstests fuer `CircuitContext`-Resetpfade
-- Entscheidung, ob ein manueller Reset aktive weiter bestehende Races nur
-  leert oder zusaetzlich kurzzeitig unterdruecken soll
+- Race-Lifecycle ist fuer den aktuellen Produktumfang strukturell geschlossen
+- weitere Arbeit in diesem Strang waere nur noch optionale Vertiefung
+  (z. B. zusaetzliche React-Integrationschecks oder spaetere Historien-/Ack-
+  Semantik), nicht mehr noetige Grundstruktur
 
 ### Beobachtete Store-Struktur
 
@@ -177,6 +196,8 @@ Die Anforderung des Nutzers ist aber naeher an einem Incident-Monitor:
 - neue Ursache sichtbar
 - stale Ursache entfernen
 - bewusster Reset moeglich
+- wiederkehrende Ursachen ueber `count`, `firstSeen` und `lastSeen` lesbar
+  machen
 
 ## Erste strukturelle Loesungsideen
 
@@ -295,10 +316,11 @@ Ziel:
 Unterpakete:
 - Race-Signaturen bilden
 - Incident-Update statt Append
-- optional `count`, `firstSeen`, `lastSeen`
+- `count`, `firstSeen`, `lastSeen`
 
 Definition of Done:
 - gleiche Race-Ursachen werden zusammengefasst statt endlos neu angehaengt
+- das Panel zeigt Wiederholungen und Zeitspanne eines Incidents explizit an
 
 ### WP-RACE-5: Validierung und Regressionen
 
@@ -314,13 +336,16 @@ Unterpakete:
 Definition of Done:
 - ein Rueckfall auf stale Race-Eintraege oder Panel-Spam wird automatisch rot
 
-## Konkrete offene To-dos
+## Ergebnis
 
-- Race-State-Modell von Event-Append auf Incident-Lifecycle umstellen
-- Strukturpruning fuer geloeschte Gates/Wires einbauen
-- manuellen Reset als zentrale Action definieren
-- identische Race-Ereignisse signaturbasiert koaleszieren
-- Regressionstests fuer Loeschung, Reset und Dedupe aufbauen
+Im aktuellen Scope erledigt:
+
+- Race-State-Modell von Event-Append auf Incident-Lifecycle umgestellt
+- Strukturpruning fuer geloeschte Gates/Wires eingebaut
+- manueller Reset als zentrale Action definiert
+- identische Race-Ereignisse signaturbasiert koalesziert
+- Regressionstests fuer Loeschung, Reset, Dedupe und Struktur-Fingerprint
+  aufgebaut
 
 ## Betroffene Hauptdateien
 
@@ -342,3 +367,18 @@ Stattdessen:
 
 So bleibt die Loesung lokal fuer Race-Management und beeinflusst nicht
 ungewollt andere Simulations- oder UI-Logiken.
+
+## Abschlussstatus
+
+Dieses Arbeitspaket ist fuer den aktuellen Produktumfang abgeschlossen.
+
+Abschliessend erledigt und verifiziert:
+
+- Incident-Lifecycle statt Event-Append
+- Dedupe mit `occurrenceCount`, `firstSeenTime` und `lastSeenTime`
+- gemeinsamer Reset-/Prune-/TTL-Pfad fuer Liste und Markierungen
+- konservatives Struktur-Fingerprint-Pruning fuer veraenderte Glitch-Ursachen
+- explizite Reset-Semantik: `Monitor reset` ist clear-only, nicht Ack/Suppress
+
+Verbleibende Folgearbeit waere nur noch spaetere optionale Vertiefung und
+kein offener Grundstrukturblock mehr.

@@ -4,6 +4,8 @@
 **Generated:** 2026-03-07
 **Purpose:** Define 25 reference circuits that together exercise the full simulator surface area. Each circuit, once implemented, serves as a regression target: given a set of input vectors, the simulation outputs and HDL export text should match the recorded golden values.
 
+**Status update 2026-03-22:** This original 25-circuit planning document has now been exceeded by the real executable baseline. The accepted Golden Corpus currently contains 30 circuits, and the current Golden-v2 pilot scope is considered closed. Further expansion beyond that baseline is optional future work, not an open gap in the current accepted corpus.
+
 ---
 
 ## Overview
@@ -16,7 +18,7 @@ The golden corpus is organized into five tracks. Each circuit has:
 - HDL export expectations
 - A note if the circuit tests a known gap or blocker
 
-**Total circuits planned: 25**
+**Total circuits planned in this original document: 25**
 
 ---
 
@@ -506,7 +508,7 @@ Seed criteria for v2:
 
 Progress note (2026-03-19):
 - Integrated into the executable corpus: `GC-V2-1`, `GC-V2-2`, `GC-V2-3`, `GC-V2-4`, `GC-V2-5`, `GC-V2-6`, `GC-V2-7`, `GC-V2-8`, `GC-V2-9`
-- Immediate follow-up targets: broader HDL-trace deepening beyond the newly strengthened `GC-V2-4` / `GC-V2-8` paths, plus deeper hierarchy/custom-IC cases beyond the two landed one-level flattening paths
+- Immediate follow-up targets: broader HDL-trace deepening beyond the newly strengthened `GC-V2-4` / `GC-V2-8` paths, plus deeper hierarchy/custom-IC cases beyond the landed one-level paths, the direct nested pass path, and the new explicit deeper-boundary regression
 
 ### Proposed v2 seeds
 
@@ -521,6 +523,7 @@ Progress note (2026-03-19):
 | `GC-V2-7` | Controlled shared-bus contention scenario scaled beyond the two-driver toy case | Keeps the multi-driver story from GC-T2, but in a bus that also has downstream consumers and decode logic. That makes contention behavior easier to verify as part of a real system rather than as a standalone corner case. | Multi-driver conflict handling, bus arbitration visibility, `X` propagation in a larger circuit |
 | `GC-V2-8` | Three-stage sequential feedback mesh with seed load and XOR feedback | Adds a compact but stateful feedback design where the same circuit must support deterministic seeding, reset, and multi-cycle autonomous evolution. This is a better long-trace regression target than a single isolated flip-flop. | Longer sequential traces, seed-vs-feedback mode switching, feedback-path export stability |
 | `GC-V2-9` | Reusable `REG4` custom-IC pipeline with staged comparison tap | Extends the first custom-IC success path into a sequential hierarchy case where enable/reset and stage-to-stage transfer matter across repeated custom-IC reuse. | Second hierarchy/custom-IC path, sequential custom-IC flattening, staged state transfer |
+| `GC-V2-14` | Promoted mixed datapath from focused regression (`BIN_CTR7S -> ALU4 -> REG4`) with longer Golden trace | Reuses an already valuable focused-nine system case, but upgrades it into a longer HDL-backed Golden scenario that covers reset, capture lag, hold and ALU mode changes in one datapath. | Larger state-heavy system coverage, mixed sequential/combinational trace depth, focused-to-golden promotion |
 
 ### Recommended v2 ordering
 
@@ -558,7 +561,7 @@ validation/golden-corpus/
 | Track 2 (Sequential) | P0-3 (VHDL `&`) for GC-S8 |
 | Track 3 (Tri-state) | P0-1 (Z sanitization), P0-2 (multi-driver) |
 | Track 4 (Mixed) | P0-4 for HDL export of combined circuits |
-| Track 5 (Hierarchical) | Two one-level paths are landed via `GC-V2-6` and `GC-V2-9`; follow-on work is deeper hierarchy coverage plus the still-open P2-3 contract strategy |
+| Track 5 (Hierarchical) | Two one-level paths are landed via `GC-V2-6` and `GC-V2-9`; direct nested combinational export is now covered by `GC-V2-12`, and a deeper blocked boundary is now documented via `GC-V2-13`; follow-on work is broader deeper hierarchy coverage plus the still-open P2-3 contract strategy |
 
 ### Recommended implementation order
 

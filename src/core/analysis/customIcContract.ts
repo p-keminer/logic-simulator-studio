@@ -53,6 +53,60 @@ function makeIssue(
   };
 }
 
+function isCustomIcType(typeId: GateTypeId): boolean {
+  if (typeId.startsWith('CIC_')) return true;
+  if (!gateRegistry.has(typeId)) return false;
+  return gateRegistry.get(typeId).category === 'custom';
+}
+
+function getDirectNestedCustomGates(gate: GateInstance): GateInstance[] {
+  if (!gateRegistry.has(gate.typeId)) return [];
+  const definition = gateRegistry.get(gate.typeId);
+  const meta = definition.customIC;
+  if (definition.category !== 'custom' || !meta) return [];
+  return Object.values(meta.subcircuit.gates).filter((innerGate) => isCustomIcType(innerGate.typeId));
+}
+
+function getNestedCombinationalRolloutDecision(innerGate: GateInstance): { allowed: boolean; reason: string } {
+  const innerStructure = analyzeCustomIcGate(innerGate);
+
+  if (innerStructure.exportPolicy === 'missing_registration' || innerStructure.exportPolicy === 'missing_export_metadata') {
+    return {
+      allowed: false,
+      reason: innerStructure.exportBlockReason
+        ?? `Nested custom IC "${innerGate.typeId}" is not available for HDL export.`,
+    };
+  }
+
+  if (innerStructure.exportPolicy === 'blocked_nested_custom_ic') {
+    return {
+      allowed: false,
+      reason: `Nested custom IC "${innerGate.typeId}" already contains its own custom IC hierarchy. The current rollout allows only one additional canonical combinational level.`,
+    };
+  }
+
+  if (innerStructure.stateful) {
+    return {
+      allowed: false,
+      reason: `Nested custom IC "${innerGate.typeId}" is stateful. The current nested rollout allows only canonical combinational children.`,
+    };
+  }
+
+  const innerContract = analyzeCustomIcGateContract(innerGate);
+  if (innerContract.status !== 'canonical') {
+    const primaryIssue = innerContract.issues.find((issue) => issue.severity === 'error' || issue.severity === 'warning');
+    return {
+      allowed: false,
+      reason: `Nested custom IC "${innerGate.typeId}" must remain canonical for the current nested rollout. ${primaryIssue?.message ?? ''}`.trim(),
+    };
+  }
+
+  return {
+    allowed: true,
+    reason: '',
+  };
+}
+
 export function analyzeCustomIcGateContract(gate: GateInstance): CustomIcGateContract {
   const structure = analyzeCustomIcGate(gate);
   const issues: CustomIcContractIssue[] = [];
@@ -64,13 +118,15 @@ export function analyzeCustomIcGateContract(gate: GateInstance): CustomIcGateCon
     issues.push(makeIssue('missing_export_metadata', 'error', structure.exportBlockReason));
   }
 
-  for (const nestedTypeId of structure.nestedCustomTypeIds) {
+  for (const nestedGate of getDirectNestedCustomGates(gate)) {
+    const nestedDecision = getNestedCombinationalRolloutDecision(nestedGate);
+    if (nestedDecision.allowed) continue;
     issues.push(
       makeIssue(
         'nested_custom_ic',
         'error',
-        `Nested custom IC "${nestedTypeId}" inside "${gate.typeId}" is not supported for HDL export.`,
-        { nestedTypeId },
+        nestedDecision.reason,
+        { nestedTypeId: nestedGate.typeId },
       ),
     );
   }

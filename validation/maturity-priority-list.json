@@ -418,10 +418,10 @@
                       "area":  "testing, ci",
                       "status":  "done",
                       "resolvedAt":  "2026-03-18",
-                      "resolutionNote":  "Runner v1.1.0 activated verilog-reexport-diff + vhdl-reexport-diff checks; as of 2026-03-19 the live byte-diff gate is re-verified on corpus v1.8.0 with 23 PASS, 0 FAIL, 1 EXPECTED LIMIT across 24 circuits. TypeID bug (IC_74HC74/283/161 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 74HC74/283/161) was fixed during the initial activation, and the expanded 48 golden HDL exports are now byte-exact against the current exporter baseline.",
+                      "resolutionNote":  "Runner v1.1.0 activated verilog-reexport-diff + vhdl-reexport-diff checks; as of 2026-03-22 the live byte-diff gate is re-verified on corpus v1.9.0 with 28 PASS, 0 FAIL, 2 EXPECTED LIMIT across 30 circuits. TypeID bug (IC_74HC74/283/161 -> 74HC74/283/161) was fixed during the initial activation, and the expanded 60 golden HDL exports are now byte-exact against the current exporter baseline.",
                       "evidence":  [
                                        "golden-corpus-v1-report.md: Export-determinism status = exporters loaded, diff checks ran live",
-                                       "golden-corpus-v1-summary.json: 23 pass, 0 fail, 1 expected_limit, 0 unsupported",
+                                       "golden-corpus-v1-summary.json: 28 pass, 0 fail, 2 expected_limit, 0 unsupported",
                                        "package.json: golden:test now runs via vite-node"
                                    ],
                       "symptom":  "No automated check verifies that re-exporting a golden corpus circuit produces identical Verilog/VHDL output. Export non-determinism could silently introduce diffs.",
@@ -487,21 +487,23 @@
                       "title":  "Golden Corpus v2 expansion - large/hierarchical circuits, broader external HDL coverage",
                       "priority":  "P2",
                       "area":  "testing",
-                      "status":  "partial",
+                      "status":  "done",
                       "evidence":  [
-                                       "golden-corpus-v1.json: 24 circuits including gc_v2_1_mux_fabric, gc_v2_2_datapath_slice, gc_v2_3_shift_pipeline, gc_v2_4_ram_readback, gc_v2_5_decode_tree, gc_v2_6_custom_halfadder, gc_v2_7_bus_conflict_system, gc_v2_8_sequential_feedback, and gc_v2_9_custom_reg4_pipeline; two one-level hierarchical/custom-IC cases are now covered",
-                                       "golden-corpus-v1-report.md: external HDL syntax/lint and scenario-based simulation are active for all non-boundary v1 cases"
+                                       "golden-corpus-v1.json: 30 circuits including fifteen v2 pilot seeds through gc_v2_15_ram_decode_capture_bus",
+                                       "golden-corpus-v1-report.md: external HDL syntax/lint and scenario-based simulation are active for all non-boundary corpus cases",
+                                       "golden-corpus-v1-acceptance.json: scopeDecision.status=closed_current_scope, partialRunsProtected=true"
                                    ],
-                      "partialResolutionNote":  "Nine Golden Corpus v2 pilot seeds are now integrated into the executable corpus: GC-V2-1 (wider mux/selector fabric), GC-V2-2 (small datapath slice), GC-V2-3 (74HC194 -\u003e 74HC595 shift/latch pipeline), GC-V2-4 (RAM256 readback chain), GC-V2-5 (74HC138/148/373/374 decode tree), GC-V2-6 (custom half-adder hierarchy flattened into HDL), GC-V2-7 (larger shared-bus conflict monitor), GC-V2-8 (sequential feedback mesh with seed-load mode and XOR feedback), and GC-V2-9 (custom REG4 hierarchy flattened into a sequential pipeline). All nine pass the live exporter diff gate plus external Verilog/VHDL simulation. The remaining gap is breadth beyond these pilots, especially broader/deeper traces and hierarchy beyond the current one-level custom-IC paths.",
-                      "symptom":  "The current golden corpus now reaches beyond the original medium-sized v1 baseline and now includes both combinational and sequential hierarchical/custom-IC slices, but it still only samples a few larger system classes. External HDL verification remains scenario-based rather than exhaustive across broader traces and deeper composed hierarchies.",
+                      "resolvedAt":  "2026-03-22",
+                      "resolutionNote":  "The Golden-Corpus-v2 workstream is now closed in the current scope as a stable pilot baseline. All landed gc_v2_* seeds have hardened traces, the corpus includes broader large-system cases (mixed datapath plus integrated RAM/decode/capture), direct nested combinational hierarchy has a clean pass path, the deeper hierarchy boundary is explicitly tracked as expected_limit, and summary/report/acceptance are generated together with protection against partial --slug runs overwriting the canonical artifacts. Further breadth or deeper hierarchy remains optional future expansion, not an open blocker inside the accepted scope.",
+                      "symptom":  "The golden corpus previously covered only a smaller v1 baseline plus a narrow first pilot set. Without broader system cases, deeper hierarchy coverage, and hardened reporting, larger regressions could remain underrepresented or the acceptance baseline could drift.",
                       "affectedGates":  [
                                             "all"
                                         ],
-                      "recommendedNextStep":  "Deepen HDL traces on the landed seeds and move from the two landed one-level hierarchy/custom-IC paths toward deeper or nested hierarchy cases.",
+                      "recommendedNextStep":  "No immediate Golden-Corpus expansion is required. Reopen this track only when broader large-system seeds or deeper reusable hierarchy become an intentional next workstream.",
                       "dependsOn":  [
 
                                     ],
-                      "riskIfUnfixed":  "Scaling and hierarchy regressions may go undetected."
+                      "riskIfUnfixed":  "N/A - current scope closed; only optional future breadth remains."
                   },
                   {
                       "id":  "P2-8",
@@ -556,6 +558,6 @@
                                          "P2-6",
                                          "P2-3"
                                      ],
-                    "note":  "All P0 blockers and P1-1 through P1-7 remain resolved. As of 2026-03-20, Contract Runner v1 is operational at 447 pass, 0 fail, 0 unsupported; Golden Corpus v1 is operational at 23 pass, 0 fail, 1 expected_limit across 24 circuits with live export-determinism plus external HDL syntax/lint and scenario-based simulation enabled. Focused-Nine UI audit remains a CI gate (12 smoke PASS, 5 semantic PASS). CI has 6 jobs. Current investment areas: canonical FSM export projection semantics, structured race-panel lifecycle semantics, Golden Corpus v2 breadth, deeper traces, branch protection, CI performance, and deeper hierarchy/custom-IC verification."
+                      "note":  "All P0 blockers and P1-1 through P1-7 remain resolved. As of 2026-03-22, Contract Runner v1 is operational at 447 pass, 0 fail, 0 unsupported; Golden Corpus v1 is operational at 28 pass, 0 fail, 2 expected_limit across 30 circuits with live export-determinism plus external HDL syntax/lint and scenario-based simulation enabled. Focused-Nine UI audit remains a CI gate (12 smoke PASS, 5 semantic PASS). CI has 6 jobs. Current investment areas: canonical FSM export projection semantics, structured race-panel lifecycle semantics, Golden Corpus acceptance/report hardening, branch protection, CI performance, and deeper hierarchy/custom-IC verification."
                 }
 }

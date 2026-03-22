@@ -110,6 +110,11 @@ const addReason = (
   }
 };
 
+const buildRetainedElementIdSet = (
+  nodeIds: Iterable<string>,
+  gateIds: Iterable<string>,
+) => new Set<string>([...nodeIds, ...gateIds]);
+
 const dedupeStrings = (values: string[]) => {
   const unique: string[] = [];
   const seen = new Set<string>();
@@ -394,10 +399,14 @@ export function createBackendBrokerCircuitContext(
 
   const retainedGateIds = new Set(reduced.gates.map((gate) => gate.id));
   const retainedNodeIds = new Set(reduced.nodes.map((node) => node.id));
+  const retainedElementIds = buildRetainedElementIdSet(
+    retainedNodeIds,
+    retainedGateIds,
+  );
   reduced = {
     ...reduced,
     selectedElementIds: reduced.selectedElementIds.filter((id) => {
-      const keep = retainedNodeIds.has(id) || retainedGateIds.has(id);
+      const keep = retainedElementIds.has(id);
       if (!keep) {
         addReason(reasons, 'selected-elements-trimmed');
       }
@@ -405,8 +414,8 @@ export function createBackendBrokerCircuitContext(
     }),
     connections: reduced.connections.filter((connection) => {
       const keep =
-        retainedGateIds.has(connection.from.gateId) &&
-        retainedGateIds.has(connection.to.gateId);
+        retainedElementIds.has(connection.from.gateId) &&
+        retainedElementIds.has(connection.to.gateId);
 
       if (!keep) {
         addReason(reasons, 'connections-trimmed');
@@ -491,11 +500,28 @@ export function createBackendBrokerCircuitContext(
     }
 
     if (finalized.nodes.length > 0) {
+      const remainingNodes = finalized.nodes.slice(0, -1);
+      const remainingNodeIds = new Set(remainingNodes.map((node) => node.id));
+      const remainingGateIds = new Set(finalized.gates.map((gate) => gate.id));
+      const remainingElementIds = buildRetainedElementIdSet(
+        remainingNodeIds,
+        remainingGateIds,
+      );
       finalized = {
         ...finalized,
-        nodes: finalized.nodes.slice(0, -1),
+        nodes: remainingNodes,
+        connections: finalized.connections.filter(
+          (connection) =>
+            remainingElementIds.has(connection.from.gateId) &&
+            remainingElementIds.has(connection.to.gateId),
+        ),
+        selectedElementIds: finalized.selectedElementIds.filter((id) =>
+          remainingElementIds.has(id),
+        ),
       };
       addReason(reasons, 'nodes-trimmed');
+      addReason(reasons, 'connections-trimmed');
+      addReason(reasons, 'selected-elements-trimmed');
       reduction = buildReduction();
       continue;
     }
@@ -503,16 +529,21 @@ export function createBackendBrokerCircuitContext(
     if (finalized.gates.length > 0) {
       const remainingGates = finalized.gates.slice(0, -1);
       const remainingGateIds = new Set(remainingGates.map((gate) => gate.id));
+      const remainingNodeIds = new Set(finalized.nodes.map((node) => node.id));
+      const remainingElementIds = buildRetainedElementIdSet(
+        remainingNodeIds,
+        remainingGateIds,
+      );
       finalized = {
         ...finalized,
         gates: remainingGates,
         connections: finalized.connections.filter(
           (connection) =>
-            remainingGateIds.has(connection.from.gateId) &&
-            remainingGateIds.has(connection.to.gateId),
+            remainingElementIds.has(connection.from.gateId) &&
+            remainingElementIds.has(connection.to.gateId),
         ),
         selectedElementIds: finalized.selectedElementIds.filter(
-          (id) => remainingGateIds.has(id) || retainedNodeIds.has(id),
+          (id) => remainingElementIds.has(id),
         ),
       };
       addReason(reasons, 'gates-trimmed');

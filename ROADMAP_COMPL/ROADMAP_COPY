@@ -304,16 +304,34 @@ Manuell validieren:
 - Mehrfach-FSM exportieren
 - Portnamen in Verilog und VHDL vergleichen
 
-### Phase 4 - Race-Lifecycle fertigziehen
+### Phase 4 - Race-Lifecycle
+
+Status:
+- abgeschlossen im aktuellen Scope
 
 Quelle:
 - validation/race-panel-fixes/work-package.md
 
-Reihenfolge:
-1. bestehendes Dedupe, Pruning und Reset stabil halten
-2. Incident-Metadaten verbessern
-3. tiefere Integrationsabsicherung fuer Store und Panel ergaenzen
-4. spaeter feinere Reset-Semantik nur falls fachlich noetig
+Abgeschlossener Stand:
+- signaturbasiertes Incident-Dedupe ist im Store gelandet
+- wiederkehrende identische Races werden jetzt als ein Incident mit
+  `occurrenceCount`, `firstSeenTime` und `lastSeenTime` koalesziert
+- das Race-Panel zeigt diese Metadaten explizit an
+- Race-Liste und Canvas-Markierungen laufen jetzt fuer Reset, Struktur-Pruning
+  und TTL-Ablauf ueber eine gemeinsame pure Helferschicht
+- Incident-Ursachen tragen jetzt einen konservativen lokalen
+  Struktur-Fingerprint, sodass auch Upstream-Aenderungen an Glitch-Faellen
+  korrekt gepruned werden
+- die Reset-Semantik ist explizit festgelegt: `Monitor reset` leert den
+  aktuellen Zustand, aktive physische Ursachen duerfen spaeter wieder auftauchen
+- damit ist die noetige Grundstruktur fuer den aktuellen Scope geschlossen;
+  spaetere weitere Arbeit waere nur noch optionale Vertiefung
+
+Abschluss fuer diesen Abschnitt:
+1. Dedupe, Pruning und Reset sind strukturell abgesichert
+2. Incident-Metadaten sind eingefuehrt
+3. Integrationsabsicherung fuer Store und Panel ist erfolgt
+4. weitere Reset-/Ack-Semantik bleibt bewusst spaeterer optionaler Ausbau
 
 Automatisch validieren:
 - Race-Lifecycle-Tests
@@ -364,6 +382,34 @@ Aktueller Stand:
 Ziel:
 - neue Verhalten nicht nur im UI, sondern ueber Referenzschaltungen absichern
 
+Aktueller Slice:
+- Golden-Trace-Depth-Hardening ist jetzt ueber alle gelandeten `gc_v2_*`-
+  Seeds verbreitert
+- damit tragen nicht mehr nur `gc_v2_3_shift_pipeline`,
+  `gc_v2_8_sequential_feedback`, `gc_v2_9_custom_reg4_pipeline` und
+  `gc_v2_11_custom_hc194_wrap`, sondern die komplette aktuelle v2-Seed-Gruppe
+  laengere oder dichtere HDL-Szenarien statt nur kurzer Smoke-Traces
+- zusaetzlich ist jetzt mit `gc_v2_12_nested_halfadder_parent` der erste
+  direkte nested-combinational-Custom-IC-Golden-Fall gelandet
+- und mit `gc_v2_13_deep_nested_halfadder_boundary` ist jetzt der erste
+  tiefere Hierarchie-Boundary-Fall als bewusstes `expected_limit` im Golden
+  Corpus dokumentiert, statt nur implizit ausserhalb der Regression zu liegen
+- zusaetzlich ist jetzt mit `gc_v2_14_mixed_datapath_extended` ein groesserer
+  state-heavy Mixed-Datapath-Fall aus der Focused-Nine-Schiene in den Golden
+  Corpus uebernommen und mit einer laengeren HDL-Sequenz abgesichert
+- zusaetzlich ist jetzt mit `gc_v2_15_ram_decode_capture_bus` der erste
+  groessere integrierte Bus-/RAM-/Decode-/Capture-Systemfall als v2-Seed im
+  Golden Corpus gelandet
+- Acceptance-/Report-Hardening ist jetzt ebenfalls eingezogen:
+  `golden-corpus-v1-acceptance.json` wird synchron mit Summary und Report
+  erzeugt, und partielle `--slug`-Runs duerfen die kanonischen Golden-
+  Artefakte nicht mehr ueberschreiben
+- die Scope-Abschlussbewertung gegen die offizielle Golden-v2-Ausbauplanung
+  ist jetzt erfolgt: der Golden-Strang ist im aktuellen Umfang als stabile
+  Pilot-v2-Basis abgeschlossen; weitere Systembreite und tiefere/nestbare
+  Hierarchie bleiben bewusste spaetere Expansion, nicht mehr offene
+  Pflichtarbeit dieses Abschnitts
+
 Reihenfolge:
 1. neue echte Repro-Faelle zuerst als gezielte Tests
 2. dann als focused-nine-Auditfall, wenn UI- oder Semantik-kritisch
@@ -394,7 +440,8 @@ Erster aktiver Einstiegsschnitt:
 - read-only `customIcContract`-Layer fuer canonical/degraded/blocked Boundary-Vertraege; erkennt jetzt auch kaputte one-level-Faelle wie dead inputs, fehlende OUTPUT_LED-Treiber und Multi-Driver-Ausgaenge vor dem Flattening
 - read-only `customIcNestingReadiness`-Layer fuer die spaetere Nested-Entscheidung; klassifiziert one-level-Custom-ICs jetzt vorab in eligible kombinatorisch, eligible sequentiell, degraded, contract-blocked oder bereits nested
 - read-only `customIcNestedAllowPolicy`-Layer als naechster Planungsschnitt; leitet aus der Readiness jetzt explizit ab, welche one-level-Custom-ICs spaeter kontrolliert fuer Nested-Registrierung und Nested-Export freigegeben werden duerften, ohne das aktuelle Blockierverhalten schon zu lockern
-- Flattening und Custom-IC-Erzeugung im Editor nutzen dieselbe Policy bereits zentral; nested Custom-ICs bleiben vorerst bewusst harter Fallback mit explizitem Hinweis
+- aktueller Rollout-Schnitt: direkte kanonische kombinatorische Nested-Custom-ICs sind jetzt in Editor und HDL-Pfad freigegeben; stateful und tiefere Nested-Faelle bleiben weiterhin explizit blockiert
+- aktueller Persistenzschnitt: gespeicherte Schaltungen tragen die benoetigte Custom-IC-Library jetzt rekursiv mit und rehydrieren sie beim Laden, sodass Host-/Hierarchie-Dateien nicht mehr auf bereits lokal registrierte `CIC_*`-Typen angewiesen sind
 - Regression-Wall verbreitert: zusaetzliche Golden-/Hierarchie-Faelle fuer Tri-State-Custom-IC und 74HC194-Custom-IC mit verstecktem Registerzustand
 - Export-Modal und Custom-IC-Dialog zeigen die aktuelle Hierarchie-Policy jetzt explizit an, statt Nested-Grenzen nur indirekt ueber spaete Exportfehler oder Alerts erkennbar zu machen
 
@@ -482,9 +529,8 @@ Zusaetzlich bei groesserer Tragweite:
    dann dokumentationsseitig nachziehen
 2. FSM-Projektion in gemischten und direkt verketteten Netzen weiter haerten
 3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen
-4. Race-Lifecycle ueber den ersten Slice hinaus vervollstaendigen
-5. Golden-, Focused- und Contract-Validierung weiter verbreitern
-6. CI- und Release-Haertung abschliessen
+4. Golden-, Focused- und Contract-Validierung weiter verbreitern
+5. CI- und Release-Haertung abschliessen
 
 ## Verweise
 

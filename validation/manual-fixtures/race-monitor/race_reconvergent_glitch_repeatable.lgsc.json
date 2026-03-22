@@ -1,0 +1,161 @@
+{
+  "id": "race_reconvergent_glitch_repeatable",
+  "name": "race_reconvergent_glitch_repeatable",
+  "version": "1.0.0",
+  "gates": {
+    "sw_a": {
+      "id": "sw_a",
+      "typeId": "INPUT_SWITCH",
+      "x": 40,
+      "y": 80,
+      "label": "a",
+      "customState": {
+        "value": 0
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "not_1": {
+      "id": "not_1",
+      "typeId": "NOT",
+      "x": 200,
+      "y": 40,
+      "label": "not_1",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "not_2": {
+      "id": "not_2",
+      "typeId": "NOT",
+      "x": 360,
+      "y": 40,
+      "label": "not_2",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "xor": {
+      "id": "xor",
+      "typeId": "XOR",
+      "x": 360,
+      "y": 140,
+      "label": "glitch",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "led": {
+      "id": "led",
+      "typeId": "OUTPUT_LED",
+      "x": 560,
+      "y": 140,
+      "label": "y",
+      "customState": {},
+      "outputSignals": {},
+      "isSelected": false
+    }
+  },
+  "wires": {
+    "w_direct": {
+      "id": "w_direct",
+      "from": {
+        "gateId": "sw_a",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "xor",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w_delay_1": {
+      "id": "w_delay_1",
+      "from": {
+        "gateId": "sw_a",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "not_1",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w_delay_2": {
+      "id": "w_delay_2",
+      "from": {
+        "gateId": "not_1",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "not_2",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w_delay_3": {
+      "id": "w_delay_3",
+      "from": {
+        "gateId": "not_2",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "xor",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    },
+    "w_out": {
+      "id": "w_out",
+      "from": {
+        "gateId": "xor",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "led",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "waypoints": [],
+      "isSelected": false
+    }
+  },
+  "viewport": {
+    "panX": 0,
+    "panY": 0,
+    "zoom": 1
+  },
+  "metadata": {
+    "createdAt": "2026-03-21",
+    "updatedAt": "2026-03-21"
+  },
+  "customIcLibrary": []
+}

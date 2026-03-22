@@ -210,6 +210,6 @@ describe('customIcNestingReadiness', () => {
     expect(summary.blockedExistingNestedCount).toBe(1);
     expect(summary.degradedReasons[0]).toContain('input i1 has no fanout');
     expect(summary.blockedReasons.some((reason) => reason.includes('output o0 has no driven OUTPUT_LED'))).toBe(true);
-    expect(summary.blockedReasons.some((reason) => reason.includes('Nested custom IC "CIC_READINESS_HALF_ADDER"'))).toBe(true);
+    expect(summary.blockedReasons.some((reason) => reason.includes('Nested custom IC "CIC_READINESS_HALF_ADDER"'))).toBe(false);
   });
 });

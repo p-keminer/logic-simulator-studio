@@ -1,7 +1,7 @@
 {
   "version": "1.9.0",
   "createdAt": "2026-03-07",
-  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, now including eleven Golden Corpus v2 pilot seeds",
+  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, now including fourteen Golden Corpus v2 pilot seeds",
   "circuits": [
     {
       "slug": "gc_c1_basic_gates",
@@ -625,6 +625,139 @@
         "vhdlExtraSignal": "signal reg_wrap_flat_dut : STD_LOGIC_VECTOR(3 downto 0)"
       },
       "rationale": "Fourth dedicated hierarchy/custom-IC seed: the existing 74HC194 modes circuit is wrapped as a reusable custom IC and re-exported. This verifies one-level sequential hierarchy for a gate with hidden state, async clear, multiple modes, and extra HDL register declarations."
+    },
+    {
+      "slug": "gc_v2_12_nested_halfadder_parent",
+      "class": "combinational",
+      "title": "Direct nested custom half-adder parent with raw OR oracle",
+      "gates": ["CIC_PARENT_HALF_ADDER", "OR", "XOR"],
+      "inputs": ["a", "b"],
+      "outputs": ["w_0", "w_1", "w_2"],
+      "initialState": {
+        "a": 0,
+        "b": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire a",
+          "input wire b",
+          "output wire w_0",
+          "output wire w_2"
+        ],
+        "internalWires": ["w_3", "w_4"],
+        "verilogPattern": "xor g_parent_flat_ha0_flat_xor1(w_3, a, b)",
+        "verilog": "xor g_xor_diff(w_2, w_0, w_1)",
+        "vhdl": "w_3 <= a xor b; -- parent_flat_ha0_flat_xor1",
+        "outputShadows": true
+      },
+      "rationale": "Twelfth v2 pilot seed and first Golden-Corpus case with a directly nested combinational custom-IC parent: a registered HALF_ADDER is wrapped into a reusable PARENT_HALF_ADDER custom IC, then compared against a raw OR oracle at top level. This verifies direct nested custom-IC registration order, recursive structural HDL flattening, and exact nested-vs-raw agreement."
+    },
+    {
+      "slug": "gc_v2_13_deep_nested_halfadder_boundary",
+      "class": "combinational",
+      "title": "Deep nested custom half-adder grandparent stays blocked at the current rollout boundary",
+      "gates": ["CIC_GRANDPARENT_HALF_ADDER", "OR", "XOR"],
+      "inputs": ["a", "b"],
+      "outputs": ["w_0", "w_1", "w_2"],
+      "initialState": {
+        "a": 0,
+        "b": 0
+      },
+      "checkPoints": {
+        "verilog": "HDL EXPORT BLOCKED — Error: Nested custom IC \"CIC_PARENT_HALF_ADDER\" already contains its own custom IC hierarchy.",
+        "vhdl": "HDL EXPORT BLOCKED — Error: Nested custom IC \"CIC_PARENT_HALF_ADDER\" already contains its own custom IC hierarchy."
+      },
+      "rationale": "Thirteenth v2 pilot seed and first deeper hierarchy boundary case: a GRANDPARENT_HALF_ADDER custom IC wraps PARENT_HALF_ADDER, which already wraps HALF_ADDER. Runtime recursion remains possible, but HDL export must stay blocked at this rollout stage. This keeps the current deeper-than-direct nested boundary explicit and regression-checked instead of silently drifting."
+    },
+    {
+      "slug": "gc_v2_14_mixed_datapath_extended",
+      "class": "mixed",
+      "title": "Extended mixed datapath with counter, ALU4 and REG4 over reset, hold and mode changes",
+      "gates": ["BIN_CTR7S", "ALU4", "REG4"],
+      "inputs": ["b0", "b1", "b2", "b3", "op0", "op1", "op2", "cin", "clk", "rst", "en"],
+      "outputs": ["w_8", "w_9", "w_10", "w_11"],
+      "initialState": {
+        "b0": 1,
+        "b1": 1,
+        "b2": 0,
+        "b3": 0,
+        "op0": 0,
+        "op1": 0,
+        "op2": 0,
+        "cin": 0,
+        "clk": 0,
+        "rst": 0,
+        "en": 1
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire b0",
+          "input wire op2",
+          "input wire clk",
+          "input wire rst",
+          "input wire en",
+          "output reg  w_8",
+          "output reg  w_11"
+        ],
+        "internalWires": ["w_0", "w_7", "w_ctr_rco", "w_alu_cout", "cnt_ctr"],
+        "verilogPattern": "case ({op2, op1, op0})",
+        "verilog": "always @(posedge clk or posedge rst)",
+        "verilogExtraReg": "reg [3:0] cnt_ctr",
+        "vhdl": "case vop is",
+        "vhdlExtraSignal": "signal cnt_ctr : STD_LOGIC_VECTOR(3 downto 0)",
+        "outputShadows": true
+      },
+      "rationale": "Fourteenth v2 pilot seed and first larger state-heavy system promoted from the focused regression set into the Golden Corpus: a BIN_CTR7S drives an ALU4 whose result is captured by REG4. The case verifies chained sequential/combinational interaction over reset, repeated clock edges, disabled hold and ALU mode changes, so it catches datapath timing and capture regressions that a shorter two-cycle smoke scenario would miss."
+    },
+    {
+      "slug": "gc_v2_15_ram_decode_capture_bus",
+      "class": "mixed",
+      "title": "RAM256 decode-and-bit-select bus with latch hold and REG4 capture",
+      "gates": ["RAM256", "74HC138", "74HC151", "74HC373", "REG4"],
+      "inputs": ["a0", "a1", "a2", "g1", "di0", "di1", "di2", "di3", "di4", "di5", "di6", "di7", "we", "cs", "oe", "le373", "oe373", "clk", "rst"],
+      "outputs": ["w_13", "w_14", "w_15", "w_16", "w_17", "w_18", "w_2"],
+      "initialState": {
+        "a0": 1,
+        "a1": 0,
+        "a2": 1,
+        "g1": 1,
+        "di0": 1,
+        "di1": 0,
+        "di2": 1,
+        "di3": 0,
+        "di4": 0,
+        "di5": 1,
+        "di6": 0,
+        "di7": 0,
+        "we": 1,
+        "cs": 1,
+        "oe": 1,
+        "le373": 0,
+        "oe373": 1,
+        "clk": 0,
+        "rst": 0
+      },
+      "checkPoints": {
+        "verilogPorts": [
+          "input wire a0",
+          "input wire g1",
+          "input wire we",
+          "input wire cs",
+          "input wire oe",
+          "input wire clk",
+          "input wire rst",
+          "output wire w_13",
+          "output reg  w_15",
+          "output reg  w_2"
+        ],
+        "internalWires": ["w_10", "w_11", "w_12", "ram_ram", "latch_lat373"],
+        "verilogPattern": "always @(posedge clk or posedge rst)",
+        "verilog": "assign w_13 = oe373 ? 1'bz : latch_lat373[0]",
+        "vhdl": "w_13_q <= 'Z' when oe373 = '1' else latch_lat373(0)",
+        "vhdlExtraSignal": "signal latch_lat373 : STD_LOGIC_VECTOR(7 downto 0)",
+        "outputShadows": true
+      },
+      "rationale": "Fifteenth v2 pilot seed and first larger integrated bus-/memory-/decode system in the Golden Corpus: RAM256 feeds both a direct live bus tap and a 74HC151 bit-select path, a 74HC138 exposes address decode status, a 74HC373 proves transparent-vs-held memory observation, and REG4 captures the combined status over reset and clock edges. This closes the gap between isolated RAM, decode, and bus cases by checking them together as one reproducible system path."
     }
   ]
 }

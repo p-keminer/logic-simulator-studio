@@ -1,5 +1,6 @@
 import type { Circuit } from '../types';
 import { gateRegistry } from '../registry/GateRegistry';
+import { registerEmbeddedCustomIcLibrary } from '../customIc/embeddedLibrary';
 
 export class DeserializationError extends Error {
   constructor(message: string) {
@@ -20,6 +21,12 @@ export function deserializeCircuit(json: string): Circuit {
 
   if (!circuit.id || !circuit.gates || !circuit.wires) {
     throw new DeserializationError('Fehlende Pflichtfelder im Circuit-Objekt');
+  }
+
+  try {
+    registerEmbeddedCustomIcLibrary(circuit);
+  } catch (error) {
+    throw new DeserializationError(`Eingebettete Custom-IC-Bibliothek konnte nicht geladen werden: ${String(error)}`);
   }
 
   // Validate all gate types are registered

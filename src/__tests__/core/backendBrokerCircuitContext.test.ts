@@ -41,6 +41,10 @@ function makeSnapshot(
             source: { gateId: 'node-in', port: 'out' },
             target: { gateId: 'gate-a', port: 'a' },
           },
+          {
+            source: { gateId: 'gate-a', port: 'out' },
+            target: { gateId: 'node-out', port: 'in' },
+          },
         ],
       },
       annotations: {
@@ -77,6 +81,10 @@ describe('backend broker circuit context adapter', () => {
           from: { gateId: 'node-in', port: 'out' },
           to: { gateId: 'gate-a', port: 'a' },
         },
+        {
+          from: { gateId: 'gate-a', port: 'out' },
+          to: { gateId: 'node-out', port: 'in' },
+        },
       ],
       notes: 'keep this note trimmed',
       reduction: expect.objectContaining({
@@ -84,7 +92,7 @@ describe('backend broker circuit context adapter', () => {
           selectedElementIds: 2,
           nodes: 2,
           gates: 1,
-          connections: 1,
+          connections: 2,
         },
       }),
     });

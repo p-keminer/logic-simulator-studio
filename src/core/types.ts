@@ -47,6 +47,13 @@ export interface CustomICExportMetadata {
   outputGateIds: string[];
 }
 
+export interface SerializedCustomICDefinition {
+  name: string;
+  typeId: GateTypeId;
+  circuit: Circuit;
+  portNames?: string[];
+}
+
 export type ProjectionSourceSystem = 'fsm_synth';
 
 export type ProjectionSignalRole =
@@ -258,6 +265,7 @@ export interface Circuit {
   wires: Record<string, Wire>;
   viewport: ViewportState;
   metadata: CircuitMetadata;
+  customIcLibrary?: SerializedCustomICDefinition[];
 }
 
 // ─── Simulation ───────────────────────────────────────────────────────────────
@@ -316,6 +324,25 @@ export interface RaceInfo {
   severity: RaceSeverity;
   /** Fine-grained classification used for filtering and tooltips. */
   type?: RaceType;
+}
+
+/**
+ * Store-level incident view of recurring race events.
+ * `time` remains the latest occurrence time for backward-compatible sorting.
+ */
+export interface RaceIncident extends RaceInfo {
+  /** Time of the first observed occurrence for this incident signature. */
+  firstSeenTime: number;
+  /** Time of the most recent observed occurrence for this incident signature. */
+  lastSeenTime: number;
+  /** Number of coalesced occurrences for the same incident signature. */
+  occurrenceCount: number;
+  /**
+   * Deterministic local structural fingerprint of the incident cause.
+   * Used to prune incidents when the observed net still exists but the relevant
+   * upstream structure has changed in the meantime.
+   */
+  structuralSignature?: string;
 }
 
 // ─── Timing Diagram ───────────────────────────────────────────────────────────

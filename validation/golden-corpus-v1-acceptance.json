@@ -1,17 +1,26 @@
 {
-  "version": 1,
-  "verifiedOn": "2026-03-19",
-  "runnerVersion": "1.8.0",
+  "version": 2,
+  "generatedAt": "2026-03-22T01:43:10.410Z",
+  "runnerVersion": "1.9.0",
+  "corpusVersion": "1.9.0",
+  "verdict": "PASS",
   "status": {
     "exists": true,
     "executed": true,
-    "inCi": true
+    "inCi": true,
+    "acceptanceArtifactsSynchronized": true,
+    "partialRunsProtected": true
   },
   "counts": {
-    "indexEntries": 24,
-    "circuitFiles": 24,
-    "verilogExports": 24,
-    "vhdlExports": 24
+    "totalCases": 30,
+    "indexEntries": 30,
+    "circuitFiles": 30,
+    "verilogExports": 30,
+    "vhdlExports": 30,
+    "passed": 28,
+    "failed": 0,
+    "expectedLimit": 2,
+    "unsupported": 0
   },
   "coverage": {
     "combinational": [
@@ -19,7 +28,9 @@
       "gc_c2_half_adder",
       "gc_c3_sr_latch",
       "gc_v2_1_mux_fabric",
-      "gc_v2_6_custom_halfadder"
+      "gc_v2_6_custom_halfadder",
+      "gc_v2_12_nested_halfadder_parent",
+      "gc_v2_13_deep_nested_halfadder_boundary"
     ],
     "sequential": [
       "gc_s1_dff_assr",
@@ -29,11 +40,13 @@
       "gc_s5_dff_basic",
       "gc_s7_hc161_vs_hc163",
       "gc_s8_hc194_modes",
-      "gc_v2_8_sequential_feedback"
+      "gc_v2_8_sequential_feedback",
+      "gc_v2_11_custom_hc194_wrap"
     ],
     "tristate": [
       "gc_t1_tribuf_direct",
-      "gc_t2_bus_mux"
+      "gc_t2_bus_mux",
+      "gc_v2_10_custom_tribuf_wrap"
     ],
     "mixed": [
       "gc_m1_dff_chain",
@@ -44,28 +57,74 @@
       "gc_v2_4_ram_readback",
       "gc_v2_5_decode_tree",
       "gc_v2_7_bus_conflict_system",
-      "gc_v2_9_custom_reg4_pipeline"
+      "gc_v2_9_custom_reg4_pipeline",
+      "gc_v2_14_mixed_datapath_extended",
+      "gc_v2_15_ram_decode_capture_bus"
+    ]
+  },
+  "expectedLimitSlugs": [
+    "gc_t2_bus_mux",
+    "gc_v2_13_deep_nested_halfadder_boundary"
+  ],
+  "requirementsAssessment": {
+    "traceDepthHardening": {
+      "status": "fulfilled",
+      "note": "All landed gc_v2_* seeds now carry hardened HDL traces instead of only short smoke scenarios."
+    },
+    "largeSystemBreadth": {
+      "status": "fulfilled_current_scope",
+      "note": "The current baseline includes a larger mixed datapath plus an integrated RAM/decode/bit-select/hold/capture system case."
+    },
+    "hierarchyDepth": {
+      "status": "partial_documented_boundary",
+      "note": "Direct nested combinational hierarchy is covered by a clean pass case, and deeper hierarchy is captured explicitly as expected_limit instead of remaining implicit."
+    },
+    "busMemoryConflictSystems": {
+      "status": "fulfilled_current_scope",
+      "note": "Shared-bus conflict, RAM readback, decode tree, and integrated RAM/decode/capture paths are all present in the executable corpus."
+    },
+    "gateStability": {
+      "status": "fulfilled",
+      "note": "Summary, report, and acceptance are generated together, and partial slug runs can no longer overwrite the canonical artifacts."
+    }
+  },
+  "scopeDecision": {
+    "status": "closed_current_scope",
+    "note": "Golden Corpus v2 is considered complete for the current scope as a stable pilot baseline. Deeper hierarchy passes and broader system breadth remain explicit optional future expansion, not silent gaps in the accepted baseline.",
+    "remainingOptionalExpansion": [
+      "broader large-system seeds beyond the current v2 pilot set",
+      "deeper reusable hierarchy pass cases beyond the documented boundary case",
+      "further trace-depth growth for future larger or more state-heavy designs"
     ]
   },
   "knownBoundaries": [
     {
       "slug": "gc_t2_bus_mux",
       "classification": "expected_limit",
-      "reason": "Documented exporter limitation / bus modeling boundary"
+      "reason": "Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary."
+    },
+    {
+      "slug": "gc_v2_13_deep_nested_halfadder_boundary",
+      "classification": "expected_limit",
+      "reason": "Documented hierarchy limitation: a grandparent custom IC wraps a parent custom IC that already contains its own custom-IC hierarchy. The current rollout intentionally blocks deeper-than-direct nested custom-IC export."
     }
   ],
+  "exportDeterminism": {
+    "active": true,
+    "scope": "live re-export plus byte-accurate diff against stored golden HDL artifacts"
+  },
   "externalHdl": {
     "syntaxLint": true,
     "scenarioSimulation": true,
     "scope": "all non-boundary corpus cases"
   },
   "runnerAcceptanceCriteria": [
-    "discover_all_24_entries",
-    "resolve_slug_to_circuit_and_exports",
-    "run_external_hdl_checks_for_non_boundary_cases",
-    "classify_expected_limit_explicitly",
-    "keep_gc_t2_bus_mux_out_of_clean_pass_if_limitation_remains",
-    "produce_deterministic_summary",
+    "discover_all_corpus_entries",
+    "resolve_each_slug_to_circuit_and_golden_exports",
+    "keep_summary_report_and_acceptance_artifacts_synchronized",
+    "run_external_hdl_checks_for_all_non_boundary_cases",
+    "classify_documented_boundaries_as_expected_limit",
+    "protect_canonical_artifacts_from_partial_slug_runs",
     "preserve_expected_limit_in_ci_and_local_runs"
   ],
   "canonicalDocs": [
@@ -74,6 +133,7 @@
     "validation/maturity-priority-list.json",
     "validation/industry-lite-roadmap.md",
     "validation/golden-corpus-v1.md",
-    "validation/golden-corpus-v1.json"
+    "validation/golden-corpus-v1.json",
+    "validation/golden-corpus-v1-acceptance.md"
   ]
 }

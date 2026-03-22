@@ -1,8 +1,15 @@
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import type { Circuit, SignalValue, TimingSnapshot, RaceInfo, RaceSeverity } from '../core/types';
+import type { Circuit, SignalValue, TimingSnapshot, RaceIncident, RaceInfo, RaceSeverity } from '../core/types';
 import type { CircuitAction } from './actions';
 import { circuitReducer, createEmptyCircuit } from './circuitReducer';
-import { appendRaceHistory, collectActiveRaceNetIds, pruneRaceHistory } from './raceLifecycle';
+import { registerEmbeddedCustomIcLibrary } from '../core/customIc/embeddedLibrary';
+import {
+  clearRaceMonitorState,
+  expireRaceMarks,
+  pruneRaceMonitorState,
+  recordDetectedRaceBatch,
+  type RaceMark,
+} from './raceMonitorState';
 import {
   initBuffer, syncBuffer, buildWireMap,
   runUntilStable, isStable,
@@ -23,18 +30,6 @@ const AUTOSAVE_KEY = 'lgsim_autosave';
  */
 const SAMPLE_EVERY = 1;
 
-// ── Severity helpers (single source of truth) ─────────────────────────────
-/**
- * Numeric rank for RaceSeverity.  Higher = more severe.
- * Used for the TTL wire-marking map and raceNetIds accumulation.
- * Priority: critical > timing > glitch > warning > loop
- */
-const SEVERITY_RANK: Record<RaceSeverity, number> = {
-  loop: 1, warning: 2, glitch: 3, timing: 4, critical: 5,
-};
-const maxSev = (a: RaceSeverity, b: RaceSeverity): RaceSeverity =>
-  SEVERITY_RANK[a] >= SEVERITY_RANK[b] ? a : b;
-
 /**
  * How long (ms) a wire-marking stays visible in CanvasWire after the last
  * detection in that net.  Prevents fast-glitch flicker while ensuring
@@ -42,12 +37,6 @@ const maxSev = (a: RaceSeverity, b: RaceSeverity): RaceSeverity =>
  * Only active in GATE_DELAY mode.
  */
 const RACE_TTL_MS = 400;
-
-/** Internal entry in the per-net TTL tracking map. */
-interface RaceMark {
-  severity:   RaceSeverity;
-  lastSeenMs: number;
-}
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function loadSavedCircuit(): Circuit | null {
@@ -67,6 +56,7 @@ export function loadSavedCircuit(): Circuit | null {
       wire.signal ??= { ...defaultSignal };
     }
     raw.viewport ??= { panX: 0, panY: 0, zoom: 1 };
+    registerEmbeddedCustomIcLibrary(raw);
     return raw;
   } catch { return null; }
 }
@@ -80,7 +70,7 @@ interface CircuitContextValue {
   setIsClockPaused: (v: boolean) => void;
   stepOneClock: () => void;
   /** Race conditions detected in the last GATE_DELAY advance. */
-  races: RaceInfo[];
+  races: RaceIncident[];
   clearRaceMonitor: () => void;
   /**
    * Map of netId → worst RaceSeverity for wires currently involved in a race.
@@ -110,7 +100,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   );
   const [timingHistory, setTimingHistory] = useState<TimingSnapshot[]>([]);
   const [isClockPaused, setIsClockPaused] = useState(false);
-  const [races, setRaces] = useState<RaceInfo[]>([]);
+  const [races, setRaces] = useState<RaceIncident[]>([]);
   const [raceNetIds, setRaceNetIds] = useState<Map<string, RaceSeverity>>(new Map());
 
   // ── Immer-aktuelle Refs (kein stale-closure-Problem im RAF-Handler) ────────
@@ -119,6 +109,9 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
 
   const isClockPausedRef = useRef(isClockPaused);
   isClockPausedRef.current = isClockPaused;
+
+  const racesRef = useRef(races);
+  racesRef.current = races;
 
   // ── Tick-Engine-Zustand ───────────────────────────────────────────────────
   const simBufferRef     = useRef<SimBuffer | null>(null);
@@ -139,18 +132,17 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
    * Converted to raceNetIds (React state) only when the derived Map changes.
    */
   const raceMarkRef      = useRef<Map<string, RaceMark>>(new Map());
-  /** Set to true whenever raceMarkRef is mutated; cleared after state sync. */
-  const raceMarkDirtyRef = useRef(false);
   /** Tracks last-seen gate / wire ID sets to distinguish structural vs switch-only settles. */
   const prevGateKeysRef  = useRef<Set<string>>(new Set());
   const prevWireKeysRef  = useRef<Set<string>>(new Set());
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
   const clearRaceMonitor = useCallback(() => {
-    setRaces([]);
-    setRaceNetIds(new Map());
-    raceMarkRef.current.clear();
-    raceMarkDirtyRef.current = false;
+    const cleared = clearRaceMonitorState();
+    racesRef.current = cleared.incidents;
+    setRaces(cleared.incidents);
+    setRaceNetIds(cleared.netIds);
+    raceMarkRef.current = cleared.marks;
   }, []);
 
   // ── Auto-Save (debounced 500 ms) ──────────────────────────────────────────
@@ -358,17 +350,12 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         // TTL wire-markings must expire even while the clock is paused.
         // Without this, a 400 ms glitch marking would hang indefinitely in pause.
         const nowMs = Date.now();
-        for (const [netId, mark] of raceMarkRef.current) {
-          if (nowMs - mark.lastSeenMs > RACE_TTL_MS) {
-            raceMarkRef.current.delete(netId);
-            raceMarkDirtyRef.current = true;
-          }
-        }
-        if (raceMarkDirtyRef.current) {
-          raceMarkDirtyRef.current = false;
-          const next = new Map<string, RaceSeverity>();
-          for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
-          setRaceNetIds(next);
+        const expired = expireRaceMarks(racesRef.current, raceMarkRef.current, nowMs, RACE_TTL_MS);
+        if (expired.marks.size !== raceMarkRef.current.size) {
+          racesRef.current = expired.incidents;
+          setRaces(expired.incidents);
+          raceMarkRef.current = expired.marks;
+          setRaceNetIds(expired.netIds);
         }
         simBufferRef.current = buf;
         if (anyChanged) {
@@ -401,37 +388,18 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
         const scheduler = schedulerRef.current;
         const targetTime = scheduler.time + ticksToRun;
 
-        // ── onBatchCommit: TTL wire-marking + per-batch timing snapshots ──
+        // ── onBatchCommit: per-batch timing snapshots ──────────────────────
         // Fires synchronously inside advance() after each event-batch commits.
         // committedOutputs already reflects the new state at that point.
-        //
-        // A) TTL wire-marking — updates raceMarkRef with max-severity per netId.
-        //    Glitch detection (netToggleCount) accumulates over the FULL advance()
-        //    window — this callback only handles critical/warning/timing races that
-        //    are known per-batch.  Glitch races (post-loop) are handled separately.
-        //
-        // B) Timing-diagram snapshot — one step per batch = per-gate-level resolution
+        // Timing-diagram snapshot — one step per batch = per-gate-level resolution
         //    so a 20-NOT chain shows a 20-step staircase.
         const newSnaps: TimingSnapshot[] = [];
         const onBatchCommit = (
           batchTime:        number,
-          batchRaces:       RaceInfo[],
+          _batchRaces:      RaceInfo[],
           batchChangedNets: ReadonlySet<string>,
         ) => {
-          // A) TTL marking for per-batch races (critical / warning / timing).
-          if (batchRaces.length > 0) {
-            const now = Date.now();
-            for (const race of batchRaces) {
-              const existing = raceMarkRef.current.get(race.netId);
-              raceMarkRef.current.set(race.netId, {
-                severity:   existing ? maxSev(existing.severity, race.severity) : race.severity,
-                lastSeenMs: now,
-              });
-            }
-            raceMarkDirtyRef.current = true;
-          }
-
-          // B) Timing-diagram snapshot.
+          // Timing-diagram snapshot.
           // Skip batches where nothing actually committed a new value.  This
           // prevents spurious flat steps caused by the redundant Step-1
           // re-evaluations of INPUT_SWITCH / PUSH_BTN gates that the scheduler
@@ -461,37 +429,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           onBatchCommit,
         );
 
-        // Post-loop glitch races (emitted by advance() after the while loop) also
-        // enter the TTL map — they are not covered by onBatchCommit above.
-        const glitchRaces = detectedRaces.filter(r => r.severity === 'glitch');
-        if (glitchRaces.length > 0) {
-          const now = Date.now();
-          for (const race of glitchRaces) {
-            const existing = raceMarkRef.current.get(race.netId);
-            raceMarkRef.current.set(race.netId, {
-              severity:   existing ? maxSev(existing.severity, race.severity) : race.severity,
-              lastSeenMs: now,
-            });
-          }
-          raceMarkDirtyRef.current = true;
-        }
-
-        // ── TTL cleanup + raceNetIds sync ────────────────────────────────
-        // Expire entries older than RACE_TTL_MS; sync React state only on change.
         const nowMs = Date.now();
-        for (const [netId, mark] of raceMarkRef.current) {
-          if (nowMs - mark.lastSeenMs > RACE_TTL_MS) {
-            raceMarkRef.current.delete(netId);
-            raceMarkDirtyRef.current = true;
-          }
-        }
-        if (raceMarkDirtyRef.current) {
-          raceMarkDirtyRef.current = false;
-          const next = new Map<string, RaceSeverity>();
-          for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
-          setRaceNetIds(next);
-        }
-
         const newBuf = scheduler.buildBuffer();
 
         // Determine if any signals changed compared to the last committed state.
@@ -516,10 +454,28 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
           dispatch({ type: 'SIMULATION_APPLY', payload: result });
         }
 
-        // ── Race panel list ──────────────────────────────────────────────
         if (detectedRaces.length > 0) {
           const MAX_RACES = 50;
-          setRaces(prev => appendRaceHistory(prev, detectedRaces, c, MAX_RACES));
+          const next = recordDetectedRaceBatch(
+            racesRef.current,
+            raceMarkRef.current,
+            detectedRaces,
+            c,
+            nowMs,
+            MAX_RACES,
+          );
+          racesRef.current = next.incidents;
+          raceMarkRef.current = next.marks;
+          setRaces(next.incidents);
+          setRaceNetIds(next.netIds);
+        } else {
+          const expired = expireRaceMarks(racesRef.current, raceMarkRef.current, nowMs, RACE_TTL_MS);
+          if (expired.marks.size !== raceMarkRef.current.size) {
+            racesRef.current = expired.incidents;
+            raceMarkRef.current = expired.marks;
+            setRaces(expired.incidents);
+            setRaceNetIds(expired.netIds);
+          }
         }
 
         // ── Timing history ───────────────────────────────────────────────
@@ -548,23 +504,11 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   // ── Structure change: prune stale race history and wire markings ─────────
   useEffect(() => {
     const currentCircuit = circuitRef.current;
-    const activeNetIds = collectActiveRaceNetIds(currentCircuit);
-
-    let marksChanged = false;
-    for (const netId of [...raceMarkRef.current.keys()]) {
-      if (!activeNetIds.has(netId)) {
-        raceMarkRef.current.delete(netId);
-        marksChanged = true;
-      }
-    }
-
-    if (marksChanged) {
-      const next = new Map<string, RaceSeverity>();
-      for (const [netId, mark] of raceMarkRef.current) next.set(netId, mark.severity);
-      setRaceNetIds(next);
-    }
-
-    setRaces(prev => pruneRaceHistory(prev, currentCircuit));
+    const next = pruneRaceMonitorState(racesRef.current, raceMarkRef.current, currentCircuit);
+    racesRef.current = next.incidents;
+    raceMarkRef.current = next.marks;
+    setRaces(next.incidents);
+    setRaceNetIds(next.netIds);
   }, [gateKeys, wireKeys]);
 
   return (

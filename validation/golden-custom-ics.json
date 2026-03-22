@@ -26,5 +26,34 @@
       "circuitSlug": "gc_s8_hc194_modes",
       "portNames": ["clk", "clrn", "s0", "s1", "sr", "sl", "d0", "d1", "d2", "d3", "q0", "q1", "q2", "q3"]
     }
+  ],
+  "gc_v2_12_nested_halfadder_parent": [
+    {
+      "name": "HALF_ADDER",
+      "circuitSlug": "gc_c2_half_adder",
+      "portNames": ["a", "b", "sum", "carry"]
+    },
+    {
+      "name": "PARENT_HALF_ADDER",
+      "circuitSlug": "gc_v2_12_nested_halfadder_parent_def",
+      "portNames": ["a", "b", "sum_or_carry"]
+    }
+  ],
+  "gc_v2_13_deep_nested_halfadder_boundary": [
+    {
+      "name": "HALF_ADDER",
+      "circuitSlug": "gc_c2_half_adder",
+      "portNames": ["a", "b", "sum", "carry"]
+    },
+    {
+      "name": "PARENT_HALF_ADDER",
+      "circuitSlug": "gc_v2_12_nested_halfadder_parent_def",
+      "portNames": ["a", "b", "sum_or_carry"]
+    },
+    {
+      "name": "GRANDPARENT_HALF_ADDER",
+      "circuitSlug": "gc_v2_13_deep_nested_halfadder_grandparent_def",
+      "portNames": ["a", "b", "sum_or_carry"]
+    }
   ]
 }

@@ -1,6 +1,6 @@
 # Golden Corpus v1 Report
 
-Generated: 2026-03-21T16:16:39.124Z
+Generated: 2026-03-22T01:43:10.452Z
 Runner version: 1.9.0
 Corpus version: 1.9.0
 
@@ -8,23 +8,23 @@ Corpus version: 1.9.0
 
 | Metric | Value |
 |---|---|
-| Total cases | 26 |
-| Executed | 26 |
-| Passed | 25 |
+| Total cases | 30 |
+| Executed | 30 |
+| Passed | 28 |
 | Failed | 0 |
-| Expected limit | 1 |
+| Expected limit | 2 |
 | Unsupported | 0 |
 
-**Verdict:** PASS (1 known limit)
+**Verdict:** PASS (2 known limits)
 
 ## Per-Class Summary
 
 | Class | Pass | Fail | Expected Limit | Unsupported | Total |
 |---|---|---|---|---|---|
-| combinational | 5 | 0 | 0 | 0 | 5 |
+| combinational | 6 | 0 | 1 | 0 | 7 |
 | sequential | 9 | 0 | 0 | 0 | 9 |
 | tristate | 2 | 0 | 1 | 0 | 3 |
-| mixed | 9 | 0 | 0 | 0 | 9 |
+| mixed | 11 | 0 | 0 | 0 | 11 |
 
 ## Per-Case Results
 
@@ -577,8 +577,8 @@ Corpus version: 1.9.0
 | vhdl-input-ports | PASS | All 21 input ports declared |
 | vhdl-output-ports | PASS | All 2 output port(s) declared |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_1_mux_fabric.vhd |
-| verilog-external-sim | PASS | 3 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 3 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 7 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 7 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -614,8 +614,8 @@ Corpus version: 1.9.0
 | vhdl-input-ports | PASS | All 8 input ports declared |
 | vhdl-output-ports | PASS | All 9 output port(s) declared |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_2_datapath_slice.vhd |
-| verilog-external-sim | PASS | 6 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 6 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 10 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 10 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -653,8 +653,8 @@ Corpus version: 1.9.0
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-checkpoint-extra-signal | PASS | Extra signal 'shift_dut_595' found |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_3_shift_pipeline.vhd |
-| verilog-external-sim | PASS | 14 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 14 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 17 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 17 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -691,8 +691,8 @@ Corpus version: 1.9.0
 | vhdl-output-ports | PASS | All 9 output port(s) declared |
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_4_ram_readback.vhd |
-| verilog-external-sim | PASS | 8 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 8 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 12 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 12 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -731,8 +731,8 @@ Corpus version: 1.9.0
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-checkpoint-extra-signal | PASS | Extra signal 'reg_reg374' found |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_5_decode_tree.vhd |
-| verilog-external-sim | PASS | 12 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 12 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 14 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 14 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -770,8 +770,8 @@ Corpus version: 1.9.0
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-checkpoint-output-shadows | PASS | Output shadow signals (_q) found in VHDL |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_6_custom_halfadder.vhd |
-| verilog-external-sim | PASS | 8 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 8 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 10 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 10 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -808,8 +808,8 @@ Corpus version: 1.9.0
 | vhdl-output-ports | PASS | All 7 output port(s) declared |
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_7_bus_conflict_system.vhd |
-| verilog-external-sim | PASS | 7 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 7 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 12 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 12 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -846,8 +846,8 @@ Corpus version: 1.9.0
 | vhdl-output-ports | PASS | All 4 output port(s) declared |
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_8_sequential_feedback.vhd |
-| verilog-external-sim | PASS | 8 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 8 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 12 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 12 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -882,8 +882,8 @@ Corpus version: 1.9.0
 | vhdl-output-ports | PASS | All 9 output port(s) declared |
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_9_custom_reg4_pipeline.vhd |
-| verilog-external-sim | PASS | 4 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 4 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 7 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 7 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -919,8 +919,8 @@ Corpus version: 1.9.0
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-checkpoint-output-shadows | PASS | Output shadow signals (_q) found in VHDL |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_10_custom_tribuf_wrap.vhd |
-| verilog-external-sim | PASS | 3 scenario step(s) passed with iverilog/vvp |
-| vhdl-external-sim | PASS | 3 scenario step(s) passed with ghdl |
+| verilog-external-sim | PASS | 5 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 5 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -958,8 +958,163 @@ Corpus version: 1.9.0
 | vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
 | vhdl-checkpoint-extra-signal | PASS | Extra signal 'reg_wrap_flat_dut' found |
 | vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_11_custom_hc194_wrap.vhd |
+| verilog-external-sim | PASS | 8 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 8 scenario step(s) passed with ghdl |
+| verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
+| vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
+
+### gc_v2_12_nested_halfadder_parent — PASS
+
+- **Class:** combinational
+- **Title:** Direct nested custom half-adder parent with raw OR oracle
+- **Reason:** 30 checks passed
+
+| Check | Status | Detail |
+|---|---|---|
+| circuit-file-exists | PASS | validation/generated-circuits-golden/gc_v2_12_nested_halfadder_parent.lgsc.json |
+| verilog-export-exists | PASS | validation/generated-exports-golden/gc_v2_12_nested_halfadder_parent.v |
+| vhdl-export-exists | PASS | validation/generated-exports-golden/gc_v2_12_nested_halfadder_parent.vhd |
+| circuit-json-parseable | PASS | Valid JSON |
+| circuit-slug-match | PASS | id=gc_v2_12_nested_halfadder_parent, name=gc_v2_12_nested_halfadder_parent |
+| circuit-gate-types | PASS | All expected gates found: CIC_PARENT_HALF_ADDER, OR, XOR |
+| circuit-inputs | PASS | All 2 inputs found |
+| circuit-outputs | PASS | Expected 3 output(s), found 3 LED(s) |
+| verilog-module-name | PASS | module gc_v2_12_nested_halfadder_parent found |
+| verilog-endmodule | PASS | endmodule found |
+| verilog-input-ports | PASS | All 2 input ports declared |
+| verilog-output-ports | PASS | All 3 output port(s) declared |
+| verilog-checkpoint-ports | PASS | All 4 checkpoint ports found |
+| verilog-checkpoint-wires | PASS | All 2 internal wires found |
+| verilog-checkpoint-pattern | PASS | Checkpoint pattern found: xor g_xor_diff(w_2, w_0, w_1) |
+| verilog-checkpoint-always-pattern | PASS | Always-block pattern found: xor g_parent_flat_ha0_flat_xor1(w_3, a, b) |
+| verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_12_nested_halfadder_parent.v |
+| verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_12_nested_halfadder_parent.v |
+| verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_12_nested_halfadder_parent.v |
+| vhdl-entity-name | PASS | entity gc_v2_12_nested_halfadder_parent found |
+| vhdl-architecture | PASS | architecture block found |
+| vhdl-input-ports | PASS | All 2 input ports declared |
+| vhdl-output-ports | PASS | All 3 output port(s) declared |
+| vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
+| vhdl-checkpoint-output-shadows | PASS | Output shadow signals (_q) found in VHDL |
+| vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_12_nested_halfadder_parent.vhd |
 | verilog-external-sim | PASS | 5 scenario step(s) passed with iverilog/vvp |
 | vhdl-external-sim | PASS | 5 scenario step(s) passed with ghdl |
+| verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
+| vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
+
+### gc_v2_13_deep_nested_halfadder_boundary — EXPECTED LIMIT
+
+- **Class:** combinational
+- **Title:** Deep nested custom half-adder grandparent stays blocked at the current rollout boundary
+- **Reason:** Skipped external HDL simulation for documented multi-driver boundary.
+
+| Check | Status | Detail |
+|---|---|---|
+| circuit-file-exists | PASS | validation/generated-circuits-golden/gc_v2_13_deep_nested_halfadder_boundary.lgsc.json |
+| verilog-export-exists | PASS | validation/generated-exports-golden/gc_v2_13_deep_nested_halfadder_boundary.v |
+| vhdl-export-exists | PASS | validation/generated-exports-golden/gc_v2_13_deep_nested_halfadder_boundary.vhd |
+| circuit-json-parseable | PASS | Valid JSON |
+| circuit-slug-match | PASS | id=gc_v2_13_deep_nested_halfadder_boundary, name=gc_v2_13_deep_nested_halfadder_boundary |
+| circuit-gate-types | PASS | All expected gates found: CIC_GRANDPARENT_HALF_ADDER, OR, XOR |
+| circuit-inputs | PASS | All 2 inputs found |
+| circuit-outputs | PASS | Expected 3 output(s), found 3 LED(s) |
+| verilog-module-name | PASS | module gc_v2_13_deep_nested_halfadder_boundary found |
+| verilog-endmodule | PASS | endmodule found |
+| verilog-input-ports | FAIL | Missing input ports: a, b |
+| verilog-output-ports | FAIL | Missing output ports: w_0, w_1, w_2 |
+| verilog-checkpoint-pattern | PASS | Checkpoint pattern found: HDL EXPORT BLOCKED — Error: Nested custom IC "CIC_PARENT_HAL |
+| verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_13_deep_nested_halfadder_boundary.v |
+| verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_13_deep_nested_halfadder_boundary.v |
+| verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_13_deep_nested_halfadder_boundary.v |
+| vhdl-entity-name | PASS | entity gc_v2_13_deep_nested_halfadder_boundary found |
+| vhdl-architecture | PASS | architecture block found |
+| vhdl-input-ports | FAIL | Missing input ports: a, b |
+| vhdl-output-ports | FAIL | Missing output ports: w_0, w_1, w_2 |
+| vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
+| vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_13_deep_nested_halfadder_boundary.vhd |
+| external-hdl-sim-scenario | EXPECTED LIMIT | Skipped external HDL simulation for documented multi-driver boundary. |
+| verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
+| vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
+| known-boundary | EXPECTED LIMIT | Documented hierarchy limitation: a grandparent custom IC wraps a parent custom IC that already contains its own custo... |
+
+### gc_v2_14_mixed_datapath_extended — PASS
+
+- **Class:** mixed
+- **Title:** Extended mixed datapath with counter, ALU4 and REG4 over reset, hold and mode changes
+- **Reason:** 32 checks passed
+
+| Check | Status | Detail |
+|---|---|---|
+| circuit-file-exists | PASS | validation/generated-circuits-golden/gc_v2_14_mixed_datapath_extended.lgsc.json |
+| verilog-export-exists | PASS | validation/generated-exports-golden/gc_v2_14_mixed_datapath_extended.v |
+| vhdl-export-exists | PASS | validation/generated-exports-golden/gc_v2_14_mixed_datapath_extended.vhd |
+| circuit-json-parseable | PASS | Valid JSON |
+| circuit-slug-match | PASS | id=gc_v2_14_mixed_datapath_extended, name=gc_v2_14_mixed_datapath_extended |
+| circuit-gate-types | PASS | All expected gates found: BIN_CTR7S, ALU4, REG4 |
+| circuit-inputs | PASS | All 11 inputs found |
+| circuit-outputs | PASS | Expected 4 output(s), found 4 LED(s) |
+| verilog-module-name | PASS | module gc_v2_14_mixed_datapath_extended found |
+| verilog-endmodule | PASS | endmodule found |
+| verilog-input-ports | PASS | All 11 input ports declared |
+| verilog-output-ports | PASS | All 4 output port(s) declared |
+| verilog-checkpoint-ports | PASS | All 7 checkpoint ports found |
+| verilog-checkpoint-wires | PASS | All 5 internal wires found |
+| verilog-checkpoint-pattern | PASS | Checkpoint pattern found: always @(posedge clk or posedge rst) |
+| verilog-checkpoint-always-pattern | PASS | Always-block pattern found: case ({op2, op1, op0}) |
+| verilog-checkpoint-extra-reg | PASS | Extra reg 'cnt_ctr' found |
+| verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_14_mixed_datapath_extended.v |
+| verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_14_mixed_datapath_extended.v |
+| verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_14_mixed_datapath_extended.v |
+| vhdl-entity-name | PASS | entity gc_v2_14_mixed_datapath_extended found |
+| vhdl-architecture | PASS | architecture block found |
+| vhdl-input-ports | PASS | All 11 input ports declared |
+| vhdl-output-ports | PASS | All 4 output port(s) declared |
+| vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
+| vhdl-checkpoint-extra-signal | PASS | Extra signal 'cnt_ctr' found |
+| vhdl-checkpoint-output-shadows | PASS | Output shadow signals (_q) found in VHDL |
+| vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_14_mixed_datapath_extended.vhd |
+| verilog-external-sim | PASS | 9 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 9 scenario step(s) passed with ghdl |
+| verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
+| vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
+
+### gc_v2_15_ram_decode_capture_bus — PASS
+
+- **Class:** mixed
+- **Title:** RAM256 decode-and-bit-select bus with latch hold and REG4 capture
+- **Reason:** 31 checks passed
+
+| Check | Status | Detail |
+|---|---|---|
+| circuit-file-exists | PASS | validation/generated-circuits-golden/gc_v2_15_ram_decode_capture_bus.lgsc.json |
+| verilog-export-exists | PASS | validation/generated-exports-golden/gc_v2_15_ram_decode_capture_bus.v |
+| vhdl-export-exists | PASS | validation/generated-exports-golden/gc_v2_15_ram_decode_capture_bus.vhd |
+| circuit-json-parseable | PASS | Valid JSON |
+| circuit-slug-match | PASS | id=gc_v2_15_ram_decode_capture_bus, name=gc_v2_15_ram_decode_capture_bus |
+| circuit-gate-types | PASS | All expected gates found: RAM256, 74HC138, 74HC151, 74HC373, REG4 |
+| circuit-inputs | PASS | All 19 inputs found |
+| circuit-outputs | PASS | Expected 7 output(s), found 7 LED(s) |
+| verilog-module-name | PASS | module gc_v2_15_ram_decode_capture_bus found |
+| verilog-endmodule | PASS | endmodule found |
+| verilog-input-ports | PASS | All 19 input ports declared |
+| verilog-output-ports | PASS | All 7 output port(s) declared |
+| verilog-checkpoint-ports | PASS | All 10 checkpoint ports found |
+| verilog-checkpoint-wires | PASS | All 5 internal wires found |
+| verilog-checkpoint-pattern | PASS | Checkpoint pattern found: assign w_13 = oe373 ? 1'bz : latch_lat373[0] |
+| verilog-checkpoint-always-pattern | PASS | Always-block pattern found: always @(posedge clk or posedge rst) |
+| verilog-iverilog-syntax | PASS | iverilog accepted validation/generated-exports-golden/gc_v2_15_ram_decode_capture_bus.v |
+| verilog-verilator-lint | PASS | verilator accepted validation/generated-exports-golden/gc_v2_15_ram_decode_capture_bus.v |
+| verilog-yosys-read | PASS | yosys accepted validation/generated-exports-golden/gc_v2_15_ram_decode_capture_bus.v |
+| vhdl-entity-name | PASS | entity gc_v2_15_ram_decode_capture_bus found |
+| vhdl-architecture | PASS | architecture block found |
+| vhdl-input-ports | PASS | All 19 input ports declared |
+| vhdl-output-ports | PASS | All 7 output port(s) declared |
+| vhdl-checkpoint-pattern | PASS | VHDL checkpoint tokens verified |
+| vhdl-checkpoint-extra-signal | PASS | Extra signal 'latch_lat373' found |
+| vhdl-checkpoint-output-shadows | PASS | Output shadow signals (_q) found in VHDL |
+| vhdl-ghdl-analyze | PASS | ghdl accepted validation/generated-exports-golden/gc_v2_15_ram_decode_capture_bus.vhd |
+| verilog-external-sim | PASS | 10 scenario step(s) passed with iverilog/vvp |
+| vhdl-external-sim | PASS | 10 scenario step(s) passed with ghdl |
 | verilog-reexport-diff | PASS | Re-exported Verilog matches golden artifact exactly |
 | vhdl-reexport-diff | PASS | Re-exported VHDL matches golden artifact exactly |
 
@@ -975,7 +1130,7 @@ Corpus version: 1.9.0
 - External HDL syntax/lint compilation (iverilog, verilator, yosys, ghdl) when toolchain is present
 - Scenario-based external HDL simulation for all non-boundary cases (iverilog/vvp and ghdl)
 - **Re-export + byte-accurate diff against golden .v/.vhd artifacts** (export-determinism, v1.1)
-- Known boundary classification (gc_t2_bus_mux)
+- Known boundary classification for all documented expected_limit cases
 
 **Export-determinism status:** Exporters loaded — diff checks ran live
 
@@ -989,5 +1144,6 @@ Corpus version: 1.9.0
 ## Known Boundaries
 
 - **gc_t2_bus_mux**: Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary.
+- **gc_v2_13_deep_nested_halfadder_boundary**: Documented hierarchy limitation: a grandparent custom IC wraps a parent custom IC that already contains its own custom-IC hierarchy. The current rollout intentionally blocks deeper-than-direct nested custom-IC export.
 
 Cases with expected_limit are *not* counted as pass. They document intentional model boundaries that are verified to still exist.

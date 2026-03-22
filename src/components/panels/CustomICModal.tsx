@@ -127,6 +127,27 @@ export function CustomICModal({ onClose }: Props) {
             <p style={{ color:'#64748b', fontSize:11, fontFamily:'monospace', margin:'0 0 16px' }}>
               Aktuelle Schaltung als wiederverwendbares IC speichern. Schalter → Eingänge, LEDs → Ausgänge.
             </p>
+            {savePolicy.allowed && savePolicy.policy === 'allow_nested_combinational' && (
+              <div style={{
+                marginBottom: 16,
+                border: '1px solid #0f766e',
+                background: 'rgba(15, 118, 110, 0.2)',
+                borderRadius: 8,
+                padding: '10px 12px',
+                color: '#ccfbf1',
+                fontSize: 11,
+                fontFamily: 'monospace',
+                lineHeight: 1.45,
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Direkte kombinatorische Nested Custom ICs sind jetzt freigegeben</div>
+                <div>{savePolicy.reason}</div>
+                {savePolicy.customGateTypeIds.length > 0 && (
+                  <div style={{ marginTop: 6, color: '#5eead4' }}>
+                    Enthaltene Nested-Typen: {savePolicy.customGateTypeIds.join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
             {!savePolicy.allowed && (
               <div style={{
                 marginBottom: 16,
@@ -139,7 +160,7 @@ export function CustomICModal({ onClose }: Props) {
                 fontFamily: 'monospace',
                 lineHeight: 1.45,
               }}>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>Nested Custom IC aktuell bewusst deaktiviert</div>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Nested Custom IC nur teilweise freigegeben</div>
                 <div>{savePolicy.reason}</div>
                 {savePolicy.customGateTypeIds.length > 0 && (
                   <div style={{ marginTop: 6, color: '#fbbf24' }}>
@@ -165,7 +186,7 @@ export function CustomICModal({ onClose }: Props) {
                   fontSize:12,
                   opacity: savePolicy.allowed ? 1 : 0.8,
                 }}>
-                {savePolicy.allowed ? 'Weiter →' : 'Nested deaktiviert'}
+                {savePolicy.allowed ? 'Weiter →' : 'Nested eingeschränkt'}
               </button>
             </div>
 

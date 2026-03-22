@@ -140,7 +140,7 @@ function expandDest(endpoint: WireEndpoint, plans: Map<string, FlattenPlan>): Wi
   return fanout.map((target) => ({ ...target }));
 }
 
-export function flattenCustomICs(circuit: Circuit): Circuit {
+function flattenCustomICsOnePass(circuit: Circuit): Circuit {
   const customGates = Object.values(circuit.gates).filter(isFlattenableCustomGate);
   if (customGates.length === 0) return circuit;
 
@@ -245,4 +245,16 @@ export function flattenCustomICs(circuit: Circuit): Circuit {
     gates,
     wires,
   };
+}
+
+export function flattenCustomICs(circuit: Circuit): Circuit {
+  let current = circuit;
+
+  for (let iteration = 0; iteration < 16; iteration += 1) {
+    const customGates = Object.values(current.gates).filter(isFlattenableCustomGate);
+    if (customGates.length === 0) return current;
+    current = flattenCustomICsOnePass(current);
+  }
+
+  throw new Error('Custom IC flattening exceeded the supported recursive depth; nested hierarchy remains unresolved.');
 }

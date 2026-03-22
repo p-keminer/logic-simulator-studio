@@ -6,6 +6,7 @@
  * checkpoints.  Produces:
  *   - validation/golden-corpus-v1-summary.json  (machine-readable)
  *   - validation/golden-corpus-v1-report.md     (human-readable)
+ *   - validation/golden-corpus-v1-acceptance.json (machine-readable acceptance)
  *
  * Status classification per case:
  *   - pass:           all checks passed
@@ -33,6 +34,7 @@ const CIRCUITS_DIR = path.join(ROOT, 'validation', 'generated-circuits-golden');
 const EXPORTS_DIR = path.join(ROOT, 'validation', 'generated-exports-golden');
 const SUMMARY_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-summary.json');
 const REPORT_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-report.md');
+const ACCEPTANCE_FILE = path.join(ROOT, 'validation', 'golden-corpus-v1-acceptance.json');
 const RUNNER_VERSION = '1.9.0';
 
 // ── Export-determinism: loaded dynamically before the run loop ───────────────
@@ -48,7 +50,18 @@ let exporterLoadError = null;
 // classified as expected_limit, NEVER as pass.
 const KNOWN_BOUNDARIES = new Map([
   ['gc_t2_bus_mux', 'Documented exporter limitation: multi-driver tri-state bus — buf1 output (w_0) is driven but not exported as output port (last-wire-wins). This is a known, intentional model boundary.'],
+  ['gc_v2_13_deep_nested_halfadder_boundary', 'Documented hierarchy limitation: a grandparent custom IC wraps a parent custom IC that already contains its own custom-IC hierarchy. The current rollout intentionally blocks deeper-than-direct nested custom-IC export.'],
 ]);
+
+const CANONICAL_ACCEPTANCE_DOCS = [
+  'validation/README.md',
+  'validation/maturity-gap-dashboard.md',
+  'validation/maturity-priority-list.json',
+  'validation/industry-lite-roadmap.md',
+  'validation/golden-corpus-v1.md',
+  'validation/golden-corpus-v1.json',
+  'validation/golden-corpus-v1-acceptance.md',
+];
 
 function buildCustomHalfAdderScenario() {
   const steps = [];
@@ -71,6 +84,32 @@ function buildCustomHalfAdderScenario() {
       },
     });
   }
+  steps.push(
+    {
+      name: 'repeat-zero-after-full-sweep',
+      set: { a: 0, b: 0, cin: 0 },
+      expect: {
+        w_6: 0,
+        w_8: 0,
+        w_7: 0,
+        w_9: 0,
+        w_10: 0,
+        w_11: 0,
+      },
+    },
+    {
+      name: 'repeat-max-after-zero',
+      set: { a: 1, b: 1, cin: 1 },
+      expect: {
+        w_6: 1,
+        w_8: 1,
+        w_7: 1,
+        w_9: 1,
+        w_10: 0,
+        w_11: 0,
+      },
+    },
+  );
   return { steps };
 }
 
@@ -123,6 +162,30 @@ function buildSequentialFeedbackScenario() {
         pulse: ['clk'],
         expect: { w_2: 0, w_0: 0, w_1: 1, w_3: 0 },
       },
+      {
+        name: 'feedback-6',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 0, w_0: 1, w_1: 0, w_3: 1 },
+      },
+      {
+        name: 'feedback-7',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 0, w_1: 1, w_3: 1 },
+      },
+      {
+        name: 'reseed-disabled',
+        set: { clk: 0, rst: 0, en: 0, d: 1, d2: 1, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 1, w_1: 0, w_3: 0 },
+      },
+      {
+        name: 'resume-feedback-after-reseed',
+        set: { clk: 0, rst: 0, en: 1, d: 0, d2: 0, d3: 0 },
+        pulse: ['clk'],
+        expect: { w_2: 1, w_0: 0, w_1: 0, w_3: 1 },
+      },
     ],
   };
 }
@@ -152,6 +215,23 @@ function buildCustomReg4PipelineScenario() {
         set: { d0: 0, d1: 0, d2: 0, d3: 0, en: 0, clk: 0, rst: 0 },
         pulse: ['clk'],
         expect: { w_0: 1, w_1: 1, w_2: 1, w_3: 1, w_4: 1, w_5: 0, w_6: 1, w_7: 0, w_8: 0 },
+      },
+      {
+        name: 'load-stage-c',
+        set: { d0: 0, d1: 1, d2: 0, d3: 0, en: 1, clk: 0, rst: 0 },
+        pulse: ['clk'],
+        expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 0, w_4: 1, w_5: 1, w_6: 1, w_7: 1, w_8: 1 },
+      },
+      {
+        name: 'propagate-stage-c',
+        set: { d0: 1, d1: 0, d2: 0, d3: 1, en: 1, clk: 0, rst: 0 },
+        pulse: ['clk'],
+        expect: { w_0: 1, w_1: 0, w_2: 0, w_3: 1, w_4: 0, w_5: 1, w_6: 0, w_7: 0, w_8: 1 },
+      },
+      {
+        name: 'reassert-reset',
+        set: { d0: 1, d1: 0, d2: 0, d3: 1, en: 1, clk: 0, rst: 1 },
+        expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0 },
       },
     ],
   };
@@ -272,6 +352,10 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'lower-bank-hit', set: { d0: 1, s0: 0, s1: 0, s2: 0, m0: 0, m1: 0 }, expect: { w_8: 1, w_9: 1 } },
       { name: 'upper-bank-hit', set: { d15: 1, s0: 1, s1: 1, s2: 1, m0: 1, m1: 0 }, expect: { w_8: 1, w_9: 0 } },
       { name: 'complement-bank-and-tap', set: { d2: 1, d8: 1, s0: 0, s1: 1, s2: 0, m0: 0, m1: 1 }, expect: { w_8: 0, w_9: 1 } },
+      { name: 'lower-bank-complement', set: { d1: 1, d8: 0, s0: 1, s1: 0, s2: 0, m0: 0, m1: 1 }, expect: { w_8: 0, w_9: 0 } },
+      { name: 'upper-bank-complement-miss', set: { d15: 1, s0: 0, s1: 0, s2: 1, m0: 1, m1: 1 }, expect: { w_8: 1, w_9: 1 } },
+      { name: 'direct-tap-d7', set: { d7: 1, s0: 0, s1: 0, s2: 0, m0: 1, m1: 0 }, expect: { w_8: 0, w_9: 1 } },
+      { name: 'direct-tap-d15-and-upper-hit', set: { d15: 1, s0: 1, s1: 1, s2: 1, m0: 1, m1: 1 }, expect: { w_8: 0, w_9: 1 } },
     ],
   }],
   ['gc_v2_2_datapath_slice', {
@@ -282,6 +366,10 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'sub-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 1, w_6: 0, w_11: 0, w_12: 0 } },
       { name: 'and-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 1, w_6: 0, w_11: 0, w_12: 0 } },
       { name: 'or-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 1, w_11: 0, w_12: 0 } },
+      { name: 'xor-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 1, w_11: 0, w_12: 0 } },
+      { name: 'not-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 1, w_3: 1, w_4: 0, w_5: 1, w_6: 1, w_11: 0, w_12: 0 } },
+      { name: 'shl-phase', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 1, w_3: 1, w_4: 1, w_5: 1, w_6: 1, w_11: 0, w_12: 0 } },
+      { name: 'shr-phase-and-high-counter-bit', set: { clk: 0, rst: 0, en: 1, b0: 1, b1: 1, b2: 0, b3: 0, cin: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 1, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_11: 1, w_12: 0 } },
     ],
   }],
   ['gc_v2_3_shift_pipeline', {
@@ -300,6 +388,9 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'oe-restore', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, expect: { w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
       { name: 'mr-clears-hidden-shift-only', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
       { name: 'stcp-makes-mr-visible', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 0 }, pulse: ['stcp'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'oe-tristate-after-clear', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 1 }, expect: { w_4: 'Z', w_5: 'Z', w_6: 'Z', w_7: 'Z', w_8: 'Z', w_9: 'Z', w_10: 'Z', w_11: 'Z' } },
+      { name: 'oe-restore-after-clear', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 0, oe: 0 }, expect: { w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'stcp-hold-cleared-latch', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 0, d0: 1, d1: 0, d2: 1, d3: 1, stcp: 0, mr: 1, oe: 0 }, pulse: ['stcp'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
     ],
   }],
   ['gc_v2_4_ram_readback', {
@@ -311,6 +402,10 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'capture-a5', set: { clk: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 0, w_4: 0, w_5: 1, w_6: 0, w_7: 1, w_8: 1 } },
       { name: 'switch-to-empty-addr0', set: { a0: 0, a1: 0, a2: 0, a3: 0, a4: 0, a5: 0, a6: 0, a7: 0, we: 1, cs: 0, oe: 0 }, expect: { w_8: 0 } },
       { name: 'capture-empty-read', set: { clk: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 0 } },
+      { name: 'rewrite-3c-into-addr5', set: { a0: 1, a1: 0, a2: 1, a3: 0, a4: 0, a5: 0, a6: 0, a7: 0, di0: 0, di1: 0, di2: 1, di3: 1, di4: 1, di5: 1, di6: 0, di7: 0, we: 0, cs: 0, oe: 1 }, expect: { w_8: 'Z' } },
+      { name: 'read-updated-live-bus', set: { we: 1, cs: 0, oe: 0 }, expect: { w_8: 0 } },
+      { name: 'capture-3c', set: { clk: 0 }, pulse: ['clk'], expect: { w_0: 0, w_1: 0, w_2: 1, w_3: 1, w_4: 1, w_5: 1, w_6: 0, w_7: 0, w_8: 0 } },
+      { name: 'chip-deselects-bus', set: { we: 1, cs: 1, oe: 0 }, expect: { w_8: 'Z' } },
       { name: 'reassert-reset', set: { a0: 0, a1: 0, a2: 0, a3: 0, a4: 0, a5: 0, a6: 0, a7: 0, di0: 1, di1: 0, di2: 1, di3: 0, di4: 0, di5: 1, di6: 0, di7: 1, we: 1, cs: 1, oe: 1, clk: 0, rst: 1 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0, w_4: 0, w_5: 0, w_6: 0, w_7: 0, w_8: 'Z' } },
     ],
   }],
@@ -328,6 +423,8 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'capture-no-active-status', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, pulse: ['clk374'], expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 0 } },
       { name: '374-high-z', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 1 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 'Z', w_23: 'Z', w_24: 'Z', w_25: 'Z', w_26: 'Z' } },
       { name: '374-restore-held-status', set: { a: 1, b: 1, c: 0, g1: 1, g2a: 1, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, expect: { w_9: 1, w_10: 1, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 0 } },
+      { name: 'restore-active-addr1-live', set: { a: 1, b: 0, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 1, oe373: 0, clk374: 0, oe374: 0 }, expect: { w_9: 1, w_10: 0, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 1, w_23: 1, w_24: 1, w_25: 1, w_26: 0 } },
+      { name: 'capture-active-addr1-status', set: { a: 1, b: 0, c: 0, g1: 1, g2a: 0, g2b: 0, ein: 0, le373: 0, oe373: 0, clk374: 0, oe374: 0 }, pulse: ['clk374'], expect: { w_9: 1, w_10: 0, w_11: 1, w_12: 1, w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_22: 0, w_23: 1, w_24: 1, w_25: 0, w_26: 1 } },
     ],
   }],
   ['gc_v2_6_custom_halfadder', buildCustomHalfAdderScenario()],
@@ -340,6 +437,11 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'overlap-conflict', set: { a_oe: 0, b_oe: 0 }, expect: { w_3: 0, w_4: 1, w_5: 0, w_6: 0, w_7: 1, w_10: 1, w_12: 1 } },
       { name: 'reload-b-align-bit0', set: { b_oe: 1, b_d0: 1, b_d1: 1, b_clk: 0 }, pulse: ['b_clk'], expect: { w_3: 'Z', w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_10: 0, w_12: 0 } },
       { name: 'overlap-no-conflict', set: { a_oe: 0, b_oe: 0 }, expect: { w_3: 1, w_4: 1, w_5: 0, w_6: 1, w_7: 1, w_10: 1, w_12: 0 } },
+      { name: 'enable-b-only', set: { a_oe: 1, b_oe: 0 }, expect: { w_3: 1, w_10: 0, w_12: 0 } },
+      { name: 'reload-a-all-high', set: { a_oe: 1, a_d0: 1, a_d1: 1, a_clk: 0 }, pulse: ['a_clk'], expect: { w_3: 1, w_4: 1, w_5: 1, w_6: 1, w_7: 1, w_10: 0, w_12: 0 } },
+      { name: 'disable-all-after-alignment', set: { a_oe: 1, b_oe: 1 }, expect: { w_3: 'Z', w_10: 0, w_12: 0 } },
+      { name: 'reload-b-conflict-low', set: { b_oe: 1, b_d0: 0, b_d1: 1, b_clk: 0 }, pulse: ['b_clk'], expect: { w_3: 'Z', w_4: 1, w_5: 1, w_6: 0, w_7: 1, w_10: 0, w_12: 0 } },
+      { name: 'overlap-conflict-again', set: { a_oe: 0, b_oe: 0 }, expect: { w_3: 0, w_10: 1, w_12: 1 } },
     ],
   }],
   ['gc_v2_8_sequential_feedback', buildSequentialFeedbackScenario()],
@@ -349,6 +451,8 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'drive-one', set: { a: 1, oe: 0 }, expect: { w_0: 1 } },
       { name: 'drive-zero', set: { a: 0, oe: 0 }, expect: { w_0: 0 } },
       { name: 'high-z', set: { a: 1, oe: 1 }, expect: { w_0: 'Z' } },
+      { name: 'restore-one-after-z', set: { a: 1, oe: 0 }, expect: { w_0: 1 } },
+      { name: 'restore-zero-after-z', set: { a: 0, oe: 0 }, expect: { w_0: 0 } },
     ],
   }],
   ['gc_v2_11_custom_hc194_wrap', {
@@ -358,6 +462,45 @@ const HDL_SIM_SCENARIOS = new Map([
       { name: 'parallel-load-1010', set: { clk: 0, clrn: 1, s0: 1, s1: 1, sr: 0, sl: 0, d0: 0, d1: 1, d2: 0, d3: 1 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1 } },
       { name: 'hold', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 1, d2: 1, d3: 1 }, pulse: ['clk'], expect: { w_0: 0, w_1: 1, w_2: 0, w_3: 1 } },
       { name: 'shift-right', set: { clk: 0, clrn: 1, s0: 1, s1: 0, sr: 1, sl: 0, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 0, w_2: 1, w_3: 1 } },
+      { name: 'shift-left', set: { clk: 0, clrn: 1, s0: 0, s1: 1, sr: 0, sl: 1, d0: 0, d1: 0, d2: 0, d3: 0 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 0, w_3: 1 } },
+      { name: 'hold-after-shift-left', set: { clk: 0, clrn: 1, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 1, d2: 1, d3: 1 }, pulse: ['clk'], expect: { w_0: 1, w_1: 1, w_2: 0, w_3: 1 } },
+      { name: 'reassert-clear', set: { clk: 0, clrn: 0, s0: 0, s1: 0, sr: 0, sl: 0, d0: 1, d1: 1, d2: 1, d3: 1 }, expect: { w_0: 0, w_1: 0, w_2: 0, w_3: 0 } },
+    ],
+  }],
+  ['gc_v2_12_nested_halfadder_parent', {
+    steps: [
+      { name: 'both-low', set: { a: 0, b: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0 } },
+      { name: 'a-high', set: { a: 1, b: 0 }, expect: { w_0: 1, w_1: 1, w_2: 0 } },
+      { name: 'b-high', set: { a: 0, b: 1 }, expect: { w_0: 1, w_1: 1, w_2: 0 } },
+      { name: 'both-high', set: { a: 1, b: 1 }, expect: { w_0: 1, w_1: 1, w_2: 0 } },
+      { name: 'return-low', set: { a: 0, b: 0 }, expect: { w_0: 0, w_1: 0, w_2: 0 } },
+    ],
+  }],
+  ['gc_v2_14_mixed_datapath_extended', {
+    steps: [
+      { name: 'assert-reset', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 1, en: 1 }, expect: { w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'release-reset', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 0, en: 1 }, expect: { w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'add-step-1', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 0, en: 1 }, pulse: ['clk'], expect: { w_8: 1, w_9: 1, w_10: 0, w_11: 0 } },
+      { name: 'add-step-2', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 0, en: 1 }, pulse: ['clk'], expect: { w_8: 0, w_9: 0, w_10: 1, w_11: 0 } },
+      { name: 'add-step-3', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 0, en: 1 }, pulse: ['clk'], expect: { w_8: 1, w_9: 0, w_10: 1, w_11: 0 } },
+      { name: 'hold-disabled', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 0, en: 0 }, pulse: ['clk'], expect: { w_8: 1, w_9: 0, w_10: 1, w_11: 0 } },
+      { name: 'xor-resume', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 1, cin: 0, clk: 0, rst: 0, en: 1 }, pulse: ['clk'], expect: { w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+      { name: 'shift-left', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 1, op2: 1, cin: 0, clk: 0, rst: 0, en: 1 }, pulse: ['clk'], expect: { w_8: 0, w_9: 0, w_10: 0, w_11: 1 } },
+      { name: 'reassert-reset', set: { b0: 1, b1: 1, b2: 0, b3: 0, op0: 0, op1: 0, op2: 0, cin: 0, clk: 0, rst: 1, en: 1 }, expect: { w_8: 0, w_9: 0, w_10: 0, w_11: 0 } },
+    ],
+  }],
+  ['gc_v2_15_ram_decode_capture_bus', {
+    steps: [
+      { name: 'assert-reset-idle', set: { a0: 1, a1: 0, a2: 1, g1: 1, di0: 1, di1: 0, di2: 1, di3: 0, di4: 0, di5: 1, di6: 0, di7: 0, we: 1, cs: 1, oe: 1, le373: 0, oe373: 1, clk: 0, rst: 1 }, expect: { w_13: 'Z', w_14: 'Z', w_15: 0, w_16: 0, w_17: 0, w_18: 0, w_2: 'Z' } },
+      { name: 'release-reset', set: { rst: 0 }, expect: { w_13: 'Z', w_14: 'Z', w_15: 0, w_16: 0, w_17: 0, w_18: 0, w_2: 'Z' } },
+      { name: 'write-25-to-addr5', set: { we: 0, cs: 0, oe: 1 }, expect: { w_13: 'Z', w_14: 'Z', w_2: 'Z' } },
+      { name: 'read-live-addr5', set: { we: 1, cs: 0, oe: 0 }, expect: { w_13: 'Z', w_14: 'Z', w_2: 1 } },
+      { name: 'reveal-latch-transparent-addr5', set: { le373: 1, oe373: 0 }, expect: { w_13: 1, w_14: 1, w_15: 0, w_16: 0, w_17: 0, w_18: 0, w_2: 1 } },
+      { name: 'hold-latch-switch-addr0', set: { le373: 0, a0: 0, a1: 0, a2: 0 }, expect: { w_13: 1, w_14: 1, w_2: 0 } },
+      { name: 'capture-addr0-status', set: { clk: 0 }, pulse: ['clk'], expect: { w_13: 1, w_14: 1, w_15: 0, w_16: 0, w_17: 1, w_18: 0, w_2: 0 } },
+      { name: 'disable-decode-capture', set: { g1: 0, clk: 0 }, pulse: ['clk'], expect: { w_13: 1, w_14: 1, w_15: 0, w_16: 1, w_17: 1, w_18: 0, w_2: 0 } },
+      { name: 'restore-addr5-capture', set: { g1: 1, a0: 1, a1: 0, a2: 1, clk: 0 }, pulse: ['clk'], expect: { w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_17: 0, w_18: 1, w_2: 1 } },
+      { name: 'chip-deselects-live-bus', set: { cs: 1, oe: 0 }, expect: { w_13: 1, w_14: 1, w_15: 1, w_16: 1, w_17: 0, w_18: 1, w_2: 'Z' } },
     ],
   }],
 ]);
@@ -1319,7 +1462,7 @@ function generateReport(corpusVersion, caseResults) {
   md += `- External HDL syntax/lint compilation (iverilog, verilator, yosys, ghdl) when toolchain is present\n`;
   md += `- Scenario-based external HDL simulation for all non-boundary cases (iverilog/vvp and ghdl)\n`;
   md += `- **Re-export + byte-accurate diff against golden .v/.vhd artifacts** (export-determinism, v1.1)\n`;
-  md += `- Known boundary classification (gc_t2_bus_mux)\n\n`;
+  md += `- Known boundary classification for all documented expected_limit cases\n\n`;
 
   const exporterStatus = generateVerilog
     ? `Exporters loaded — diff checks ran live`
@@ -1386,6 +1529,112 @@ function generateSummary(corpusVersion, caseResults) {
   };
 }
 
+function buildCoverage(entries) {
+  const coverage = {
+    combinational: [],
+    sequential: [],
+    tristate: [],
+    mixed: [],
+  };
+  for (const entry of entries) {
+    if (!coverage[entry.class]) coverage[entry.class] = [];
+    coverage[entry.class].push(entry.slug);
+  }
+  return coverage;
+}
+
+function generateAcceptance(corpusVersion, entries, summary) {
+  const expectedLimitSlugs = summary.perCase
+    .filter((result) => result.status === 'expected_limit')
+    .map((result) => result.slug)
+    .sort();
+
+  const requirementsAssessment = {
+    traceDepthHardening: {
+      status: 'fulfilled',
+      note: 'All landed gc_v2_* seeds now carry hardened HDL traces instead of only short smoke scenarios.',
+    },
+    largeSystemBreadth: {
+      status: 'fulfilled_current_scope',
+      note: 'The current baseline includes a larger mixed datapath plus an integrated RAM/decode/bit-select/hold/capture system case.',
+    },
+    hierarchyDepth: {
+      status: 'partial_documented_boundary',
+      note: 'Direct nested combinational hierarchy is covered by a clean pass case, and deeper hierarchy is captured explicitly as expected_limit instead of remaining implicit.',
+    },
+    busMemoryConflictSystems: {
+      status: 'fulfilled_current_scope',
+      note: 'Shared-bus conflict, RAM readback, decode tree, and integrated RAM/decode/capture paths are all present in the executable corpus.',
+    },
+    gateStability: {
+      status: 'fulfilled',
+      note: 'Summary, report, and acceptance are generated together, and partial slug runs can no longer overwrite the canonical artifacts.',
+    },
+  };
+
+  return {
+    version: 2,
+    generatedAt: summary.generatedAt,
+    runnerVersion: summary.runnerVersion,
+    corpusVersion,
+    verdict: summary.verdict,
+    status: {
+      exists: true,
+      executed: summary.totalCases > 0,
+      inCi: true,
+      acceptanceArtifactsSynchronized: true,
+      partialRunsProtected: true,
+    },
+    counts: {
+      totalCases: summary.totalCases,
+      indexEntries: entries.length,
+      circuitFiles: entries.length,
+      verilogExports: entries.length,
+      vhdlExports: entries.length,
+      passed: summary.passed,
+      failed: summary.failed,
+      expectedLimit: summary.expectedLimit,
+      unsupported: summary.unsupported,
+    },
+    coverage: buildCoverage(entries),
+    expectedLimitSlugs,
+    requirementsAssessment,
+    scopeDecision: {
+      status: 'closed_current_scope',
+      note: 'Golden Corpus v2 is considered complete for the current scope as a stable pilot baseline. Deeper hierarchy passes and broader system breadth remain explicit optional future expansion, not silent gaps in the accepted baseline.',
+      remainingOptionalExpansion: [
+        'broader large-system seeds beyond the current v2 pilot set',
+        'deeper reusable hierarchy pass cases beyond the documented boundary case',
+        'further trace-depth growth for future larger or more state-heavy designs',
+      ],
+    },
+    knownBoundaries: [...KNOWN_BOUNDARIES.entries()].map(([slug, reason]) => ({
+      slug,
+      classification: 'expected_limit',
+      reason,
+    })),
+    exportDeterminism: {
+      active: Boolean(generateVerilog && generateVHDL),
+      scope: 'live re-export plus byte-accurate diff against stored golden HDL artifacts',
+    },
+    externalHdl: {
+      syntaxLint: true,
+      scenarioSimulation: true,
+      scope: 'all non-boundary corpus cases',
+    },
+    runnerAcceptanceCriteria: [
+      'discover_all_corpus_entries',
+      'resolve_each_slug_to_circuit_and_golden_exports',
+      'keep_summary_report_and_acceptance_artifacts_synchronized',
+      'run_external_hdl_checks_for_all_non_boundary_cases',
+      'classify_documented_boundaries_as_expected_limit',
+      'protect_canonical_artifacts_from_partial_slug_runs',
+      'preserve_expected_limit_in_ci_and_local_runs',
+    ],
+    canonicalDocs: CANONICAL_ACCEPTANCE_DOCS,
+  };
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main({ slug = null, writeArtifacts = true } = {}) {
@@ -1403,6 +1652,11 @@ async function main({ slug = null, writeArtifacts = true } = {}) {
   if (slug && entries.length === 0) {
     console.error(`No corpus entry found for slug: ${slug}`);
     process.exit(2);
+  }
+  const partialRun = slug !== null;
+  if (partialRun && writeArtifacts) {
+    writeArtifacts = false;
+    console.log('Artifact writes skipped for partial --slug run to protect canonical Golden Corpus artifacts.');
   }
 
   // ── Load TypeScript exporters (requires vite-node) ──────────────────────
@@ -1437,10 +1691,12 @@ async function main({ slug = null, writeArtifacts = true } = {}) {
 
   const summary = generateSummary(corpusVersion, caseResults);
   const report = generateReport(corpusVersion, caseResults);
+  const acceptance = generateAcceptance(corpusVersion, entries, summary);
 
   if (writeArtifacts) {
     await fs.writeFile(SUMMARY_FILE, JSON.stringify(summary, null, 2) + '\n');
     await fs.writeFile(REPORT_FILE, report);
+    await fs.writeFile(ACCEPTANCE_FILE, JSON.stringify(acceptance, null, 2) + '\n');
   } else {
     console.log('Artifact writes skipped (--no-write).');
   }
@@ -1450,12 +1706,14 @@ async function main({ slug = null, writeArtifacts = true } = {}) {
   if (writeArtifacts) {
     console.log(`Summary: ${displayPath(SUMMARY_FILE)}`);
     console.log(`Report:  ${displayPath(REPORT_FILE)}`);
+    console.log(`Acceptance: ${displayPath(ACCEPTANCE_FILE)}`);
   }
 
   // CI-consumable JSON
   console.log(JSON.stringify({
     summaryFile: writeArtifacts ? displayPath(SUMMARY_FILE) : null,
     reportFile: writeArtifacts ? displayPath(REPORT_FILE) : null,
+    acceptanceFile: writeArtifacts ? displayPath(ACCEPTANCE_FILE) : null,
     slug: slug ?? null,
     verdict: summary.verdict,
     passed: summary.passed,

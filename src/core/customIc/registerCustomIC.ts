@@ -2,6 +2,7 @@ import { gateRegistry } from '../registry/GateRegistry';
 import { runSimulation } from '../simulation/engine';
 import type { Circuit, SignalValue } from '../types';
 import { FlipFlopShape } from '../../gates/shapes/FlipFlopShape';
+import { toCustomIcTypeId } from './customIcTypeId';
 
 function buildSubcircuitCopy(
   subcircuit: Circuit,
@@ -27,9 +28,17 @@ function buildSubcircuitCopy(
   };
 }
 
-export function registerCustomIC(name: string, subcircuit: Circuit, portNames?: string[]) {
-  const typeId = `CIC_${name.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
-  if (gateRegistry.has(typeId)) return;
+export function registerCustomIC(
+  name: string,
+  subcircuit: Circuit,
+  portNames?: string[],
+  options?: { replace?: boolean },
+) {
+  const typeId = toCustomIcTypeId(name);
+  if (gateRegistry.has(typeId)) {
+    if (!options?.replace) return;
+    gateRegistry.unregister(typeId);
+  }
 
   const inputGates = Object.values(subcircuit.gates).filter((g) => g.typeId === 'INPUT_SWITCH');
   const outputGates = Object.values(subcircuit.gates).filter((g) => g.typeId === 'OUTPUT_LED');

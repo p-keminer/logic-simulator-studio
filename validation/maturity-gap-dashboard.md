@@ -12,7 +12,7 @@ This dashboard consolidates maturity evidence across seven criteria. Each criter
 
 **Overall maturity level: BETA / APPROACHING-PRODUCTION**
 
-**Last updated 2026-03-20:** All P0 blockers and P1-1 through P1-7 remain resolved. Contract Runner v1 now stands at 447 pass, 0 fail, 0 unsupported and is green in CI. Golden Corpus v1 stands at 23 pass, 0 fail, 1 expected_limit across 24 circuits and now runs live export-determinism plus external HDL syntax/lint and scenario-based simulation, including the nine v2 pilot seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`. Two one-level hierarchical/custom-IC HDL paths are now verified via structural flattening, and the sequential-feedback seed adds a longer multi-cycle regression path. The FSM export work has now moved from pure planning into an implemented first slice: projection metadata, `projectionBatchId`, the central sequential projection helper, a small core helper for static/reduced STT, explicit mixed-fallback behavior for partial projections, direct core-level regressions, and focused-nine UI audit coverage for projected narrow, projected reduced, and mixed-fallback STT modes are in place. The race-panel lifecycle work has also moved from pure planning into an implemented first slice: store-side pruning of stale incidents, a central manual reset path, signaturbasierte Incident-Dedupe, and focused helper regressions are in place. The next FSM step should stay intentionally small: broaden verification around the new STT core and only then tighten subsystem boundaries further. P1-7 (Focused-Nine UI Audit) remains green at 12 smoke PASS, 5 semantic PASS, 0 semantic WARN. CI still has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **884/884**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P1/P2: finish the static/reduced FSM projection path for broad and mixed circuits, deepen race-monitor incident semantics/integration coverage, Golden Corpus v2 breadth, branch protection, CI performance, and deeper hierarchy/custom-IC verification.
+**Last updated 2026-03-22:** All P0 blockers and P1-1 through P1-7 remain resolved. Contract Runner v1 now stands at 447 pass, 0 fail, 0 unsupported and is green in CI. Golden Corpus v1 stands at 28 pass, 0 fail, 2 expected_limit across 30 circuits and now runs live export-determinism plus external HDL syntax/lint and scenario-based simulation, including the fifteen v2 pilot seeds `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, `gc_v2_9_custom_reg4_pipeline`, `gc_v2_10_custom_tribuf_wrap`, `gc_v2_11_custom_hc194_wrap`, `gc_v2_12_nested_halfadder_parent`, `gc_v2_13_deep_nested_halfadder_boundary`, `gc_v2_14_mixed_datapath_extended`, and `gc_v2_15_ram_decode_capture_bus`. Four one-level hierarchical/custom-IC HDL paths are now verified via structural flattening, the trace-depth hardening slice has been extended across all landed `gc_v2_*` seeds, the corpus includes a first direct nested-combinational custom-IC golden pass case, it now also carries the first explicit deeper hierarchy exporter boundary as a stable expected_limit regression, it absorbs a larger state-heavy mixed datapath from the focused regression set into the Golden baseline, and it now adds a first larger integrated RAM/decode/bit-select/hold/capture system case. The Golden-Strang ist damit im aktuellen Scope als stabile Pilot-v2-Basis abgeschlossen; weitere Breite oder tiefere Hierarchie sind nur noch optionale Folgeexpansion. The FSM export work has now moved from pure planning into an implemented first slice: projection metadata, `projectionBatchId`, the central sequential projection helper, a small core helper for static/reduced STT, explicit mixed-fallback behavior for partial projections, direct core-level regressions, and focused-nine UI audit coverage for projected narrow, projected reduced, and mixed-fallback STT modes are in place. The race-panel lifecycle work is now structurally completed for the current scope: store-side pruning, a central manual reset path, signaturbasierte Incident-Dedupe, shared monitor-state helpers, and structure-fingerprint pruning are in place. The next FSM step should stay intentionally small: broaden verification around the new STT core and only then tighten subsystem boundaries further. P1-7 (Focused-Nine UI Audit) remains green at 12 smoke PASS, 5 semantic PASS, 0 semantic WARN. CI still has 6 jobs: quality-gates, contract-runner, golden-corpus, focused-nine-ui, focused-nine-core, hdl-toolchain. Test suite: **884/884**. Focused-nine core: **12/12 PASS, 0 tooling warnings**. Remaining open work is P1/P2: finish the static/reduced FSM projection path for broad and mixed circuits, branch protection, CI performance, and deeper hierarchy/custom-IC verification.
 
 ---
 
@@ -82,7 +82,7 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 | MS_JK_FF HDL export uses `negedge clk` only  does not model master-slave behavior | gate-gap-analysis.md 4.2 | synthesis-risk |
 | D_LATCH Verilog `always @(*)` causes latch inference warnings in synthesis tools | gate-gap-analysis.md 4.4 | synthesis-risk |
 | Synthetisierte FSM-Exporte brauchen fuer die verbleibenden Misch- und Breitenfaelle noch weitere semantische Haertung; der aktive Plan liegt im FSM0-Strang | `validation/fsm0/work-package.md` | P1/P2 |
-| Race-Panel-Eintraege und Race-Markierungen haben jetzt einen ersten verifizierten Reset-/Prune-/Dedupe-Slice, aber noch keinen voll ausgearbeiteten Incident-Store mit Zusatzmetadaten und tiefer Integrationstestabdeckung | `validation/race-panel-fixes/work-package.md` | P1/P2 |
+| Race-Panel-Eintraege und Race-Markierungen sind fuer den aktuellen Produktumfang strukturell abgesichert: Incident-Store mit `count`/`firstSeen`/`lastSeen`, gemeinsamer Monitor-State, Reset-/Prune-/Dedupe-Pfad und Struktur-Fingerprint-Pruning sind verifiziert; spaetere Vertiefung bleibt optional | `validation/race-panel-fixes/work-package.md` | abgeschlossen im aktuellen Scope |
 | ~~17 basic gates (AND/OR/NOT/NAND/NOR/XOR/XNOR/BUFFER + multi-input variants) have no toVerilog/toVHDL~~ | **RESOLVED P0 2026-03-07**  all logic_basic and logic_multi gates now export | ~~P0 blocker~~ done |
 | AND_C/OR_C/XOR_C output naming (`q`, `q_n`) inverted vs NAND_C/NOR_C  inconsistency | gate-gap-analysis.md 7.3 | documentation-gap |
 
@@ -106,7 +106,7 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 
 ### Current State
 
-Verification covers 884/884 vitest tests, 12/12 focused-nine simulation + toolchain cases, 447/447 contract runner cases (0 unsupported cases), and 23/24 golden corpus cases plus 1 expected_limit. Multi-driver behavior is now formally defined and tested. The testability mapping (`testability-mapping.json`) defines 14 test patterns across 18 gate classes (124 required pattern slots). Contract Runner v1 now provides automated behavioral verification across 86 gate contracts. Golden Corpus v1 Runner provides structural, syntax, and scenario-based HDL regression across 24 reference circuits.
+Verification covers 884/884 vitest tests, 12/12 focused-nine simulation + toolchain cases, 447/447 contract runner cases (0 unsupported cases), and 28/30 golden corpus cases plus 2 expected_limit. Multi-driver behavior is now formally defined and tested. The testability mapping (`testability-mapping.json`) defines 14 test patterns across 18 gate classes (124 required pattern slots). Contract Runner v1 now provides automated behavioral verification across 86 gate contracts. Golden Corpus v1 Runner provides structural, syntax, and scenario-based HDL regression across 30 reference circuits.
 
 ### Confirmed Strengths
 
@@ -114,7 +114,7 @@ Verification covers 884/884 vitest tests, 12/12 focused-nine simulation + toolch
 - Gate contracts define precise behavioral expectations with input/output tables
 - Focused-nine audit covers 12 high-risk cases  all now pass [CONFIRMED: focused-nine-summary.json]
 - Contract Runner v1 verifies 86 gate contracts (447 cases)  447 pass, 0 unsupported [CONFIRMED: contract-runner-summary.json]
-- Golden Corpus v1 Runner verifies 24 reference circuits  23 pass, 1 expected_limit [CONFIRMED: golden-corpus-v1-summary.json]
+- Golden Corpus v1 Runner verifies 30 reference circuits  28 pass, 2 expected_limit [CONFIRMED: golden-corpus-v1-summary.json]
 - Risk classes are assigned per-gate, enabling risk-weighted test prioritization
 - Multi-driver conflict behavior is now defined and verified: conflicting drivers -> X (3) [CONFIRMED]
 
@@ -202,7 +202,7 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 | Issue | Evidence | Severity |
 |---|---|---|
 | Custom ICs: no contracts, no static analysis possible | gate-gap-analysis.md 8 | P2 |
-| Golden Corpus v1 covers 24 circuits and now includes nine broader v2 pilot seeds, but hierarchy/custom-IC coverage is still only one-level and still narrow | `golden-corpus-v1.json`  24 reference circuits including `gc_v2_1_mux_fabric`, `gc_v2_2_datapath_slice`, `gc_v2_3_shift_pipeline`, `gc_v2_4_ram_readback`, `gc_v2_5_decode_tree`, `gc_v2_6_custom_halfadder`, `gc_v2_7_bus_conflict_system`, `gc_v2_8_sequential_feedback`, and `gc_v2_9_custom_reg4_pipeline`; two custom-IC HDL paths are covered via flattening and longer sequential traces have begun, but deeper hierarchy remains open | P2 |
+| Golden Corpus v1 covers 30 circuits and now includes fifteen broader v2 pilot seeds, but hierarchy/custom-IC coverage still remains intentionally narrow beyond the landed direct nested combinational case and the newly documented deeper hierarchy boundary | `golden-corpus-v1.json`  30 reference circuits including `gc_v2_1_mux_fabric` through `gc_v2_15_ram_decode_capture_bus`; four one-level custom-IC HDL paths, a first direct nested combinational custom-IC pass path, one explicit deeper exporter boundary, a promoted larger state-heavy mixed datapath, and a first integrated RAM/decode/bit-select/hold/capture system case are covered, but broader deeper hierarchy remains open | P2 |
 | ~~STT variable limit (max 8) blocks state inspection for all ICs with >8 inputs+state~~ | **PARTIALLY RESOLVED (post-P0):** STT now renders a "Reduzierte Ansicht" (reduced view) for wide sequentials  8-64 rows of meaningful data instead of error message | P2 (residual) |
 | FSM-Editor-Synthese skaliert strukturell, aber die verbleibenden Misch- und Reduktionsfaelle fuer STT/Timing brauchen weitere Haertung im aktiven FSM0-Strang | `validation/fsm0/work-package.md` | P1/P2 |
 
@@ -231,7 +231,7 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 A CI pipeline exists (`.github/workflows/quality-gates.yml`) with six jobs:
 - `quality-gates`  test/build/lint via `run_quality_gates.sh`
 - `contract-runner`  Contract Runner v1 (447 pass, 0 fail, 0 unsupported) via `run_contract_runner.sh`
-- `golden-corpus`  Golden Corpus v1 Runner (23 pass, 0 fail, 1 expected_limit) via `run_golden_corpus.sh`
+- `golden-corpus`  Golden Corpus v1 Runner (28 pass, 0 fail, 2 expected_limit) via `run_golden_corpus.sh`
 - `focused-nine-ui`  12-case browser/UI regression via `run_focused_nine_ui.sh`
 - `focused-nine-core`  12-case simulation + HDL-regression via `run_focused_nine_core.sh`
 - `hdl-toolchain`  iverilog/ghdl/yosys/verilator presence check via `check_hdl_toolchain.sh`
@@ -242,7 +242,7 @@ Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real 
 
 - Focused-nine audit is structured and machine-readable (JSON format)
 - Contract Runner v1 provides automated behavioral verification for 86 gate contracts [CONFIRMED: contract-runner-summary.json  447 pass, CI gate]
-- Golden Corpus v1 Runner provides structural plus external HDL regression for 24 reference circuits [CONFIRMED: golden-corpus-v1-summary.json  23 pass, 1 expected_limit, CI gate]
+- Golden Corpus v1 Runner provides structural plus external HDL regression for 30 reference circuits [CONFIRMED: golden-corpus-v1-summary.json  28 pass, 2 expected_limit, CI gate]
 - Focused-Nine UI audit is now a CI gate with 12 smoke PASS and 5 semantic PASS [CONFIRMED: focused-nine-ui-summary.json]
 - Gap analysis assigns risk classes to all findings
 - Testability mapping defines a prioritized test plan (P0/P1/P2/P3)
@@ -330,7 +330,7 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | ~~P1-1~~ | 74HC373 Verilog latch  Verilator LATCH warning-as-error | **DONE P1-1 2026-03-07** |
 | ~~P1-3~~ | prevClk hidden state not in stateKeys (edge-triggered FFs) | **DONE P1-3 2026-03-07** |
 | ~~P1-5~~ | Contract Runner v1  automated gate contract verification | **DONE / EXPANDED P1-5 2026-03-20**  447 pass, 0 fail, 0 unsupported, in CI |
-| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE / EXPANDED P1-6 2026-03-20**  23 pass, 1 expected_limit, live exporter diff + external HDL checks established |
+| ~~P1-6~~ | Golden Corpus v1 Runner + CI expansion | **DONE / EXPANDED P1-6 2026-03-20**  28 pass, 2 expected_limit, live exporter diff + external HDL checks established |
 | ~~P1-7~~ | Focused-Nine UI audit as CI gate | **DONE P1-7 2026-03-08**  12 smoke PASS, 5 semantic PASS, 6 CI jobs |
 
 ### P1  High Priority
@@ -360,7 +360,7 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | `validation/focused-nine-summary.json` | 12 simulation+toolchain test results (12/12 PASS, 0 tooling warnings) |
 | `validation/focused-nine-ui-summary.json` | UI and STT audit results (12/12 smoke PASS, 5 semantic PASS, 0 semantic WARN) |
 | `validation/contract-runner-summary.json` | Contract Runner v1 results (447 pass, 0 fail, 0 unsupported, 447 total) |
-| `validation/golden-corpus-v1-summary.json` | Golden Corpus v1 results (23 pass, 0 fail, 1 expected_limit, 24 total) |
+| `validation/golden-corpus-v1-summary.json` | Golden Corpus v1 results (28 pass, 0 fail, 2 expected_limit, 30 total) |
 | `validation/golden-corpus-v1.json` | 24 Golden-Corpus-v1 reference circuits with class, checkpoints, rationale |
 | `validation/golden-corpus-v1.md` | Human-readable description of the 24 Golden-Corpus-v1 circuits |
 | `validation/gate-gap-analysis.md` | Full gap analysis (11 sections, 323 lines) |

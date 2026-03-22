@@ -106,9 +106,52 @@ function makeMultiDriverOutputSubcircuit(): Circuit {
   );
 }
 
+function makeHalfAdderSubcircuit(): Circuit {
+  return makeCircuit(
+    'contract_half_adder_sub',
+    [
+      makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+      makeGate('sw_b', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'b' }),
+      makeGate('xor1', 'XOR'),
+      makeGate('and1', 'AND'),
+      makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+      makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+    ],
+    [
+      makeWire('w1', 'sw_a', 'out', 'xor1', 'a'),
+      makeWire('w2', 'sw_b', 'out', 'xor1', 'b'),
+      makeWire('w3', 'xor1', 'out', 'led_sum', 'in'),
+      makeWire('w4', 'sw_a', 'out', 'and1', 'a'),
+      makeWire('w5', 'sw_b', 'out', 'and1', 'b'),
+      makeWire('w6', 'and1', 'out', 'led_carry', 'in'),
+    ],
+  );
+}
+
+function makeNestedHalfAdderSubcircuit(): Circuit {
+  return makeCircuit(
+    'contract_nested_half_adder_sub',
+    [
+      makeGate('sw_a', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'a' }),
+      makeGate('sw_b', 'INPUT_SWITCH', { customState: { value: 0 }, label: 'b' }),
+      makeGate('ha', 'CIC_CONTRACT_HALF_ADDER'),
+      makeGate('led_sum', 'OUTPUT_LED', { label: 'sum' }),
+      makeGate('led_carry', 'OUTPUT_LED', { label: 'carry' }),
+    ],
+    [
+      makeWire('w1', 'sw_a', 'out', 'ha', 'i0'),
+      makeWire('w2', 'sw_b', 'out', 'ha', 'i1'),
+      makeWire('w3', 'ha', 'o0', 'led_sum', 'in'),
+      makeWire('w4', 'ha', 'o1', 'led_carry', 'in'),
+    ],
+  );
+}
+
 registerCustomIC('CONTRACT_DEAD_INPUT', makeDeadInputSubcircuit(), ['a', 'unused', 'y']);
 registerCustomIC('CONTRACT_MISSING_OUTPUT', makeMissingOutputDriverSubcircuit(), ['a', 'y']);
 registerCustomIC('CONTRACT_MULTI_OUTPUT', makeMultiDriverOutputSubcircuit(), ['a', 'b', 'y']);
+registerCustomIC('CONTRACT_HALF_ADDER', makeHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
+registerCustomIC('CONTRACT_PARENT_HALF_ADDER', makeNestedHalfAdderSubcircuit(), ['a', 'b', 'sum', 'carry']);
 
 describe('customIcContract', () => {
   it('marks dead exported inputs as degraded, but not export-blocking', () => {
@@ -142,5 +185,15 @@ describe('customIcContract', () => {
     expect(contract.exportBlockReason).toContain('output o0 has 2 internal drivers');
     expect(policy.boundaryPolicy).toBe('contract_blocked');
     expect(policy.exportAllowed).toBe(false);
+  });
+
+  it('treats direct canonical combinational nested custom ICs as contract-safe for the current rollout', () => {
+    const contract = analyzeCustomIcGateContract(makeGate('parent_wrap', 'CIC_CONTRACT_PARENT_HALF_ADDER'));
+    const policy = getCustomIcGatePolicy(makeGate('parent_wrap', 'CIC_CONTRACT_PARENT_HALF_ADDER'));
+
+    expect(contract.status).toBe('canonical');
+    expect(contract.exportAllowed).toBe(true);
+    expect(policy.boundaryPolicy).toBe('nested_combinational');
+    expect(policy.exportAllowed).toBe(true);
   });
 });
