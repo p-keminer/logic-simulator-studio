@@ -3,18 +3,18 @@ import {
   type CircuitContext,
   type CircuitContextReduction,
   type CircuitReductionReason,
-} from '../../contracts/circuit-context';
-import { createSandboxError } from '../../shared/errors';
-import { mapCircuitSourceToContextDraft } from './circuit-context-mapper';
+} from '../../contracts/circuit-context.js';
+import { createSandboxError } from '../../shared/errors.js';
+import { mapCircuitSourceToContextDraft } from './circuit-context-mapper.js';
 import {
   normalizeCircuitContext,
   type CircuitContextNormalizationResult,
-} from './circuit-context-normalizer';
+} from './circuit-context-normalizer.js';
 import type {
   CircuitContextBuildOptions,
   CircuitCountSummary,
   CircuitSource,
-} from './types';
+} from './types.js';
 
 export const defaultCircuitContextLimits: CircuitContextBuildOptions['limits'] = {
   maxNodes: 120,

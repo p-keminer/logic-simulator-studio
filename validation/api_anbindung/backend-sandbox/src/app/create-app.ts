@@ -5,62 +5,62 @@ import cors from '@fastify/cors';
 import {
   DefaultSessionService,
   type SessionService,
-} from '../modules/auth/session-service';
-import { InMemoryKeyReferenceStore } from '../modules/auth/key-reference-store';
-import { InMemorySessionStore } from '../modules/auth/session-store';
+} from '../modules/auth/session-service.js';
+import { InMemoryKeyReferenceStore } from '../modules/auth/key-reference-store.js';
+import { InMemorySessionStore } from '../modules/auth/session-store.js';
 import {
   InMemoryAuditSink,
   type AuditSink,
-} from '../modules/audit-and-observability/audit-events';
+} from '../modules/audit-and-observability/audit-events.js';
 import {
   InMemoryMetricsSink,
   type MetricsSink,
-} from '../modules/audit-and-observability/metrics';
+} from '../modules/audit-and-observability/metrics.js';
 import {
   redactSensitiveText,
   redactSensitiveValue,
-} from '../modules/audit-and-observability/redaction';
-import { FileCurrentCircuitSnapshotProvider } from '../modules/circuit-context/file-current-circuit-snapshot-provider';
-import { FixtureCurrentCircuitSnapshotProvider } from '../modules/circuit-context/fixture-current-circuit-snapshot-provider';
-import type { CurrentCircuitSnapshotProvider } from '../modules/circuit-context/current-circuit-snapshot-provider';
+} from '../modules/audit-and-observability/redaction.js';
+import { FileCurrentCircuitSnapshotProvider } from '../modules/circuit-context/file-current-circuit-snapshot-provider.js';
+import { FixtureCurrentCircuitSnapshotProvider } from '../modules/circuit-context/fixture-current-circuit-snapshot-provider.js';
+import type { CurrentCircuitSnapshotProvider } from '../modules/circuit-context/current-circuit-snapshot-provider.js';
 import {
   SandboxChatRequestHandler,
   type ChatRequestHandler,
-} from '../modules/edge-api/chat-request-handler';
-import { localAppBridgeRoutes } from '../modules/edge-api/routes/local-app-bridge-routes';
-import { devProviderFaultRoutes } from '../modules/edge-api/routes/dev-provider-fault-routes';
-import { mapErrorToHttpResponse } from '../modules/edge-api/http-error-mapper';
-import { chatRoutes } from '../modules/edge-api/routes/chat-routes';
-import { sessionRoutes } from '../modules/edge-api/routes/session-routes';
+} from '../modules/edge-api/chat-request-handler.js';
+import { localAppBridgeRoutes } from '../modules/edge-api/routes/local-app-bridge-routes.js';
+import { devProviderFaultRoutes } from '../modules/edge-api/routes/dev-provider-fault-routes.js';
+import { mapErrorToHttpResponse } from '../modules/edge-api/http-error-mapper.js';
+import { chatRoutes } from '../modules/edge-api/routes/chat-routes.js';
+import { sessionRoutes } from '../modules/edge-api/routes/session-routes.js';
 import {
   DefaultPolicyEngine,
   type PolicyEngine,
-} from '../modules/policy-guardrails/policy-engine';
+} from '../modules/policy-guardrails/policy-engine.js';
 import {
   InMemoryRateLimitStore,
   type RateLimitStore,
-} from '../modules/policy-guardrails/rate-limit-store';
-import type { RateLimitConfig } from '../modules/policy-guardrails/policy-types';
+} from '../modules/policy-guardrails/rate-limit-store.js';
+import type { RateLimitConfig } from '../modules/policy-guardrails/policy-types.js';
 import {
   DefaultPromptOrchestrator,
   type PromptOrchestrator,
-} from '../modules/prompt-orchestrator/prompt-orchestrator';
+} from '../modules/prompt-orchestrator/prompt-orchestrator.js';
 import {
   InMemoryConversationHistoryStore,
   type ConversationHistoryStore,
-} from '../modules/prompt-orchestrator/conversation-history-store';
+} from '../modules/prompt-orchestrator/conversation-history-store.js';
 import {
   DevFaultInjectingProviderGateway,
-} from '../modules/provider-gateway/dev-fault-injecting-provider-gateway';
+} from '../modules/provider-gateway/dev-fault-injecting-provider-gateway.js';
 import {
   DefaultProviderGateway,
   type ProviderGateway,
-} from '../modules/provider-gateway/provider-gateway';
-import { InMemoryDevProviderFaultController } from '../modules/provider-gateway/dev-provider-fault-controller';
-import { NoopProviderClient } from '../modules/provider-gateway/provider-client';
-import { isSandboxError } from '../shared/errors';
-import { loadConfig } from '../shared/config';
-import { createLoggerOptions } from '../shared/logger';
+} from '../modules/provider-gateway/provider-gateway.js';
+import { InMemoryDevProviderFaultController } from '../modules/provider-gateway/dev-provider-fault-controller.js';
+import { NoopProviderClient } from '../modules/provider-gateway/provider-client.js';
+import { isSandboxError } from '../shared/errors.js';
+import { loadConfig } from '../shared/config.js';
+import { createLoggerOptions } from '../shared/logger.js';
 
 export interface CreateAppOptions {
   config?: Partial<ReturnType<typeof loadConfig>>;

@@ -4,10 +4,10 @@ import {
   chatResetRequestSchema,
   chatResetResponseSchema,
   chatResponseSchema,
-} from '../../../contracts/chat';
-import { createSandboxError } from '../../../shared/errors';
-import { createRequestContext } from '../../../shared/request-context';
-import type { ChatRequestHandler } from '../chat-request-handler';
+} from '../../../contracts/chat.js';
+import { createSandboxError } from '../../../shared/errors.js';
+import { createRequestContext } from '../../../shared/request-context.js';
+import type { ChatRequestHandler } from '../chat-request-handler.js';
 
 export interface ChatRoutesOptions {
   chatRequestHandler: ChatRequestHandler;

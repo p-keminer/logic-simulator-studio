@@ -1,10 +1,10 @@
-import type { CircuitContext } from '../../contracts/circuit-context';
+import type { CircuitContext } from '../../contracts/circuit-context.js';
 import type {
   ConversationTurn,
   PromptEnvelope,
   PromptOrchestrationInput,
   PromptSection,
-} from './prompt-types';
+} from './prompt-types.js';
 
 export interface PromptOrchestrator {
   build(input: PromptOrchestrationInput): Promise<PromptEnvelope>;

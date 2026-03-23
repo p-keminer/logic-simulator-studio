@@ -4,14 +4,14 @@ import {
   sessionKeyDeleteResponseSchema,
   sessionKeyRequestSchema,
   sessionKeyResponseSchema,
-} from '../../../contracts/session';
-import type { AuditSink } from '../../audit-and-observability/audit-events';
-import type { MetricsSink } from '../../audit-and-observability/metrics';
-import type { SessionService } from '../../auth/session-service';
-import type { RateLimitConfig } from '../../policy-guardrails/policy-types';
-import type { RateLimitDecision, RateLimitStore } from '../../policy-guardrails/rate-limit-store';
-import { createSandboxError } from '../../../shared/errors';
-import { createRequestContext } from '../../../shared/request-context';
+} from '../../../contracts/session.js';
+import type { AuditSink } from '../../audit-and-observability/audit-events.js';
+import type { MetricsSink } from '../../audit-and-observability/metrics.js';
+import type { SessionService } from '../../auth/session-service.js';
+import type { RateLimitConfig } from '../../policy-guardrails/policy-types.js';
+import type { RateLimitDecision, RateLimitStore } from '../../policy-guardrails/rate-limit-store.js';
+import { createSandboxError } from '../../../shared/errors.js';
+import { createRequestContext } from '../../../shared/request-context.js';
 
 export interface SessionRoutesOptions {
   sessionService: SessionService;

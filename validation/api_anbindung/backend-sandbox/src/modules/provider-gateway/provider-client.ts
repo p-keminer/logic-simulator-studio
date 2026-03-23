@@ -1,8 +1,8 @@
 import type {
   ProviderGatewayRequest,
   ProviderGatewayResponse,
-} from './provider-types';
-import { ProviderGatewayError } from './provider-error';
+} from './provider-types.js';
+import { ProviderGatewayError } from './provider-error.js';
 
 export interface ProviderClient {
   readonly name: string;

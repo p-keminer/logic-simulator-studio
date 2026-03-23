@@ -1,12 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { createSandboxError } from '../../shared/errors';
-import type { KeyReferenceStore } from './key-reference-store';
+import { createSandboxError } from '../../shared/errors.js';
+import type { KeyReferenceStore } from './key-reference-store.js';
 import type {
   SessionId,
   SessionRecord,
   SessionStore,
   SessionStoreClock,
-} from './session-store';
+} from './session-store.js';
 
 export interface SessionKeyRegistration {
   readonly sessionId: SessionId;

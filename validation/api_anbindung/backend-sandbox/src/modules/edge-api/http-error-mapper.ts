@@ -1,5 +1,5 @@
-import { isSandboxError, type SandboxError } from '../../shared/errors';
-import { redactSensitiveValue } from '../audit-and-observability/redaction';
+import { isSandboxError, type SandboxError } from '../../shared/errors.js';
+import { redactSensitiveValue } from '../audit-and-observability/redaction.js';
 
 export interface HttpErrorBody {
   error: {

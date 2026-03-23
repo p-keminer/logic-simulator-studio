@@ -1,4 +1,4 @@
-import type { ConversationTurn } from './prompt-types';
+import type { ConversationTurn } from './prompt-types.js';
 
 export interface ConversationHistoryRecord {
   readonly sessionId: string;

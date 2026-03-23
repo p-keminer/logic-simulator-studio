@@ -1,5 +1,5 @@
 import type { Writable } from 'node:stream';
-import type { SandboxConfig } from './config';
+import type { SandboxConfig } from './config.js';
 
 export interface LoggerContext {
   requestId?: string;

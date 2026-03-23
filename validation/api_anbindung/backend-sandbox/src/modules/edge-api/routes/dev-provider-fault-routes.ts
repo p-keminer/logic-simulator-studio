@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
-import type { AuditSink } from '../../audit-and-observability/audit-events';
-import type { DevProviderFaultController } from '../../provider-gateway/dev-provider-fault-controller';
-import { createSandboxError } from '../../../shared/errors';
-import { createRequestContext } from '../../../shared/request-context';
+import type { AuditSink } from '../../audit-and-observability/audit-events.js';
+import type { DevProviderFaultController } from '../../provider-gateway/dev-provider-fault-controller.js';
+import { createSandboxError } from '../../../shared/errors.js';
+import { createRequestContext } from '../../../shared/request-context.js';
 
 const requestSchema = z.object({
   mode: z.enum(['timeout', 'unavailable', 'clear']),

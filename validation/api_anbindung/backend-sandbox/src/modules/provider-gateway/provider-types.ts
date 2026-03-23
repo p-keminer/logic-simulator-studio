@@ -1,4 +1,4 @@
-import type { PromptEnvelope } from '../prompt-orchestrator/prompt-types';
+import type { PromptEnvelope } from '../prompt-orchestrator/prompt-types.js';
 
 export interface ProviderPromptDebug {
   readonly renderedBytes: number;

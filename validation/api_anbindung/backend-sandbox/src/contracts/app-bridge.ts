@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { chatMessageSchema } from './chat';
-import { sessionIdSchema } from './session';
+import { chatMessageSchema } from './chat.js';
+import { sessionIdSchema } from './session.js';
 
 export const appBridgeVersionSchema = z.literal('sandbox-app-bridge-v1');
 

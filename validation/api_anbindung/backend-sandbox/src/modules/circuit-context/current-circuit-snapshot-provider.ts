@@ -1,7 +1,7 @@
 import type {
   AppBridgeSnapshot,
   AppBridgeVersion,
-} from '../../contracts/app-bridge';
+} from '../../contracts/app-bridge.js';
 
 export type CurrentCircuitSnapshotProviderMode =
   | 'fixture'

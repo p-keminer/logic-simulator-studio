@@ -4,12 +4,12 @@ import { fileURLToPath } from 'node:url';
 import {
   appBridgeSnapshotSchema,
   type AppBridgeSnapshot,
-} from '../../contracts/app-bridge';
-import { createSandboxError } from '../../shared/errors';
+} from '../../contracts/app-bridge.js';
+import { createSandboxError } from '../../shared/errors.js';
 import {
   type CurrentCircuitSnapshotProvider,
   type CurrentCircuitSnapshotProviderDescription,
-} from './current-circuit-snapshot-provider';
+} from './current-circuit-snapshot-provider.js';
 
 export interface FileCurrentCircuitSnapshotProviderOptions {
   readonly providerId?: string;

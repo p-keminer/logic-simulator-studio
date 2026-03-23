@@ -1,23 +1,23 @@
 import { createHash } from 'node:crypto';
-import type { AuditSink } from '../audit-and-observability/audit-events';
-import type { MetricsSink } from '../audit-and-observability/metrics';
+import type { AuditSink } from '../audit-and-observability/audit-events.js';
+import type { MetricsSink } from '../audit-and-observability/metrics.js';
 import {
   redactSensitiveText,
   redactSensitiveValue,
-} from '../audit-and-observability/redaction';
-import type { PromptEnvelope } from '../prompt-orchestrator/prompt-types';
-import type { ProviderClient } from './provider-client';
+} from '../audit-and-observability/redaction.js';
+import type { PromptEnvelope } from '../prompt-orchestrator/prompt-types.js';
+import type { ProviderClient } from './provider-client.js';
 import {
   ProviderGatewayError,
   normalizeProviderGatewayError,
-} from './provider-error';
+} from './provider-error.js';
 import type {
   ProviderGatewayLogger,
   ProviderGatewayRequest,
   ProviderGatewayResponse,
   ProviderGatewayRuntime,
-} from './provider-types';
-export type { ProviderGatewayResponse } from './provider-types';
+} from './provider-types.js';
+export type { ProviderGatewayResponse } from './provider-types.js';
 
 export interface ProviderGatewaySendInput {
   readonly requestId?: string;

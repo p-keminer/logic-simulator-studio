@@ -3,8 +3,8 @@ import type {
   PolicyOutcome,
   PolicyViolation,
   RateLimitConfig,
-} from './policy-types';
-import type { RateLimitStore } from './rate-limit-store';
+} from './policy-types.js';
+import type { RateLimitStore } from './rate-limit-store.js';
 
 export interface PolicyEngine {
   evaluate(input: PolicyInput): Promise<PolicyOutcome>;

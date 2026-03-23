@@ -1,4 +1,4 @@
-import type { AppBridgeSnapshot } from '../../contracts/app-bridge';
+import type { AppBridgeSnapshot } from '../../contracts/app-bridge.js';
 
 export const createFixtureCurrentCircuitSnapshot = (): AppBridgeSnapshot => ({
   bridgeVersion: 'sandbox-app-bridge-v1',

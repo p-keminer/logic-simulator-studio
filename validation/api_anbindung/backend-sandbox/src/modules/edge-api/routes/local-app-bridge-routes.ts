@@ -2,12 +2,12 @@ import type { FastifyPluginAsync } from 'fastify';
 import {
   appBridgeCapabilitiesSchema,
   appBridgeCurrentCircuitResponseSchema,
-} from '../../../contracts/app-bridge';
-import { sessionIdSchema } from '../../../contracts/session';
-import { createSandboxError } from '../../../shared/errors';
-import { createRequestContext } from '../../../shared/request-context';
-import type { SessionService } from '../../auth/session-service';
-import type { CurrentCircuitSnapshotProvider } from '../../circuit-context/current-circuit-snapshot-provider';
+} from '../../../contracts/app-bridge.js';
+import { sessionIdSchema } from '../../../contracts/session.js';
+import { createSandboxError } from '../../../shared/errors.js';
+import { createRequestContext } from '../../../shared/request-context.js';
+import type { SessionService } from '../../auth/session-service.js';
+import type { CurrentCircuitSnapshotProvider } from '../../circuit-context/current-circuit-snapshot-provider.js';
 
 export interface LocalAppBridgeRoutesOptions {
   currentCircuitSnapshotProvider: CurrentCircuitSnapshotProvider;

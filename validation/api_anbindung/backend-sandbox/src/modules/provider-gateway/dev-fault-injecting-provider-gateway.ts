@@ -1,12 +1,12 @@
 import type {
   ProviderGateway,
   ProviderGatewaySendInput,
-} from './provider-gateway';
-import { ProviderGatewayError } from './provider-error';
+} from './provider-gateway.js';
+import { ProviderGatewayError } from './provider-error.js';
 import type {
   DevProviderFaultController,
   DevProviderFaultMode,
-} from './dev-provider-fault-controller';
+} from './dev-provider-fault-controller.js';
 
 const createFaultError = (mode: DevProviderFaultMode) => {
   if (mode === 'timeout') {

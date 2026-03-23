@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { circuitContextSchema } from './circuit-context';
-import { sessionIdSchema } from './session';
+import { circuitContextSchema } from './circuit-context.js';
+import { sessionIdSchema } from './session.js';
 
 export const chatMessageSchema = z
   .string()

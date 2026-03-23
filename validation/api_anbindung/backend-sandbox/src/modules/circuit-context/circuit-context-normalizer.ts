@@ -1,6 +1,6 @@
-import { circuitContextSchema } from '../../contracts/circuit-context';
-import type { CircuitContextDraft } from './circuit-context-mapper';
-import type { CircuitContextLimits } from './types';
+import { circuitContextSchema } from '../../contracts/circuit-context.js';
+import type { CircuitContextDraft } from './circuit-context-mapper.js';
+import type { CircuitContextLimits } from './types.js';
 
 export interface CircuitContextNormalizationResult {
   readonly draft: CircuitContextDraft;

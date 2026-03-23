@@ -1,8 +1,8 @@
 import {
   appBridgeSnapshotSchema,
   type AppBridgeSnapshot,
-} from '../../contracts/app-bridge';
-import type { CircuitSource } from './types';
+} from '../../contracts/app-bridge.js';
+import type { CircuitSource } from './types.js';
 
 export function mapAppBridgeSnapshotToCircuitSource(
   snapshot: AppBridgeSnapshot,

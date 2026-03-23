@@ -4,21 +4,21 @@ import type {
   ChatResetRequest,
   ChatResetResponse,
   ChatResponse,
-} from '../../contracts/chat';
-import { createSandboxError } from '../../shared/errors';
-import type { AuditSink } from '../audit-and-observability/audit-events';
-import type { MetricsSink } from '../audit-and-observability/metrics';
-import type { SessionService } from '../auth/session-service';
-import type { PolicyEngine } from '../policy-guardrails/policy-engine';
-import type { PolicyViolation } from '../policy-guardrails/policy-types';
-import type { PromptOrchestrator } from '../prompt-orchestrator/prompt-orchestrator';
-import type { ConversationHistoryStore } from '../prompt-orchestrator/conversation-history-store';
-import type { ProviderGateway } from '../provider-gateway/provider-gateway';
-import { ProviderGatewayError } from '../provider-gateway/provider-error';
-import type { ProviderGatewayResponse } from '../provider-gateway/provider-types';
+} from '../../contracts/chat.js';
+import { createSandboxError } from '../../shared/errors.js';
+import type { AuditSink } from '../audit-and-observability/audit-events.js';
+import type { MetricsSink } from '../audit-and-observability/metrics.js';
+import type { SessionService } from '../auth/session-service.js';
+import type { PolicyEngine } from '../policy-guardrails/policy-engine.js';
+import type { PolicyViolation } from '../policy-guardrails/policy-types.js';
+import type { PromptOrchestrator } from '../prompt-orchestrator/prompt-orchestrator.js';
+import type { ConversationHistoryStore } from '../prompt-orchestrator/conversation-history-store.js';
+import type { ProviderGateway } from '../provider-gateway/provider-gateway.js';
+import { ProviderGatewayError } from '../provider-gateway/provider-error.js';
+import type { ProviderGatewayResponse } from '../provider-gateway/provider-types.js';
 import type {
   PromptEnvelope,
-} from '../prompt-orchestrator/prompt-types';
+} from '../prompt-orchestrator/prompt-types.js';
 
 export interface ChatRequestHandlerResult {
   readonly prompt: PromptEnvelope;

@@ -1,4 +1,4 @@
-import type { RateLimitConfig } from './policy-types';
+import type { RateLimitConfig } from './policy-types.js';
 
 export interface RateLimitClock {
   now(): Date;

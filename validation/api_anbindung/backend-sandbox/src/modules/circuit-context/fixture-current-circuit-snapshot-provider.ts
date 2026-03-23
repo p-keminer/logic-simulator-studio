@@ -1,12 +1,12 @@
 import {
   appBridgeSnapshotSchema,
   type AppBridgeSnapshot,
-} from '../../contracts/app-bridge';
+} from '../../contracts/app-bridge.js';
 import {
   type CurrentCircuitSnapshotProvider,
   type CurrentCircuitSnapshotProviderDescription,
-} from './current-circuit-snapshot-provider';
-import { createFixtureCurrentCircuitSnapshot } from './fixture-current-circuit-snapshot';
+} from './current-circuit-snapshot-provider.js';
+import { createFixtureCurrentCircuitSnapshot } from './fixture-current-circuit-snapshot.js';
 
 export interface FixtureCurrentCircuitSnapshotProviderOptions {
   readonly providerId?: string;

@@ -1,4 +1,4 @@
-import type { CircuitContext } from '../../contracts/circuit-context';
+import type { CircuitContext } from '../../contracts/circuit-context.js';
 
 export type PromptTemplateVersion = 'sandbox-chat-v1';
 

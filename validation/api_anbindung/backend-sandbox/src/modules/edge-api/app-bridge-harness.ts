@@ -5,24 +5,24 @@ import {
   type AppBridgeChatRequest,
   type AppBridgeCurrentCircuitChatRequest,
   type AppBridgeChatResetRequest,
-} from '../../contracts/app-bridge';
+} from '../../contracts/app-bridge.js';
 import {
   chatRequestSchema,
   chatResetRequestSchema,
   type ChatRequest,
   type ChatResetRequest,
   type ChatResetResponse,
-} from '../../contracts/chat';
-import { createSandboxError } from '../../shared/errors';
-import { reduceCircuitContext } from '../circuit-context/circuit-context-reducer';
-import { mapAppBridgeSnapshotToCircuitSource } from '../circuit-context/app-bridge-mapper';
-import type { CurrentCircuitSnapshotProvider } from '../circuit-context/current-circuit-snapshot-provider';
-import type { CircuitContextBuildOptions, CircuitSource } from '../circuit-context/types';
+} from '../../contracts/chat.js';
+import { createSandboxError } from '../../shared/errors.js';
+import { reduceCircuitContext } from '../circuit-context/circuit-context-reducer.js';
+import { mapAppBridgeSnapshotToCircuitSource } from '../circuit-context/app-bridge-mapper.js';
+import type { CurrentCircuitSnapshotProvider } from '../circuit-context/current-circuit-snapshot-provider.js';
+import type { CircuitContextBuildOptions, CircuitSource } from '../circuit-context/types.js';
 import type {
   ChatRequestHandler,
   ChatRequestHandlerResult,
   ChatRequestHandlingContext,
-} from './chat-request-handler';
+} from './chat-request-handler.js';
 
 export interface AppBridgeHarnessOptions {
   readonly circuitContext?: Partial<CircuitContextBuildOptions>;

@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { createApp } from './create-app';
-import { loadConfig } from '../shared/config';
+import { createApp } from './create-app.js';
+import { loadConfig } from '../shared/config.js';
 
 export const startServer = async () => {
   const config = loadConfig();

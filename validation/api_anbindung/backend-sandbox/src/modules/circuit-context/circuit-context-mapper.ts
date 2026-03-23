@@ -1,7 +1,7 @@
 import type {
   CircuitContextBuildOptions,
   CircuitSource,
-} from "./types";
+} from "./types.js";
 
 export type CircuitContextDraft = {
   scope: "active-circuit";
