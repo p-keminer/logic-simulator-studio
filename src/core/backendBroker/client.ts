@@ -6,7 +6,10 @@ import type {
   BackendBrokerSessionDeletion,
   BackendBrokerSessionRegistration,
 } from './contracts';
-import { createBackendBrokerApiError } from './errors';
+import {
+  BackendBrokerConfigurationError,
+  createBackendBrokerApiError,
+} from './errors';
 
 export interface BackendBrokerClientOptions {
   baseUrl?: string;
@@ -20,6 +23,17 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
+
+const LOOPBACK_IPV4_PATTERN = /^127(?:\.\d{1,3}){3}$/;
+
+function isAllowedLocalBrokerHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '::1' ||
+    hostname === '[::1]' ||
+    LOOPBACK_IPV4_PATTERN.test(hostname)
+  );
+}
 
 function assertString(
   value: unknown,
@@ -171,7 +185,34 @@ export function normalizeBackendBrokerBaseUrl(rawValue: string): string {
     return DEFAULT_BACKEND_BROKER_BASE_URL;
   }
 
-  const url = new URL(trimmed);
+  let url: URL;
+
+  try {
+    url = new URL(trimmed);
+  } catch {
+    throw new BackendBrokerConfigurationError(
+      'Die Broker-Base-URL ist ungueltig. Bitte eine vollstaendige URL wie http://127.0.0.1:8787 oder http://127.0.0.1:8787/v1 eintragen.',
+    );
+  }
+
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new BackendBrokerConfigurationError(
+      'Die Broker-Base-URL muss mit http:// oder https:// beginnen.',
+    );
+  }
+
+  if (url.username.length > 0 || url.password.length > 0) {
+    throw new BackendBrokerConfigurationError(
+      'Die Broker-Base-URL darf keine eingebetteten Zugangsdaten enthalten.',
+    );
+  }
+
+  if (!isAllowedLocalBrokerHost(url.hostname)) {
+    throw new BackendBrokerConfigurationError(
+      'Die Broker-Base-URL muss im aktuellen Scope auf einen lokalen Broker zeigen (localhost, 127.0.0.1 oder ::1).',
+    );
+  }
+
   let pathname = url.pathname.replace(/\/+$/, '');
 
   if (pathname === '' || pathname === '/') {

@@ -12,6 +12,11 @@ export type BackendBrokerUiErrorKind =
   | 'network'
   | 'unknown';
 
+export type BackendBrokerRateLimitRequestKind =
+  | 'session-key'
+  | 'chat-request'
+  | 'chat-reset';
+
 export interface BackendBrokerUiError {
   kind: BackendBrokerUiErrorKind;
   title: string;
@@ -19,7 +24,20 @@ export interface BackendBrokerUiError {
   code?: BackendBrokerErrorCode;
   requestId?: string;
   retryAfterSeconds?: number;
+  requestKind?: BackendBrokerRateLimitRequestKind;
 }
+
+export interface BackendBrokerRateLimitCooldownRemainingSeconds {
+  sessionKey: number;
+  chatRequest: number;
+  chatReset: number;
+}
+
+export type BackendBrokerUiActionContext =
+  | 'connect'
+  | 'send'
+  | 'reset'
+  | 'disconnect';
 
 export class BackendBrokerApiError extends Error {
   readonly statusCode: number;
@@ -42,6 +60,13 @@ export class BackendBrokerApiError extends Error {
     this.code = options.code;
     this.details = options.details;
     this.requestId = options.requestId;
+  }
+}
+
+export class BackendBrokerConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BackendBrokerConfigurationError';
   }
 }
 
@@ -101,7 +126,21 @@ export const toBackendBrokerUiError = (
     };
   }
 
+  if (error instanceof BackendBrokerConfigurationError) {
+    return {
+      kind: 'request',
+      title: 'Broker-Base-URL ist ungueltig',
+      message: error.message,
+    };
+  }
+
   if (error instanceof BackendBrokerApiError) {
+    const requestKind =
+      error.details?.requestKind === 'session-key' ||
+      error.details?.requestKind === 'chat-request' ||
+      error.details?.requestKind === 'chat-reset'
+        ? error.details.requestKind
+        : undefined;
     const retryAfterSeconds =
       typeof error.details?.retryAfterSeconds === 'number'
         ? error.details.retryAfterSeconds
@@ -111,18 +150,37 @@ export const toBackendBrokerUiError = (
       error.message.trim().toLowerCase() === 'session was not found.';
 
     switch (error.code) {
-      case 'RATE_LIMITED':
+      case 'RATE_LIMITED': {
+        const rateLimitTitle =
+          requestKind === 'session-key'
+            ? 'Broker-Key-Limit erreicht'
+            : requestKind === 'chat-reset'
+              ? 'Broker-Reset-Limit erreicht'
+              : requestKind === 'chat-request'
+                ? 'Broker-Chat-Limit erreicht'
+                : 'Broker-Limit erreicht';
+        const rateLimitActionLabel =
+          requestKind === 'session-key'
+            ? 'den Broker-Key'
+            : requestKind === 'chat-reset'
+              ? 'den Broker-Reset'
+              : requestKind === 'chat-request'
+                ? 'den Broker-Chat'
+                : 'die Anfrage';
+
         return {
           kind: 'rate-limit',
-          title: 'Broker-Limit erreicht',
+          title: rateLimitTitle,
           message:
             retryAfterSeconds && retryAfterSeconds > 0
-              ? `Der Broker blockiert die Anfrage temporaer. Bitte in etwa ${retryAfterSeconds}s erneut versuchen.`
-              : 'Der Broker blockiert die Anfrage temporaer. Bitte spaeter erneut versuchen.',
+              ? `Der Broker blockiert ${rateLimitActionLabel} temporaer. Bitte in etwa ${retryAfterSeconds}s erneut versuchen.`
+              : `Der Broker blockiert ${rateLimitActionLabel} temporaer. Bitte spaeter erneut versuchen.`,
           code: error.code,
           requestId: error.requestId,
+          requestKind,
           retryAfterSeconds,
         };
+      }
       case 'UNAUTHORIZED':
       case 'CONFLICT':
       case 'NOT_FOUND':
@@ -205,4 +263,87 @@ export const toBackendBrokerUiError = (
     title: 'Unbekannter Broker-Fehler',
     message: 'Die Broker-Anfrage ist mit einem nicht klassifizierten Fehler fehlgeschlagen.',
   };
+};
+
+export const shouldAutoClearBackendBrokerUiError = (
+  error: BackendBrokerUiError | null,
+  cooldowns: BackendBrokerRateLimitCooldownRemainingSeconds,
+): boolean => {
+  if (
+    !error ||
+    error.kind !== 'rate-limit' ||
+    !error.requestKind ||
+    typeof error.retryAfterSeconds !== 'number' ||
+    error.retryAfterSeconds <= 0
+  ) {
+    return false;
+  }
+
+  switch (error.requestKind) {
+    case 'session-key':
+      return cooldowns.sessionKey === 0;
+    case 'chat-request':
+      return cooldowns.chatRequest === 0;
+    case 'chat-reset':
+      return cooldowns.chatReset === 0;
+    default:
+      return false;
+  }
+};
+
+export const shouldClearBackendBrokerUiErrorOnUserEdit = (
+  error: BackendBrokerUiError | null,
+): boolean => {
+  if (!error) {
+    return false;
+  }
+
+  return true;
+};
+
+export const applyBackendBrokerUiActionContext = (
+  error: BackendBrokerUiError,
+  action: BackendBrokerUiActionContext,
+): BackendBrokerUiError => {
+  if (error.kind === 'rate-limit' || error.kind === 'session') {
+    return error;
+  }
+
+  switch (action) {
+    case 'connect':
+      return {
+        ...error,
+        title:
+          error.kind === 'request'
+            ? error.title
+            : 'Broker-Verbindung fehlgeschlagen',
+      };
+    case 'send':
+      return {
+        ...error,
+        title:
+          error.kind === 'provider'
+            ? 'Broker-Chat konnte nicht zugestellt werden'
+            : error.kind === 'request'
+              ? 'Broker-Chat wurde abgelehnt'
+              : 'Broker-Chat fehlgeschlagen',
+      };
+    case 'reset':
+      return {
+        ...error,
+        title:
+          error.kind === 'request'
+            ? 'Broker-Reset wurde abgelehnt'
+            : error.kind === 'provider'
+              ? 'Broker-Reset konnte nicht abgeschlossen werden'
+              : 'Broker-Reset fehlgeschlagen',
+      };
+    case 'disconnect':
+      return {
+        ...error,
+        title: 'Broker-Key konnte nicht geloescht werden',
+      };
+    default:
+      return error;
+  }
 };

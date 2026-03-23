@@ -47,6 +47,23 @@
   ueber eine enge CORS-Freigabe fuer `localhost`-/`127.0.0.1`-Origins moeglich,
   damit `session/key`, Chat und Reset im Dev-Dialog nicht mehr als
   "Broker ist nicht erreichbar" an einem Browser-Preflight scheitern
+- erster `API1-02`-Basisschnitt fuer staging-nahe Runtime-Profile:
+  `APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`, deaktivierte
+  Dev-only-Fault-Routen ausserhalb von Development sowie
+  Environment-Metadaten auf `/health` und `/ready`
+- `.env.staging.example` als erste explizite Staging-Beispielkonfiguration
+- lokaler Profil-Smoke `npm run smoke:staging-profile` fuer die staging-nahe
+  Sandbox-Baseline
+- staging-lokaler Startpfad `npm run dev:staging-local` mit fester
+  URL-/Origin-Grundkonfiguration
+- staging-lokaler Runtime-Smoke `npm run smoke:staging-runtime`, der die
+  Runtime selbst startet und danach den URL-Smoke ausfuehrt
+- staging-URL-Smoke `npm run smoke:staging-url` gegen ein bereits laufendes
+  Zielsystem
+- erster externer Zielpfad via Render-Blueprint in
+  [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml)
+  plus Deploy-Doku in
+  [render-staging.md](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
 
 ## Bewusst nur Stub
 
@@ -81,9 +98,14 @@
 - `npm install` innerhalb der Sandbox ausgefuehrt
 - `npm run typecheck` erfolgreich
 - `npm run build` erfolgreich
-- `npm test` erfolgreich: `17` Testdateien bestanden, `58` Tests bestanden
+- `npm test` erfolgreich: `21` Testdateien bestanden, `66` Tests bestanden
+- `npm run smoke:staging-profile` erfolgreich
+- `npm run smoke:staging-runtime` erfolgreich
 - Browser-CORS-Checks fuer lokale App-Origins auf `/v1/session/key` laufen
   jetzt ebenfalls isoliert innerhalb der Sandbox
+- staging-nahe Profil-Checks fuer explizite Origins, deaktivierte
+  Dev-Fault-Routen und Environment-Metadaten laufen ebenfalls isoliert
+  innerhalb der Sandbox
 - Circuit-Context-Checks fuer Whitelist, Manipulation, Reduktion und Oversize-Ablehnung laufen isoliert innerhalb der Sandbox
 - Chat-Checks fuer Session-Bindung, Policy-/Rate-Limit-Block, Prompt-Bau, lokale History/Reset und Route-Haertung laufen isoliert innerhalb der Sandbox
 - Error-Contract-Checks fuer den lokalen HTTP-Mapper laufen isoliert innerhalb der Sandbox

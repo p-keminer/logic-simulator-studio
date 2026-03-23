@@ -41,6 +41,7 @@ const createTestApp = (options?: {
   const app = createApp({
     auditSink,
     config: {
+      devResponseDelayMs: 0,
       host: '127.0.0.1',
       logLevel: 'info',
       port: 8787,
@@ -170,6 +171,7 @@ describe('session route security', () => {
     expect(blocked.body).not.toContain(rawKey);
     expect(loggerStream.dump()).not.toContain(rawKey);
     expect(blocked.body).toContain('RATE_LIMITED');
+    expect(blocked.body).toContain('"requestKind":"session-key"');
     expect(auditSink.events).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

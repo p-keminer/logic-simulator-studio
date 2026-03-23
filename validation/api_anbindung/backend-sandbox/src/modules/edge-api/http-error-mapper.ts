@@ -25,6 +25,7 @@ const PUBLIC_ERROR_DETAIL_KEYS = new Set([
   'providerCode',
   'providerStatusCode',
   'remaining',
+  'requestKind',
   'resetAt',
   'retryAfterSeconds',
   'retryable',

@@ -47,8 +47,8 @@ Pflegeregel:
 - Verlauf, Repros und Altstaende bewusst von aktiven Plaenen trennen
 - bei neuen sichtbaren UI-Faellen immer auch `ui-manual-verification-plan.md`
   mitziehen
-- nach jeder Aenderung an Doku-Quellen `npm run roadmap:compl` ausfuehren,
-  damit `ROADMAP_COMPL/` aktuell bleibt
+- nach jeder Aenderung an Doku-Quellen `npm run snapshot:sync` ausfuehren,
+  damit `SNAPSHOT/` aktuell bleibt
 
 ---
 
@@ -211,7 +211,7 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
-- **P1/P2:** API-/Broker-App-Integration weiter haerten (`validation/api_anbindung/work-package.md`): zuerst den sichtbaren Nutzerfluss `Key -> Chat -> Reset -> Delete` manuell und spaeter automatisiert absichern, danach erst Staging-/Rollout-Schritte
+- **P1/P2:** API-/Broker-Strang (`validation/api_anbindung/work-package.md`): `API1-01` ist im aktuellen Scope abgeschlossen. `API1-02` besitzt jetzt neben dem staging-nahen Profil-Schnitt auch einen staging-lokalen Startpfad (`backend-sandbox npm run dev:staging-local`), einen staging-lokalen Runtime-Smoke (`backend-sandbox npm run smoke:staging-runtime`), einen staging-URL-Smoke (`backend-sandbox npm run smoke:staging-url`) und den ersten externen Zielpfad via Render-Blueprint in [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml). Als Naechstes diesen Zielpfad real deployen und den URL-Smoke gegen die echte Staging-URL bestaetigen, danach `API1-03` Observability und `API1-04` Pilot-/Rollout-Vorbereitung
 - **P2 klein und separat:** UX-Feinschliff-Strang pflegen (`validation/ux-feinschliff/work-package.md`): kleine Bedienungsnacharbeiten zuerst dokumentiert sammeln, dann in bewusst kleinen Slices umsetzen
 - **P2 bewusst nachgelagert:** Falls der FSM-Strang wieder aufgenommen wird, dann ueber `FSM0-8` (`validation/fsm0/work-package.md`): Netzlisten-Minimierung / Bool-Minimierung / Mapping fuer breite FSM-Synthese statt neuer Grundsemantik-Arbeit am bereits abgeschlossenen aktuellen Scope
 - **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster und tiefere Invarianten)

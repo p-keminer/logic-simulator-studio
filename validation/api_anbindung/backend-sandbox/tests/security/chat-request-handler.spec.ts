@@ -14,6 +14,7 @@ import {
 } from '../../src/modules/edge-api/chat-request-handler';
 import type { SessionService } from '../../src/modules/auth/session-service';
 import type { PolicyEngine } from '../../src/modules/policy-guardrails/policy-engine';
+import type { PolicyOutcome } from '../../src/modules/policy-guardrails/policy-types';
 import {
   InMemoryConversationHistoryStore,
   type ConversationHistoryStore,
@@ -60,7 +61,7 @@ const createHarness = (options?: {
     keyReferenceId: 'key-ref-1',
     status: 'active' as const,
   }));
-  const evaluate = vi.fn(async () => {
+  const evaluate = vi.fn(async (): Promise<PolicyOutcome> => {
     if (options?.policyDecision === 'block') {
       return {
         decision: 'block' as const,
@@ -155,7 +156,7 @@ const createHarness = (options?: {
     resolveActiveSessionKey,
   };
   const policyEngine: PolicyEngine = {
-    evaluate,
+    evaluate: evaluate as PolicyEngine['evaluate'],
   };
   const promptOrchestrator: PromptOrchestrator = {
     build,
@@ -285,5 +286,36 @@ describe('chat request handler', () => {
         'sandbox-conversation-1',
       ),
     ).resolves.toBeNull();
+  });
+
+  it('marks rate-limited chat requests with their request kind', async () => {
+    const request = createChatRequest();
+    const harness = createHarness();
+    harness.evaluate.mockResolvedValueOnce({
+      decision: 'block',
+      violations: [
+        {
+          code: 'rate-limit-exceeded' as const,
+          message: 'Sandbox request rate limit was exceeded.',
+          details: {
+            limit: 4,
+            remaining: 0,
+            requestKind: 'chat-request',
+            resetAt: '2026-03-23T15:10:00.000Z',
+            retryAfterSeconds: 8,
+            windowMs: 60_000,
+          },
+        },
+      ],
+    });
+
+    await expect(harness.handler.handle(request)).rejects.toMatchObject({
+      code: 'RATE_LIMITED',
+      details: expect.objectContaining({
+        requestKind: 'chat-request',
+        retryAfterSeconds: 8,
+      }),
+      statusCode: 429,
+    });
   });
 });

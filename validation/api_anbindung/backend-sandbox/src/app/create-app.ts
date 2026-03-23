@@ -28,6 +28,7 @@ import {
   type ChatRequestHandler,
 } from '../modules/edge-api/chat-request-handler';
 import { localAppBridgeRoutes } from '../modules/edge-api/routes/local-app-bridge-routes';
+import { devProviderFaultRoutes } from '../modules/edge-api/routes/dev-provider-fault-routes';
 import { mapErrorToHttpResponse } from '../modules/edge-api/http-error-mapper';
 import { chatRoutes } from '../modules/edge-api/routes/chat-routes';
 import { sessionRoutes } from '../modules/edge-api/routes/session-routes';
@@ -49,16 +50,20 @@ import {
   type ConversationHistoryStore,
 } from '../modules/prompt-orchestrator/conversation-history-store';
 import {
+  DevFaultInjectingProviderGateway,
+} from '../modules/provider-gateway/dev-fault-injecting-provider-gateway';
+import {
   DefaultProviderGateway,
   type ProviderGateway,
 } from '../modules/provider-gateway/provider-gateway';
+import { InMemoryDevProviderFaultController } from '../modules/provider-gateway/dev-provider-fault-controller';
 import { NoopProviderClient } from '../modules/provider-gateway/provider-client';
 import { isSandboxError } from '../shared/errors';
 import { loadConfig } from '../shared/config';
 import { createLoggerOptions } from '../shared/logger';
 
 export interface CreateAppOptions {
-  config?: ReturnType<typeof loadConfig>;
+  config?: Partial<ReturnType<typeof loadConfig>>;
   sessionService?: SessionService;
   policyEngine?: PolicyEngine;
   promptOrchestrator?: PromptOrchestrator;
@@ -78,7 +83,11 @@ export interface CreateAppOptions {
 export const createApp = (
   options: CreateAppOptions = {},
 ): FastifyInstance => {
-  const config = options.config ?? loadConfig();
+  const config = {
+    ...loadConfig(),
+    ...options.config,
+  };
+  const devEndpointsEnabled = config.appEnv === 'development';
   const sessionService =
     options.sessionService ??
     new DefaultSessionService(
@@ -137,6 +146,24 @@ export const createApp = (
     },
   });
 
+  const applyDevResponseDelay = async (requestUrl: string, method: string) => {
+    if (!devEndpointsEnabled || config.devResponseDelayMs <= 0) {
+      return;
+    }
+
+    if (method === 'OPTIONS') {
+      return;
+    }
+
+    if (!requestUrl.startsWith('/v1/')) {
+      return;
+    }
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, config.devResponseDelayMs);
+    });
+  };
+
   void app.register(cors, {
     allowedHeaders: ['content-type', 'x-request-id', 'x-session-id'],
     credentials: false,
@@ -147,13 +174,10 @@ export const createApp = (
         return;
       }
 
-      const isAllowedLocalOrigin =
-        /^https?:\/\/localhost(?::\d+)?$/i.test(origin) ||
-        /^https?:\/\/127\.0\.0\.1(?::\d+)?$/i.test(origin);
-
-      callback(null, isAllowedLocalOrigin);
+      callback(null, config.allowedOrigins.includes(origin));
     },
   });
+  const devProviderFaultController = new InMemoryDevProviderFaultController();
   const providerGateway =
     options.providerGateway ??
     new DefaultProviderGateway(new NoopProviderClient(), {
@@ -161,6 +185,10 @@ export const createApp = (
       logger: app.log,
       metricsSink,
     });
+  const effectiveProviderGateway = new DevFaultInjectingProviderGateway(
+    providerGateway,
+    devProviderFaultController,
+  );
   const chatRequestHandler =
     options.chatRequestHandler ??
     new SandboxChatRequestHandler(
@@ -168,7 +196,7 @@ export const createApp = (
       policyEngine,
       promptOrchestrator,
       conversationHistoryStore,
-      providerGateway,
+      effectiveProviderGateway,
       {
         auditSink,
         logger: app.log,
@@ -181,13 +209,21 @@ export const createApp = (
     request.log.info({ requestId: request.id }, 'request received');
   });
 
+  app.addHook('preHandler', async (request) => {
+    await applyDevResponseDelay(request.url, request.method);
+  });
+
   app.get('/health', async () => ({
+    environment: config.appEnv,
+    devEndpointsEnabled,
     ok: true,
     service: 'backend-sandbox',
     status: 'healthy',
   }));
 
   app.get('/ready', async () => ({
+    environment: config.appEnv,
+    devEndpointsEnabled,
     ok: true,
     service: 'backend-sandbox',
     status: 'ready',
@@ -239,6 +275,13 @@ export const createApp = (
     prefix: '/v1',
     chatRequestHandler,
   });
+  if (devEndpointsEnabled) {
+    app.register(devProviderFaultRoutes, {
+      prefix: '/v1',
+      auditSink,
+      controller: devProviderFaultController,
+    });
+  }
   if (options.enableLocalAppBridgeRoutes && currentCircuitSnapshotProvider) {
     app.register(localAppBridgeRoutes, {
       prefix: '/v1',

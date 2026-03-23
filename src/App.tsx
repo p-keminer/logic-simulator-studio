@@ -11,7 +11,6 @@ import { useCircuitContext } from './store/CircuitContext';
 import { CircuitCanvas } from './components/canvas/CircuitCanvas';
 import { BackendBrokerModal } from './components/panels/BackendBrokerModal';
 import { GatePalette } from './components/sidebar/GatePalette';
-import { isBackendBrokerUiEnabled } from './core/backendBroker/featureFlags';
 import { useBackendSandboxDebugBridge } from './hooks/useBackendSandboxDebugBridge';
 import { BackendBrokerProvider } from './hooks/useBackendBroker';
 import { Toolbar } from './components/toolbar/Toolbar';
@@ -22,7 +21,6 @@ import { CanvasAnalysisBanner } from './components/panels/CanvasAnalysisBanner';
 const TIMING_MIN_H = 100;
 const TIMING_MAX_H = 600;
 const PALETTE_COLLAPSED_STORAGE_KEY = 'logic-simulator-ui:palette-collapsed';
-const BACKEND_BROKER_UI_ENABLED = isBackendBrokerUiEnabled();
 
 function loadInitialPaletteCollapsed(): boolean {
   if (typeof window === 'undefined') return false;
@@ -83,7 +81,7 @@ function AppInner() {
   return (
     <div className="flex flex-col h-full">
       <Toolbar showTiming={showTiming} onToggleTiming={() => setShowTiming((v) => !v)}
-        onShowBroker={BACKEND_BROKER_UI_ENABLED ? () => setShowBroker(true) : undefined}
+        onShowBroker={() => setShowBroker(true)}
         onShowFsm={() => setShowFsm(true)} />
       <CanvasAnalysisBanner />
       <div className="flex flex-1 min-h-0">
@@ -119,7 +117,7 @@ function AppInner() {
           )}
         </div>
       </div>
-      {BACKEND_BROKER_UI_ENABLED && showBroker && (
+      {showBroker && (
         <BackendBrokerModal onClose={() => setShowBroker(false)} />
       )}
     </div>
@@ -131,11 +129,7 @@ export default function App() {
   const appContent = <AppInner />;
   return (
     <CircuitProvider initialCircuit={savedCircuit ?? undefined}>
-      {BACKEND_BROKER_UI_ENABLED ? (
-        <BackendBrokerProvider>{appContent}</BackendBrokerProvider>
-      ) : (
-        appContent
-      )}
+      <BackendBrokerProvider>{appContent}</BackendBrokerProvider>
     </CircuitProvider>
   );
 }

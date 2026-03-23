@@ -49,6 +49,7 @@ const createRouteApp = async () => {
   const loggerStream = new MemoryLogStream();
   const app = createApp({
     config: {
+      devResponseDelayMs: 0,
       host: '127.0.0.1',
       logLevel: 'debug',
       port: 8787,
@@ -143,6 +144,7 @@ describe('local app bridge routes', () => {
     const loggerStream = new MemoryLogStream();
     const app = createApp({
       config: {
+        devResponseDelayMs: 0,
         host: '127.0.0.1',
         logLevel: 'debug',
         port: 8787,
@@ -194,6 +196,7 @@ describe('local app bridge routes', () => {
     const loggerStream = new MemoryLogStream();
     const app = createApp({
       config: {
+        devResponseDelayMs: 0,
         host: '127.0.0.1',
         logLevel: 'debug',
         port: 8787,
@@ -223,6 +226,7 @@ describe('local app bridge routes', () => {
     const loggerStream = new MemoryLogStream();
     const app = createApp({
       config: {
+        devResponseDelayMs: 0,
         host: '127.0.0.1',
         logLevel: 'debug',
         port: 8787,
@@ -260,6 +264,7 @@ describe('local app bridge routes', () => {
     const loggerStream = new MemoryLogStream();
     const app = createApp({
       config: {
+        devResponseDelayMs: 0,
         host: '127.0.0.1',
         logLevel: 'debug',
         port: 8787,

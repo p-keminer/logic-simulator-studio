@@ -54,6 +54,61 @@ Fuer einen spaeteren lokalen Start ist das dev-Script nur auf das Sandbox-Subpro
 npm run dev
 ```
 
+Fuer den ersten staging-nahen Lauf existiert jetzt zusaetzlich ein explizites
+Umgebungsprofil:
+
+```bash
+APP_ENV=staging ALLOWED_ORIGINS=https://staging.logic-simulator.example npm run dev
+```
+
+Passende Beispielwerte liegen in [`.env.example`](./.env.example) und
+[`.env.staging.example`](./.env.staging.example).
+
+Fuer den staging-lokalen Start mit denselben Guardrails existiert ausserdem
+ein fester Startpfad:
+
+```bash
+npm run dev:staging-local
+```
+
+Dieser Start nutzt standardmaessig `APP_ENV=staging`,
+`HOST=127.0.0.1`, `PORT=8787` und
+`ALLOWED_ORIGINS=https://staging.logic-simulator.example`.
+
+Der erste staging-nahe Smoke dazu ist:
+
+```bash
+npm run smoke:staging-profile
+```
+
+Dieser Check bestaetigt aktuell:
+
+- Staging braucht explizite `ALLOWED_ORIGINS`
+- `/health` und `/ready` tragen Environment-Metadaten
+- Dev-only-Fault-Routen bleiben ausserhalb von `development` deaktiviert
+- die konfigurierte Staging-Origin wird per CORS angenommen
+
+Fuer den deploy-nahen lokalen Runtime-Pfad existiert zusaetzlich:
+
+```bash
+npm run smoke:staging-runtime
+```
+
+Dieser Check startet selbst eine staging-lokale Runtime, wartet auf
+`/ready` und fuehrt danach den URL-Smoke gegen dieselbe Runtime aus.
+
+Wenn bereits eine staging-aehnliche Sandbox-Runtime laeuft, kann die URL-
+Pruefung auch separat gefahren werden:
+
+```bash
+npm run smoke:staging-url
+```
+
+Fuer den ersten externen Staging-Zielpfad ausserhalb des Entwicklerrechners
+liegt der begleitende Render-Blueprint im Repo-Root:
+
+- [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml)
+
 ## Current-Circuit-Adapter
 
 Der Current-Circuit-Port kennt in der Sandbox aktuell zwei Adaptertypen:
@@ -90,5 +145,8 @@ Die konkreten Regeln stehen in [debugging-guidelines.md](./docs/debugging-guidel
 - lokalen App-Bridge-Harness spaeter gegen einen echten Adapter auf den offenen App-State austauschen
 - echten App-Zugriff spaeter nur als Adapter gegen `CurrentCircuitSnapshotProvider` anbinden, nicht direkt in Chat-/Circuit-Logik
 - Audit, Limits und Observability von lokaler In-Memory-Strategie auf echte Betriebsdienste heben
+- den ersten lokalen Staging-Profil-Slice zu einer echten deploybaren
+  Staging-Umgebung mit externer URL, Runtime-Config und nachgelagerten
+  Staging-Smokes erweitern
 
 Weitere Details und Validierungsschritte stehen in `docs/` und im `status-report.md`.

@@ -17,6 +17,7 @@ Gerade bei einer kleinen Security-Broker-Anwendung entstehen viele reale Risiken
 
 - `environments.md`: Entwicklungs-, Staging- und Produktionsumgebungen
 - `operations-checklist.md`: Betriebs- und Freigabecheckliste
+- `render-staging.md`: erster externer Staging-Zielpfad via Render
 
 ## Umsetzungsschritte fuer diesen Ordner
 

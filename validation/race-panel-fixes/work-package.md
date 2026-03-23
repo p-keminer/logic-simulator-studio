@@ -21,8 +21,8 @@ Ziel ist eine **eigene, strukturierte Race-Lifecycle-Logik**, die:
 ## Doku-Pflege
 
 Nach jeder Aenderung an diesem Dokument oder angrenzenden Race-/Panel-
-Dokuquellen muss `npm run roadmap:compl` ausgefuehrt werden, damit
-`ROADMAP_COMPL/` aktuell bleibt.
+Dokuquellen muss `npm run snapshot:sync` ausgefuehrt werden, damit
+`SNAPSHOT/` aktuell bleibt.
 
 ## Aktuell bekannte Anforderungen
 

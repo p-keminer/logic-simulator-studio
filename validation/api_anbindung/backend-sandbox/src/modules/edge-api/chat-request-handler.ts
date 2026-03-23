@@ -122,6 +122,7 @@ export class SandboxChatRequestHandler implements ChatRequestHandler {
         this.extractNumberDetail(error.details, 'maxAttempts') ?? null,
       providerCode: error.code,
       providerStatusCode: error.statusCode ?? null,
+      requestKind: 'chat-request',
       retryAfterSeconds:
         this.extractNumberDetail(error.details, 'retryAfterSeconds') ?? null,
       retryable: error.retryable,
@@ -161,6 +162,7 @@ export class SandboxChatRequestHandler implements ChatRequestHandler {
           remaining:
             this.extractNumberDetail(rateLimitViolation.details, 'remaining') ??
             null,
+          requestKind,
           resetAt:
             this.extractStringDetail(rateLimitViolation.details, 'resetAt') ??
             null,

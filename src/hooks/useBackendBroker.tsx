@@ -2,7 +2,9 @@
 import {
   createContext,
   startTransition,
+  useEffect,
   useContext,
+  useMemo,
   useReducer,
   useState,
 } from 'react';
@@ -19,8 +21,9 @@ import {
   normalizeBackendBrokerBaseUrl,
 } from '../core/backendBroker/client';
 import { createBackendBrokerCircuitContext } from '../core/backendBroker/circuitContext';
-import { isBackendBrokerUiEnabled } from '../core/backendBroker/featureFlags';
 import {
+  applyBackendBrokerUiActionContext,
+  shouldAutoClearBackendBrokerUiError,
   toBackendBrokerUiError,
   type BackendBrokerUiError,
 } from '../core/backendBroker/errors';
@@ -29,6 +32,7 @@ import {
   createInitialBackendBrokerUiState,
   type BackendBrokerPhase,
 } from '../core/backendBroker/uiState';
+import { useBackendBrokerDebugBridge } from './useBackendBrokerDebugBridge';
 import type {
   BackendSandboxCurrentCircuitSnapshot,
   BackendSandboxCurrentCircuitSnapshotSummary,
@@ -42,8 +46,14 @@ export interface BackendBrokerContextValue {
   session: BackendBrokerSessionRegistration | null;
   conversationId?: string;
   messages: BackendBrokerConversationMessage[];
+  rateLimitCooldownRemainingSeconds: {
+    sessionKey: number;
+    chatRequest: number;
+    chatReset: number;
+  };
   lastError: BackendBrokerUiError | null;
   clearError: () => void;
+  clearLocalState: () => void;
   connect: (apiKey: string) => Promise<BackendBrokerSessionRegistration>;
   disconnect: () => Promise<BackendBrokerSessionDeletion | null>;
   resetConversation: (
@@ -63,35 +73,6 @@ interface BackendBrokerProviderProps {
 const BackendBrokerContext = createContext<BackendBrokerContextValue | null>(
   null,
 );
-
-const createDisabledFeatureError = () =>
-  new Error(
-    'Backend broker UI ist in diesem Build nicht verfuegbar.',
-  );
-
-const DISABLED_BACKEND_BROKER_CONTEXT: BackendBrokerContextValue = {
-  brokerBaseUrl: DEFAULT_BACKEND_BROKER_BASE_URL,
-  setBrokerBaseUrl: () => undefined,
-  phase: 'idle',
-  hasActiveSession: false,
-  session: null,
-  conversationId: undefined,
-  messages: [],
-  lastError: null,
-  clearError: () => undefined,
-  connect: async () => {
-    throw createDisabledFeatureError();
-  },
-  disconnect: async () => {
-    throw createDisabledFeatureError();
-  },
-  resetConversation: async () => {
-    throw createDisabledFeatureError();
-  },
-  sendMessage: async () => {
-    throw createDisabledFeatureError();
-  },
-};
 
 const createConversationMessage = (
   role: BackendBrokerConversationMessage['role'],
@@ -119,7 +100,11 @@ const resolveInitialBaseUrl = () => {
   const envValue = import.meta.env.VITE_BACKEND_BROKER_BASE_URL;
 
   if (typeof envValue === 'string' && envValue.trim().length > 0) {
-    return normalizeBackendBrokerBaseUrl(envValue);
+    try {
+      return normalizeBackendBrokerBaseUrl(envValue);
+    } catch {
+      return envValue.trim();
+    }
   }
 
   return DEFAULT_BACKEND_BROKER_BASE_URL;
@@ -136,25 +121,107 @@ export function BackendBrokerProvider({
   children,
 }: BackendBrokerProviderProps): React.JSX.Element {
   const [brokerBaseUrl, setBrokerBaseUrlState] = useState(resolveInitialBaseUrl);
+  const [cooldownClockMs, setCooldownClockMs] = useState(() => Date.now());
   const [uiState, dispatchUiState] = useReducer(
     backendBrokerUiStateReducer,
     undefined,
     createInitialBackendBrokerUiState,
   );
-  const { phase, session, conversationId, messages, lastError } = uiState;
+  const {
+    phase,
+    session,
+    conversationId,
+    messages,
+    lastError,
+    rateLimitCooldownUntilByRequestKind,
+  } = uiState;
+  useBackendBrokerDebugBridge({
+    brokerBaseUrl,
+    conversationId,
+    hasActiveSession: Boolean(session),
+    lastErrorKind: lastError?.kind,
+    lastErrorTitle: lastError?.title,
+    messageCount: messages.length,
+    phase,
+    sessionId: session?.sessionId,
+  });
   const createClient = () => new BackendBrokerClient({ baseUrl: brokerBaseUrl });
 
+  useEffect(() => {
+    const hasActiveCooldown = Object.values(
+      rateLimitCooldownUntilByRequestKind,
+    ).some((value) => typeof value === 'number' && value > Date.now());
+
+    if (!hasActiveCooldown) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setCooldownClockMs(Date.now());
+    }, 250);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [rateLimitCooldownUntilByRequestKind]);
+
+  const rateLimitCooldownRemainingSeconds = useMemo(
+    () => ({
+      sessionKey: Math.max(
+        0,
+        Math.ceil(
+          ((rateLimitCooldownUntilByRequestKind['session-key'] ?? 0) -
+            cooldownClockMs) /
+            1000,
+        ),
+      ),
+      chatRequest: Math.max(
+        0,
+        Math.ceil(
+          ((rateLimitCooldownUntilByRequestKind['chat-request'] ?? 0) -
+            cooldownClockMs) /
+            1000,
+        ),
+      ),
+      chatReset: Math.max(
+        0,
+        Math.ceil(
+          ((rateLimitCooldownUntilByRequestKind['chat-reset'] ?? 0) -
+            cooldownClockMs) /
+            1000,
+        ),
+      ),
+    }),
+    [cooldownClockMs, rateLimitCooldownUntilByRequestKind],
+  );
+
+  useEffect(() => {
+    if (
+      !shouldAutoClearBackendBrokerUiError(
+        lastError,
+        rateLimitCooldownRemainingSeconds,
+      )
+    ) {
+      return;
+    }
+
+    dispatchUiState({ type: 'clear-error' });
+  }, [lastError, rateLimitCooldownRemainingSeconds]);
+
   const setBrokerBaseUrl = (nextBaseUrl: string) => {
-    const normalized = normalizeBackendBrokerBaseUrl(nextBaseUrl);
-    setBrokerBaseUrlState(normalized);
+    setBrokerBaseUrlState(nextBaseUrl);
 
     logBackendBrokerDebug('broker base url updated', {
-      brokerBaseUrl: normalized,
+      brokerBaseUrl: nextBaseUrl,
     });
   };
 
   const clearError = () => {
     dispatchUiState({ type: 'clear-error' });
+  };
+
+  const clearLocalState = () => {
+    dispatchUiState({ type: 'clear-local-state' });
   };
 
   const connect = async (apiKey: string) => {
@@ -176,8 +243,15 @@ export function BackendBrokerProvider({
 
       return nextSession;
     } catch (error) {
-      const mappedError = toBackendBrokerUiError(error);
-      dispatchUiState({ type: 'connect-failure', error: mappedError });
+      const mappedError = applyBackendBrokerUiActionContext(
+        toBackendBrokerUiError(error),
+        'connect',
+      );
+      dispatchUiState({
+        type: 'connect-failure',
+        error: mappedError,
+        nowMs: Date.now(),
+      });
       throw error;
     }
   };
@@ -209,11 +283,15 @@ export function BackendBrokerProvider({
 
       return result;
     } catch (error) {
-      const mappedError = toBackendBrokerUiError(error);
+      const mappedError = applyBackendBrokerUiActionContext(
+        toBackendBrokerUiError(error),
+        'disconnect',
+      );
 
       dispatchUiState({
         type: 'disconnect-failure',
         error: mappedError,
+        nowMs: Date.now(),
         sessionInvalidated: mappedError.kind === 'session',
       });
 
@@ -276,11 +354,15 @@ export function BackendBrokerProvider({
 
       return response;
     } catch (error) {
-      const mappedError = toBackendBrokerUiError(error);
+      const mappedError = applyBackendBrokerUiActionContext(
+        toBackendBrokerUiError(error),
+        'send',
+      );
 
       dispatchUiState({
         type: 'send-failure',
         error: mappedError,
+        nowMs: Date.now(),
         sessionInvalidated: mappedError.kind === 'session',
       });
 
@@ -318,11 +400,15 @@ export function BackendBrokerProvider({
 
       return response;
     } catch (error) {
-      const mappedError = toBackendBrokerUiError(error);
+      const mappedError = applyBackendBrokerUiActionContext(
+        toBackendBrokerUiError(error),
+        'reset',
+      );
 
       dispatchUiState({
         type: 'reset-failure',
         error: mappedError,
+        nowMs: Date.now(),
         sessionInvalidated: mappedError.kind === 'session',
       });
 
@@ -340,8 +426,10 @@ export function BackendBrokerProvider({
         session,
         conversationId,
         messages,
+        rateLimitCooldownRemainingSeconds,
         lastError,
         clearError,
+        clearLocalState,
         connect,
         disconnect,
         resetConversation,
@@ -361,18 +449,4 @@ export function useBackendBroker(): BackendBrokerContextValue {
   }
 
   return context;
-}
-
-export function useOptionalBackendBroker(): BackendBrokerContextValue {
-  const context = useContext(BackendBrokerContext);
-
-  if (context) {
-    return context;
-  }
-
-  if (!isBackendBrokerUiEnabled()) {
-    return DISABLED_BACKEND_BROKER_CONTEXT;
-  }
-
-  throw new Error('useOptionalBackendBroker must be used within BackendBrokerProvider');
 }

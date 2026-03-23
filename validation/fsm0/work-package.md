@@ -82,7 +82,7 @@ Haertungspfad.
 Pflegeregel:
 
 - nach jeder Aenderung an diesem Dokument oder angrenzenden FSM-Dokuquellen
-  `npm run roadmap:compl` ausfuehren, damit `ROADMAP_COMPL/FSM/` aktuell
+  `npm run snapshot:sync` ausfuehren, damit `SNAPSHOT/FSM/` aktuell
   bleibt
 
 ## Uebersicht

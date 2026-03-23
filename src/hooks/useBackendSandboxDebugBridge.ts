@@ -48,8 +48,10 @@ export function useBackendSandboxDebugBridge(): void {
   const snapshotRef = useRef(snapshot);
   const summaryRef = useRef(summary);
 
-  snapshotRef.current = snapshot;
-  summaryRef.current = summary;
+  useEffect(() => {
+    snapshotRef.current = snapshot;
+    summaryRef.current = summary;
+  }, [snapshot, summary]);
 
   useEffect(() => {
     if (!import.meta.env.DEV || typeof window === 'undefined') {
@@ -78,6 +80,6 @@ export function useBackendSandboxDebugBridge(): void {
       return;
     }
 
-    logSnapshotSummary('current circuit snapshot updated', summary);
-  }, [summary.snapshotFingerprint]);
+    logSnapshotSummary('current circuit snapshot updated', summaryRef.current);
+  }, [summary]);
 }

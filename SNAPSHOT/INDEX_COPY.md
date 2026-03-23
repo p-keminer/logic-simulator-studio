@@ -1,12 +1,13 @@
-# ROADMAP_COMPL Index
+# SNAPSHOT Index
 
-Dieser Ordner enthaelt pfadcodierte Kopien der repo-eigenen Ablauf- und Fortschrittsdokumente.
+Dieser Ordner enthaelt pfadcodierte Snapshots der repo-eigenen Ablauf- und Fortschrittsdokumente.
 
 - `API/`: inhaltlich hauptsaechlich API-/Broker-/Backend-Anbindung
 - `FSM/`: inhaltlich hauptsaechlich FSM-/STT-/Timing-/Synthese-Strang
+- `UX/`: inhaltlich hauptsaechlich UX-Feinschliff und Interaktionsnotizen
 - Root: verbleibende allgemeine Ablauf- und Verifikationsdokumente
 
-Dokumente: 62
+Dokumente: 64
 
 | Originalpfad | Zielpfad | Kategorie | Dokumentklasse | Status-Hinweis |
 |---|---|---|---|---|
@@ -46,6 +47,7 @@ Dokumente: 62
 | `validation/api_anbindung/deployment/environments.md` | `API/validation__api_anbindung__deployment__environments_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/deployment/operations-checklist.md` | `API/validation__api_anbindung__deployment__operations-checklist_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/deployment/README.md` | `API/validation__api_anbindung__deployment__README_COPY.md` | api | readme | - |
+| `validation/api_anbindung/deployment/render-staging.md` | `API/validation__api_anbindung__deployment__render-staging_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/HELP.md` | `API/validation__api_anbindung__HELP_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/README.md` | `API/validation__api_anbindung__README_COPY.md` | api | readme | - |
 | `validation/api_anbindung/ROADMAP.md` | `API/validation__api_anbindung__ROADMAP_COPY.md` | api | roadmap | - |
@@ -71,4 +73,5 @@ Dokumente: 62
 | `validation/race-panel-fixes/work-package.md` | `validation__race-panel-fixes__work-package_COPY.md` | root | work-package | abgeschlossen im aktuellen Scope |
 | `validation/README.md` | `validation__README_COPY.md` | root | readme | 2026-03-23 |
 | `validation/ui-manual-verification-plan.md` | `FSM/validation__ui-manual-verification-plan_COPY.md` | fsm | verification | aktuell |
+| `validation/ux-feinschliff/work-package.md` | `UX/validation__ux-feinschliff__work-package_COPY.md` | ux | work-package | offen |
 | `validation/verification-matrix.md` | `validation__verification-matrix_COPY.md` | root | verification | - |

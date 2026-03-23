@@ -166,7 +166,6 @@ export class DefaultProviderGateway implements ProviderGateway {
   async send(input: ProviderGatewaySendInput): Promise<ProviderGatewayResponse> {
     this.validateRuntime();
     const request = createRequest(input, this.runtime);
-    const startedAt = this.clock().getTime();
 
     this.auditSink?.record({
       type: 'provider.requested',

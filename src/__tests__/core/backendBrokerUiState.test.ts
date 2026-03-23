@@ -48,10 +48,41 @@ const rateLimitError: BackendBrokerUiError = {
   kind: 'rate-limit',
   title: 'Broker-Limit erreicht',
   message: 'Bitte spaeter erneut versuchen.',
+  requestKind: 'chat-request',
   retryAfterSeconds: 9,
 };
 
 describe('backend broker ui state reducer', () => {
+  it('can clear local broker state without relying on a broker round-trip', () => {
+    let state = createInitialBackendBrokerUiState();
+    state = backendBrokerUiStateReducer(state, {
+      type: 'connect-success',
+      session: activeSession,
+    });
+    state = backendBrokerUiStateReducer(state, {
+      type: 'send-start',
+      userTurn: userTurn(),
+    });
+    state = backendBrokerUiStateReducer(state, {
+      type: 'set-error',
+      error: rateLimitError,
+    });
+
+    state = backendBrokerUiStateReducer(state, {
+      type: 'clear-local-state',
+    });
+
+    expect(state).toEqual({
+      phase: 'idle',
+      session: null,
+      conversationId: undefined,
+      messages: [],
+      lastError: null,
+      pendingUserTurnId: undefined,
+      rateLimitCooldownUntilByRequestKind: {},
+    });
+  });
+
   it('clears session, conversation and optimistic turns on session-invalidated chat failure', () => {
     let state = createInitialBackendBrokerUiState();
     state = backendBrokerUiStateReducer(state, {
@@ -66,6 +97,7 @@ describe('backend broker ui state reducer', () => {
     state = backendBrokerUiStateReducer(state, {
       type: 'send-failure',
       error: sessionError,
+      nowMs: 1_000,
       sessionInvalidated: true,
     });
 
@@ -75,10 +107,12 @@ describe('backend broker ui state reducer', () => {
       conversationId: undefined,
       messages: [],
       lastError: sessionError,
+      pendingUserTurnId: undefined,
+      rateLimitCooldownUntilByRequestKind: {},
     });
   });
 
-  it('keeps the optimistic user turn on non-session chat failures', () => {
+  it('rolls back the optimistic user turn on non-session chat failures', () => {
     let state = createInitialBackendBrokerUiState();
     state = backendBrokerUiStateReducer(state, {
       type: 'connect-success',
@@ -92,13 +126,18 @@ describe('backend broker ui state reducer', () => {
     state = backendBrokerUiStateReducer(state, {
       type: 'send-failure',
       error: rateLimitError,
+      nowMs: 1_000,
       sessionInvalidated: false,
     });
 
     expect(state.phase).toBe('active');
     expect(state.session).toEqual(activeSession);
-    expect(state.messages).toEqual([userTurn()]);
+    expect(state.messages).toEqual([]);
     expect(state.lastError).toEqual(rateLimitError);
+    expect(state.pendingUserTurnId).toBeUndefined();
+    expect(state.rateLimitCooldownUntilByRequestKind['chat-request']).toBe(
+      10_000,
+    );
   });
 
   it('uses the same clear-session behavior for reset and disconnect session failures', () => {
@@ -120,12 +159,14 @@ describe('backend broker ui state reducer', () => {
     const resetFailureState = backendBrokerUiStateReducer(state, {
       type: 'reset-failure',
       error: sessionError,
+      nowMs: 1_000,
       sessionInvalidated: true,
     });
 
     const disconnectFailureState = backendBrokerUiStateReducer(state, {
       type: 'disconnect-failure',
       error: sessionError,
+      nowMs: 1_000,
       sessionInvalidated: true,
     });
 
@@ -135,6 +176,8 @@ describe('backend broker ui state reducer', () => {
       conversationId: undefined,
       messages: [],
       lastError: sessionError,
+      pendingUserTurnId: undefined,
+      rateLimitCooldownUntilByRequestKind: {},
     });
     expect(disconnectFailureState).toEqual(resetFailureState);
   });

@@ -94,6 +94,7 @@ const createTestApp = (options?: {
   const app = createApp({
     auditSink,
     config: {
+      devResponseDelayMs: 0,
       host: '127.0.0.1',
       logLevel: 'debug',
       port: 8787,
@@ -471,6 +472,7 @@ describe('chat route sandbox flow', () => {
     expect(first.statusCode).toBe(202);
     expect(blocked.statusCode).toBe(429);
     expect(blocked.body).toContain('RATE_LIMITED');
+    expect(blocked.body).toContain('"requestKind":"chat-request"');
     expect(blocked.body).not.toContain(rawKey);
     expect(loggerStream.dump()).not.toContain(rawKey);
     expect(loggerStream.dump()).toContain('sandbox policy blocked request');

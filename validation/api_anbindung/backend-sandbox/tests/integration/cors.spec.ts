@@ -14,6 +14,7 @@ afterEach(async () => {
 const createCorsTestApp = () => {
   const app = createApp({
     config: {
+      devResponseDelayMs: 0,
       host: '127.0.0.1',
       logLevel: 'silent',
       port: 8787,

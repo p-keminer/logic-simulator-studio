@@ -95,8 +95,8 @@ Fuer diese lokale UI-Runde ist die Pflichtvalidierung:
 4. Aenderung lokal umsetzen.
 5. Automatische Verifikation laufen lassen.
 6. Manuellen Pruefpfad dokumentieren oder aktualisieren.
-7. Nach jedem Doku-Update `npm run roadmap:compl` ausfuehren, damit
-   `ROADMAP_COMPL/` synchron bleibt.
+7. Nach jedem Doku-Update `npm run snapshot:sync` ausfuehren, damit
+   `SNAPSHOT/` synchron bleibt.
 8. Erst dann mit dem naechsten Abschnitt weitermachen.
 
 ## Validierungsstufen
@@ -134,7 +134,7 @@ Pflicht, wenn sich Verhalten, Abdeckung oder Grenzen aendern:
 - validation/ui-manual-verification-plan.md
 - bei Bedarf validation/maturity-gap-dashboard.md
 - bei Bedarf validation/industry-lite-roadmap.md
-- nach jeder Aenderung an Doku-Quellen: `npm run roadmap:compl`
+- nach jeder Aenderung an Doku-Quellen: `npm run snapshot:sync`
 
 ## Was wann validiert werden soll
 
@@ -553,7 +553,21 @@ Zusaetzlich bei groesserer Tragweite:
 ## Aktuelle offene Hauptpakete
 
 1. API-/Broker-App-Integration fuer `Key -> Chat -> Reset -> Delete`
-   weiter haerten und sichtbar verifizieren
+   ist im aktuellen Scope geschlossen; lokaler Happy-Path-,
+   stale-Session-Recovery-, Session-Key-/Chat-/Reset-Rate-Limit-,
+   Konfigurationsfehler-, Policy-Block- und Provider-/Upstream-Fehler-Smoke
+   stehen, dazu die manuelle Verifikation des sichtbaren Flows.
+   `API1-02` ist jetzt mit einem ersten staging-nahen Runtime-Profil
+   angelaufen (`APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`,
+   deaktivierte Dev-Routen ausserhalb von Development, Profil-Smoke).
+   Zusaetzlich existieren jetzt ein staging-lokaler Startpfad
+   (`backend-sandbox npm run dev:staging-local`), ein staging-lokaler
+   Runtime-Smoke (`backend-sandbox npm run smoke:staging-runtime`) und ein
+   staging-URL-Smoke (`backend-sandbox npm run smoke:staging-url`).
+   Zusaetzlich liegt jetzt der erste externe Zielpfad als Render-Blueprint in
+   `render.yaml` vor. Naechster Folgepfad: diesen Zielpfad real deployen und
+   den URL-Smoke gegen die echte Staging-URL bestaetigen, danach `API1-03`
+   Observability und `API1-04` Pilot-/Rollout
 2. kleinen UX-Feinschliff-Strang separat pflegen und erst dokumentiert sammeln,
    dann bewusst in kleinen Slices umsetzen
 3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen

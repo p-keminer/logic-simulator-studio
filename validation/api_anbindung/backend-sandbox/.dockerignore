@@ -1,0 +1,13 @@
+node_modules
+dist
+npm-test-json.log
+npm-test-report.json
+api011-local-app-bridge-test.log
+.env
+.env.local
+.env.*.local
+coverage
+tests
+docs
+fixtures
+.git

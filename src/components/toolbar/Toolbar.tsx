@@ -6,8 +6,7 @@ import { ExportModal } from './ExportModal';
 import { HelpModal } from './HelpModal';
 import { gateRegistry } from '../../core/registry/GateRegistry';
 import { TruthTableModal } from '../panels/TruthTableModal';
-import { isBackendBrokerUiEnabled } from '../../core/backendBroker/featureFlags';
-import { useOptionalBackendBroker } from '../../hooks/useBackendBroker';
+import { useBackendBroker } from '../../hooks/useBackendBroker';
 import { CustomICModal } from '../panels/CustomICModal';
 import { RacePanel } from '../panels/RacePanel';
 import { APP_NAME } from '../../core/branding';
@@ -25,8 +24,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
     isClockPaused, setIsClockPaused, stepOneClock,
     races,
   } = useCircuitContext();
-  const brokerUiEnabled = isBackendBrokerUiEnabled();
-  const { hasActiveSession, phase: brokerPhase } = useOptionalBackendBroker();
+  const { hasActiveSession, phase: brokerPhase } = useBackendBroker();
   const headerRef = useRef<HTMLElement | null>(null);
   const overflowMenuRef = useRef<HTMLDivElement | null>(null);
   const overflowMenuButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -220,15 +218,12 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
           </button>
           <div className="h-4 w-px bg-slate-700" />
           <button onClick={handleReset} className="px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-red-400 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded transition-colors font-mono">Neu</button>
-          {brokerUiEnabled && (
-            <>
-              <div className="h-4 w-px bg-slate-700" />
-              <button onClick={onShowBroker} title="Broker-Bridge fuer Key, Chat und Reset"
+          <div className="h-4 w-px bg-slate-700" />
+          <button onClick={onShowBroker} title="Broker-Bridge fuer Key, Chat und Reset"
+            data-testid="toolbar-broker-button"
             className={"px-2.5 py-1 text-xs font-medium border rounded transition-colors font-mono " + (hasActiveSession ? "text-cyan-200 bg-cyan-900/30 border-cyan-700" : "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600")}>
             Broker{hasActiveSession ? ' •' : ''}
-              </button>
-            </>
-          )}
+          </button>
           <button onClick={onShowFsm} title="FSM-Editor öffnen"
             className="px-2.5 py-1 text-xs font-medium text-purple-300 bg-purple-900/30 hover:bg-purple-800/40 border border-purple-700 rounded transition-colors font-mono">
             FSM
@@ -243,6 +238,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
           <button
             ref={overflowMenuButtonRef}
             type="button"
+            data-testid="toolbar-overflow-button"
             onClick={() => setIsOverflowMenuOpen((prev) => !prev)}
             aria-haspopup="menu"
             aria-expanded={isOverflowMenuOpen}
@@ -293,15 +289,14 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
                   ⏭ Ein Takt
                 </button>
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); handleReset(); }} className="rounded border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs font-medium text-slate-400 hover:bg-slate-700 hover:text-red-400 font-mono">Neu</button>
-                {brokerUiEnabled && (
                   <button
                     role="menuitem"
+                    data-testid="toolbar-broker-button"
                     onClick={() => { closeOverflowMenu(); onShowBroker?.(); }}
                     className={"rounded border px-3 py-2 text-left text-xs font-medium font-mono transition-colors " + (hasActiveSession ? "text-cyan-200 bg-cyan-900/30 border-cyan-700" : "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600")}
                   >
                     Broker ({brokerPhase})
                   </button>
-                )}
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); onShowFsm?.(); }} className="rounded border border-purple-700 bg-purple-900/30 px-3 py-2 text-left text-xs font-medium text-purple-300 hover:bg-purple-800/40 font-mono">FSM</button>
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); setShowHelp(true); }} className="rounded border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs font-medium text-slate-300 hover:bg-slate-700 font-mono">Hilfe</button>
               </div>

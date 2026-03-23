@@ -3,6 +3,8 @@ import {
   createBackendSandboxCurrentCircuitSnapshot,
   summarizeBackendSandboxCurrentCircuitSnapshot,
 } from '../../core/io/backendSandboxSnapshot';
+import { shouldClearBackendBrokerUiErrorOnUserEdit } from '../../core/backendBroker/errors';
+import { getBackendBrokerModalControlState } from '../../core/backendBroker/modalState';
 import { useBackendBroker } from '../../hooks/useBackendBroker';
 import { useCircuitContext } from '../../store/CircuitContext';
 
@@ -33,6 +35,7 @@ export function BackendBrokerModal({ onClose }: Props) {
     brokerBaseUrl,
     setBrokerBaseUrl,
     clearError,
+    clearLocalState,
     connect,
     conversationId,
     disconnect,
@@ -40,6 +43,7 @@ export function BackendBrokerModal({ onClose }: Props) {
     lastError,
     messages,
     phase,
+    rateLimitCooldownRemainingSeconds,
     resetConversation,
     sendMessage,
     session,
@@ -54,6 +58,30 @@ export function BackendBrokerModal({ onClose }: Props) {
   const snapshotSummary = useMemo(
     () => summarizeBackendSandboxCurrentCircuitSnapshot(snapshot),
     [snapshot],
+  );
+  const controlState = useMemo(
+    () =>
+      getBackendBrokerModalControlState({
+        phase,
+        hasActiveSession,
+        apiKeyInput,
+        draftMessage,
+        sessionKeyCooldownRemainingSeconds:
+          rateLimitCooldownRemainingSeconds.sessionKey,
+        chatRequestCooldownRemainingSeconds:
+          rateLimitCooldownRemainingSeconds.chatRequest,
+        chatResetCooldownRemainingSeconds:
+          rateLimitCooldownRemainingSeconds.chatReset,
+      }),
+    [
+      apiKeyInput,
+      draftMessage,
+      hasActiveSession,
+      phase,
+      rateLimitCooldownRemainingSeconds.chatRequest,
+      rateLimitCooldownRemainingSeconds.chatReset,
+      rateLimitCooldownRemainingSeconds.sessionKey,
+    ],
   );
 
   useEffect(() => {
@@ -87,12 +115,20 @@ export function BackendBrokerModal({ onClose }: Props) {
     void promise.catch(() => undefined);
   };
 
+  const clearErrorOnUserEdit = () => {
+    if (shouldClearBackendBrokerUiErrorOnUserEdit(lastError)) {
+      clearError();
+    }
+  };
+
   return (
     <div
+      data-testid="backend-broker-modal-overlay"
       className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/80 px-3 py-4"
       onClick={onClose}
     >
       <div
+        data-testid="backend-broker-modal"
         className="flex max-h-[calc(100vh-1.5rem)] w-[min(1100px,calc(100vw-1rem))] flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
@@ -131,17 +167,21 @@ export function BackendBrokerModal({ onClose }: Props) {
                         : 'bg-slate-800 text-slate-400'
                     }`}
                   >
-                    {phase}
+                    {controlState.phaseLabel}
                   </span>
                 </div>
                 <label className="mb-1 block text-[11px] font-mono uppercase tracking-wide text-slate-500">
                   Broker Base URL
                 </label>
                 <input
+                  data-testid="broker-base-url-input"
                   type="url"
                   value={brokerBaseUrl}
-                  onChange={(event) => setBrokerBaseUrl(event.target.value)}
-                  disabled={hasActiveSession}
+                  onChange={(event) => {
+                    clearErrorOnUserEdit();
+                    setBrokerBaseUrl(event.target.value);
+                  }}
+                  disabled={controlState.baseUrlDisabled}
                   className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-xs font-mono text-slate-200 outline-none transition-colors focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <p className="mt-2 text-[11px] text-slate-500">
@@ -160,20 +200,26 @@ export function BackendBrokerModal({ onClose }: Props) {
                       API Key
                     </label>
                     <input
+                      data-testid="broker-api-key-input"
                       type="password"
                       value={apiKeyInput}
-                      onChange={(event) => setApiKeyInput(event.target.value)}
+                      onChange={(event) => {
+                        clearErrorOnUserEdit();
+                        setApiKeyInput(event.target.value);
+                      }}
                       placeholder="sk-..."
+                      disabled={controlState.apiKeyDisabled}
                       className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-2 text-xs font-mono text-slate-200 outline-none transition-colors focus:border-cyan-500"
                     />
                     <button
+                      data-testid="broker-connect-button"
                       onClick={() => {
                         runBrokerAction(handleConnect());
                       }}
-                      disabled={phase === 'connecting' || apiKeyInput.trim().length < 16}
+                      disabled={controlState.connectDisabled}
                       className="mt-3 w-full rounded bg-cyan-500 px-3 py-2 text-xs font-mono font-semibold text-slate-950 transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
                     >
-                      Broker-Key setzen
+                      {controlState.connectLabel}
                     </button>
                   </>
                 ) : (
@@ -184,7 +230,9 @@ export function BackendBrokerModal({ onClose }: Props) {
                           Session ID
                         </dt>
                         <dd className="mt-1 break-all font-mono text-slate-200">
+                          <span data-testid="broker-session-id">
                           {session?.sessionId}
+                          </span>
                         </dd>
                       </div>
                       <div>
@@ -197,13 +245,14 @@ export function BackendBrokerModal({ onClose }: Props) {
                       </div>
                     </dl>
                     <button
+                      data-testid="broker-disconnect-button"
                       onClick={() => {
                         runBrokerAction(disconnect());
                       }}
-                      disabled={phase === 'disconnecting'}
+                      disabled={controlState.disconnectDisabled}
                       className="mt-3 w-full rounded border border-rose-700 bg-rose-950/40 px-3 py-2 text-xs font-mono font-semibold text-rose-200 transition-colors hover:bg-rose-900/50 disabled:cursor-not-allowed disabled:border-slate-700 disabled:bg-slate-900 disabled:text-slate-500"
                     >
-                      Broker-Key loeschen
+                      {controlState.disconnectLabel}
                     </button>
                   </>
                 )}
@@ -250,10 +299,16 @@ export function BackendBrokerModal({ onClose }: Props) {
               </section>
 
               {lastError && (
-                <section className="rounded-lg border border-amber-700/60 bg-amber-950/30 p-3">
+                <section
+                  data-testid="broker-error-panel"
+                  className="rounded-lg border border-amber-700/60 bg-amber-950/30 p-3"
+                >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-mono text-xs font-semibold uppercase tracking-wide text-amber-200">
+                      <h3
+                        data-testid="broker-error-title"
+                        className="font-mono text-xs font-semibold uppercase tracking-wide text-amber-200"
+                      >
                         {lastError.title}
                       </h3>
                       <p className="mt-2 text-xs text-amber-100/90">
@@ -271,10 +326,18 @@ export function BackendBrokerModal({ onClose }: Props) {
                       )}
                     </div>
                     <button
+                      data-testid="broker-clear-error-button"
                       onClick={clearError}
                       className="rounded border border-amber-700/60 px-2 py-1 text-[11px] font-mono text-amber-200 transition-colors hover:bg-amber-900/40"
                     >
                       OK
+                    </button>
+                    <button
+                      data-testid="broker-clear-local-button"
+                      onClick={clearLocalState}
+                      className="rounded border border-slate-700 px-2 py-1 text-[11px] font-mono text-slate-300 transition-colors hover:bg-slate-900/40"
+                    >
+                      Lokal leeren
                     </button>
                   </div>
                 </section>
@@ -295,7 +358,10 @@ export function BackendBrokerModal({ onClose }: Props) {
                   </p>
                 </div>
                 <div className="rounded border border-slate-800 bg-slate-950/80 px-3 py-2 text-[11px] font-mono text-slate-400">
-                  conversationId: {conversationId ?? 'noch keine'}
+                  conversationId:{' '}
+                  <span data-testid="broker-conversation-id">
+                    {conversationId ?? 'noch keine'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -351,44 +417,50 @@ export function BackendBrokerModal({ onClose }: Props) {
             <div className="border-t border-slate-800 px-4 py-4">
               <div className="grid gap-3">
                 <textarea
+                  data-testid="broker-message-input"
                   value={draftMessage}
-                  onChange={(event) => setDraftMessage(event.target.value)}
+                  onChange={(event) => {
+                    clearErrorOnUserEdit();
+                    setDraftMessage(event.target.value);
+                  }}
                   placeholder="Frage zur aktuell geoeffneten Schaltung..."
                   rows={4}
-                  disabled={!hasActiveSession || phase === 'sending'}
+                  disabled={controlState.draftMessageDisabled}
                   className="w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-3 text-sm text-slate-100 outline-none transition-colors focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <div className="flex flex-col gap-3 md:flex-row">
                   <input
+                    data-testid="broker-reset-reason-input"
                     type="text"
                     value={draftResetReason}
-                    onChange={(event) => setDraftResetReason(event.target.value)}
+                    onChange={(event) => {
+                      clearErrorOnUserEdit();
+                      setDraftResetReason(event.target.value);
+                    }}
                     placeholder="Optionaler Reset-Grund"
-                    disabled={!hasActiveSession || phase === 'resetting'}
+                    disabled={controlState.draftResetReasonDisabled}
                     className="min-w-0 flex-1 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-mono text-slate-200 outline-none transition-colors focus:border-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
                   />
                   <div className="flex flex-wrap gap-2">
                     <button
+                      data-testid="broker-reset-button"
                       onClick={() => {
                         runBrokerAction(handleReset());
                       }}
-                      disabled={!hasActiveSession || phase === 'resetting'}
+                      disabled={controlState.resetDisabled}
                       className="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-mono text-slate-200 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:text-slate-500"
                     >
-                      Broker-Reset
+                      {controlState.resetLabel}
                     </button>
                     <button
+                      data-testid="broker-send-button"
                       onClick={() => {
                         runBrokerAction(handleSend());
                       }}
-                      disabled={
-                        !hasActiveSession ||
-                        phase === 'sending' ||
-                        draftMessage.trim().length === 0
-                      }
+                      disabled={controlState.sendDisabled}
                       className="rounded bg-cyan-500 px-4 py-2 text-xs font-mono font-semibold text-slate-950 transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
                     >
-                      Nachricht senden
+                      {controlState.sendLabel}
                     </button>
                   </div>
                 </div>

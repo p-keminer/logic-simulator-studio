@@ -23,8 +23,8 @@ Ziel ist ein **breiterer und tieferer Golden Corpus**, der:
 ## Doku-Pflege
 
 Nach jeder Aenderung an diesem Dokument oder angrenzenden Golden-Corpus-
-Dokuquellen muss `npm run roadmap:compl` ausgefuehrt werden, damit
-`ROADMAP_COMPL/` aktuell bleibt.
+Dokuquellen muss `npm run snapshot:sync` ausgefuehrt werden, damit
+`SNAPSHOT/` aktuell bleibt.
 
 ## Aktuell bekannte Anforderungen
 

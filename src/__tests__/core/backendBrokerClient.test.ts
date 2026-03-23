@@ -5,7 +5,10 @@ import {
   DEFAULT_BACKEND_BROKER_BASE_URL,
   normalizeBackendBrokerBaseUrl,
 } from '../../core/backendBroker/client';
-import { BackendBrokerApiError } from '../../core/backendBroker/errors';
+import {
+  BackendBrokerApiError,
+  BackendBrokerConfigurationError,
+} from '../../core/backendBroker/errors';
 
 describe('backend broker client', () => {
   it('binds the default browser fetch before storing it for later requests', async () => {
@@ -59,6 +62,30 @@ describe('backend broker client', () => {
     expect(normalizeBackendBrokerBaseUrl('http://127.0.0.1:8787/api')).toBe(
       'http://127.0.0.1:8787/api/v1',
     );
+  });
+
+  it('rejects invalid broker base urls with a dedicated configuration error', () => {
+    expect(() => normalizeBackendBrokerBaseUrl('not-a-url')).toThrow(
+      BackendBrokerConfigurationError,
+    );
+  });
+
+  it('rejects non-http broker base urls', () => {
+    expect(() => normalizeBackendBrokerBaseUrl('ftp://127.0.0.1:8787')).toThrow(
+      BackendBrokerConfigurationError,
+    );
+  });
+
+  it('rejects broker base urls with embedded credentials', () => {
+    expect(() =>
+      normalizeBackendBrokerBaseUrl('http://user:secret@127.0.0.1:8787'),
+    ).toThrow(BackendBrokerConfigurationError);
+  });
+
+  it('rejects non-local broker hosts in the current app scope', () => {
+    expect(() =>
+      normalizeBackendBrokerBaseUrl('https://example.com/v1'),
+    ).toThrow(BackendBrokerConfigurationError);
   });
 
   it('posts session registration and parses the broker response', async () => {

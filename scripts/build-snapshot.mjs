@@ -5,11 +5,13 @@ import { fileURLToPath } from 'node:url';
 const scriptFile = fileURLToPath(import.meta.url);
 const scriptDir = path.dirname(scriptFile);
 const repoRoot = path.resolve(scriptDir, '..');
-const outputDir = path.join(repoRoot, 'ROADMAP_COMPL');
+const outputDir = path.join(repoRoot, 'SNAPSHOT');
+const legacyOutputDir = path.join(repoRoot, 'ROADMAP_COMPL');
 
 const EXCLUDED_DIRECTORY_NAMES = new Set([
   '.git',
   'ROADMAP_COMPL',
+  'SNAPSHOT',
   'dist',
   'node_modules',
 ]);
@@ -21,12 +23,14 @@ const SUPPORTING_PATH_PREFIXES = [
   'validation/fsm0/',
   'validation/golden-corpus-v2-expansion/',
   'validation/race-panel-fixes/',
+  'validation/ux-feinschliff/',
 ];
 
 const STATUS_LABELS = ['Status', 'Stand', 'Qualitaetsstand'];
 const CATEGORY_DIRECTORY_NAMES = {
   api: 'API',
   fsm: 'FSM',
+  ux: 'UX',
 };
 const EXPLICIT_FSM_PATHS = new Set([
   'validation/fsm0/work-package.md',
@@ -94,6 +98,7 @@ function buildCopyFileName(relativePath) {
 function resolveCategory(relativePath, fileContent) {
   if (relativePath.startsWith('validation/api_anbindung/')) return 'api';
   if (EXPLICIT_FSM_PATHS.has(relativePath)) return 'fsm';
+  if (relativePath.startsWith('validation/ux-feinschliff/')) return 'ux';
 
   const normalizedPath = relativePath.toLowerCase();
   if (normalizedPath.includes('/fsm-') || normalizedPath.includes('/fsm0/')) return 'fsm';
@@ -164,12 +169,13 @@ async function collectDocuments(directoryPath, documents) {
 
 function buildIndexContent(entries) {
   const lines = [
-    '# ROADMAP_COMPL Index',
+    '# SNAPSHOT Index',
     '',
-    'Dieser Ordner enthaelt pfadcodierte Kopien der repo-eigenen Ablauf- und Fortschrittsdokumente.',
+    'Dieser Ordner enthaelt pfadcodierte Snapshots der repo-eigenen Ablauf- und Fortschrittsdokumente.',
     '',
     '- `API/`: inhaltlich hauptsaechlich API-/Broker-/Backend-Anbindung',
     '- `FSM/`: inhaltlich hauptsaechlich FSM-/STT-/Timing-/Synthese-Strang',
+    '- `UX/`: inhaltlich hauptsaechlich UX-Feinschliff und Interaktionsnotizen',
     '- Root: verbleibende allgemeine Ablauf- und Verifikationsdokumente',
     '',
     `Dokumente: ${entries.length}`,
@@ -222,6 +228,7 @@ async function main() {
     });
   }
 
+  await fs.rm(legacyOutputDir, { recursive: true, force: true });
   await fs.rm(outputDir, { recursive: true, force: true });
   await fs.mkdir(outputDir, { recursive: true });
 
@@ -234,7 +241,7 @@ async function main() {
   const indexContent = buildIndexContent(generatedEntries);
   await fs.writeFile(path.join(outputDir, 'INDEX_COPY.md'), indexContent, 'utf8');
 
-  console.log(`ROADMAP_COMPL erzeugt: ${generatedEntries.length} Dokumente`);
+  console.log(`SNAPSHOT erzeugt: ${generatedEntries.length} Dokumente`);
 }
 
 await main();

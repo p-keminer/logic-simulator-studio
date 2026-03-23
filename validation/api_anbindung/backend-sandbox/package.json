@@ -6,9 +6,13 @@
   "description": "Isoliertes Backend-Scaffold fuer die spaetere sichere API-Anbindung der aktuell geoeffneten Schaltung.",
   "scripts": {
     "dev": "node ./node_modules/tsx/dist/cli.mjs watch src/app/server.ts",
+    "dev:staging-local": "node ./scripts/run-staging-local-dev.mjs",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "npm run typecheck",
+    "smoke:staging-profile": "vitest run --config vitest.config.ts tests/integration/staging-profile.spec.ts",
+    "smoke:staging-runtime": "node ./scripts/run-staging-runtime-smoke.mjs",
+    "smoke:staging-url": "node ./scripts/run-staging-url-smoke.mjs",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts"
   },

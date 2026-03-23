@@ -15,6 +15,12 @@ Diese Checkliste dient spaeter als Mindeststandard vor Inbetriebnahme oder groes
 ## Vor Staging
 
 - Integrations- und Contract-Tests gruen
+- `npm run smoke:staging-profile` gruen
+- `npm run dev:staging-local` laesst sich lokal reproduzierbar starten
+- `npm run smoke:staging-runtime` gruen
+- `npm run smoke:staging-url` gegen das vorgesehene Zielsystem gruen
+- `render.yaml` und Docker-Artefakte reviewt
+- Ziel-Origin fuer `ALLOWED_ORIGINS` festgelegt
 - Missbrauchsszenarien simuliert
 - Monitoring und Alerting aktiv
 - Fehlerantworten auf sensible Daten geprueft

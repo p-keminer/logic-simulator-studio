@@ -541,7 +541,55 @@ Vorbedingung:
    naechster Aktion.
 9. Erneut entweder eine Chat-Nachricht senden, `Broker-Reset` ausloesen oder
    `Broker-Key loeschen`.
-10. Zusaetzlich im Browser-Netzwerk-Tab pruefen, dass nur Broker-Requests und
+10. Zusaetzlich einen echten Chat-Sendefehler ohne Session-Invalidierung
+    provozieren, z. B. aktive Session behalten, nur den Broker-Prozess
+    stoppen, **vor dem Sendeversuch noch nicht neu starten** und dann eine
+    Nachricht senden.
+11. Danach den Broker wieder starten, den noch angezeigten Broker-Key zuerst
+    loeschen, anschliessend einen neuen Broker-Key setzen und die Nachricht
+    erneut senden.
+12. Im Fehlerzustand zusaetzlich `Lokal leeren` pruefen.
+13. Danach bei inaktivem Dialog eine bewusst ungueltige Broker-Base-URL
+    eintragen, z. B. `http://127.0.0.1:`
+14. `Broker-Key setzen` versuchen.
+15. Danach ein unerlaubtes Schema oder eingebettete Zugangsdaten pruefen,
+    z. B. `ftp://127.0.0.1:8787` oder
+    `http://user:secret@127.0.0.1:8787`
+16. Wieder `Broker-Key setzen` versuchen.
+17. Danach einen externen Host pruefen, z. B. `https://example.com/v1`
+18. Wieder `Broker-Key setzen` versuchen.
+19. Danach mit gueltiger lokaler URL einen normalen Verbindungsversuch starten.
+20. Waehend `connecting` kurz pruefen, dass Base-URL, Key und Connect nicht
+    parallel erneut veraendert oder abgeschickt werden koennen.
+    Falls der Zustand lokal zu kurz sichtbar ist, die Sandbox testweise mit
+    `DEV_RESPONSE_DELAY_MS=400 npm run dev` starten und den Check wiederholen.
+21. Danach mit aktiver Session eine Chat-Nachricht senden und waehrend
+    `sending` pruefen, dass `Broker-Reset`, `Broker-Key loeschen`, das
+    Chat-Feld und der Reset-Entwurf nicht parallel weiter bedienbar sind.
+22. Anschliessend denselben Gegencheck einmal waehrend `Broker-Reset`
+    durchfuehren und pruefen, dass `Nachricht senden` sowie
+    `Broker-Key loeschen` bis zum Abschluss des Reset-Round-Trips gesperrt
+    bleiben.
+23. Danach einen `RATE_LIMITED`-Fall provozieren und pruefen, dass im Dialog
+    nicht nur `retryAfter`, sondern auch ein route-spezifischer Countdown auf
+    der betroffenen Aktion erscheint, z. B. `Warte 9s`, `Sende in 9s` oder
+    `Reset in 9s`.
+24. Erwartung:
+    - waehrend des Countdowns bleibt nur die betroffene Aktion gesperrt
+    - andere Recovery-Pfade wie `Broker-Key loeschen` oder `Lokal leeren`
+      bleiben weiter verfuegbar
+    - der Fehlertitel benennt den betroffenen Pfad jetzt ebenfalls klar als
+      Key-, Chat- oder Reset-Limit
+    - nach Ablauf des Countdowns verschwindet der zugehoerige
+      Rate-Limit-Warnkasten wieder automatisch
+    - wenn der Nutzer stattdessen vorher schon URL, Key oder Entwurfsfelder
+      aktiv bearbeitet, verschwindet der sichtbare Fehlerkasten ebenfalls
+      direkt
+    - auch andere Fehler benennen jetzt den betroffenen Pfad klarer, z. B.
+      Verbindung, Chat, Reset oder Key-Loeschen
+    - Busy-Phasen sprechen sichtbar progressbezogen wie `Verbinde...`,
+      `Sende...`, `Reset laeuft...` oder `Loesche...`
+25. Danach zusaetzlich im Browser-Netzwerk-Tab pruefen, dass nur Broker-Requests und
     kein direkter Provider-Call aus der App sichtbar sind.
 
 Erwartung:
@@ -560,8 +608,24 @@ Erwartung:
   Session-Invalidierung und darf den Nutzer nicht in einem blockierten
   Zwischenzustand festhalten; nach dem Fehler muss der Dialog wieder einen
   neuen Key annehmen koennen
+- bei einem reinen Chat-Sendefehler ohne Session-Invalidierung bleibt der
+  Entwurf fuer einen Retry erhalten, aber die fehlgeschlagene User-Nachricht
+  taucht nicht als scheinbar gesendeter Turn im Verlauf auf
+- nach dem Wiederstart des Brokers funktioniert der Retry erst nach einem
+  neuen Broker-Key wieder normal; die alte Session bleibt bewusst stale
+- `Lokal leeren` setzt den sichtbaren Broker-Zustand ohne Broker-Round-Trip
+  sofort auf leer und erlaubt danach direkt einen neuen Key-/Session-Start
+- eine ungueltige Broker-Base-URL darf beim Tippen den Dialog nicht zerlegen;
+  erst beim Verbinden erscheint die klare Meldung
+  `Broker-Base-URL ist ungueltig`
+- nicht erlaubte Schemata oder eingebettete Zugangsdaten in der Broker-URL
+  werden ebenfalls klar abgelehnt
+- externe Nicht-Loopback-Hosts werden im aktuellen Scope ebenfalls klar
+  abgelehnt; zugelassen sind derzeit nur `localhost`, `127.0.0.1` und `::1`
+- waehrend eines laufenden Connect-Versuchs bleiben Base-URL, Key und Connect
+  gesperrt, damit der Dialog keine konkurrierenden Verbindungszustaende
+  aufbauen kann
 - im Netzwerk-Tab taucht kein direkter Provider-Call aus der App auf
-  scheinbar gespeichert wird, spaeter aber erst beim Export scheitert
 
 ## Fehlerprotokoll
 

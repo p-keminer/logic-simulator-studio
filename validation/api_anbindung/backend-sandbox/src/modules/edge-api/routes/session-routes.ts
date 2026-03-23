@@ -34,6 +34,7 @@ const createRateLimitError = (decision: RateLimitDecision) =>
     {
       limit: decision.limit,
       remaining: decision.remaining,
+      requestKind: 'session-key',
       resetAt: decision.resetAt,
       retryAfterSeconds: decision.retryAfterSeconds,
       windowMs: decision.windowMs,

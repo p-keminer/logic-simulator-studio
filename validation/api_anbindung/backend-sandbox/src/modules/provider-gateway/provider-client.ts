@@ -67,7 +67,8 @@ export class MockFailingProviderClient implements ProviderClient {
 
   constructor(private readonly error: ProviderGatewayError) {}
 
-  async send(_request: ProviderGatewayRequest): Promise<ProviderGatewayResponse> {
+  async send(request: ProviderGatewayRequest): Promise<ProviderGatewayResponse> {
+    void request;
     throw this.error;
   }
 }
