@@ -106,6 +106,17 @@ Stand: 2026-03-23
   [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml)
   mit begleitender Deploy-Doku unter
   [render-staging.md](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
+- das erste echte externe Staging-Ziel laeuft jetzt ueber Render unter
+  `https://logic-simulator-broker-staging.onrender.com`; der Guardrail-
+  und Ziel-Smoke wird dagegen als eigener API1-02-Verifikationsschritt
+  gefahren
+- fuer `API1-02` ist damit zwar der erste echte HTTPS-Stagingpfad da, aber
+  die Sicherheitsgrenze ist bewusst noch nicht als "hoch abgesichert"
+  bewertet: vor spaeterer breiterer Frontend-Anbindung bleiben ein
+  vorgeschalteter Staging-Zugangsschutz, eine haertere Session-Key-
+  Registrierungsbarriere, exakte nicht-platzhalterhafte Frontend-Origins,
+  abuse-orientierte Alarmierung und eine kontrollierte Oeffnung des
+  Frontend-Remote-Broker-Pfads Pflicht
 - bewusste Folgearbeit liegt jetzt nicht mehr in weiterer
   App-Flow-Grundhaertung, sondern in `API1-02` Staging, `API1-03`
   Observability/Alarmierung und `API1-04` Pilot-/Rollout-Vorbereitung
@@ -120,11 +131,23 @@ Automatisch validiert:
 
 Naechster Kernslice:
 
-- den jetzt vorhandenen staging-lokalen Runtime-Pfad auf ein extern
-  erreichbares echtes Staging-Ziel deployen, `backend-sandbox npm run smoke:staging-url`
-  gegen die ausgerollte Ziel-URL bestaetigen und danach `API1-03`
-  Observability/Alarmierung und `API1-04` Pilot-/Rollout-
-  Vorbedingungen angehen
+- den jetzt vorhandenen staging-lokalen Runtime-Pfad ueber das echte
+  Render-Ziel per `backend-sandbox npm run smoke:staging-url` bestaetigen
+- danach den Staging-Zugangsschutz haerten, bevor der Remote-Broker-Pfad in
+  der App ueber Loopback hinaus geoeffnet wird:
+  1. vorgeschalteten Staging-Access-Gate oder vergleichbare Auth-Barriere
+     vor den oeffentlichen Service setzen
+  2. Session-Key-Registrierung nicht mehr als frei oeffentlichen Endpoint
+     belassen, sondern an Staging-Access oder eine explizite
+     Betreiberfreigabe koppeln
+  3. `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen und
+     Platzhalterwerte aus der Laufzeit entfernen
+  4. abuse-orientierte Observability fuer Session-Key-Spikes,
+     CORS-Ablehnungen und Provider-/Upstream-Fehler aktivieren
+  5. den sichtbaren App-Client erst danach bewusst fuer Remote-Staging-Ziele
+     freigeben
+- erst nach diesem Security-Checkpoint `API1-03` Observability/Alarmierung
+  und `API1-04` Pilot-/Rollout-Vorbedingungen angehen
 
 ## Scope-Abschlussbewertung fuer API1-01
 

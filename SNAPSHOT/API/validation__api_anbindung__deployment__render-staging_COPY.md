@@ -64,8 +64,32 @@ Erwartung:
 - die konfigurierte Frontend-Origin wird per CORS akzeptiert
 - `/v1/dev/provider-fault` bleibt deaktiviert
 
+## Sicherheitsgrenze des ersten externen Ziels
+
+Der erste Render-Deploy ist bewusst nur der Einstieg in einen echten
+externen Stagingpfad. Er gilt nicht automatisch als "hoch abgesichert",
+nur weil die Ziel-URL ueber `https://` laeuft.
+
+Aktuell bereits gegeben:
+
+- Transport Browser/Client -> Render ueber HTTPS
+- explizites `APP_ENV=staging`
+- verpflichtende `ALLOWED_ORIGINS`
+- deaktivierte Dev-Fault-Routen
+
+Vor spaeterer breiterer Frontend-Nutzung weiterhin Pflicht:
+
+- vorgeschalteter Access-Schutz vor dem oeffentlichen Staging-Service
+- haertere Barriere fuer `POST /v1/session/key`
+- `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen
+- abuse-orientierte Alarmierung fuer Session-Key-Spikes, CORS-Ablehnungen und
+  Provider-/Upstream-Fehler
+- Oeffnung des sichtbaren App-Clients fuer Remote-Broker-Ziele erst nach
+  diesem Sicherheits-Checkpoint
+
 ## Naechster Folgepunkt
 
 Sobald dieses externe Ziel einmal real steht und der URL-Smoke dagegen gruen
-ist, ist der naechste Plan-Schritt nicht mehr der reine Staging-Aufbau,
-sondern `API1-03` Observability/Alarmierung.
+ist, folgt zuerst der beschriebene Staging-Sicherheits-Checkpoint. Danach
+gehen `API1-03` Observability/Alarmierung und spaeter `API1-04`
+Pilot-/Rollout-Vorbereitung weiter.

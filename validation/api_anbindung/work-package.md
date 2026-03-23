@@ -12,7 +12,7 @@ aktuell bleibt.
 
 ## Aktueller Integrationsstand
 
-Stand: 2026-03-23
+Stand: 2026-03-24
 
 - `API0` ist im Sandbox- und Frontend-Vorbau weitgehend angelegt:
   Session-Key-Registrierung, Chat-Request, Chat-Reset, Circuit-Context-
@@ -106,12 +106,35 @@ Stand: 2026-03-23
   [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml)
   mit begleitender Deploy-Doku unter
   [render-staging.md](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
+- das erste echte externe Staging-Ziel laeuft jetzt ueber Render unter
+  `https://logic-simulator-broker-staging.onrender.com`; der Guardrail-
+  und Ziel-Smoke wird dagegen als eigener API1-02-Verifikationsschritt
+  gefahren
+- fuer `API1-02` ist damit zwar der erste echte HTTPS-Stagingpfad da, aber
+  die Sicherheitsgrenze ist bewusst noch nicht als "hoch abgesichert"
+  bewertet: vor spaeterer breiterer Frontend-Anbindung bleiben ein
+  vorgeschalteter Staging-Zugangsschutz, eine haertere Session-Key-
+  Registrierungsbarriere, exakte nicht-platzhalterhafte Frontend-Origins,
+  abuse-orientierte Alarmierung und eine kontrollierte Oeffnung des
+  Frontend-Remote-Broker-Pfads Pflicht
 - bewusste Folgearbeit liegt jetzt nicht mehr in weiterer
   App-Flow-Grundhaertung, sondern in `API1-02` Staging, `API1-03`
   Observability/Alarmierung und `API1-04` Pilot-/Rollout-Vorbereitung
 - app-seitige Regressionsabdeckung existiert jetzt nicht mehr nur fuer Client,
   Error-Mapping und Circuit-Context, sondern auch fuer den gemeinsamen
   Broker-UI-Stateflow
+- `API1-02` Staging-Access-Gate ist jetzt als Fastify-`onRequest`-Hook
+  implementiert: alle `/v1/*`-Routen erfordern in `APP_ENV=staging` den
+  Header `X-Staging-Token` mit dem konfigurierten `STAGING_ACCESS_TOKEN`;
+  `/health` und `/ready` sowie OPTIONS-Preflight-Requests sind vom Gate
+  ausgenommen, damit Render-Health-Checks und CORS-Preflight weiterhin
+  funktionieren; bei fehlendem oder falschem Token antwortet das Gate mit
+  `401 { error: "staging_access_denied" }`; der Token wird ausschliesslich
+  als Render-Secret-Env-Var konfiguriert (`sync: false`) und darf nicht
+  ins Repo; `staging-runtime-defaults.mjs` exportiert jetzt zusaetzlich
+  `getStagingAccessToken`; der URL-Smoke uebergibt den Token an alle
+  `/v1/*`-Requests und prueft zusaetzlich, dass ein Request ohne Token
+  korrekt mit 401 abgelehnt wird
 
 Automatisch validiert:
 
@@ -120,11 +143,18 @@ Automatisch validiert:
 
 Naechster Kernslice:
 
-- den jetzt vorhandenen staging-lokalen Runtime-Pfad auf ein extern
-  erreichbares echtes Staging-Ziel deployen, `backend-sandbox npm run smoke:staging-url`
-  gegen die ausgerollte Ziel-URL bestaetigen und danach `API1-03`
-  Observability/Alarmierung und `API1-04` Pilot-/Rollout-
-  Vorbedingungen angehen
+- `STAGING_ACCESS_TOKEN` als Render-Secret setzen und Service neu deployen
+- URL-Smoke mit Token gegen das echte Render-Ziel fahren:
+  `STAGING_BASE_URL=https://logic-simulator-broker-staging.onrender.com STAGING_ALLOWED_ORIGIN=<origin> STAGING_ACCESS_TOKEN=<token> npm run smoke:staging-url`
+- danach verbleibende Pflichtpunkte vor Frontend-Freigabe:
+  1. `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen
+     (kein Platzhalter)
+  2. abuse-orientierte Observability fuer Session-Key-Spikes,
+     CORS-Ablehnungen und Provider-/Upstream-Fehler aktivieren (API1-03)
+  3. den sichtbaren App-Client erst danach bewusst fuer Remote-Staging-Ziele
+     freigeben (Loopback-Beschraenkung aufheben)
+- erst nach diesen Schritten `API1-03` Observability/Alarmierung
+  und `API1-04` Pilot-/Rollout-Vorbedingungen angehen
 
 ## Scope-Abschlussbewertung fuer API1-01
 

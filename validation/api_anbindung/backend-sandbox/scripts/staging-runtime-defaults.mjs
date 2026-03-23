@@ -27,3 +27,8 @@ export const getStagingRuntimeEnv = (env = process.env) => ({
   HOST: getStagingHost(env),
   PORT: getStagingPort(env),
 });
+
+// Staging-Access-Token fuer den X-Staging-Token Header.
+// Leer-String bedeutet: Gate nicht konfiguriert, Smoke ueberspringt Gate-Checks.
+export const getStagingAccessToken = (env = process.env) =>
+  env.STAGING_ACCESS_TOKEN?.trim() ?? '';

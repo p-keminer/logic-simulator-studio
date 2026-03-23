@@ -165,7 +165,7 @@ export const createApp = (
   };
 
   void app.register(cors, {
-    allowedHeaders: ['content-type', 'x-request-id', 'x-session-id'],
+    allowedHeaders: ['content-type', 'x-request-id', 'x-session-id', 'x-staging-token'],
     credentials: false,
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
     origin(origin, callback) {
@@ -177,6 +177,29 @@ export const createApp = (
       callback(null, config.allowedOrigins.includes(origin));
     },
   });
+
+  // Staging-Access-Gate: Schutzt alle /v1/*-Routen vor oeffentlichem Zugriff.
+  // Aktiv nur wenn APP_ENV=staging UND STAGING_ACCESS_TOKEN konfiguriert ist.
+  // /health und /ready bleiben frei, damit Render-Health-Checks weiterhin funktionieren.
+  // OPTIONS-Requests (CORS-Preflight) werden ebenfalls freigelassen, da der CORS-
+  // Plugin bereits davor antwortet; die Ausnahme ist hier als Sicherheitsnetz mitgefuehrt.
+  if (config.appEnv === 'staging' && config.stagingAccessToken) {
+    const expectedToken = config.stagingAccessToken;
+    app.addHook('onRequest', async (request, reply) => {
+      if (
+        request.method === 'OPTIONS' ||
+        request.url === '/health' ||
+        request.url === '/ready'
+      ) {
+        return;
+      }
+      const receivedToken = request.headers['x-staging-token'];
+      if (receivedToken !== expectedToken) {
+        await reply.code(401).send({ error: 'staging_access_denied' });
+      }
+    });
+  }
+
   const devProviderFaultController = new InMemoryDevProviderFaultController();
   const providerGateway =
     options.providerGateway ??

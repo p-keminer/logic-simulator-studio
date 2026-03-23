@@ -100,6 +100,10 @@ Der erste konkrete `API1-02`-Basisschnitt ist jetzt ebenfalls vorhanden:
   [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml)
   plus begleitende Deploy-Doku in
   [render-staging.md](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
+- das erste externe Render-Ziel ist jetzt bewusst als Staging-HTTPS-Pfad
+  einordenbar, aber noch nicht als voll gehaertete Endstufe; vor spaeterer
+  breiterer Frontend-Freigabe bleiben Access-Schutz, Session-Key-Barriere,
+  exakte Staging-Origin und abuse-orientierte Alarmierung Pflicht
 
 ## Reihenfolge fuer die spaetere Implementierung
 
@@ -168,8 +172,9 @@ Der erste konkrete `API1-02`-Basisschnitt ist jetzt ebenfalls vorhanden:
   Konfigurationsfehler-Smoke ueber `npm run broker:smoke:config-error` ab
 - zusaetzlich deckt `API1-01b` jetzt einen lokalen sichtbaren
   Policy-Block-Smoke ueber `npm run broker:smoke:policy-block` ab
-- der naechste direkte Folgepunkt ist jetzt, den staging-lokalen Lauf auf ein
-  echtes extern erreichbares Staging-Ziel mit fester Ziel-URL- und Origin-
-  Konfiguration ausserhalb des Entwicklerrechners zu deployen und per
-  Ziel-Smoke zu bestaetigen; danach folgen `API1-03`
-  Observability/Alarmierung und `API1-04` Pilot-/Rollout-Schritte
+- der naechste direkte Folgepunkt ist jetzt, den staging-lokalen Lauf ueber
+  das echte externe Render-Ziel per URL-Smoke zu bestaetigen und anschliessend
+  den Staging-Sicherheits-Checkpoint fuer Access-Schutz,
+  Session-Key-Barriere, exakte Origin und abuse-orientierte Alarmierung
+  abzuarbeiten; danach folgen `API1-03` Observability/Alarmierung und
+  `API1-04` Pilot-/Rollout-Schritte

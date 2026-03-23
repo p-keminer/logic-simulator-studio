@@ -18,3 +18,5 @@ services:
         value: info
       - key: ALLOWED_ORIGINS
         sync: false
+      - key: STAGING_ACCESS_TOKEN
+        sync: false

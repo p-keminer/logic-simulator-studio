@@ -53,6 +53,21 @@ Aktuell vorhandene staging-nahe Laufpfade:
 - externer Zielpfad beschrieben in
   [render-staging.md](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
 
+Security-Checkpoint vor spaeterer breiterer Freigabe:
+
+- Transport ueber HTTPS ist fuer das erste Render-Ziel gegeben, reicht aber
+  allein nicht als Hochsicherheitsargument
+- vor einer Oeffnung fuer echte Frontend-Staging-Nutzung braucht das Ziel
+  einen vorgeschalteten Access-Schutz oder eine vergleichbare
+  Zugriffsschranke
+- die Session-Key-Registrierung darf im spaeteren haerteren Staging nicht als
+  frei oeffentlicher Endpoint stehenbleiben
+- `ALLOWED_ORIGINS` muss auf die echte Frontend-Staging-Domain festgezogen
+  werden; Platzhalterwerte sind nur fuer den ersten Deploy-/Smoke-Check
+  akzeptabel
+- missbrauchsrelevante Signale wie Session-Key-Spikes, CORS-Ablehnungen und
+  Provider-Ausfaelle muessen vor breiterer Nutzung sichtbar alarmierbar sein
+
 ## Production
 
 Zweck:
@@ -79,3 +94,6 @@ Naechster konkreter Staging-Schritt:
 5. den staging-lokalen Lauf jetzt auf ein extern erreichbares Ziel mit
    fester Staging-Domain, Runtime-Config ausserhalb des Entwicklerrechners und
    nachgelagertem Ziel-Smoke heben
+6. danach den externen Stagingpfad bewusst mit Zugangsschutz,
+   Session-Key-Barriere, exakten Origins und abuse-orientierter
+   Observability haerten, bevor Frontend-Remote-Ziele freigegeben werden

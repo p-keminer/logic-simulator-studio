@@ -10,6 +10,10 @@ const configSchema = z.object({
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
+  // Staging-Access-Gate: statisches Token, das alle /v1/*-Routen in staging schuetzt.
+  // Mindestlaenge 32 Zeichen, damit Brute-Force unpraktikabel bleibt.
+  // Darf nicht hartcodiert werden – nur als Render-Secret oder lokale Env-Var setzen.
+  STAGING_ACCESS_TOKEN: z.string().min(32).optional(),
 });
 
 export interface SandboxConfig {
@@ -20,6 +24,8 @@ export interface SandboxConfig {
   sessionTtlSeconds: number;
   devResponseDelayMs: number;
   logLevel: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
+  /** Nur gesetzt wenn STAGING_ACCESS_TOKEN konfiguriert ist. Bewacht alle /v1/*-Routen in staging. */
+  stagingAccessToken: string | undefined;
 }
 
 const DEFAULT_DEVELOPMENT_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173'];
@@ -59,5 +65,6 @@ export const loadConfig = (
     sessionTtlSeconds: parsed.SESSION_TTL_SECONDS,
     devResponseDelayMs: parsed.DEV_RESPONSE_DELAY_MS,
     logLevel: parsed.LOG_LEVEL,
+    stagingAccessToken: parsed.STAGING_ACCESS_TOKEN,
   };
 };

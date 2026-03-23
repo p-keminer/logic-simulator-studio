@@ -21,8 +21,16 @@ Diese Checkliste dient spaeter als Mindeststandard vor Inbetriebnahme oder groes
 - `npm run smoke:staging-url` gegen das vorgesehene Zielsystem gruen
 - `render.yaml` und Docker-Artefakte reviewt
 - Ziel-Origin fuer `ALLOWED_ORIGINS` festgelegt
+- externer Staging-Service ueber HTTPS erreichbar und `/ready` gesund
+- vorgeschalteter Staging-Zugangsschutz oder gleichwertige Zugriffsschranke
+  fuer spaeteren haerteren Betrieb festgelegt
+- Session-Key-Registrierung fuer externes Staging nicht mehr als frei
+  oeffentlicher Endpoint eingeplant
+- Platzhalter-Origin durch echte Frontend-Staging-Domain ersetzt
 - Missbrauchsszenarien simuliert
 - Monitoring und Alerting aktiv
+- Alarmierung fuer Session-Key-Spikes, CORS-Ablehnungen und
+  Provider-/Upstream-Fehler vorbereitet
 - Fehlerantworten auf sensible Daten geprueft
 
 ## Vor Produktion
