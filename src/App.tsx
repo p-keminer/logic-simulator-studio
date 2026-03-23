@@ -17,6 +17,7 @@ import { BackendBrokerProvider } from './hooks/useBackendBroker';
 import { Toolbar } from './components/toolbar/Toolbar';
 import { TimingDiagram } from './components/panels/TimingDiagram';
 import { FsmEditor } from './components/fsm/FsmEditor';
+import { CanvasAnalysisBanner } from './components/panels/CanvasAnalysisBanner';
 
 const TIMING_MIN_H = 100;
 const TIMING_MAX_H = 600;
@@ -84,6 +85,7 @@ function AppInner() {
       <Toolbar showTiming={showTiming} onToggleTiming={() => setShowTiming((v) => !v)}
         onShowBroker={BACKEND_BROKER_UI_ENABLED ? () => setShowBroker(true) : undefined}
         onShowFsm={() => setShowFsm(true)} />
+      <CanvasAnalysisBanner />
       <div className="flex flex-1 min-h-0">
         <GatePalette
           isCollapsed={isPaletteCollapsed}

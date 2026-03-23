@@ -306,22 +306,23 @@
                       "title":  "FSM export projection semantics missing for STT and timing",
                       "priority":  "P1",
                       "area":  "ui, fsm-synthesis, validation",
-                      "status":  "partial",
+                      "status":  "done",
+                      "resolvedAt":  "2026-03-23",
+                      "resolutionNote":  "The FSM0 current scope is now closed. Projection metadata, shared batch semantics, static/reduced STT core helpers, clean/legacy/modified/mixed semantics, shared STT/timing panel state, early editor/canvas guardrails, and the fixture-backed boundary wall for projected+raw, chained, observer, mixed-islands, shared-observer, and shared-helper cases are implemented and verified. Remaining follow-up is consciously deferred to FSM0-8 (Netzlisten-Minimierung / Bool-Minimierung / Mapping), not further current-scope projection groundwork.",
                       "evidence":  [
-                                       "validation/fsm0/work-package.md: active FSM path with implemented foundation and next validation objects",
+                                       "validation/fsm0/work-package.md: current-scope closure with Abschlussbewertung and fixture-backed boundary wall",
                                        "validation/verification-matrix.md: FSM export projection and reduced STT are now explicit required patterns",
-                                       "validation/maturity-gap-dashboard.md: current open work summary"
+                                       "validation/maturity-gap-dashboard.md: FSM current-scope closure summary"
                                    ],
                       "symptom":  "FSMs synthesized from the FSM editor can be functionally correct on canvas and in HDL export, but the remaining mixed and wide cases still need a fully deterministic projection layer. Without the final reduction and fallback rules, STT and timing can still drift back toward raw gate/helper networks in edge cases.",
                       "affectedGates":  [
                                             "all FSM-editor synthesized circuits"
                                         ],
-                      "recommendedNextStep":  "Keep the next slice small: build on the new static/reduced STT core helper, expand focused regressions for broad and mixed sequential cases, and only then tighten subsystem-boundary logic instead of starting a large UI refactor.",
+                      "recommendedNextStep":  "No further current-scope action required. If the FSM strand is reopened, restart deliberately with FSM0-8: Netzlisten-Minimierung / Bool-Minimierung / Mapping for broad synthesis, plus optional additional legacy breadth if needed.",
                       "dependsOn":  [
 
                                     ],
-                      "riskIfUnfixed":  "Synthesized FSMs remain semantically inconsistent between editor, STT, timing, and UI validation. Regressions in FSM projection can recur without a dedicated safety net.",
-                      "partialResolutionNote":  "First slice implemented and extended: FSM synthesis now emits projection metadata plus a shared projectionBatchId, the UI uses buildStateTransitionProjection() for isolated synthesized FSMs, a dedicated core helper now carries the static/reduced STT logic, and focused regressions cover broad projected inputs, explicit mixed fallbacks, and the legacy fixture bridge. Canonical STT and timing views exclude helper/display mirror noise in the standard path. The next step stays intentionally small: keep broad/mixed regressions growing around the new core helper and only then tighten subsystem-boundary rules."
+                      "riskIfUnfixed":  "N/A - current scope closed. Residual future value lies in minimization and optional broader fixture breadth, not unresolved current-scope projection inconsistency."
                   },
                   {
                       "id":  "P1-9",

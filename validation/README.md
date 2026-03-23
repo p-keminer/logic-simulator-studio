@@ -1,8 +1,8 @@
 # validation/ - Kanonischer Einstiegspunkt
 
 **Projekt:** logic-gate-simulator
-**Stand:** 2026-03-21
-**Qualitaetsstand:** 884/884 Tests gruen - Contract Runner und Golden Corpus auf aktuellem 19.03-Stand verifiziert; UI-Timing-Audit in CI semantisch gruen
+**Stand:** 2026-03-23
+**Qualitaetsstand:** 1020/1020 Tests gruen - Contract Runner und Golden Corpus verifiziert; UI-Timing-Audit in CI semantisch gruen; `lint` ist aktuell noch nicht voll gruen wegen Restpunkten im Broker-/Sandbox-Pfad
 
 ---
 
@@ -16,8 +16,10 @@ Aktive kanonische Steuerdokumente:
   Einstiegspunkt in Reports, Runner und Validation-Artefakte
 - `validation/api_anbindung/work-package.md`
   aktiver API-/Broker-Pfad
+- `validation/ux-feinschliff/work-package.md`
+  aktiver UX-Feinschliff-/Intake-Pfad fuer kleine Bedienungsnacharbeiten
 - `validation/fsm0/work-package.md`
-  aktiver FSM-Pfad
+  FSM-Pfad; aktueller Scope abgeschlossen, Folgeausbau dokumentiert
 - `validation/race-panel-fixes/work-package.md`
   aktiver Race-/Panel-Pfad
 
@@ -54,9 +56,9 @@ Pflegeregel:
 
 | Metrik | Wert |
 |---|---|
-| Vitest-Suite | **884/884** pass |
+| Vitest-Suite | **1020/1020** pass |
 | Build | pass (`tsc -b` + `vite build`) |
-| Lint | pass |
+| Lint | fail (Restpunkte in `src/hooks/useBackendSandboxDebugBridge.ts` sowie `validation/api_anbindung/backend-sandbox/src/modules/provider-gateway/*`) |
 | Contract Runner v1 | **447 pass, 0 fail, 0 unsupported** (447 total) |
 | Golden Corpus v1 | **28 pass, 0 fail, 2 expected_limit, 0 unsupported** (30 total) |
 | Focused-Nine Core | **12/12** pass, 0 HDL-Fails, 0 Tooling-Warnungen |
@@ -91,11 +93,14 @@ Browser-Audit der 12 Fokusfaelle: STT-Projektion, HDL-Modal-Konsistenz, Screensh
 ### 7. Roadmap -> industry-lite-roadmap.md
 Drei Reifegrad-Stufen (Teaching Tool / Design Tool / Industry-Lite EDA) mit 6 Arbeitsstromen. Langfristiger Horizont.
 
-### 8. Offenes FSM0-Arbeitspaket -> fsm0/work-package.md
-Der aktive FSM-Strang liegt jetzt als ein zusammenhaengendes Arbeitspaket-Dokument unter `fsm0/work-package.md`. Es fuehrt `FSM0-1` bis `FSM0-7` in einem einzigen Strang mit Reihenfolge, Mehrwert- und Aufwandseinschaetzung. Echte Legacy-Repros liegen weiter unter `fsm-export-fixes/cases/`.
+### 8. FSM0-Arbeitspaket -> fsm0/work-package.md
+Der FSM-Strang liegt jetzt als ein zusammenhaengendes Arbeitspaket-Dokument unter `fsm0/work-package.md`. `FSM0-1` bis `FSM0-7` sind fuer den aktuellen Scope abgeschlossen und dort inklusive Abschlussbewertung dokumentiert. Echte Legacy-Repros liegen weiter unter `fsm-export-fixes/cases/`. Fuer breite FSMs ist die reduzierte STT-Sicht aktiv; die eigentliche Canvas-Synthese bleibt fuer derzeit zu grosse unverdichtete SOP-Netze bewusst blockiert, bis eine spaetere verdichtete Synthese diesen Pfad uebernimmt. Die fruehe Editor-/Canvas-Rueckmeldung fuer `legacy`, `modified`, `mixed` und Mehrsystem-Faelle ist verankert, und breite, Legacy-, gemischte `projected + raw`-, direkt verkettete Batch-, Observer-Split-, Mixed-Islands-, Shared-Observer- und Shared-Helper-Kernrepros liegen als gespeicherte Fixtures mit automatischer Regression vor. Bewusster Folgepfad ausserhalb des geschlossenen Scope bleibt `FSM0-8` (Netzlisten-Minimierung / Bool-Minimierung / Mapping).
 
 ### 9. Race-Arbeitspaket -> race-panel-fixes/work-package.md
 Strukturelles Arbeitspaket fuer Race-Panel, Race-Markierungen und Race-Lifecycle im Store. Der Strang ist fuer den aktuellen Produktumfang abgeschlossen: store-seitiges Pruning geloeschter Race-Ursachen, manueller Reset, signaturbasiertes Incident-Dedupe, gemeinsame Monitor-State-Helferschicht, Incident-Metadaten sowie konservatives Struktur-Fingerprint-Pruning sind umgesetzt und verifiziert. Weitere Arbeit waere hier nur noch spaetere optionale Vertiefung, nicht mehr noetige Grundstruktur.
+
+### 10. UX-Feinschliff -> ux-feinschliff/work-package.md
+Kleiner Sammel- und Ablaufstrang fuer sichtbare Bedienungsfeinheiten ohne neue Grundsemantik. Aktuell sind dort u. a. der spaetere manuelle Startzustand fuer Flipflops sowie der standardmaessig pausierte Start der Simulation als offene Folgeslices dokumentiert.
 
 ---
 
@@ -129,7 +134,8 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | `golden-corpus-v1-acceptance.md` | Akzeptanzkriterien und kanonischer fachlicher Baseline-Text fuer Golden Corpus v1 |
 | `golden-corpus-plan.md` | Plan fuer 25 Referenzschaltungen in 5 Tracks |
 | `industry-lite-roadmap.md` | Arbeitsstrom-Roadmap (W1-W6, Phasen A-D) |
-| `fsm0/work-package.md` | Aktiver FSM-Strang als ein einziges Arbeitspaket-Dokument. Enthaelt `FSM0-1` bis `FSM0-7` mit Reihenfolge, Nutzen, Aufwand und Abgrenzung; `FSM0-8` bleibt bewusst zurueckgestellt. |
+| `fsm0/work-package.md` | FSM-Strang als ein einziges Arbeitspaket-Dokument. `FSM0-1` bis `FSM0-7` sind im aktuellen Scope abgeschlossen; `FSM0-8` bleibt bewusst als Folgepfad zurueckgestellt. |
+| `ux-feinschliff/work-package.md` | Kleiner UX-Feinschliff-/Intake-Strang fuer offene Bedienungsnacharbeiten wie Flipflop-Startzustand und pausierten Simulationsstart. |
 | `race-panel-fixes/work-package.md` | Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik; fuer den aktuellen Scope abgeschlossen und nur noch optional vertiefbar |
 | `race-panel-fixes/README.md` | Einstiegspunkt fuer die Race-Fix-Hierarchie |
 | `verification-matrix.md` | Pflichtpruefmuster je Gate-Klasse und Freigaberegeln |
@@ -205,7 +211,9 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
-- **P1/P2:** Den aktiven FSM0-Strang in kleinen Schritten weiterziehen (`validation/fsm0/work-package.md`): zuerst Boundary-/Semantik-Themen, dann Regressionswand und verbleibende UI-/Legacy-Abschluesse; Netzlisten-Minimierung bleibt bewusst nachgelagert
+- **P1/P2:** API-/Broker-App-Integration weiter haerten (`validation/api_anbindung/work-package.md`): zuerst den sichtbaren Nutzerfluss `Key -> Chat -> Reset -> Delete` manuell und spaeter automatisiert absichern, danach erst Staging-/Rollout-Schritte
+- **P2 klein und separat:** UX-Feinschliff-Strang pflegen (`validation/ux-feinschliff/work-package.md`): kleine Bedienungsnacharbeiten zuerst dokumentiert sammeln, dann in bewusst kleinen Slices umsetzen
+- **P2 bewusst nachgelagert:** Falls der FSM-Strang wieder aufgenommen wird, dann ueber `FSM0-8` (`validation/fsm0/work-package.md`): Netzlisten-Minimierung / Bool-Minimierung / Mapping fuer breite FSM-Synthese statt neuer Grundsemantik-Arbeit am bereits abgeschlossenen aktuellen Scope
 - **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster und tiefere Invarianten)
 - **P1/P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (Trace-Depth-Hardening ist jetzt ueber alle gelandeten `gc_v2_*`-Seeds verbreitert; als Naechstes besonders grosse oder stateful Seeds weiter verdichten und spaeter aus der neuen tieferen Hierarchie-Grenze wieder in echte Pass-Faelle uebergehen)
 - **P2 optional:** Golden Corpus spaeter weiter ausbauen (mehr Schaltungen, tiefere HDL-Traces, zweite Hierarchie-Stufe, groessere Designs), falls dieser Strang wieder aktiv aufgenommen wird

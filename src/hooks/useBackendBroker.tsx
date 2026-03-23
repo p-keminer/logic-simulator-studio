@@ -1,8 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   startTransition,
   useContext,
-  useMemo,
+  useReducer,
   useState,
 } from 'react';
 import type {
@@ -23,18 +24,15 @@ import {
   toBackendBrokerUiError,
   type BackendBrokerUiError,
 } from '../core/backendBroker/errors';
+import {
+  backendBrokerUiStateReducer,
+  createInitialBackendBrokerUiState,
+  type BackendBrokerPhase,
+} from '../core/backendBroker/uiState';
 import type {
   BackendSandboxCurrentCircuitSnapshot,
   BackendSandboxCurrentCircuitSnapshotSummary,
 } from '../core/io/backendSandboxSnapshot';
-
-export type BackendBrokerPhase =
-  | 'idle'
-  | 'connecting'
-  | 'active'
-  | 'sending'
-  | 'resetting'
-  | 'disconnecting';
 
 export interface BackendBrokerContextValue {
   brokerBaseUrl: string;
@@ -68,7 +66,7 @@ const BackendBrokerContext = createContext<BackendBrokerContextValue | null>(
 
 const createDisabledFeatureError = () =>
   new Error(
-    'Backend broker UI is disabled. Set VITE_ENABLE_BACKEND_BROKER_UI=1 in a dev build to enable it.',
+    'Backend broker UI ist in diesem Build nicht verfuegbar.',
   );
 
 const DISABLED_BACKEND_BROKER_CONTEXT: BackendBrokerContextValue = {
@@ -138,18 +136,13 @@ export function BackendBrokerProvider({
   children,
 }: BackendBrokerProviderProps): React.JSX.Element {
   const [brokerBaseUrl, setBrokerBaseUrlState] = useState(resolveInitialBaseUrl);
-  const [phase, setPhase] = useState<BackendBrokerPhase>('idle');
-  const [session, setSession] = useState<BackendBrokerSessionRegistration | null>(
-    null,
+  const [uiState, dispatchUiState] = useReducer(
+    backendBrokerUiStateReducer,
+    undefined,
+    createInitialBackendBrokerUiState,
   );
-  const [conversationId, setConversationId] = useState<string>();
-  const [messages, setMessages] = useState<BackendBrokerConversationMessage[]>([]);
-  const [lastError, setLastError] = useState<BackendBrokerUiError | null>(null);
-
-  const client = useMemo(
-    () => new BackendBrokerClient({ baseUrl: brokerBaseUrl }),
-    [brokerBaseUrl],
-  );
+  const { phase, session, conversationId, messages, lastError } = uiState;
+  const createClient = () => new BackendBrokerClient({ baseUrl: brokerBaseUrl });
 
   const setBrokerBaseUrl = (nextBaseUrl: string) => {
     const normalized = normalizeBackendBrokerBaseUrl(nextBaseUrl);
@@ -161,21 +154,18 @@ export function BackendBrokerProvider({
   };
 
   const clearError = () => {
-    setLastError(null);
+    dispatchUiState({ type: 'clear-error' });
   };
 
   const connect = async (apiKey: string) => {
-    setLastError(null);
-    setPhase('connecting');
+    dispatchUiState({ type: 'connect-start' });
 
     try {
+      const client = createClient();
       const nextSession = await client.registerSessionKey(apiKey);
 
       startTransition(() => {
-        setSession(nextSession);
-        setConversationId(undefined);
-        setMessages([]);
-        setPhase('active');
+        dispatchUiState({ type: 'connect-success', session: nextSession });
       });
 
       logBackendBrokerDebug('broker session established', {
@@ -187,8 +177,7 @@ export function BackendBrokerProvider({
       return nextSession;
     } catch (error) {
       const mappedError = toBackendBrokerUiError(error);
-      setLastError(mappedError);
-      setPhase('idle');
+      dispatchUiState({ type: 'connect-failure', error: mappedError });
       throw error;
     }
   };
@@ -196,25 +185,20 @@ export function BackendBrokerProvider({
   const disconnect = async () => {
     if (!session) {
       startTransition(() => {
-        setConversationId(undefined);
-        setMessages([]);
-        setPhase('idle');
+        dispatchUiState({ type: 'disconnect-no-session' });
       });
 
       return null;
     }
 
-    setLastError(null);
-    setPhase('disconnecting');
+    dispatchUiState({ type: 'disconnect-start' });
 
     try {
+      const client = createClient();
       const result = await client.deleteSessionKey(session.sessionId);
 
       startTransition(() => {
-        setSession(null);
-        setConversationId(undefined);
-        setMessages([]);
-        setPhase('idle');
+        dispatchUiState({ type: 'disconnect-success' });
       });
 
       logBackendBrokerDebug('broker session deleted', {
@@ -227,17 +211,11 @@ export function BackendBrokerProvider({
     } catch (error) {
       const mappedError = toBackendBrokerUiError(error);
 
-      setLastError(mappedError);
-      if (mappedError.kind === 'session') {
-        startTransition(() => {
-          setSession(null);
-          setConversationId(undefined);
-          setMessages([]);
-          setPhase('idle');
-        });
-      } else {
-        setPhase('active');
-      }
+      dispatchUiState({
+        type: 'disconnect-failure',
+        error: mappedError,
+        sessionInvalidated: mappedError.kind === 'session',
+      });
 
       throw error;
     }
@@ -252,7 +230,7 @@ export function BackendBrokerProvider({
 
     if (!session) {
       const missingSessionError = createMissingSessionError();
-      setLastError(missingSessionError);
+      dispatchUiState({ type: 'set-error', error: missingSessionError });
       throw new Error(missingSessionError.message);
     }
 
@@ -260,17 +238,13 @@ export function BackendBrokerProvider({
       throw new Error('Broker chat requests require a non-empty user message.');
     }
 
-    setLastError(null);
-    setPhase('sending');
-
     const nextConversationId = conversationId ?? crypto.randomUUID();
     const userTurn = createConversationMessage('user', message);
 
-    startTransition(() => {
-      setMessages((currentMessages) => [...currentMessages, userTurn]);
-    });
+    dispatchUiState({ type: 'send-start', userTurn });
 
     try {
+      const client = createClient();
       const circuitContext = createBackendBrokerCircuitContext(snapshot);
       const response = await client.sendChatRequest({
         sessionId: session.sessionId,
@@ -283,9 +257,11 @@ export function BackendBrokerProvider({
       });
 
       startTransition(() => {
-        setConversationId(response.conversationId ?? nextConversationId);
-        setMessages((currentMessages) => [...currentMessages, assistantTurn]);
-        setPhase('active');
+        dispatchUiState({
+          type: 'send-success',
+          assistantTurn,
+          conversationId: response.conversationId ?? nextConversationId,
+        });
       });
 
       logBackendBrokerDebug('broker chat response received', {
@@ -302,16 +278,11 @@ export function BackendBrokerProvider({
     } catch (error) {
       const mappedError = toBackendBrokerUiError(error);
 
-      setLastError(mappedError);
-      if (mappedError.kind === 'session') {
-        startTransition(() => {
-          setSession(null);
-          setConversationId(undefined);
-          setPhase('idle');
-        });
-      } else {
-        setPhase('active');
-      }
+      dispatchUiState({
+        type: 'send-failure',
+        error: mappedError,
+        sessionInvalidated: mappedError.kind === 'session',
+      });
 
       throw error;
     }
@@ -320,14 +291,14 @@ export function BackendBrokerProvider({
   const resetConversation = async (reason?: string) => {
     if (!session) {
       const missingSessionError = createMissingSessionError();
-      setLastError(missingSessionError);
+      dispatchUiState({ type: 'set-error', error: missingSessionError });
       throw new Error(missingSessionError.message);
     }
 
-    setLastError(null);
-    setPhase('resetting');
+    dispatchUiState({ type: 'reset-start' });
 
     try {
+      const client = createClient();
       const response = await client.resetChat({
         sessionId: session.sessionId,
         conversationId,
@@ -335,9 +306,7 @@ export function BackendBrokerProvider({
       });
 
       startTransition(() => {
-        setConversationId(undefined);
-        setMessages([]);
-        setPhase('active');
+        dispatchUiState({ type: 'reset-success' });
       });
 
       logBackendBrokerDebug('broker conversation reset', {
@@ -351,17 +320,11 @@ export function BackendBrokerProvider({
     } catch (error) {
       const mappedError = toBackendBrokerUiError(error);
 
-      setLastError(mappedError);
-      if (mappedError.kind === 'session') {
-        startTransition(() => {
-          setSession(null);
-          setConversationId(undefined);
-          setMessages([]);
-          setPhase('idle');
-        });
-      } else {
-        setPhase('active');
-      }
+      dispatchUiState({
+        type: 'reset-failure',
+        error: mappedError,
+        sessionInvalidated: mappedError.kind === 'session',
+      });
 
       throw error;
     }

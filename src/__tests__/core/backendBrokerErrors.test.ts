@@ -42,6 +42,19 @@ describe('backend broker ui error mapping', () => {
     expect(mapped.requestId).toBe('req-auth');
   });
 
+  it('treats stale-session not-found responses as session invalidation, not as a generic request error', () => {
+    const mapped = toBackendBrokerUiError(
+      new BackendBrokerApiError(404, 'Session was not found.', {
+        code: 'NOT_FOUND',
+        requestId: 'req-stale',
+      }),
+    );
+
+    expect(mapped.kind).toBe('session');
+    expect(mapped.title).toBe('Broker-Sitzung ist nicht mehr gueltig');
+    expect(mapped.requestId).toBe('req-stale');
+  });
+
   it('maps local circuit-context build failures before the request leaves the app', () => {
     const mapped = toBackendBrokerUiError(
       new BackendBrokerCircuitContextError(

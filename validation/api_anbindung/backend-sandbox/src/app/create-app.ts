@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Writable } from 'node:stream';
 import fastify, { type FastifyInstance } from 'fastify';
+import cors from '@fastify/cors';
 import {
   DefaultSessionService,
   type SessionService,
@@ -133,6 +134,24 @@ export const createApp = (
       }
 
       return randomUUID();
+    },
+  });
+
+  void app.register(cors, {
+    allowedHeaders: ['content-type', 'x-request-id', 'x-session-id'],
+    credentials: false,
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const isAllowedLocalOrigin =
+        /^https?:\/\/localhost(?::\d+)?$/i.test(origin) ||
+        /^https?:\/\/127\.0\.0\.1(?::\d+)?$/i.test(origin);
+
+      callback(null, isAllowedLocalOrigin);
     },
   });
   const providerGateway =

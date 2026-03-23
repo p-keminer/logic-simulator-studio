@@ -1,0 +1,537 @@
+{
+  "id": "fsm0-projected-raw-modified-fixture",
+  "name": "FSM0 Projected Raw Modified Fixture",
+  "version": "1.0",
+  "gates": {
+    "mn2gjb6e-2": {
+      "id": "mn2gjb6e-2",
+      "typeId": "CLOCK",
+      "x": 500,
+      "y": 60,
+      "label": "CLK",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "clock",
+        "visibility": "canonical",
+        "signalLabel": "CLK",
+        "groupKey": "clock:CLK",
+        "signalPortId": "clk"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6e-3": {
+      "id": "mn2gjb6e-3",
+      "typeId": "INPUT_SWITCH",
+      "x": 500,
+      "y": 140,
+      "label": "RST",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "reset",
+        "visibility": "canonical",
+        "signalLabel": "RST",
+        "groupKey": "reset:RST",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6e-4": {
+      "id": "mn2gjb6e-4",
+      "typeId": "INPUT_SWITCH",
+      "x": 500,
+      "y": 280,
+      "label": "A",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "input",
+        "visibility": "canonical",
+        "signalLabel": "A",
+        "groupKey": "input:A",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6e-5": {
+      "id": "mn2gjb6e-5",
+      "typeId": "NOT",
+      "x": 640,
+      "y": 280,
+      "label": "!A",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "internal_helper",
+        "visibility": "derived",
+        "signalLabel": "!A",
+        "groupKey": "input:A"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6e-7": {
+      "id": "mn2gjb6e-7",
+      "typeId": "D_FF_R",
+      "x": 640,
+      "y": 440,
+      "label": "Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "state",
+        "visibility": "canonical",
+        "signalLabel": "Q0",
+        "groupKey": "state:Q0",
+        "signalPortId": "q"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6e-a": {
+      "id": "mn2gjb6e-a",
+      "typeId": "NOT",
+      "x": 780,
+      "y": 440,
+      "label": "!Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "state_inverted",
+        "visibility": "derived",
+        "signalLabel": "!Q0",
+        "groupKey": "state:Q0"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6f-c": {
+      "id": "mn2gjb6f-c",
+      "typeId": "AND",
+      "x": 920,
+      "y": 60,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6f-f": {
+      "id": "mn2gjb6f-f",
+      "typeId": "AND",
+      "x": 920,
+      "y": 140,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6f-i": {
+      "id": "mn2gjb6f-i",
+      "typeId": "OR",
+      "x": 1060,
+      "y": 220,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6f-m": {
+      "id": "mn2gjb6f-m",
+      "typeId": "OUTPUT_LED",
+      "x": 1280,
+      "y": 60,
+      "label": "Y",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "output",
+        "visibility": "canonical",
+        "signalLabel": "Y",
+        "groupKey": "output:Y",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "mn2gjb6f-o": {
+      "id": "mn2gjb6f-o",
+      "typeId": "OUTPUT_LED",
+      "x": 1380,
+      "y": 60,
+      "label": "Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "display_mirror",
+        "visibility": "derived",
+        "signalLabel": "Q0",
+        "groupKey": "state:Q0",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "raw-reg": {
+      "id": "raw-reg",
+      "typeId": "D_FF_R",
+      "x": 720,
+      "y": 40,
+      "label": "RAW_Q",
+      "outputSignals": {},
+      "customState": {
+        "q": 0,
+        "prevClk": 0
+      },
+      "isSelected": false
+    },
+    "raw-and": {
+      "id": "raw-and",
+      "typeId": "AND",
+      "x": 860,
+      "y": 40,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "raw-led": {
+      "id": "raw-led",
+      "typeId": "OUTPUT_LED",
+      "x": 2200,
+      "y": 40,
+      "label": "RAW_LED",
+      "outputSignals": {},
+      "isSelected": false
+    }
+  },
+  "wires": {
+    "mn2gjb6e-6": {
+      "id": "mn2gjb6e-6",
+      "from": {
+        "gateId": "mn2gjb6e-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6e-5",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6e-8": {
+      "id": "mn2gjb6e-8",
+      "from": {
+        "gateId": "mn2gjb6e-2",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6e-9": {
+      "id": "mn2gjb6e-9",
+      "from": {
+        "gateId": "mn2gjb6e-3",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6e-b": {
+      "id": "mn2gjb6e-b",
+      "from": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mn2gjb6e-a",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-d": {
+      "id": "mn2gjb6f-d",
+      "from": {
+        "gateId": "mn2gjb6e-a",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-c",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-e": {
+      "id": "mn2gjb6f-e",
+      "from": {
+        "gateId": "mn2gjb6e-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-c",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-g": {
+      "id": "mn2gjb6f-g",
+      "from": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-f",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-h": {
+      "id": "mn2gjb6f-h",
+      "from": {
+        "gateId": "mn2gjb6e-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-f",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-j": {
+      "id": "mn2gjb6f-j",
+      "from": {
+        "gateId": "mn2gjb6f-c",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-i",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-k": {
+      "id": "mn2gjb6f-k",
+      "from": {
+        "gateId": "mn2gjb6f-f",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-i",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-l": {
+      "id": "mn2gjb6f-l",
+      "from": {
+        "gateId": "mn2gjb6f-i",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-n": {
+      "id": "mn2gjb6f-n",
+      "from": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-m",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "mn2gjb6f-p": {
+      "id": "mn2gjb6f-p",
+      "from": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "mn2gjb6f-o",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "raw-clk": {
+      "id": "raw-clk",
+      "from": {
+        "gateId": "mn2gjb6e-2",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "raw-reg",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "raw-rst": {
+      "id": "raw-rst",
+      "from": {
+        "gateId": "mn2gjb6e-3",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "raw-reg",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "raw-seed": {
+      "id": "raw-seed",
+      "from": {
+        "gateId": "mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "raw-and",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "raw-feedback": {
+      "id": "raw-feedback",
+      "from": {
+        "gateId": "raw-reg",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "raw-and",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "raw-d": {
+      "id": "raw-d",
+      "from": {
+        "gateId": "raw-and",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "raw-reg",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "raw-out": {
+      "id": "raw-out",
+      "from": {
+        "gateId": "raw-reg",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "raw-led",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    }
+  },
+  "viewport": {
+    "panX": 0,
+    "panY": 0,
+    "zoom": 1
+  },
+  "metadata": {
+    "createdAt": "",
+    "updatedAt": ""
+  }
+}

@@ -43,6 +43,10 @@
 - Integrations- und Route-Tests decken jetzt Happy-Path, fehlende Datei, ungueltiges JSON, schemaungueltige Snapshots und Pfad-Escape-Block ab
 - Review-Fix: opt-in-Local-App-Bridge-Routen geben Capabilities oder Current-Circuit-Daten nur noch fuer aktive Sandbox-Sessions frei
 - Review-Fix: File-Adapter blocken jetzt auch Realpfad-Escapes ueber Symlinks oder Junctions und testen diesen Pfad isoliert
+- Review-Fix: lokale Browser-App-Integration gegen den Sandbox-Broker ist jetzt
+  ueber eine enge CORS-Freigabe fuer `localhost`-/`127.0.0.1`-Origins moeglich,
+  damit `session/key`, Chat und Reset im Dev-Dialog nicht mehr als
+  "Broker ist nicht erreichbar" an einem Browser-Preflight scheitern
 
 ## Bewusst nur Stub
 
@@ -78,6 +82,8 @@
 - `npm run typecheck` erfolgreich
 - `npm run build` erfolgreich
 - `npm test` erfolgreich: `17` Testdateien bestanden, `58` Tests bestanden
+- Browser-CORS-Checks fuer lokale App-Origins auf `/v1/session/key` laufen
+  jetzt ebenfalls isoliert innerhalb der Sandbox
 - Circuit-Context-Checks fuer Whitelist, Manipulation, Reduktion und Oversize-Ablehnung laufen isoliert innerhalb der Sandbox
 - Chat-Checks fuer Session-Bindung, Policy-/Rate-Limit-Block, Prompt-Bau, lokale History/Reset und Route-Haertung laufen isoliert innerhalb der Sandbox
 - Error-Contract-Checks fuer den lokalen HTTP-Mapper laufen isoliert innerhalb der Sandbox

@@ -8,6 +8,9 @@ Use this checklist when the scaffold is ready for a later implementation pass.
 - confirm the route shells expose only the intended placeholder endpoints
 - confirm `POST /v1/chat/request` only accepts a session-bound reduced active-circuit payload
 - confirm `POST /v1/chat/reset` only clears sandbox-local conversation history for the bound session
+- confirm local browser app origins such as `http://localhost:5173` or
+  `http://127.0.0.1:5173` can pass CORS preflight for the broker routes while
+  unrelated origins stay untrusted
 - confirm session and chat contracts reject unknown fields
 - confirm the local app-bridge contract can map an app-near open-circuit snapshot onto the existing sandbox chat/reset contracts without importing active-app code
 - confirm `CurrentCircuitSnapshotProvider` can be swapped from fixture to a later real adapter without changing chat or circuit modules

@@ -10,6 +10,37 @@ Nach jeder Aenderung an diesem Dokument oder angrenzenden API-Dokuquellen
 muss `npm run roadmap:compl` ausgefuehrt werden, damit `ROADMAP_COMPL/API/`
 aktuell bleibt.
 
+## Aktueller Integrationsstand
+
+Stand: 2026-03-23
+
+- `API0` ist im Sandbox- und Frontend-Vorbau weitgehend angelegt:
+  Session-Key-Registrierung, Chat-Request, Chat-Reset, Circuit-Context-
+  Reduktion, Guardrails, Provider-Gateway, Audit/Redaction und die lokale
+  App-Bridge-Kante existieren bereits
+- die aktive App besitzt jetzt einen dedizierten Broker-Client, einen
+  lokalen Circuit-Context-Adapter, einen Snapshot-Bridge-Typ sowie ein
+  standardmaessig sichtbares Broker-Modal fuer Key, Chat, Reset und Delete
+- der aktuelle Slice `API1-01a` haertet den App-seitigen Broker-Flow:
+  Key-/Chat-/Reset-/Delete-Zustaende laufen jetzt ueber einen gemeinsamen
+  UI-State-Reducer statt ueber leicht auseinanderlaufende Einzelpfade
+- Session-Invalidierung verhaelt sich jetzt konsistent ueber Chat, Reset und
+  Delete: Session, Conversation und lokale Chat-History werden im selben
+  Zustandspfad geleert
+- app-seitige Regressionsabdeckung existiert jetzt nicht mehr nur fuer Client,
+  Error-Mapping und Circuit-Context, sondern auch fuer den gemeinsamen
+  Broker-UI-Stateflow
+
+Automatisch validiert:
+
+- `npm test -- --run`
+- `npm run build`
+
+Naechster Kernslice:
+
+- `API1-01b` manuelle und spaeter automatisierte UI-/Flow-Absicherung fuer
+  den echten Nutzerpfad `Key -> Chat -> Reset -> Delete`
+
 ## Arbeitspaket 1: Scope absichern
 
 Ziel:
@@ -114,3 +145,34 @@ Umsetzungsschritte:
 Abnahme:
 
 - Rollout-Kriterien und Rueckfallstrategie sind schriftlich freigegeben
+
+## Manuelle Verifikation fuer API1-01a
+
+1. App mit kleiner offener Schaltung starten
+2. Broker-Modal oeffnen und einen gueltigen Sandbox-Key setzen
+3. Erwartung:
+   - Session-ID und Gueltig-bis erscheinen
+   - Basis-URL ist waehrend aktiver Session gesperrt
+4. Eine Chat-Nachricht senden
+5. Erwartung:
+   - die Nachricht laeuft ueber den Broker
+   - kein direkter Provider-Call aus der App
+   - Conversation-ID wird gesetzt
+6. Broker-Reset ausfuehren
+7. Erwartung:
+   - lokale Chat-History ist leer
+   - Conversation-ID ist zurueckgesetzt
+   - Session bleibt aktiv
+8. Broker-Key loeschen
+9. Erwartung:
+    - Session-, Conversation- und Chat-Zustand sind leer
+    - das Modal springt in den inaktiven Zustand zurueck
+10. Einen Session-Fehler provozieren, z. B. ueber stale Session oder
+    ungueltige Session-ID im Sandbox-Backend
+11. Erwartung:
+    - dieselbe konsistente Session-Invalidierung greift auch fuer Chat, Reset
+      oder Delete
+    - auch `NOT_FOUND` / `Session was not found.` wird dabei als stale Session
+      behandelt und nicht als blockierender generischer Request-Fehler
+    - der Nutzer sieht einen Session-Fehler und keinen halblebenden
+      Restzustand

@@ -9,14 +9,14 @@ Rohdaten: `validation/focused-nine-ui-summary.json`
 
 Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist gegen den aktuellen P0-Stand gelaufen.
 
-- `4` echte UI-/Auditfehler ueber Smoke-, STT-Modus- und Timing-System-Pruefungen
+- `3` echte UI-/Auditfehler ueber Smoke-, STT-Modus- und Timing-System-Pruefungen
 - `0` davon klassische UI-/Projektionsfehler im Smoke-Lauf
 - `0` erwartete UI-Limit-Faelle bei breiten sequenziellen Zustandsraeumen
 - `12` saubere UI-Smoke-Passes
 - `0` Infrastruktur-/Ladefehler
 - HDL-Modal war in allen erfolgreich geladenen Faellen textuell konsistent mit den generierten Exportdateien
 - Timing-Panel hat in allen erfolgreich geladenen Faellen geoeffnet
-- FSM-STT-Modus-Audit: `1` PASS, `4` FAIL
+- FSM-STT-Modus-Audit: `2` PASS, `3` FAIL
 - Timing-System-Audit: `1` PASS, `0` FAIL
 - Semantischer Timing-Check fuer 5 Fokusfaelle: `5` PASS, `0` WARN
 
@@ -24,7 +24,6 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 
 - `fsm_mixed_fallback`: Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation.
 - `fsm_projected_reduced`: Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints.
-- `fsm_partial_inputs_fallback`: Partial-input fallback no longer stays technical-full or lost its specific fallback explanation in the UI.
 - `fsm_partial_outputs_fallback`: Partial-output fallback no longer stays technical-full or lost its specific fallback explanation in the UI.
 
 ## Erwartete UI-Limits
@@ -55,7 +54,7 @@ Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist ge
 - `fsm_projected_modes`: PASS - Projected FSM exposes compact + technical STT modes with distinct table shapes.
 - `fsm_mixed_fallback`: FAIL - Mixed FSM/raw fallback still exposes a compact dropdown, lost the technical clock dimension, or no longer renders the fallback explanation.
 - `fsm_projected_reduced`: FAIL - Wide projected FSM reduction no longer hides the technical-full mode or lost its reduced-STT hints.
-- `fsm_partial_inputs_fallback`: FAIL - Partial-input fallback no longer stays technical-full or lost its specific fallback explanation in the UI.
+- `fsm_partial_inputs_fallback`: PASS - Partial-input FSM fallback stays technical-full in the UI and surfaces the specific partial-input explanation.
 - `fsm_partial_outputs_fallback`: FAIL - Partial-output fallback no longer stays technical-full or lost its specific fallback explanation in the UI.
 
 ## Timing-System-Pruefung

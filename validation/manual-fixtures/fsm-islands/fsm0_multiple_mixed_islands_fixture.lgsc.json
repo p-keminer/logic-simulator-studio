@@ -1,0 +1,1328 @@
+{
+  "id": "fsm0-multiple-mixed-islands-fixture",
+  "name": "FSM0 Multiple Mixed Islands Fixture",
+  "version": "1.0",
+  "gates": {
+    "island1-mn2gjb6e-2": {
+      "id": "island1-mn2gjb6e-2",
+      "typeId": "CLOCK",
+      "x": 500,
+      "y": 60,
+      "label": "CLK",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "clock",
+        "visibility": "canonical",
+        "signalLabel": "CLK",
+        "groupKey": "clock:CLK",
+        "signalPortId": "clk"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-3": {
+      "id": "island1-mn2gjb6e-3",
+      "typeId": "INPUT_SWITCH",
+      "x": 500,
+      "y": 140,
+      "label": "RST",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "reset",
+        "visibility": "canonical",
+        "signalLabel": "RST",
+        "groupKey": "reset:RST",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-4": {
+      "id": "island1-mn2gjb6e-4",
+      "typeId": "INPUT_SWITCH",
+      "x": 500,
+      "y": 280,
+      "label": "A",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "input",
+        "visibility": "canonical",
+        "signalLabel": "A",
+        "groupKey": "input:A",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-5": {
+      "id": "island1-mn2gjb6e-5",
+      "typeId": "NOT",
+      "x": 640,
+      "y": 280,
+      "label": "!A",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "internal_helper",
+        "visibility": "derived",
+        "signalLabel": "!A",
+        "groupKey": "input:A"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-7": {
+      "id": "island1-mn2gjb6e-7",
+      "typeId": "D_FF_R",
+      "x": 640,
+      "y": 440,
+      "label": "Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "state",
+        "visibility": "canonical",
+        "signalLabel": "Q0",
+        "groupKey": "state:Q0",
+        "signalPortId": "q"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-a": {
+      "id": "island1-mn2gjb6e-a",
+      "typeId": "NOT",
+      "x": 780,
+      "y": 440,
+      "label": "!Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "state_inverted",
+        "visibility": "derived",
+        "signalLabel": "!Q0",
+        "groupKey": "state:Q0"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-c": {
+      "id": "island1-mn2gjb6f-c",
+      "typeId": "AND",
+      "x": 920,
+      "y": 60,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-f": {
+      "id": "island1-mn2gjb6f-f",
+      "typeId": "AND",
+      "x": 920,
+      "y": 140,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-i": {
+      "id": "island1-mn2gjb6f-i",
+      "typeId": "OR",
+      "x": 1060,
+      "y": 220,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-m": {
+      "id": "island1-mn2gjb6f-m",
+      "typeId": "OUTPUT_LED",
+      "x": 1280,
+      "y": 60,
+      "label": "Y",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "output",
+        "visibility": "canonical",
+        "signalLabel": "Y",
+        "groupKey": "output:Y",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-o": {
+      "id": "island1-mn2gjb6f-o",
+      "typeId": "OUTPUT_LED",
+      "x": 1380,
+      "y": 60,
+      "label": "Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gjb6e-1",
+        "role": "display_mirror",
+        "visibility": "derived",
+        "signalLabel": "Q0",
+        "groupKey": "state:Q0",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-raw-reg": {
+      "id": "island1-raw-reg",
+      "typeId": "D_FF_R",
+      "x": 720,
+      "y": 40,
+      "label": "RAW_Q",
+      "outputSignals": {},
+      "customState": {
+        "q": 0,
+        "prevClk": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-and": {
+      "id": "island1-raw-and",
+      "typeId": "AND",
+      "x": 860,
+      "y": 40,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island1-raw-led": {
+      "id": "island1-raw-led",
+      "typeId": "OUTPUT_LED",
+      "x": 2200,
+      "y": 40,
+      "label": "RAW_LED",
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-2": {
+      "id": "island2-mn2gwkd6-2",
+      "typeId": "CLOCK",
+      "x": 2000,
+      "y": 60,
+      "label": "CLK",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "clock",
+        "visibility": "canonical",
+        "signalLabel": "CLK",
+        "groupKey": "clock:CLK",
+        "signalPortId": "clk"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-3": {
+      "id": "island2-mn2gwkd6-3",
+      "typeId": "INPUT_SWITCH",
+      "x": 2000,
+      "y": 140,
+      "label": "RST",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "reset",
+        "visibility": "canonical",
+        "signalLabel": "RST",
+        "groupKey": "reset:RST",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-4": {
+      "id": "island2-mn2gwkd6-4",
+      "typeId": "INPUT_SWITCH",
+      "x": 2000,
+      "y": 280,
+      "label": "A",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "input",
+        "visibility": "canonical",
+        "signalLabel": "A",
+        "groupKey": "input:A",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-5": {
+      "id": "island2-mn2gwkd6-5",
+      "typeId": "NOT",
+      "x": 2140,
+      "y": 280,
+      "label": "!A",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "internal_helper",
+        "visibility": "derived",
+        "signalLabel": "!A",
+        "groupKey": "input:A"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-7": {
+      "id": "island2-mn2gwkd6-7",
+      "typeId": "D_FF_R",
+      "x": 2140,
+      "y": 440,
+      "label": "Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "state",
+        "visibility": "canonical",
+        "signalLabel": "Q0",
+        "groupKey": "state:Q0",
+        "signalPortId": "q"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-a": {
+      "id": "island2-mn2gwkd6-a",
+      "typeId": "NOT",
+      "x": 2280,
+      "y": 440,
+      "label": "!Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "state_inverted",
+        "visibility": "derived",
+        "signalLabel": "!Q0",
+        "groupKey": "state:Q0"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-c": {
+      "id": "island2-mn2gwkd6-c",
+      "typeId": "AND",
+      "x": 2420,
+      "y": 60,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-f": {
+      "id": "island2-mn2gwkd6-f",
+      "typeId": "AND",
+      "x": 2420,
+      "y": 140,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-i": {
+      "id": "island2-mn2gwkd6-i",
+      "typeId": "OR",
+      "x": 2560,
+      "y": 220,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-m": {
+      "id": "island2-mn2gwkd6-m",
+      "typeId": "OUTPUT_LED",
+      "x": 2780,
+      "y": 60,
+      "label": "Y",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "output",
+        "visibility": "canonical",
+        "signalLabel": "Y",
+        "groupKey": "output:Y",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-o": {
+      "id": "island2-mn2gwkd6-o",
+      "typeId": "OUTPUT_LED",
+      "x": 2880,
+      "y": 60,
+      "label": "Q0",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd5-1",
+        "role": "display_mirror",
+        "visibility": "derived",
+        "signalLabel": "Q0",
+        "groupKey": "state:Q0",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-r": {
+      "id": "island2-mn2gwkd6-r",
+      "typeId": "CLOCK",
+      "x": 3180,
+      "y": 60,
+      "label": "CLK_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "clock",
+        "visibility": "canonical",
+        "signalLabel": "CLK_1",
+        "groupKey": "clock:CLK_1",
+        "signalPortId": "clk"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-s": {
+      "id": "island2-mn2gwkd6-s",
+      "typeId": "INPUT_SWITCH",
+      "x": 3180,
+      "y": 140,
+      "label": "RST_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "reset",
+        "visibility": "canonical",
+        "signalLabel": "RST_1",
+        "groupKey": "reset:RST_1",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-t": {
+      "id": "island2-mn2gwkd6-t",
+      "typeId": "INPUT_SWITCH",
+      "x": 3180,
+      "y": 280,
+      "label": "A_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "input",
+        "visibility": "canonical",
+        "signalLabel": "A_1",
+        "groupKey": "input:A_1",
+        "signalPortId": "out"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-u": {
+      "id": "island2-mn2gwkd6-u",
+      "typeId": "NOT",
+      "x": 3320,
+      "y": 280,
+      "label": "!A_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "internal_helper",
+        "visibility": "derived",
+        "signalLabel": "!A_1",
+        "groupKey": "input:A_1"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-w": {
+      "id": "island2-mn2gwkd6-w",
+      "typeId": "D_FF_R",
+      "x": 3320,
+      "y": 440,
+      "label": "Q0_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "state",
+        "visibility": "canonical",
+        "signalLabel": "Q0_1",
+        "groupKey": "state:Q0_1",
+        "signalPortId": "q"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-z": {
+      "id": "island2-mn2gwkd6-z",
+      "typeId": "NOT",
+      "x": 3460,
+      "y": 440,
+      "label": "!Q0_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "state_inverted",
+        "visibility": "derived",
+        "signalLabel": "!Q0_1",
+        "groupKey": "state:Q0_1"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-11": {
+      "id": "island2-mn2gwkd6-11",
+      "typeId": "AND",
+      "x": 3600,
+      "y": 60,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-14": {
+      "id": "island2-mn2gwkd6-14",
+      "typeId": "AND",
+      "x": 3600,
+      "y": 140,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-17": {
+      "id": "island2-mn2gwkd6-17",
+      "typeId": "OR",
+      "x": 3740,
+      "y": 220,
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-1b": {
+      "id": "island2-mn2gwkd6-1b",
+      "typeId": "OUTPUT_LED",
+      "x": 3960,
+      "y": 60,
+      "label": "Y_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "output",
+        "visibility": "canonical",
+        "signalLabel": "Y_1",
+        "groupKey": "output:Y_1",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-1d": {
+      "id": "island2-mn2gwkd6-1d",
+      "typeId": "OUTPUT_LED",
+      "x": 4060,
+      "y": 60,
+      "label": "Q0_1",
+      "projection": {
+        "sourceSystem": "fsm_synth",
+        "projectionBatchId": "mn2gwkd6-q",
+        "role": "display_mirror",
+        "visibility": "derived",
+        "signalLabel": "Q0_1",
+        "groupKey": "state:Q0_1",
+        "signalPortId": "_display"
+      },
+      "outputSignals": {},
+      "isSelected": false
+    }
+  },
+  "wires": {
+    "island1-mn2gjb6e-6": {
+      "id": "island1-mn2gjb6e-6",
+      "from": {
+        "gateId": "island1-mn2gjb6e-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6e-5",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-8": {
+      "id": "island1-mn2gjb6e-8",
+      "from": {
+        "gateId": "island1-mn2gjb6e-2",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-9": {
+      "id": "island1-mn2gjb6e-9",
+      "from": {
+        "gateId": "island1-mn2gjb6e-3",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6e-b": {
+      "id": "island1-mn2gjb6e-b",
+      "from": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6e-a",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-d": {
+      "id": "island1-mn2gjb6f-d",
+      "from": {
+        "gateId": "island1-mn2gjb6e-a",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-c",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-e": {
+      "id": "island1-mn2gjb6f-e",
+      "from": {
+        "gateId": "island1-mn2gjb6e-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-c",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-g": {
+      "id": "island1-mn2gjb6f-g",
+      "from": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-f",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-h": {
+      "id": "island1-mn2gjb6f-h",
+      "from": {
+        "gateId": "island1-mn2gjb6e-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-f",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-j": {
+      "id": "island1-mn2gjb6f-j",
+      "from": {
+        "gateId": "island1-mn2gjb6f-c",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-i",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-k": {
+      "id": "island1-mn2gjb6f-k",
+      "from": {
+        "gateId": "island1-mn2gjb6f-f",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-i",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-l": {
+      "id": "island1-mn2gjb6f-l",
+      "from": {
+        "gateId": "island1-mn2gjb6f-i",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-n": {
+      "id": "island1-mn2gjb6f-n",
+      "from": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-m",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-mn2gjb6f-p": {
+      "id": "island1-mn2gjb6f-p",
+      "from": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-mn2gjb6f-o",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-clk": {
+      "id": "island1-raw-clk",
+      "from": {
+        "gateId": "island1-mn2gjb6e-2",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "island1-raw-reg",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-rst": {
+      "id": "island1-raw-rst",
+      "from": {
+        "gateId": "island1-mn2gjb6e-3",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-raw-reg",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-seed": {
+      "id": "island1-raw-seed",
+      "from": {
+        "gateId": "island1-mn2gjb6e-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-raw-and",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-feedback": {
+      "id": "island1-raw-feedback",
+      "from": {
+        "gateId": "island1-raw-reg",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-raw-and",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-d": {
+      "id": "island1-raw-d",
+      "from": {
+        "gateId": "island1-raw-and",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island1-raw-reg",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island1-raw-out": {
+      "id": "island1-raw-out",
+      "from": {
+        "gateId": "island1-raw-reg",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island1-raw-led",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-6": {
+      "id": "island2-mn2gwkd6-6",
+      "from": {
+        "gateId": "island2-mn2gwkd6-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-5",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-8": {
+      "id": "island2-mn2gwkd6-8",
+      "from": {
+        "gateId": "island2-mn2gwkd6-2",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-9": {
+      "id": "island2-mn2gwkd6-9",
+      "from": {
+        "gateId": "island2-mn2gwkd6-3",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-b": {
+      "id": "island2-mn2gwkd6-b",
+      "from": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-a",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-d": {
+      "id": "island2-mn2gwkd6-d",
+      "from": {
+        "gateId": "island2-mn2gwkd6-a",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-c",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-e": {
+      "id": "island2-mn2gwkd6-e",
+      "from": {
+        "gateId": "island2-mn2gwkd6-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-c",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-g": {
+      "id": "island2-mn2gwkd6-g",
+      "from": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-f",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-h": {
+      "id": "island2-mn2gwkd6-h",
+      "from": {
+        "gateId": "island2-mn2gwkd6-4",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-f",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-j": {
+      "id": "island2-mn2gwkd6-j",
+      "from": {
+        "gateId": "island2-mn2gwkd6-c",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-i",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-k": {
+      "id": "island2-mn2gwkd6-k",
+      "from": {
+        "gateId": "island2-mn2gwkd6-f",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-i",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-l": {
+      "id": "island2-mn2gwkd6-l",
+      "from": {
+        "gateId": "island2-mn2gwkd6-i",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-n": {
+      "id": "island2-mn2gwkd6-n",
+      "from": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-m",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-p": {
+      "id": "island2-mn2gwkd6-p",
+      "from": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-o",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-v": {
+      "id": "island2-mn2gwkd6-v",
+      "from": {
+        "gateId": "island2-mn2gwkd6-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-u",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-x": {
+      "id": "island2-mn2gwkd6-x",
+      "from": {
+        "gateId": "island2-mn2gwkd6-r",
+        "portId": "clk"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "clk"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-y": {
+      "id": "island2-mn2gwkd6-y",
+      "from": {
+        "gateId": "island2-mn2gwkd6-s",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "rst"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-10": {
+      "id": "island2-mn2gwkd6-10",
+      "from": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-z",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-12": {
+      "id": "island2-mn2gwkd6-12",
+      "from": {
+        "gateId": "island2-mn2gwkd6-z",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-11",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-13": {
+      "id": "island2-mn2gwkd6-13",
+      "from": {
+        "gateId": "island2-mn2gwkd6-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-11",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-15": {
+      "id": "island2-mn2gwkd6-15",
+      "from": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-14",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-16": {
+      "id": "island2-mn2gwkd6-16",
+      "from": {
+        "gateId": "island2-mn2gwkd6-t",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-14",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-18": {
+      "id": "island2-mn2gwkd6-18",
+      "from": {
+        "gateId": "island2-mn2gwkd6-11",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-17",
+        "portId": "a"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-19": {
+      "id": "island2-mn2gwkd6-19",
+      "from": {
+        "gateId": "island2-mn2gwkd6-14",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-17",
+        "portId": "b"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-1a": {
+      "id": "island2-mn2gwkd6-1a",
+      "from": {
+        "gateId": "island2-mn2gwkd6-17",
+        "portId": "out"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-1c": {
+      "id": "island2-mn2gwkd6-1c",
+      "from": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-1b",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-mn2gwkd6-1e": {
+      "id": "island2-mn2gwkd6-1e",
+      "from": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-1d",
+        "portId": "in"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    },
+    "island2-chain_w1": {
+      "id": "island2-chain_w1",
+      "from": {
+        "gateId": "island2-mn2gwkd6-7",
+        "portId": "q"
+      },
+      "to": {
+        "gateId": "island2-mn2gwkd6-w",
+        "portId": "d"
+      },
+      "signal": {
+        "value": 0,
+        "version": 0,
+        "lastChangedAt": 0
+      },
+      "isSelected": false
+    }
+  },
+  "viewport": {
+    "panX": 0,
+    "panY": 0,
+    "zoom": 1
+  },
+  "metadata": {
+    "createdAt": "2026-03-23T00:00:00.000Z",
+    "updatedAt": "2026-03-23T00:00:00.000Z"
+  }
+}

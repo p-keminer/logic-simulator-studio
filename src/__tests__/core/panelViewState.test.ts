@@ -1,11 +1,14 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json';
 import { buildAnalysisSubsystemOptions } from '../../core/analysis/sequentialProjection';
 import type { GateInstance, SignalState, Wire } from '../../core/types';
 import type { AnalysisSubsystemOption } from '../../core/analysis/sequentialProjection';
 import type { Circuit, TimingSnapshot } from '../../core/types';
 import {
+  buildAnalysisSubsystemSemanticNotes,
+  buildCanvasAnalysisSemanticNotes,
   resolveAnalysisSubsystemState,
   resolveActiveAnalysisSubsystem,
   resolveTimingPanelState,
@@ -20,6 +23,7 @@ import type { FsmMachine } from '../../fsm/types';
 import { buildClipboardDataForSelection } from '../../store/clipboardSelection';
 import { buildPastedClipboardContent } from '../../store/pasteClipboardProjection';
 import { CircuitProvider } from '../../store/CircuitContext';
+import { CanvasAnalysisBanner } from '../../components/panels/CanvasAnalysisBanner';
 import { TimingDiagram } from '../../components/panels/TimingDiagram';
 import { TruthTableModal } from '../../components/panels/TruthTableModal';
 
@@ -102,6 +106,21 @@ function makeOption(key: string, kind: AnalysisSubsystemOption['kind'], circuit:
   };
 }
 
+function makeOptionWithSemantics(
+  key: string,
+  kind: AnalysisSubsystemOption['kind'],
+  circuit: Circuit,
+  projectionSemantics: AnalysisSubsystemOption['projectionSemantics'],
+): AnalysisSubsystemOption {
+  return {
+    key,
+    label: key,
+    circuit,
+    kind,
+    projectionSemantics,
+  };
+}
+
 function emptyCircuit(id = 'panel-view-circuit'): Circuit {
   return {
     id,
@@ -144,6 +163,45 @@ function makeTwoStateFsm(): FsmMachine {
       { id: 't4', fromId: sB, toId: sB, conditionText: '!A', mealyOutput: 0 },
     ],
   });
+}
+
+function cloneValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function loadLegacyFsmExportFixture(): Circuit {
+  return legacyFsmExportFixture as Circuit;
+}
+
+function makeCopiedLegacyCircuit(): Circuit {
+  const base = cloneValue(loadLegacyFsmExportFixture());
+  const clipboard = buildClipboardDataForSelection(
+    base,
+    new Set(Object.keys(base.gates)),
+  );
+  expect(clipboard).toBeTruthy();
+  const pasted = buildPastedClipboardContent({
+    clipboard: clipboard!,
+    existingCircuit: base,
+    offsetX: 24,
+    offsetY: 24,
+    createId: (() => {
+      let index = 0;
+      return () => `legacy-panel-copy-${++index}`;
+    })(),
+  });
+
+  return {
+    ...base,
+    gates: {
+      ...base.gates,
+      ...Object.fromEntries(pasted.gates.map((gate) => [gate.id, gate])),
+    },
+    wires: {
+      ...base.wires,
+      ...Object.fromEntries(pasted.wires.map((wire) => [wire.id, wire])),
+    },
+  };
 }
 
 function makeCopiedProjectedCircuit(): Circuit {
@@ -329,6 +387,182 @@ describe('panelViewState', () => {
     expect(html).toContain('aria-label="System"');
     expect(html).toContain('>Y<');
     expect(html).toContain('>Y_1<');
+  });
+
+  it('renders subsystem selectors for duplicated loaded legacy FSM exports', () => {
+    const circuit = makeCopiedLegacyCircuit();
+    const restoreWindow = installWindowMock({
+      'logic-sim:timing-diagram:view-mode': 'selected',
+    });
+
+    try {
+      const timingHtml = renderToStaticMarkup(
+        React.createElement(
+          CircuitProvider,
+          {
+            initialCircuit: circuit,
+            children: React.createElement(TimingDiagram, {
+              history: [] as TimingSnapshot[],
+              onClose: () => undefined,
+            }),
+          },
+        ),
+      );
+      const truthTableHtml = renderToStaticMarkup(
+        React.createElement(
+          CircuitProvider,
+          {
+            initialCircuit: circuit,
+            children: React.createElement(TruthTableModal, {
+              onClose: () => undefined,
+            }),
+          },
+        ),
+      );
+
+      expect(timingHtml).toContain('aria-label="Timing-System"');
+      expect(timingHtml).toContain('>Y<');
+      expect(timingHtml).toContain('>Y_1<');
+      expect(truthTableHtml).toContain('aria-label="System"');
+      expect(truthTableHtml).toContain('>Y<');
+      expect(truthTableHtml).toContain('>Y_1<');
+    } finally {
+      restoreWindow();
+    }
+  });
+
+  it('builds shared semantic notes for legacy, modified and isolated projected FSM panels', () => {
+    const circuit = makeCircuit('semantic-panel-test');
+    const legacyOption = makeOptionWithSemantics('legacy', 'projected_fsm', circuit, 'legacy_projected_fsm');
+    const modifiedOption = makeOptionWithSemantics('modified', 'generic', circuit, 'modified_projected_fsm');
+    const cleanOption = makeOptionWithSemantics('clean', 'projected_fsm', circuit, 'clean_projected_fsm');
+
+    expect(buildAnalysisSubsystemSemanticNotes({
+      analysisSubsystemOptions: [legacyOption],
+      activeAnalysisSubsystem: legacyOption,
+      target: 'truth_table',
+    })).toEqual([
+      {
+        key: 'legacy_projected_fsm',
+        tone: 'info',
+        message: 'Dieser Altfall wird ueber die Legacy-Bruecke weiterhin kanonisch projiziert.',
+      },
+    ]);
+
+    expect(buildAnalysisSubsystemSemanticNotes({
+      analysisSubsystemOptions: [modifiedOption],
+      activeAnalysisSubsystem: modifiedOption,
+      target: 'timing',
+    })).toEqual([
+      {
+        key: 'modified_projected_fsm',
+        tone: 'warning',
+        message: 'Synthetisierte FSM wurde nachtraeglich veraendert oder ergaenzt. Kompakte FSM-Sichten gelten dafuer nicht mehr; die Ansicht bleibt technisch.',
+      },
+    ]);
+
+    expect(buildAnalysisSubsystemSemanticNotes({
+      analysisSubsystemOptions: [cleanOption, legacyOption],
+      activeAnalysisSubsystem: cleanOption,
+      target: 'timing',
+    })).toEqual([
+      {
+        key: 'isolated_projected_fsm',
+        tone: 'info',
+        message: 'Zeigt isoliert das ausgewaehlte System clean, damit getrennte FSM-Projektionsbatches nicht in eine gemeinsame technische Fallback-Sicht gedrueckt werden.',
+      },
+    ]);
+  });
+
+  it('builds early canvas semantic notes for modified, mixed, legacy and multi-system projected FSMs', () => {
+    const circuit = makeCircuit('canvas-semantic-test');
+    const modifiedOption = makeOptionWithSemantics('Y', 'generic', circuit, 'modified_projected_fsm');
+    const mixedOption = makeOptionWithSemantics('Y_mix', 'generic', circuit, 'mixed_projected_subsystem');
+    const legacyOption = makeOptionWithSemantics('Y_legacy', 'projected_fsm', circuit, 'legacy_projected_fsm');
+    const cleanOption = makeOptionWithSemantics('Y_1', 'projected_fsm', circuit, 'clean_projected_fsm');
+
+    expect(buildCanvasAnalysisSemanticNotes([
+      modifiedOption,
+      mixedOption,
+      legacyOption,
+      cleanOption,
+    ])).toEqual([
+      {
+        key: 'canvas-modified-projected-fsm',
+        tone: 'warning',
+        message: 'System Y wurde nachtraeglich an der synthetisierten FSM-Struktur veraendert oder ergaenzt. Kompakte FSM-Sichten gelten dafuer nicht mehr.',
+      },
+      {
+        key: 'canvas-mixed-projected-subsystem',
+        tone: 'warning',
+        message: 'System Y_mix mischt projizierte und rohe oder direkt verkettete sequentielle Anteile. STT und Timing bleiben dafuer bewusst technisch.',
+      },
+      {
+        key: 'canvas-legacy-projected-fsm',
+        tone: 'info',
+        message: 'Legacy-System Y_legacy laeuft weiter ueber die Legacy-Bruecke und bleibt kanonisch projiziert.',
+      },
+      {
+        key: 'canvas-multi-projected-fsm',
+        tone: 'info',
+        message: 'Getrennte projizierte FSM-Systeme erkannt: Y_legacy und Y_1. STT und Timing koennen diese Systeme isoliert auswaehlen.',
+      },
+    ]);
+  });
+
+  it('renders the timing and truth-table semantic notes from the same helper', () => {
+    const circuit = makeCopiedProjectedCircuit();
+    const restoreWindow = installWindowMock({
+      'logic-sim:timing-diagram:view-mode': 'selected',
+    });
+
+    try {
+      const timingHtml = renderToStaticMarkup(
+        React.createElement(
+          CircuitProvider,
+          {
+            initialCircuit: circuit,
+            children: React.createElement(TimingDiagram, {
+              history: [] as TimingSnapshot[],
+              onClose: () => undefined,
+            }),
+          },
+        ),
+      );
+      const truthTableHtml = renderToStaticMarkup(
+        React.createElement(
+          CircuitProvider,
+          {
+            initialCircuit: circuit,
+            children: React.createElement(TruthTableModal, {
+              onClose: () => undefined,
+            }),
+          },
+        ),
+      );
+
+      expect(timingHtml).toContain('Zeigt isoliert das ausgewaehlte System');
+      expect(truthTableHtml).toContain('Analysiert isoliert das ausgewaehlte System');
+      expect(truthTableHtml).toContain('damit getrennte FSM-Projektionsbatches nicht in eine gemeinsame technische Fallback-Sicht gedrueckt werden.');
+    } finally {
+      restoreWindow();
+    }
+  });
+
+  it('renders dismiss buttons for early canvas analysis hints', () => {
+    const circuit = makeCopiedLegacyCircuit();
+    const html = renderToStaticMarkup(
+      React.createElement(
+        CircuitProvider,
+        {
+          initialCircuit: circuit,
+          children: React.createElement(CanvasAnalysisBanner),
+        },
+      ),
+    );
+
+    expect(html).toContain('Hinweis ausblenden');
+    expect(html).toContain('Legacy-Systeme');
   });
 
   it('keeps a single projected FSM on its trimmed subsystem when only raw observer outputs are attached', () => {

@@ -1,11 +1,11 @@
 # UI Manual Verification Plan
 
-Datum: 2026-03-21
+Datum: 2026-03-23
 Repo: `<repo-root>`
 Status: **aktuell**
 Zweck: manuelle End-to-End-Pruefung der zuletzt verifizierten UI-relevanten
 Aenderungen rund um FSM-Editor, FSM-Exportprojektion, STT, Timing-Diagramm und
-Race-Panel.
+Race-Panel sowie den sichtbaren Broker-Dialog.
 
 ## Vorbedingungen
 
@@ -28,6 +28,8 @@ Dieses Manual deckt vor allem diese heute aktive UI-Semantik ab:
 - Legacy-Bridge fuer aeltere gespeicherte Exporte
 - Timing-Persistenz und Rueckscrollen bis zum ersten gehaltenen Takt
 - Race-Dedupe, Auto-Prune und manueller Reset
+- Broker-Key-/Chat-/Reset-/Delete-Flow ueber den standardmaessig sichtbaren
+  API-/Broker-Dialog
 
 ## Abschnitt A - Basis und Responsive Chrome
 
@@ -105,6 +107,8 @@ Erwartung:
   dem gewaehlten System
 - im Timing erscheint der `System`-Selektor nur im Modus `ausgewählt`,
   nicht im Modus `vollstaendig`
+- STT und Timing zeigen denselben fachlichen Isolationshinweis fuer das
+  ausgewaehlte projizierte System, statt zwei verschiedene Erklerungstexte
 
 ## Abschnitt E - Copy/Paste und Teilkopie projizierter FSMs
 
@@ -124,19 +128,27 @@ Erwartung:
 
 ## Abschnitt F - Verkettete oder gemischte Sequential-Faelle
 
-1. Zwei getrennte projizierte FSMs auf das Canvas legen.
-2. Zunaechst pruefen, dass sie separat waehlbar sind.
-3. Danach einen Ausgang der ersten FSM in die zweite einkoppeln.
-4. STT und Timing erneut oeffnen.
-5. Zusaetzlich einen rohen Zusatzpfad testen, z. B.
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-chained/fsm0_direct_chained_batches_fixture.lgsc.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-chained/README.md`
+
+1. Die Fixture `fsm0_direct_chained_batches_fixture.lgsc.json` laden.
+2. STT und Timing oeffnen.
+3. Optional denselben Fall haendisch nachbauen, indem zwei getrennte
+   projizierte FSMs zuerst separat angelegt und danach direkt verkettet werden.
+4. Zusaetzlich einen rohen Zusatzpfad testen, z. B.
    `PUSH_BTN -> AND -> OUTPUT_LED`, der mit einem projizierten Teil mischt.
 
 Erwartung:
 
-- getrennte FSMs bleiben separat auswaehlbar
+- getrennte FSMs bleiben nur **vor** der direkten Verkettung separat auswaehlbar
 - direkt verkettete FSMs werden bewusst als gemeinsamer technischer Fallback
   behandelt
 - die STT zeigt in solchen Faellen keinen scheinbar gueltigen Kompaktmodus
+- Timing und STT erklaeren den Mixed-Fall fachlich gleich als gemischtes
+  projiziertes Sequential-Subsystem statt als unterschiedliche Sondertexte
 - der Fallback-Hinweis bleibt fachlich klar, z. B.:
   - mehrere Projektionsbatches erkannt
   - Eingaenge nur teilweise projiziert
@@ -145,11 +157,17 @@ Erwartung:
 
 ## Abschnitt G - Nachtraeglich veraenderte projizierte FSM
 
-1. Mit einer sauberen projizierten FSM starten, fuer die `FSM kompakt`
-   verfuegbar ist.
-2. In genau dieses System einen rohen Baustein einhaengen oder den projizierten
-   Teil manuell erweitern.
-3. Wahrheitstabelle / STT erneut oeffnen.
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-mixed/fsm0_projected_raw_modified_fixture.lgsc.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-mixed/README.md`
+
+1. Die Fixture `fsm0_projected_raw_modified_fixture.lgsc.json` laden.
+2. Wahrheitstabelle / STT oeffnen.
+3. Timing fuer dasselbe System oeffnen.
+4. Optional denselben Fall noch einmal haendisch nachbauen, indem in eine
+   saubere projizierte FSM ein roher sequentialer Zusatzpfad eingekoppelt wird.
 
 Erwartung:
 
@@ -159,19 +177,170 @@ Erwartung:
   Hinweis, dass die synthetisierte FSM nachtraeglich veraendert oder ergaenzt
   wurde
 - die Ansicht bleibt bewusst technisch voll
+- derselbe Modified-Hinweis erscheint jetzt konsistent in STT und Timing fuer
+  das aktive Analyse-Subsystem
+- solange nur dieses eine gemischte System auf dem Canvas liegt, erscheint
+  **kein** `System`-Selektor; das ist korrekt
+- sobald zusaetzlich ein weiteres analysierbares System vorhanden ist, bleibt
+  das gemischte System unter dem projizierten Fachlabel wie `Y` erkennbar und
+  kippt nicht auf ein rohes Zusatzlabel wie `RAW_LED`
 
-## Abschnitt H - Breite projizierte FSM: reduzierte Sicht
+## Abschnitt G1 - Getrennte projizierte FSMs mit gemeinsamem Roh-Observer
 
-1. Eine breite FSM aufbauen, bei der `Eingaenge + State-Bits > 8` liegt.
-2. Diese FSM synthetisieren.
-3. STT oeffnen.
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-observer/fsm0_observer_split_batches_fixture.lgsc.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-observer/README.md`
+
+1. Die Fixture `fsm0_observer_split_batches_fixture.lgsc.json` laden.
+2. Jetzt zuerst STT oeffnen.
+3. Danach Timing im Modus `ausgewählt` oeffnen.
+4. Optional denselben Fall noch einmal haendisch nachbauen, indem zwei
+   getrennte projizierte FSMs nur ueber ein rohes `AND` plus rohe `OUTPUT_LED`
+   beobachtet werden.
 
 Erwartung:
 
+- der gemeinsame rohe Observer-Pfad zieht die beiden projizierten FSMs
+  **nicht** in einen gemeinsamen Mixed-Fallback
+- in STT bleibt ein `System`-Selektor verfuegbar
+- die Systeme bleiben fachlich unter `Y` und `Y_1` selektierbar
+- Timing zeigt dieselbe getrennte Systemauswahl wie STT
+- weder STT noch Timing kippen auf das rohe Beobachterlabel `OBS`
+- sobald statt des reinen Observers eine echte Rueckkopplung oder direkte
+  Verkettung in den projizierten Kern entsteht, darf der Fall wieder bewusst
+  in den `mixed`-/technischen Fallback kippen
+
+## Abschnitt G2 - Mehrere getrennte gemischte Sequential-Inseln
+
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-islands/fsm0_multiple_mixed_islands_fixture.lgsc.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-islands/README.md`
+
+1. Die Fixture `fsm0_multiple_mixed_islands_fixture.lgsc.json` laden.
+2. STT oeffnen.
+3. Timing im Modus `ausgewählt` oeffnen.
+4. Zwischen den Systemen im Selektor wechseln.
+
+Erwartung:
+
+- obwohl beide Teilnetze gemischt/technisch sind, bleiben sie als zwei
+  getrennte Analyse-Systeme selektierbar
+- der `System`-Selektor zeigt keine doppelte Mehrdeutigkeit wie zweimal `Y`,
+  sondern eindeutige Labels wie `Y` und `Y_1`
+- eine Insel bleibt der `modified`-Fall, die andere der dokumentierte
+  `mixed`-/verkettete Fall
+- STT und Timing zeigen dieselbe Systemliste und dieselbe Einordnung
+
+## Abschnitt G3 - Mehrere gemischte Inseln mit gemeinsamem Roh-Observer
+
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-islands/fsm0_mixed_islands_shared_observer_fixture.lgsc.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-islands/README.md`
+
+1. Die Fixture `fsm0_mixed_islands_shared_observer_fixture.lgsc.json` laden.
+2. STT oeffnen.
+3. Timing im Modus `ausgewählt` oeffnen.
+4. Zwischen den Systemen im Selektor wechseln.
+
+Erwartung:
+
+- obwohl beide technischen Inseln ueber einen gemeinsamen rohen Observer-Zweig
+  verbunden sind, bleiben sie als zwei Systeme selektierbar
+- der `System`-Selektor kippt nicht auf ein einziges Beobachterlabel wie
+  `OBS`
+- die Systeme bleiben eindeutig z. B. als `Y` und `Y_1` beschriftet
+- beide Inseln bleiben in diesem Repro `modified_projected_fsm`
+- STT und Timing zeigen dieselbe Systemliste und dieselbe Einordnung
+
+## Abschnitt G4 - Mehrere gemischte Inseln mit gemeinsamer roher Feed-forward-Hilfslogik
+
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-islands/fsm0_shared_helper_islands_fixture.lgsc.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-islands/README.md`
+
+1. Die Fixture `fsm0_shared_helper_islands_fixture.lgsc.json` laden.
+2. STT oeffnen.
+3. Timing im Modus `ausgewählt` oeffnen.
+4. Zwischen den Systemen im Selektor wechseln.
+
+Erwartung:
+
+- obwohl beide technischen Inseln ueber gemeinsame rohe Feed-forward-
+  Hilfslogik aus Eingangsquellen zusammenhaengen, bleiben sie als zwei Systeme
+  selektierbar
+- der `System`-Selektor zeigt zwei eindeutige Labels wie `Y` und `Y_1`
+- beide Inseln bleiben in diesem Repro `modified_projected_fsm`
+- STT und Timing zeigen dieselbe Systemliste und dieselbe Einordnung
+
+## Abschnitt H - Breite projizierte FSM: reduzierte Sicht
+
+Empfohlene Fixture:
+
+- `validation/manual-fixtures/fsm-wide/fsm0_wide_reduced_fixture.fsm.json`
+- Kontext / Kurzbeschreibung:
+  `validation/manual-fixtures/fsm-wide/README.md`
+
+1. Die Fixture `fsm0_wide_reduced_fixture.fsm.json` in den FSM-Editor laden.
+2. Den neuen Editor-Guardrail-Banner direkt nach dem Laden lesen.
+3. STT oeffnen.
+4. Den Banner fuer die reduzierte Sicht genau lesen.
+5. Danach bewusst `Synthetisieren` ausloesen.
+6. Falls die Ansicht einen `Ansicht`-Selektor zeigt, pruefen, ob `Technisch voll`
+   fuer diesen breiten projected-Fall bewusst nicht mehr angeboten wird.
+
+Erwartung:
+
+- schon im FSM-Editor erscheint vor der eigentlichen Synthese ein klarer
+  Guardrail-Hinweis, dass die breite unverdichtete SOP spaeter bewusst
+  blockiert werden wuerde
 - die STT bleibt renderbar und fachlich lesbar
 - bei breiten projected-Faellen wird eine reduzierte bzw. kontrollierte
   kompakte Sicht verwendet
+- der Reduktionshinweis nennt jetzt explizit
+  - das repraesentative Zustandsbit
+  - weggelassene Steuer-Eingaenge, falls gekappt wurde
+  - sichtbare reduzierte Zeilen vs. fachlich relevante Vollzeilen
+- die eigentliche Canvas-Synthese wird fuer diesen breiten Roh-SOP-Fall bewusst
+  blockiert, bevor eine chaotische Gate-/Leitungswolke erzeugt wird
+- die Fehlermeldung erklaert, dass die unverdichtete SOP zu gross waere und
+  spaeter eine verdichtete Synthese (z. B. Quine-McCluskey / Bool-Minimierung)
+  noetig ist
 - kein unklarer Wechsel zwischen sinnvoll reduzierter und chaotischer Vollsicht
+
+## Abschnitt H2 - Fruehe Canvas-Rueckmeldung fuer projizierte FSM-Semantik
+
+1. Die Fixture `validation/manual-fixtures/fsm-mixed/fsm0_projected_raw_modified_fixture.lgsc.json` laden.
+2. Direkt auf den Hauptcanvas oberhalb der Zeichenflaeche schauen, ohne STT
+   oder Timing zu oeffnen.
+3. Danach `validation/manual-fixtures/fsm-chained/fsm0_direct_chained_batches_fixture.lgsc.json` laden.
+4. Wieder zuerst nur den Canvas-Hinweis lesen.
+5. Danach den Legacy-Fall
+   `validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json`
+   laden und erneut zuerst nur den Canvas-Hinweis lesen.
+6. Optional zwei getrennte saubere projizierte FSMs auf dem Canvas halten,
+   ohne sie direkt zu verketten.
+
+Erwartung:
+
+- der Canvas zeigt den `modified`-Fall bereits vor STT/Timing als fruehen
+  Warnhinweis
+- der Canvas zeigt den direkt verketteten/gemischten Fall bereits vor
+  STT/Timing als fruehen Warnhinweis
+- der Canvas zeigt den Legacy-Fall bereits vor STT/Timing als Info-Hinweis
+- bei zwei getrennten sauberen projizierten FSMs darf zusaetzlich ein
+  frueher Hinweis auf mehrere getrennte projizierte Systeme erscheinen
+- diese fruehen Hinweise widersprechen den spaeteren STT-/Timing-Texten nicht,
+  sondern greifen dieselbe fachliche Semantik vor
+- jeder dieser fruehen Hinweise laesst sich fuer den aktuellen Analysezustand
+  direkt per `×` wegklicken
 
 ## Abschnitt I - Legacy-Download-Fall
 
@@ -180,14 +349,30 @@ Erwartung:
 2. Timing Diagramm oeffnen.
 3. STT oeffnen.
 4. Die Simulation einige Sekunden laufen lassen.
+5. Dieselbe geladene Legacy-FSM vollstaendig kopieren/einfuegen.
+6. Timing im Modus `ausgewählt` und STT erneut oeffnen.
+7. In beiden Panels pruefen, dass jetzt wieder zwei Systeme mit fachlichen
+   Legacy-Labels wie `Y` und `Y_1` separat selektierbar sind.
+8. Danach in genau einen der Legacy-Pfade eine rohe Zusatzlogik einhaengen,
+   z. B. `RST` und `CLK` in ein zusaetzliches `AND` fuehren und dieses Signal
+   in den bestehenden Legacy-Logikkegel einkoppeln.
+9. STT und Timing fuer genau dieses veraenderte Legacy-System erneut oeffnen.
 
 Erwartung:
 
 - der Legacy-Fall wird weiter akzeptiert
 - Timing bleibt lesbar und kanonisch genug
 - die STT bleibt fachlich stabil und springt nicht mit blinkenden Signalschnipseln
+- STT und Timing markieren den Altfall jetzt gleichermassen als ueber die
+  Legacy-Bruecke weiter kanonisch projizierten Fall
 - der Altfall muss nicht neu gespeichert oder neu synthetisiert werden, damit
   die Projektion greift
+- eine vollstaendig duplizierte geladene Legacy-FSM erscheint wieder als
+  eigenes zweites System statt als unscharfer generischer Restfall
+- sobald der Legacy-Pfad strukturell veraendert wurde, ist die kompakte
+  FSM-Sicht fuer genau dieses System nicht mehr verfuegbar
+- STT und Timing behandeln diesen veraenderten Legacy-Fall dann konsistent als
+  `modified` und bleiben bewusst technisch
 
 ## Abschnitt J - Timing Diagramm: Vollstaendig, Ausgewaehlt und History
 
@@ -335,8 +520,47 @@ Erwartung:
   Alert
 - stateful oder tiefere Nested-Faelle bleiben mit einem expliziten Hinweis
   blockiert, dass aktuell nur kanonische kombinatorische Nested-Kinder
-  freigegeben sind
-- es darf kein Fall entstehen, in dem ein eigentlich geblockter Nested-Fall
+
+## Abschnitt N - Broker-Dialog: Key, Chat, Reset, Delete
+
+Vorbedingung:
+
+- App normal im Dev-Build starten:
+  `npm run dev`
+- lokales Sandbox-Backend oder den vorgesehenen Test-Broker starten
+
+1. App mit einer kleinen offenen Schaltung starten.
+2. Den Broker-Dialog ueber die Toolbar oeffnen.
+3. Einen gueltigen Test-Key eingeben und `Broker-Key setzen` druecken.
+4. Den sichtbaren Session-Zustand pruefen.
+5. Eine kurze Chat-Nachricht zur offenen Schaltung senden.
+6. Danach `Broker-Reset` ausfuehren.
+7. Anschliessend `Broker-Key loeschen`.
+8. Danach einen Session-Fehler provozieren, z. B. ueber eine stale Session im
+   lokalen Broker oder einen Neustart des Backends zwischen gesetztem Key und
+   naechster Aktion.
+9. Erneut entweder eine Chat-Nachricht senden, `Broker-Reset` ausloesen oder
+   `Broker-Key loeschen`.
+10. Zusaetzlich im Browser-Netzwerk-Tab pruefen, dass nur Broker-Requests und
+    kein direkter Provider-Call aus der App sichtbar sind.
+
+Erwartung:
+
+- nach dem Setzen des Keys erscheinen Session-ID und Gueltig-bis im Dialog
+- die Basis-URL bleibt waehrend einer aktiven Session gesperrt
+- der Chat laeuft ueber den Broker und setzt eine Conversation-ID
+- `Broker-Reset` leert die lokale Chat-History und setzt die Conversation-ID
+  zurueck, ohne die Session unnoetig zu verlieren
+- `Broker-Key loeschen` leert Session, Conversation und lokale Chat-History
+  gemeinsam
+- ein provozierter Session-Fehler fuehrt fuer Chat, Reset und Delete in
+  denselben konsistenten Leerlaufzustand zurueck statt halb-lebende
+  Restzustande zu hinterlassen
+- ein Broker-Fehler `Session was not found.` zaehlt dabei explizit als
+  Session-Invalidierung und darf den Nutzer nicht in einem blockierten
+  Zwischenzustand festhalten; nach dem Fehler muss der Dialog wieder einen
+  neuen Key annehmen koennen
+- im Netzwerk-Tab taucht kein direkter Provider-Call aus der App auf
   scheinbar gespeichert wird, spaeter aber erst beim Export scheitert
 
 ## Fehlerprotokoll

@@ -31,7 +31,7 @@ Zielbild:
 - Alle logic_basic- und logic_multi-Gatter exportieren nach Verilog und VHDL.
 - `gc_t2_bus_mux` und `gc_v2_13_deep_nested_halfadder_boundary` sind bewusst als `expected_limit` klassifiziert - dokumentierte Exporter-Grenzen, nicht als pass verkauft.
 - Report-Artefakte (JSON + Markdown) werden von allen vier fachlichen CI-Jobs hochgeladen.
-- Fuer aus dem FSM-Editor synthetisierte Schaltungen fehlt noch eine kanonische Projektion in STT und Timing: die aktuelle UI arbeitet dort noch zu stark auf Roh-Gate-/Port-Ebene statt auf semantischen FSM-Signalen. Der naechste Schritt bleibt bewusst klein und zieht nur den statischen/reduzierten STT-Kern weiter in den Core, ohne das UI-Wiring gross umzubauen.
+- Fuer aus dem FSM-Editor synthetisierte Schaltungen ist die kanonische Projektion in STT und Timing inzwischen als aktiver Arbeitspfad verankert: Signalrollen, Batch-Isolation, gemeinsame STT-/Timing-Projektion, explizite Mixed-Fallbacks und jetzt auch gemeinsame Panel-Semantik fuer `clean`, `legacy`, `modified` und gemischte projizierte Sequential-Faelle sind umgesetzt. Offen bleiben vor allem feinere Randfaelle bei breiten/gemischten Systemen und deren Abschlussverifikation.
 - Der Race-Monitor ist fuer den aktuellen Produktumfang strukturell
   abgesichert: Reset, Strukturpruning, signaturbasiertes Incident-Dedupe,
   gemeinsame Helferschicht fuer Liste/Markierungen sowie konservatives
@@ -80,7 +80,7 @@ Restliche offene Punkte (kein Blocker mehr):
 - `X` fuer Metastabilitaet/Setup-Hold: bewusste Modellgrenze, dokumentieren statt loesen
 - STT-Variablenlimit blockiert UI-Verifikation fuer breite sequenzielle Schaltungen: P2 (Reduzierte Ansicht implementiert)
 - UI-Timing-Audit ist funktional gruen und als CI-Gate verdrahtet; offen bleibt nur ein breiterer Waveform-/Visual-Diff
-- Synthetisierte FSM-Exporte haben fuer gemischte und breite Restfaelle noch keinen vollstaendig abgeschlossenen semantischen Projektionspfad fuer STT/Timing; der aktive Restplan liegt in `validation/fsm0/work-package.md`
+- Der semantische FSM-Projektionspfad fuer Editor -> Canvas -> STT -> Timing ist fuer den aktuellen Scope geschlossen und in `validation/fsm0/work-package.md` als Abschluss dokumentiert; bewusster Folgepfad bleibt `FSM0-8` (Netzlisten-Minimierung / Bool-Minimierung / Mapping) statt weiterer Grundsemantik-Arbeit
 - Race-Panel/Race-Monitor ist fuer den aktuellen Scope strukturell
   abgeschlossen; manueller Reset ist explizit als `clear only` definiert und
   aktive physische Ursachen duerfen spaeter wieder auftauchen. Details siehe
@@ -159,7 +159,15 @@ Status: **TEILWEISE ERREICHT**
 - 5 Fokusfaelle liefern echte Timing-Snapshots und PASS statt WARN
 - UI-Timing-Rendering ist fuer die Fokusfaelle lokal und in CI verifiziert
 - Offene Restluecke ist jetzt nicht mehr die CI-Anbindung, sondern ein breiterer Waveform-/Visual-Diff fuer mehr als die Fokusfaelle
-- Fuer FSM-Editor -> Canvas-Synthese fehlt noch die volle semantische Signalprojektion: ein erster Infrastrukturschnitt ist bereits umgesetzt (Projektionsmetadaten, projectionBatchId, zentrale STT-Projektion, kleiner Core-Helfer fuer statische/verkuerzte STT, kanonische Timing-Kanaele, isolierte FSM-STT-Ansicht und explizite Mixed-Fallbacks), offen bleiben jetzt vor allem feinere Subsystem-Grenzen fuer breite sowie gemischte Faelle und die dazu passenden Regressionen
+- Fuer FSM-Editor -> Canvas-Synthese ist der semantische Projektionspfad inzwischen bis zum aktuellen Scope geschlossen: Projektionsmetadaten, `projectionBatchId`, zentrale STT-Projektion, kanonische Timing-Kanaele, isolierte Analyse-Subsysteme, explizite Mixed-Fallbacks, gemeinsame Legacy-/Modified-/Mixed-Hinweise, fruehe Editor-/Canvas-Rueckmeldung sowie die Boundary-/Fixture-Wall fuer Chained-, Observer-, Mixed-Islands-, Shared-Observer- und Shared-Helper-Faelle sind umgesetzt und abgesichert. Der naechste bewusste Folgepfad ist nicht weitere Grundsemantik, sondern spaetere Netzlisten-Minimierung und Mapping fuer breite FSM-Synthese.
+- Die bestehende FSM-Semantik ist jetzt ausserdem frueher sichtbar: breite
+  Roh-SOP-Guardrails erscheinen bereits im FSM-Editor, und der Hauptcanvas
+  surfacet `legacy`-, `modified`-, `mixed`- und Mehrsystem-Hinweise schon vor
+  dem Oeffnen von STT oder Timing
+- Fuer breite FSMs ist die unverdichtete SOP-Canvas-Synthese jetzt bewusst
+  blockiert, sobald sie voraussichtlich eine browserkritische Gate- und
+  Leitungsmenge erzeugen wuerde; damit bleibt die reduzierte STT nutzbar,
+  waehrend die spaetere verdichtete Synthese als eigener Folgepfad offen bleibt
 - Die aktuelle FSM-Synthese ist weiterhin bewusst strukturell und didaktisch:
   sie erzeugt transparente SOP-/Hilfslogik statt bereits gate-minimierter
   Netzlisten. Eine spaetere Optimierungsstufe mit Wiederverwendung vorhandener
@@ -171,8 +179,8 @@ Status: **TEILWEISE ERREICHT**
 Offenes Struktur-Arbeitspaket:
 - `validation/fsm0/work-package.md`
 - Kernidee: Signalrollen und Sichtbarkeitsklassen einfuehren, die FSM-Synthese annotieren, einen read-only Sequential-Projection-Layer bauen und STT/Timing auf dieselbe kanonische Projektion umstellen
-- bereits umgesetzt: erste Signalrollen, Projektionsmetadaten, Batch-Isolation und die gemeinsame STT-/Timing-Projektion fuer isolierte FSMs
-- naechste Validierungsobjekte: Batch-Konsistenz, kanonische STT, kanonische Timing-Reihenfolge, reduzierte STT fuer breite FSMs, Mixed-Mode-Fallback
+- bereits umgesetzt: erste Signalrollen, Projektionsmetadaten, Batch-Isolation, die gemeinsame STT-/Timing-Projektion fuer isolierte FSMs sowie jetzt gemeinsame Panel-Semantik fuer Legacy-/Modified-/Mixed-Faelle und isolierte projizierte Systeme
+- naechste Validierungsobjekte: Batch-Konsistenz fuer restliche Mischnetze, reduzierte STT fuer breite FSMs, Mixed-Mode-Fallbacks in Randfaellen und die Abschlussverifikation dieser Semantik
 
 Bewusst nach hinten geschobener Optimierungstrack:
 - minimierte FSM-Synthese statt rein struktureller SOP-Netze

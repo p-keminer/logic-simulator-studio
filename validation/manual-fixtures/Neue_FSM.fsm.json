@@ -1,0 +1,105 @@
+{
+  "id": "mmy1nstf-5",
+  "name": "Neue FSM",
+  "archType": "moore",
+  "inputCount": 1,
+  "inputNames": [
+    "ABC"
+  ],
+  "outputCount": 1,
+  "outputNames": [
+    "Y"
+  ],
+  "states": {
+    "mmy1nstf-3": {
+      "id": "mmy1nstf-3",
+      "label": "00",
+      "x": 220,
+      "y": 280,
+      "isInitial": true,
+      "output": 0
+    },
+    "mmy1nxx6-a": {
+      "id": "mmy1nxx6-a",
+      "label": "10",
+      "x": 569.2714996337891,
+      "y": 508.8079833984375,
+      "isInitial": false,
+      "output": 0
+    },
+    "mmy1o0a1-c": {
+      "id": "mmy1o0a1-c",
+      "label": "11",
+      "x": 208.60928344726562,
+      "y": 509.7351379394531,
+      "isInitial": false,
+      "output": 0
+    },
+    "mmypmylr-2r": {
+      "id": "mmypmylr-2r",
+      "label": "S4",
+      "x": 560.9271240234375,
+      "y": 276.0927276611328,
+      "isInitial": false,
+      "output": 1
+    }
+  },
+  "transitions": [
+    {
+      "id": "mmy1p7rc-6",
+      "fromId": "mmy1nxx6-a",
+      "toId": "mmy1o0a1-c",
+      "conditionText": "!ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmy1pfwq-8",
+      "fromId": "mmy1o0a1-c",
+      "toId": "mmy1nstf-3",
+      "conditionText": "!ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmy1pmfd-a",
+      "fromId": "mmy1nstf-3",
+      "toId": "mmy1o0a1-c",
+      "conditionText": "ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmy1pxoh-c",
+      "fromId": "mmy1o0a1-c",
+      "toId": "mmy1nxx6-a",
+      "conditionText": "ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmypnp0f-2v",
+      "fromId": "mmy1nstf-3",
+      "toId": "mmypmylr-2r",
+      "conditionText": "!ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmypogo8-39",
+      "fromId": "mmypmylr-2r",
+      "toId": "mmy1nstf-3",
+      "conditionText": "ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmyq2ke3-1ud",
+      "fromId": "mmypmylr-2r",
+      "toId": "mmy1nxx6-a",
+      "conditionText": "!ABC",
+      "mealyOutput": 0
+    },
+    {
+      "id": "mmyq2pjn-1uf",
+      "fromId": "mmy1nxx6-a",
+      "toId": "mmypmylr-2r",
+      "conditionText": "ABC",
+      "mealyOutput": 0
+    }
+  ]
+}

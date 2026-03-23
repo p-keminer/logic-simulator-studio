@@ -80,6 +80,52 @@ export interface OverlapWarning {
   inputCombo: string;
 }
 
+interface RawSopComplexityEstimate {
+  gateCount: number;
+  wireCount: number;
+  maxFunctionMinterms: number;
+  variableSpan: number;
+}
+
+export interface FsmSynthesisGuardrailInfo {
+  blocked: boolean;
+  message: string | null;
+  estimate: RawSopComplexityEstimate | null;
+  warnings: string[];
+}
+
+interface PreparedFsmSynthesisModel {
+  structure: ReturnType<typeof requireFsmStructure>;
+  inputCount: number;
+  outputCount: number;
+  inputNames: string[];
+  outputNames: string[];
+  archType: FsmMachine['archType'];
+  stateBitCount: number;
+  totalVariableCount: number;
+  states: Record<string, FsmStateNode>;
+  transitions: ReturnType<typeof requireFsmStructure>['effectiveTransitions'];
+  mintSets: Set<number>[];
+  warnings: string[];
+  complexityEstimate: RawSopComplexityEstimate;
+}
+
+const MAX_RAW_SYNTHESIS_GATES = 240;
+const MAX_RAW_SYNTHESIS_WIRES = 480;
+
+function buildWideSynthesisBlockMessage(complexityEstimate: RawSopComplexityEstimate): string {
+  return (
+    `Breite FSM-Synthese ist aktuell bewusst blockiert: die unverdichtete SOP ` +
+    `wuerde voraussichtlich ca. ${complexityEstimate.gateCount} Gatter und ` +
+    `${complexityEstimate.wireCount} Leitungen erzeugen ` +
+    `(max. ${complexityEstimate.maxFunctionMinterms} Minterme in einer Funktion ` +
+    `bei ${complexityEstimate.variableSpan} Variablen). ` +
+    `Bitte die reduzierte STT im FSM-Editor verwenden; eine verdichtete ` +
+    `Synthese (z. B. Quine-McCluskey oder aequivalente Bool-Minimierung) ` +
+    `ist dafuer noch ausstehend.`
+  );
+}
+
 /**
  * Detect overlapping transitions: for each state, find pairs of outgoing
  * transitions whose conditions are simultaneously true for at least one
@@ -139,36 +185,58 @@ export function detectOverlappingTransitions(fsm: FsmMachine): OverlapWarning[] 
   return warnings;
 }
 
-// ── main synthesis ────────────────────────────────────────────────────────────
-export function synthesizeFsm(
-  fsm: FsmMachine,
-  existingCircuit: Circuit,
-): { gates: Record<string, GateInstance>; wires: Record<string, Wire>; warnings: string[] } {
+function estimateRawSopComplexity(
+  mintSets: Set<number>[],
+  inputCount: number,
+  stateBitCount: number,
+  outputCount: number,
+  archType: FsmMachine['archType'],
+  totalVariableCount: number,
+): RawSopComplexityEstimate {
+  let gateCount = 2 + (inputCount * 2) + (stateBitCount * 3) + outputCount;
+  let wireCount = inputCount + (stateBitCount * 5) + outputCount;
+  let maxFunctionMinterms = 0;
+  let variableSpan = 0;
+
+  for (let f = 0; f < stateBitCount + outputCount; f++) {
+    const mintCount = mintSets[f].size;
+    const isMooreOutput = f >= stateBitCount && archType === 'moore';
+    const varCnt = isMooreOutput ? stateBitCount : totalVariableCount;
+    const totalMintCount = 1 << varCnt;
+
+    maxFunctionMinterms = Math.max(maxFunctionMinterms, mintCount);
+    variableSpan = Math.max(variableSpan, varCnt);
+
+    if (mintCount === 0 || mintCount === totalMintCount) {
+      gateCount += 1;
+      continue;
+    }
+
+    if (varCnt > 1) {
+      const andGateCount = mintCount * (varCnt - 1);
+      gateCount += andGateCount;
+      wireCount += andGateCount * 2;
+    }
+
+    if (mintCount > 1) {
+      const orGateCount = mintCount - 1;
+      gateCount += orGateCount;
+      wireCount += orGateCount * 2;
+    }
+  }
+
+  return {
+    gateCount,
+    wireCount,
+    maxFunctionMinterms,
+    variableSpan,
+  };
+}
+
+function prepareFsmSynthesisModel(fsm: FsmMachine): PreparedFsmSynthesisModel {
   const structure = requireFsmStructure(fsm);
-
-  const gates: Record<string, GateInstance> = {};
-  const wires: Record<string, Wire>         = {};
-  const add  = (g: GateInstance) => { gates[g.id] = g; return g; };
-  const conn = (a: Sig, b: Sig)  => { const w = mkWire(a.gateId, a.portId, b.gateId, b.portId); wires[w.id] = w; };
   const warnings: string[] = [];
-  const projectionBatchId = generateId();
-  const reserveSignalLabel = createUniqueSignalLabelAllocator(existingCircuit);
-  const mkBatchProjection = (
-    role: GateProjectionMetadata['role'],
-    visibility: GateProjectionMetadata['visibility'],
-    signalLabel: string,
-    groupKey: string,
-    signalPortId?: string,
-  ): GateProjectionMetadata => mkProjection(
-    projectionBatchId,
-    role,
-    visibility,
-    signalLabel,
-    groupKey,
-    signalPortId,
-  );
 
-  // ── Pre-validate all transition conditions (V3-M7 + FSM-M7) ────────────────
   if (structure.unreachableStates.length > 0) {
     warnings.push(
       `FSM: Unerreichbare Zustände werden nicht synthetisiert (${structure.unreachableStates.map((state) => state.label).join(', ')})`,
@@ -192,7 +260,153 @@ export function synthesizeFsm(
   if (M > 15) throw new Error(`Zu viele Eingänge für Synthese (${M}). Maximum: 15.`);
   const encMap = structure.encodingByStateId;
   const N = structure.effectiveBitWidth;
-  const V = N + M;                          // total variables for D functions
+  const V = N + M;
+
+  const mintSets: Set<number>[] = Array.from({ length: N + K }, () => new Set<number>());
+  const stateList = structure.reachableStates;
+  const unmatchedStates = new Set<string>();
+  const transAstMap = new Map<string, Expr | null>();
+  for (const t of transitions) {
+    const { ast, error } = parseCondition(t.conditionText);
+    transAstMap.set(t.id, (!error && ast) ? ast : null);
+  }
+
+  for (const state of stateList) {
+    const encInt = encMap.get(state.id) ?? 0;
+    const inputCombos = 1 << M;
+
+    for (let x = 0; x < inputCombos; x++) {
+      const mintIdx = encInt | (x << N);
+      const vals: Record<string, boolean> = {};
+      for (let j = 0; j < M; j++) vals[inputNames[j]] = ((x >> j) & 1) === 1;
+
+      let nextState: FsmStateNode | null = null;
+      let mealyOut = 0;
+      for (const t of transitions.filter((transition) => transition.fromId === state.id)) {
+        const ast = transAstMap.get(t.id);
+        if (ast && evalCondition(ast, vals)) {
+          nextState = states[t.toId] ?? null;
+          mealyOut = t.mealyOutput;
+          break;
+        }
+      }
+
+      if (!nextState && archType === 'mealy') {
+        unmatchedStates.add(state.label);
+      }
+
+      const nsEnc = nextState ? (encMap.get(nextState.id) ?? 0) : encInt;
+      for (let i = 0; i < N; i++) {
+        if (((nsEnc >> i) & 1) === 1) mintSets[i].add(mintIdx);
+      }
+
+      if (archType === 'mealy') {
+        for (let k = 0; k < K; k++) {
+          if (((mealyOut >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(mintIdx);
+        }
+      }
+    }
+
+    if (archType === 'moore') {
+      for (let k = 0; k < K; k++) {
+        if (((state.output >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(encInt);
+      }
+    }
+  }
+
+  if (unmatchedStates.size > 0) {
+    warnings.push(`Mealy: Unvollständige Transitions in ${[...unmatchedStates].join(', ')} — fehlende Kombinationen verwenden Output=0`);
+  }
+
+  const complexityEstimate = estimateRawSopComplexity(
+    mintSets,
+    M,
+    N,
+    K,
+    archType,
+    V,
+  );
+
+  return {
+    structure,
+    inputCount: M,
+    outputCount: K,
+    inputNames,
+    outputNames,
+    archType,
+    stateBitCount: N,
+    totalVariableCount: V,
+    states,
+    transitions,
+    mintSets,
+    warnings,
+    complexityEstimate,
+  };
+}
+
+export function analyzeFsmSynthesisGuardrail(fsm: FsmMachine): FsmSynthesisGuardrailInfo {
+  try {
+    const prepared = prepareFsmSynthesisModel(fsm);
+    const blocked = (
+      prepared.complexityEstimate.gateCount > MAX_RAW_SYNTHESIS_GATES
+      || prepared.complexityEstimate.wireCount > MAX_RAW_SYNTHESIS_WIRES
+    );
+    return {
+      blocked,
+      message: blocked ? buildWideSynthesisBlockMessage(prepared.complexityEstimate) : null,
+      estimate: prepared.complexityEstimate,
+      warnings: prepared.warnings,
+    };
+  } catch {
+    return {
+      blocked: false,
+      message: null,
+      estimate: null,
+      warnings: [],
+    };
+  }
+}
+
+// ── main synthesis ────────────────────────────────────────────────────────────
+export function synthesizeFsm(
+  fsm: FsmMachine,
+  existingCircuit: Circuit,
+): { gates: Record<string, GateInstance>; wires: Record<string, Wire>; warnings: string[] } {
+  const prepared = prepareFsmSynthesisModel(fsm);
+  const {
+    inputCount: M,
+    outputCount: K,
+    inputNames,
+    outputNames,
+    archType,
+    stateBitCount: N,
+    totalVariableCount: V,
+    mintSets,
+    warnings: preparedWarnings,
+    complexityEstimate,
+  } = prepared;
+
+  const gates: Record<string, GateInstance> = {};
+  const wires: Record<string, Wire>         = {};
+  const add  = (g: GateInstance) => { gates[g.id] = g; return g; };
+  const conn = (a: Sig, b: Sig)  => { const w = mkWire(a.gateId, a.portId, b.gateId, b.portId); wires[w.id] = w; };
+  const warnings: string[] = [...preparedWarnings];
+  const projectionBatchId = generateId();
+  const reserveSignalLabel = createUniqueSignalLabelAllocator(existingCircuit);
+  const mkBatchProjection = (
+    role: GateProjectionMetadata['role'],
+    visibility: GateProjectionMetadata['visibility'],
+    signalLabel: string,
+    groupKey: string,
+    signalPortId?: string,
+  ): GateProjectionMetadata => mkProjection(
+    projectionBatchId,
+    role,
+    visibility,
+    signalLabel,
+    groupKey,
+    signalPortId,
+  );
 
   // ── start position ──────────────────────────────────────────────────────────
   const xs = Object.values(existingCircuit.gates).map(g => g.x + 100);
@@ -243,73 +457,11 @@ export function synthesizeFsm(
     ...notInGs.map(g  => ({ gateId: g.id,    portId: 'out' })),
   ];
 
-  // ── Truth table → minterms ────────────────────────────────────────────────
-  // minterms[0..N-1] = D_i functions  (V = N+M variables)
-  // minterms[N..N+K-1] = output functions
-  const mintSets: Set<number>[] = Array.from({ length: N + K }, () => new Set<number>());
-
-  const stateList = structure.reachableStates;
-  const unmatchedStates = new Set<string>();
-
-  // Pre-parse transition ASTs for O(1) lookup in the inner loop
-  const transAstMap = new Map<string, Expr | null>();
-  for (const t of transitions) {
-    const { ast, error } = parseCondition(t.conditionText);
-    transAstMap.set(t.id, (!error && ast) ? ast : null);
-  }
-
-  for (const state of stateList) {
-    const encInt    = encMap.get(state.id) ?? 0;
-    const inputCombos = 1 << M;
-
-    for (let x = 0; x < inputCombos; x++) {
-      // Minterm index: Q bits in positions 0..N-1, input bits in positions N..N+M-1
-      const mintIdx = encInt | (x << N);
-
-      // Build input value map for evalCondition
-      const vals: Record<string, boolean> = {};
-      for (let j = 0; j < M; j++) vals[inputNames[j]] = ((x >> j) & 1) === 1;
-
-      // Find matching transition
-      let nextState: FsmStateNode | null = null;
-      let mealyOut  = 0;
-      for (const t of transitions.filter(t => t.fromId === state.id)) {
-        const ast = transAstMap.get(t.id);
-        if (ast && evalCondition(ast, vals)) {
-          nextState = states[t.toId] ?? null;
-          mealyOut  = t.mealyOutput;
-          break;
-        }
-      }
-
-      if (!nextState && archType === 'mealy') {
-        unmatchedStates.add(state.label);
-      }
-
-      // D_i: bit i of next-state encoding
-      const nsEnc = nextState ? (encMap.get(nextState.id) ?? 0) : encInt;
-      for (let i = 0; i < N; i++) {
-        if (((nsEnc >> i) & 1) === 1) mintSets[i].add(mintIdx);
-      }
-
-      // Output: for Mealy, use per-row output
-      if (archType === 'mealy') {
-        for (let k = 0; k < K; k++) {
-          if (((mealyOut >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(mintIdx);
-        }
-      }
-    }
-
-    // Moore output: depends only on current state (N variables only)
-    if (archType === 'moore') {
-      for (let k = 0; k < K; k++) {
-        if (((state.output >> (K - 1 - k)) & 1) === 1) mintSets[N + k].add(encInt);
-      }
-    }
-  }
-
-  if (unmatchedStates.size > 0) {
-    warnings.push(`Mealy: Unvollständige Transitions in ${[...unmatchedStates].join(', ')} — fehlende Kombinationen verwenden Output=0`);
+  if (
+    complexityEstimate.gateCount > MAX_RAW_SYNTHESIS_GATES ||
+    complexityEstimate.wireCount > MAX_RAW_SYNTHESIS_WIRES
+  ) {
+    throw new Error(buildWideSynthesisBlockMessage(complexityEstimate));
   }
 
   // ── SOP circuit builder ───────────────────────────────────────────────────

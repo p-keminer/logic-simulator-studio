@@ -287,6 +287,9 @@ describe('stateTransitionTable', () => {
       controlCount: 7,
       cappedControls: true,
       fixedDataLabels: [],
+      omittedControlLabels: ['A5'],
+      fullCompactRowCount: 256,
+      reducedCompactRowCount: 64,
     });
   });
 
@@ -407,6 +410,9 @@ describe('stateTransitionTable', () => {
         totalStateBits: 3,
         controlCount: 7,
         cappedControls: true,
+        omittedControlLabels: ['A5'],
+        fullCompactRowCount: 512,
+        reducedCompactRowCount: 64,
       },
       inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
     })).toEqual(['fsm_compact']);
@@ -468,6 +474,9 @@ describe('stateTransitionTable', () => {
         totalStateBits: 3,
         controlCount: 7,
         cappedControls: true,
+        omittedControlLabels: ['A5'],
+        fullCompactRowCount: 512,
+        reducedCompactRowCount: 64,
       },
       inputRoles: { clk: 'clock', rst: 'reset', a: 'input' },
     });
@@ -716,6 +725,11 @@ describe('stateTransitionTable', () => {
     expect(displayed.mode).toBe('fsm_compact');
     expect(displayed.inputs.map((gate) => gate.label)).toEqual(['A0', 'A1', 'A2', 'A3', 'A4']);
     expect(displayed.stateVars.map((stateVar) => stateVar.label)).toEqual(['Q0']);
+    expect(table.reducedMeta).toMatchObject({
+      omittedControlLabels: ['A5'],
+      fullCompactRowCount: 256,
+      reducedCompactRowCount: 64,
+    });
     expect(displayed.notes).toEqual([
       'CLK wird als Übergangsereignis interpretiert.',
       'RST=1 ist im Modus "Technisch voll" sichtbar.',

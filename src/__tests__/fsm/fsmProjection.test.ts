@@ -12,6 +12,8 @@ import {
 import { synthesizeFsm } from '../../fsm/synthesis/synthesize';
 import type { FsmMachine } from '../../fsm/types';
 import { gateLabel } from '../../components/panels/truthTableAnalysis';
+import { buildClipboardDataForSelection } from '../../store/clipboardSelection';
+import { buildPastedClipboardContent } from '../../store/pasteClipboardProjection';
 import {
   collectConnectedGateIds,
   collectStateVarsForStt,
@@ -50,6 +52,92 @@ function emptyCircuit(): Circuit {
 
 function loadLegacyFsmExportFixture(): Circuit {
   return legacyFsmExportFixture as Circuit;
+}
+
+function cloneCircuit<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function makeCopiedLegacyFsmCircuit(): Circuit {
+  const base = loadLegacyFsmExportFixture();
+  const clipboard = buildClipboardDataForSelection(
+    base,
+    new Set(Object.keys(base.gates)),
+  );
+  expect(clipboard).toBeTruthy();
+  const pasted = buildPastedClipboardContent({
+    clipboard: clipboard!,
+    existingCircuit: base,
+    offsetX: 24,
+    offsetY: 24,
+    createId: (() => {
+      let index = 0;
+      return () => `legacy-copy-${++index}`;
+    })(),
+  });
+
+  return {
+    ...cloneCircuit(base),
+    gates: {
+      ...cloneCircuit(base.gates),
+      ...Object.fromEntries(pasted.gates.map((gate) => [gate.id, gate])),
+    },
+    wires: {
+      ...cloneCircuit(base.wires),
+      ...Object.fromEntries(pasted.wires.map((wire) => [wire.id, wire])),
+    },
+  };
+}
+
+function makeModifiedLegacyFsmCircuit(): Circuit {
+  const circuit = cloneCircuit(loadLegacyFsmExportFixture());
+  const clockGate = Object.values(circuit.gates).find((gate) => gate.typeId === 'CLOCK' && gate.label === 'CLK');
+  const resetGate = Object.values(circuit.gates).find((gate) => gate.typeId === 'INPUT_SWITCH' && gate.label === 'RST');
+  const targetAnd = Object.values(circuit.gates).find((gate) => gate.typeId === 'AND');
+  const replacedWire = Object.values(circuit.wires).find((wire) =>
+    wire.to.gateId === targetAnd?.id && wire.to.portId === 'a',
+  );
+
+  expect(clockGate).toBeTruthy();
+  expect(resetGate).toBeTruthy();
+  expect(targetAnd).toBeTruthy();
+  expect(replacedWire).toBeTruthy();
+
+  const rawAnd: GateInstance = {
+    id: 'legacy-raw-and',
+    typeId: 'AND',
+    x: (targetAnd?.x ?? 0) - 140,
+    y: (targetAnd?.y ?? 0) - 80,
+    label: 'RAW_CTRL',
+    outputSignals: {},
+    isSelected: false,
+  };
+
+  delete circuit.wires[replacedWire!.id];
+  circuit.gates[rawAnd.id] = rawAnd;
+  circuit.wires['legacy-raw-clk'] = {
+    id: 'legacy-raw-clk',
+    from: { gateId: clockGate!.id, portId: 'clk' },
+    to: { gateId: rawAnd.id, portId: 'a' },
+    signal: { value: 0, version: 0, lastChangedAt: 0 },
+    isSelected: false,
+  };
+  circuit.wires['legacy-raw-rst'] = {
+    id: 'legacy-raw-rst',
+    from: { gateId: resetGate!.id, portId: 'out' },
+    to: { gateId: rawAnd.id, portId: 'b' },
+    signal: { value: 0, version: 0, lastChangedAt: 0 },
+    isSelected: false,
+  };
+  circuit.wires['legacy-raw-feed'] = {
+    id: 'legacy-raw-feed',
+    from: { gateId: rawAnd.id, portId: 'out' },
+    to: { gateId: targetAnd!.id, portId: 'a' },
+    signal: { value: 0, version: 0, lastChangedAt: 0 },
+    isSelected: false,
+  };
+
+  return circuit;
 }
 
 function makeProjection(
@@ -425,9 +513,13 @@ describe('FSM projection metadata', () => {
     const subsystemOptions = buildProjectedFsmSubsystemOptions(circuit);
     expect(subsystemOptions).toHaveLength(1);
     expect(subsystemOptions[0]?.label).toBe('Y');
+    expect(subsystemOptions[0]?.projectionSemantics).toBe('clean_projected_fsm');
 
     const channels = buildSequentialProjectionChannels(circuit);
     expect(channels.map((channel) => channel.label)).toEqual(['CLK', 'RST', 'A', 'Q0', 'Y']);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    expect(analysisOptions[0]?.projectionSemantics).toBe('clean_projected_fsm');
   });
 
   it('builds one projected STT subsystem per disconnected synthesized FSM batch', () => {
@@ -518,6 +610,7 @@ describe('FSM projection metadata', () => {
     const analysisOptions = buildAnalysisSubsystemOptions(chainedCircuit);
     expect(analysisOptions).toHaveLength(1);
     expect(analysisOptions[0]?.kind).toBe('generic');
+    expect(analysisOptions[0]?.projectionSemantics).toBe('mixed_projected_subsystem');
     expect(buildSequentialProjectionChannels(analysisOptions[0]!.circuit)).toEqual([]);
 
     const connectedIds = collectConnectedGateIds(analysisOptions[0]!.circuit);
@@ -1581,10 +1674,15 @@ describe('FSM projection metadata', () => {
 
     const projectedSubsystemOptions = buildProjectedFsmSubsystemOptions(circuit);
     expect(projectedSubsystemOptions.map((option) => option.label)).toEqual(['Y']);
+    expect(projectedSubsystemOptions[0]?.projectionSemantics).toBe('legacy_projected_fsm');
 
     const analysisOptions = buildAnalysisSubsystemOptions(circuit);
-    expect(analysisOptions.map((option) => ({ label: option.label, kind: option.kind }))).toEqual([
-      { label: 'Y', kind: 'projected_fsm' },
+    expect(analysisOptions.map((option) => ({
+      label: option.label,
+      kind: option.kind,
+      projectionSemantics: option.projectionSemantics,
+    }))).toEqual([
+      { label: 'Y', kind: 'projected_fsm', projectionSemantics: 'legacy_projected_fsm' },
     ]);
 
     const subsystemCircuit = analysisOptions[0].circuit;
@@ -1617,5 +1715,75 @@ describe('FSM projection metadata', () => {
     expect(projectedView.inputs.map((gate) => gate.label)).toEqual(['CLK', 'RST', 'A']);
     expect(projectedView.stateVars.map((stateVar) => stateVar.label)).toEqual(['Q0', 'Q1']);
     expect(projectedView.outputGates.map((gate) => gate.label)).toEqual(['Y']);
+  });
+
+  it('reconstructs two separately selectable legacy FSM batches after copying a loaded export', () => {
+    const circuit = makeCopiedLegacyFsmCircuit();
+
+    const projectedSubsystemOptions = buildProjectedFsmSubsystemOptions(circuit);
+    expect(projectedSubsystemOptions.map((option) => ({
+      label: option.label,
+      semantics: option.projectionSemantics,
+    }))).toEqual([
+      { label: 'Y', semantics: 'legacy_projected_fsm' },
+      { label: 'Y_1', semantics: 'legacy_projected_fsm' },
+    ]);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    expect(analysisOptions.map((option) => ({
+      label: option.label,
+      kind: option.kind,
+      projectionSemantics: option.projectionSemantics,
+    }))).toEqual([
+      { label: 'Y', kind: 'projected_fsm', projectionSemantics: 'legacy_projected_fsm' },
+      { label: 'Y_1', kind: 'projected_fsm', projectionSemantics: 'legacy_projected_fsm' },
+    ]);
+  });
+
+  it('drops modified legacy exports out of the compact projected FSM path', () => {
+    const circuit = makeModifiedLegacyFsmCircuit();
+
+    const projectedSubsystemOptions = buildProjectedFsmSubsystemOptions(circuit);
+    expect(projectedSubsystemOptions.map((option) => option.label)).toEqual(['Y']);
+    expect(Object.keys(projectedSubsystemOptions[0]!.circuit.gates)).toContain('legacy-raw-and');
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    expect(analysisOptions.map((option) => ({
+      label: option.label,
+      kind: option.kind,
+      projectionSemantics: option.projectionSemantics,
+    }))).toEqual([
+      { label: 'Y', kind: 'generic', projectionSemantics: 'modified_projected_fsm' },
+    ]);
+
+    expect(buildSequentialProjectionChannels(analysisOptions[0]!.circuit)).toEqual([]);
+
+    const subsystemCircuit = analysisOptions[0]!.circuit;
+    const connectedIds = collectConnectedGateIds(subsystemCircuit);
+    const feedbackGateIds = collectSttFeedbackGateIds(
+      subsystemCircuit,
+      connectedIds,
+      [],
+      gateRegistry.get.bind(gateRegistry),
+    );
+    const stateVars = collectStateVarsForStt(
+      subsystemCircuit,
+      connectedIds,
+      feedbackGateIds,
+      gateRegistry.get.bind(gateRegistry),
+    );
+    const projectedView = buildStateTransitionProjection(
+      subsystemCircuit,
+      Object.values(subsystemCircuit.gates)
+        .filter((gate) => INPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+        .sort((a, b) => a.x - b.x),
+      stateVars,
+      Object.values(subsystemCircuit.gates)
+        .filter((gate) => OUTPUT_TYPES.has(gate.typeId) && connectedIds.has(gate.id))
+        .sort((a, b) => a.x - b.x),
+    );
+
+    expect(projectedView.isProjectedFsmView).toBe(false);
+    expect(projectedView.projectionStatus).toBe('fallback_partial_inputs');
   });
 });

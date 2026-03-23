@@ -6,7 +6,7 @@ Dieser Ordner enthaelt pfadcodierte Kopien der repo-eigenen Ablauf- und Fortschr
 - `FSM/`: inhaltlich hauptsaechlich FSM-/STT-/Timing-/Synthese-Strang
 - Root: verbleibende allgemeine Ablauf- und Verifikationsdokumente
 
-Dokumente: 61
+Dokumente: 62
 
 | Originalpfad | Zielpfad | Kategorie | Dokumentklasse | Status-Hinweis |
 |---|---|---|---|---|
@@ -46,6 +46,7 @@ Dokumente: 61
 | `validation/api_anbindung/deployment/environments.md` | `API/validation__api_anbindung__deployment__environments_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/deployment/operations-checklist.md` | `API/validation__api_anbindung__deployment__operations-checklist_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/deployment/README.md` | `API/validation__api_anbindung__deployment__README_COPY.md` | api | readme | - |
+| `validation/api_anbindung/HELP.md` | `API/validation__api_anbindung__HELP_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/README.md` | `API/validation__api_anbindung__README_COPY.md` | api | readme | - |
 | `validation/api_anbindung/ROADMAP.md` | `API/validation__api_anbindung__ROADMAP_COPY.md` | api | roadmap | - |
 | `validation/api_anbindung/rollout/milestones.md` | `API/validation__api_anbindung__rollout__milestones_COPY.md` | api | supporting | - |
@@ -58,16 +59,16 @@ Dokumente: 61
 | `validation/api_anbindung/security/threat-model.md` | `API/validation__api_anbindung__security__threat-model_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/testing/README.md` | `API/validation__api_anbindung__testing__README_COPY.md` | api | readme | - |
 | `validation/api_anbindung/testing/test-matrix.md` | `API/validation__api_anbindung__testing__test-matrix_COPY.md` | api | supporting | - |
-| `validation/api_anbindung/work-package.md` | `API/validation__api_anbindung__work-package_COPY.md` | api | work-package | - |
+| `validation/api_anbindung/work-package.md` | `API/validation__api_anbindung__work-package_COPY.md` | api | work-package | 2026-03-23 |
 | `validation/archive/pre-p0/current-fix-verification-report.md` | `validation__archive__pre-p0__current-fix-verification-report_COPY.md` | root | verification | teilweise erreicht |
 | `validation/archive/pre-p0/README.md` | `validation__archive__pre-p0__README_COPY.md` | root | readme | - |
-| `validation/fsm0/work-package.md` | `FSM/validation__fsm0__work-package_COPY.md` | fsm | work-package | in Arbeit |
+| `validation/fsm0/work-package.md` | `FSM/validation__fsm0__work-package_COPY.md` | fsm | work-package | abgeschlossen im aktuellen Scope |
 | `validation/golden-corpus-plan.md` | `validation__golden-corpus-plan_COPY.md` | root | plan | - |
 | `validation/golden-corpus-v2-expansion/README.md` | `validation__golden-corpus-v2-expansion__README_COPY.md` | root | readme | aktueller Scope abgeschlossen; weiterfuehrende Expansion optional |
 | `validation/golden-corpus-v2-expansion/work-package.md` | `validation__golden-corpus-v2-expansion__work-package_COPY.md` | root | work-package | aktueller Scope abgeschlossen; weiterfuehrende Expansion optional |
 | `validation/industry-lite-roadmap.md` | `validation__industry-lite-roadmap_COPY.md` | root | roadmap | ABGESCHLOSSEN (P0 2026-03-07) |
 | `validation/race-panel-fixes/README.md` | `validation__race-panel-fixes__README_COPY.md` | root | readme | offen |
 | `validation/race-panel-fixes/work-package.md` | `validation__race-panel-fixes__work-package_COPY.md` | root | work-package | abgeschlossen im aktuellen Scope |
-| `validation/README.md` | `validation__README_COPY.md` | root | readme | 2026-03-21 |
+| `validation/README.md` | `validation__README_COPY.md` | root | readme | 2026-03-23 |
 | `validation/ui-manual-verification-plan.md` | `FSM/validation__ui-manual-verification-plan_COPY.md` | fsm | verification | aktuell |
 | `validation/verification-matrix.md` | `validation__verification-matrix_COPY.md` | root | verification | - |

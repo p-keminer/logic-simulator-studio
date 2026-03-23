@@ -7,6 +7,7 @@ import {
 } from '../../core/analysis/sequentialProjection';
 import type { TimingSnapshot } from '../../core/types';
 import {
+  buildAnalysisSubsystemSemanticNotes,
   resolveTimingPanelState,
   shouldUseProjectedTimingChannels,
 } from './panelViewState';
@@ -234,6 +235,14 @@ export function TimingDiagram({ history, onClose }: Props) {
     analysisSubsystemOptions,
     selectedSubsystemKey,
     viewMode,
+  );
+  const analysisSemanticNotes = useMemo(
+    () => buildAnalysisSubsystemSemanticNotes({
+      analysisSubsystemOptions,
+      activeAnalysisSubsystem,
+      target: 'timing',
+    }),
+    [activeAnalysisSubsystem, analysisSubsystemOptions],
   );
 
   // ── Verbundene Gatter-IDs ermitteln ──────────────────────────────────────
@@ -789,6 +798,28 @@ export function TimingDiagram({ history, onClose }: Props) {
           style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}
         >×</button>
       </div>
+
+      {analysisSemanticNotes.length > 0 && (
+        <div style={{ padding: '10px 12px 0', display: 'grid', gap: 8 }}>
+          {analysisSemanticNotes.map((note) => (
+            <div
+              key={note.key}
+              style={{
+                padding: '8px 12px',
+                background: note.tone === 'warning' ? '#172554' : '#0f172a',
+                border: `1px solid ${note.tone === 'warning' ? '#1d4ed8' : '#334155'}`,
+                borderRadius: 6,
+                fontFamily: 'monospace',
+                fontSize: 11,
+                color: note.tone === 'warning' ? '#dbeafe' : '#cbd5e1',
+                lineHeight: 1.7,
+              }}
+            >
+              {note.message}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Kein Inhalt ───────────────────────────────────────────────── */}
       {channels.length === 0 ? (

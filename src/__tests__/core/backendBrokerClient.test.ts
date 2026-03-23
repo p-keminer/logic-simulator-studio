@@ -8,6 +8,47 @@ import {
 import { BackendBrokerApiError } from '../../core/backendBroker/errors';
 
 describe('backend broker client', () => {
+  it('binds the default browser fetch before storing it for later requests', async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchSpy = vi.fn(function (this: typeof globalThis) {
+      expect(this).toBe(globalThis);
+
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            sessionId: 'bound-fetch-session',
+            issuedAt: '2026-03-23T04:00:00.000Z',
+            expiresAt: '2026-03-23T04:05:00.000Z',
+            status: 'active',
+          }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            status: 201,
+          },
+        ),
+      );
+    }) as typeof fetch;
+
+    globalThis.fetch = fetchSpy;
+
+    try {
+      const client = new BackendBrokerClient();
+
+      await expect(
+        client.registerSessionKey('sk-broker-test-1234567890'),
+      ).resolves.toEqual({
+        sessionId: 'bound-fetch-session',
+        issuedAt: '2026-03-23T04:00:00.000Z',
+        expiresAt: '2026-03-23T04:05:00.000Z',
+        status: 'active',
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it('normalizes root and v1-prefixed broker base urls', () => {
     expect(normalizeBackendBrokerBaseUrl('http://127.0.0.1:8787')).toBe(
       DEFAULT_BACKEND_BROKER_BASE_URL,

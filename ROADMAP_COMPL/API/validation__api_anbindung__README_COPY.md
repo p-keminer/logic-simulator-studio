@@ -70,3 +70,20 @@ Nach Umsetzung dieses Plans existiert eine kleine, klar begrenzte Backend-Anwend
 4. Kernmodule des Backends umsetzen
 5. Deployment und Tests aufsetzen
 6. kontrollierten Rollout aktivieren
+
+## Aktueller Stand
+
+- die Sandbox unter `backend-sandbox/` deckt den `API0`-Vorbau fuer Session,
+  Chat, Reset, Circuit-Context, Guardrails, Provider-Gateway, Audit/Redaction
+  und lokale App-Bridge bereits isoliert ab
+- die aktive App besitzt einen standardmaessig sichtbaren Broker-Client-Pfad
+  mit dediziertem Circuit-Context-Adapter und Broker-Modal
+- der aktuelle Integrationsslice `API1-01a` haertet den App-seitigen
+  Nutzerfluss fuer `Key -> Chat -> Reset -> Delete` ueber einen gemeinsamen
+  UI-State-Reducer und dedizierte Regressionsabdeckung
+- stale Session-Antworten wie `NOT_FOUND` / `Session was not found.` fallen in
+  der App jetzt ebenfalls in denselben konsistenten Session-Invalidierungspfad
+  zurueck statt den Dialog in einem blockierten Fehlerzustand zu lassen
+- der naechste direkte Folgepunkt ist `API1-01b`: manuelle und spaeter
+  automatisierte End-to-End-Absicherung des sichtbaren Broker-Flows in der
+  App, bevor Staging- oder Rollout-Schritte aktiv werden

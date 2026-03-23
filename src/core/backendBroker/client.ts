@@ -196,7 +196,8 @@ export class BackendBrokerClient {
     this.baseUrl = normalizeBackendBrokerBaseUrl(
       options.baseUrl ?? DEFAULT_BACKEND_BROKER_BASE_URL,
     );
-    this.fetchFn = options.fetchFn ?? fetch;
+    this.fetchFn =
+      options.fetchFn ?? (globalThis.fetch.bind(globalThis) as typeof fetch);
     this.timeoutMs = options.timeoutMs ?? 30_000;
   }
 

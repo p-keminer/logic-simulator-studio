@@ -19,6 +19,7 @@ import {
 } from '../../core/analysis/stateTransitionTable';
 import type { Circuit, GateInstance } from '../../core/types';
 import {
+  buildAnalysisSubsystemSemanticNotes,
   resolveTruthTablePanelState,
 } from './panelViewState';
 import {
@@ -342,10 +343,11 @@ export function TruthTableModal({ onClose }: Props) {
   const showSttViewModeSelect = sttViewState?.showModeSelect ?? false;
   const showReducedCompactNote = sttViewState?.showReducedCompactNote ?? false;
   const fallbackProjectionNote = sttViewState?.fallbackNote ?? '';
-  const modifiedProjectedFsmNote = activeAnalysisSubsystem?.projectionSemantics === 'modified_projected_fsm'
-    ? 'Synthetisierte FSM wurde nachtraeglich veraendert oder ergaenzt. Die kompakte Ansicht ist dafuer nicht mehr verfuegbar; Ansicht bleibt technisch voll.'
-    : '';
-  const effectiveFallbackProjectionNote = modifiedProjectedFsmNote || fallbackProjectionNote;
+  const analysisSemanticNotes = buildAnalysisSubsystemSemanticNotes({
+    analysisSubsystemOptions,
+    activeAnalysisSubsystem,
+    target: 'truth_table',
+  });
 
   // â”€â”€ Style-Funktionen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -564,20 +566,64 @@ export function TruthTableModal({ onClose }: Props) {
           const outputGates = displayedStateTransition?.outputGates ?? computed.outputGates;
           const rows = displayedStateTransition?.rows ?? computed.rows;
           const modeNotes = displayedStateTransition?.notes ?? [];
+          const renderSemanticBlocks = () => (
+            <>
+              {analysisSemanticNotes.map((note) => (
+                <div
+                  key={note.key}
+                  style={{
+                    marginBottom: 14,
+                    padding: '8px 12px',
+                    background: note.tone === 'warning' ? '#172554' : '#0f172a',
+                    border: `1px solid ${note.tone === 'warning' ? '#1d4ed8' : '#334155'}`,
+                    borderRadius: 6,
+                    fontFamily: 'monospace',
+                    fontSize: 11,
+                    color: note.tone === 'warning' ? '#dbeafe' : '#cbd5e1',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {note.message}
+                </div>
+              ))}
+
+              {fallbackProjectionNote && (
+                <div style={{
+                  marginBottom: 14,
+                  padding: '8px 12px',
+                  background: '#172554',
+                  border: '1px solid #1d4ed8',
+                  borderRadius: 6,
+                  fontFamily: 'monospace',
+                  fontSize: 11,
+                  color: '#dbeafe',
+                  lineHeight: 1.7,
+                }}>
+                  {fallbackProjectionNote}
+                </div>
+              )}
+            </>
+          );
 
           if (stateVars.length === 0) {
             return (
-              <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                Keine Zustandsvariablen identifizierbar (keine isSynchronous-Gatter / Feedback-Knoten verbunden).
-              </p>
+              <>
+                {renderSemanticBlocks()}
+                <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
+                  Keine Zustandsvariablen identifizierbar (keine isSynchronous-Gatter / Feedback-Knoten verbunden).
+                </p>
+              </>
             );
           }
 
           if (tooMany) {
             return (
-              <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
-                Zu viele Steuer-Eingaenge fuer reduzierte Analyse (&gt;7). Schaltung zu komplex fuer tabellarische Darstellung.
-              </p>
+              <>
+                {renderSemanticBlocks()}
+                <p style={{ color: '#ef4444', fontSize: 12, fontFamily: 'monospace' }}>
+                  Zu viele Steuer-Eingaenge fuer reduzierte Analyse (&gt;7). Schaltung zu komplex fuer tabellarische Darstellung.
+                </p>
+              </>
             );
           }
 
@@ -617,9 +663,26 @@ export function TruthTableModal({ onClose }: Props) {
                     )}
                     {reducedMeta.cappedControls && (
                       <div style={{ color: '#f87171' }}>
-                        Steuer-Eingaenge auf {reducedMeta.controlCount} begrenzt (ueberschuessige weggelassen)
+                        Steuer-Eingaenge auf {reducedMeta.controlCount} begrenzt
+                        {reducedMeta.omittedControlLabels.length > 0 && (
+                          <>
+                            {' '}(
+                            uebersprungen:{' '}
+                            <span style={{ color: '#fca5a5' }}>
+                              {reducedMeta.omittedControlLabels.join(', ')}
+                            </span>
+                            )
+                          </>
+                        )}
                       </div>
                     )}
+                    <div>
+                      Reduzierte FSM-STT:{' '}
+                      <span style={{ color: '#f59e0b' }}>{reducedMeta.reducedCompactRowCount}</span>
+                      {' '}sichtbare Zeilen statt{' '}
+                      <span style={{ color: '#f59e0b' }}>{reducedMeta.fullCompactRowCount}</span>
+                      {' '}fachlich relevanter Vollzeilen.
+                    </div>
                   </div>
                 </div>
               )}
@@ -640,38 +703,7 @@ export function TruthTableModal({ onClose }: Props) {
                 </div>
               )}
 
-              {effectiveFallbackProjectionNote && (
-                <div style={{
-                  marginBottom: 14,
-                  padding: '8px 12px',
-                  background: '#172554',
-                  border: '1px solid #1d4ed8',
-                  borderRadius: 6,
-                  fontFamily: 'monospace',
-                  fontSize: 11,
-                  color: '#dbeafe',
-                  lineHeight: 1.7,
-                }}>
-                  {effectiveFallbackProjectionNote}
-                </div>
-              )}
-
-              {analysisSubsystemOptions.length > 1 && activeAnalysisSubsystem?.kind === 'projected_fsm' && (
-                <div style={{
-                  marginBottom: 14,
-                  padding: '8px 12px',
-                  background: '#0f172a',
-                  border: '1px solid #334155',
-                  borderRadius: 6,
-                  fontFamily: 'monospace',
-                  fontSize: 11,
-                  color: '#cbd5e1',
-                  lineHeight: 1.7,
-                }}>
-                  Analysiert isoliert das ausgewaehlte System <span style={{ color: '#f8fafc' }}>{activeAnalysisSubsystem.label}</span>,
-                  damit getrennte FSM-Projektionsbatches nicht in eine gemeinsame technische Fallback-STT gedrueckt werden.
-                </div>
-              )}
+              {renderSemanticBlocks()}
 
               {activeSttViewMode === 'fsm_compact' && modeNotes.length > 0 && (
                 <div style={{
@@ -773,7 +805,7 @@ export function TruthTableModal({ onClose }: Props) {
                 <span style={{ color: '#f59e0b' }}>[*]</span> = Stabiler Zustand Q(t) = Q(t+1)
                 {reducedMeta && (
                   <span style={{ color: '#78716c' }}>
-                    &nbsp;|&nbsp; Reduzierte Ansicht - vollstaendige Analyse bei {reducedMeta.totalStateBits * Math.pow(2, inputs.length + reducedMeta.totalStateBits)} Zeilen nicht darstellbar
+                    &nbsp;|&nbsp; Reduzierte Ansicht - {reducedMeta.reducedCompactRowCount} sichtbare statt {reducedMeta.fullCompactRowCount} fachlich relevanter Vollzeilen
                   </span>
                 )}
               </p>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import '../../core/registry/index';
 import type { Circuit } from '../../core/types';
 import {
   buildAnalysisSubsystemOptions,
@@ -92,6 +93,64 @@ function makeChainedProjectedCircuit(): Circuit {
   };
 }
 
+function makeSharedObserverProjectedCircuit(): Circuit {
+  const disconnected = makeDisconnectedProjectedCircuit();
+  const firstState = Object.values(disconnected.gates).find((gate) => gate.typeId === 'D_FF_R' && gate.label === 'Q0');
+  const secondState = Object.values(disconnected.gates).find((gate) => gate.typeId === 'D_FF_R' && gate.label === 'Q0_1');
+
+  expect(firstState).toBeTruthy();
+  expect(secondState).toBeTruthy();
+
+  return {
+    ...disconnected,
+    gates: {
+      ...disconnected.gates,
+      raw_and: {
+        id: 'raw_and',
+        typeId: 'AND',
+        x: 1580,
+        y: 220,
+        label: 'OBS_AND',
+        outputSignals: {},
+        isSelected: false,
+      },
+      raw_led: {
+        id: 'raw_led',
+        typeId: 'OUTPUT_LED',
+        x: 1720,
+        y: 220,
+        label: 'OBS',
+        outputSignals: {},
+        isSelected: false,
+      },
+    },
+    wires: {
+      ...disconnected.wires,
+      observer_w1: {
+        id: 'observer_w1',
+        from: { gateId: firstState!.id, portId: 'q' },
+        to: { gateId: 'raw_and', portId: 'a' },
+        signal: { value: 0, version: 0, lastChangedAt: 0 },
+        isSelected: false,
+      },
+      observer_w2: {
+        id: 'observer_w2',
+        from: { gateId: secondState!.id, portId: 'q' },
+        to: { gateId: 'raw_and', portId: 'b' },
+        signal: { value: 0, version: 0, lastChangedAt: 0 },
+        isSelected: false,
+      },
+      observer_w3: {
+        id: 'observer_w3',
+        from: { gateId: 'raw_and', portId: 'out' },
+        to: { gateId: 'raw_led', portId: 'in' },
+        signal: { value: 0, version: 0, lastChangedAt: 0 },
+        isSelected: false,
+      },
+    },
+  };
+}
+
 describe('Sequential subsystem boundaries', () => {
   it('creates one clean projected boundary per disconnected synthesized FSM batch', () => {
     const circuit = makeDisconnectedProjectedCircuit();
@@ -123,5 +182,26 @@ describe('Sequential subsystem boundaries', () => {
     const analysisOptions = buildAnalysisSubsystemOptions(circuit);
     expect(analysisOptions).toHaveLength(1);
     expect(analysisOptions[0].kind).toBe('generic');
+  });
+
+  it('keeps projected FSM batches separately selectable when they only share a raw observer path', () => {
+    const circuit = makeSharedObserverProjectedCircuit();
+
+    const boundaries = collectSequentialSubsystemBoundaries(circuit);
+    expect(boundaries).toHaveLength(1);
+    expect(boundaries[0].hasMixedProjectedBatches).toBe(true);
+
+    const projectedOptions = buildProjectedFsmSubsystemOptions(circuit);
+    expect(projectedOptions.map((option) => option.label)).toEqual(['Y', 'Y_1']);
+
+    const analysisOptions = buildAnalysisSubsystemOptions(circuit);
+    expect(analysisOptions.map((option) => ({
+      label: option.label,
+      kind: option.kind,
+      projectionSemantics: option.projectionSemantics,
+    }))).toEqual([
+      { label: 'Y', kind: 'projected_fsm', projectionSemantics: 'clean_projected_fsm' },
+      { label: 'Y_1', kind: 'projected_fsm', projectionSemantics: 'clean_projected_fsm' },
+    ]);
   });
 });

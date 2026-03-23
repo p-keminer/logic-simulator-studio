@@ -13,6 +13,9 @@ export interface ReducedStateTransitionMeta {
   totalStateBits: number;
   controlCount: number;
   cappedControls: boolean;
+  omittedControlLabels: string[];
+  fullCompactRowCount: number;
+  reducedCompactRowCount: number;
 }
 
 export interface StaticStateTransitionRow {
@@ -408,11 +411,20 @@ export function buildStaticStateTransitionTable(args: {
     activeStateVars = [representative];
     dataInputsToZero = data;
     nonRepresentativeStateBits = projectedStateVars.filter((stateVar) => stateVar !== representative);
+    const compactVisibleControls = isProjectedFsmView
+      ? controls.filter((gate) => gate.projection?.role !== 'clock' && gate.projection?.role !== 'reset')
+      : controls;
+    const reducedVisibleControls = isProjectedFsmView
+      ? activeInputs.filter((gate) => gate.projection?.role !== 'clock' && gate.projection?.role !== 'reset')
+      : activeInputs;
     reducedMeta = {
       fixedDataLabels: data.map((gate) => gateLabel(gate)),
       totalStateBits: projectedStateVars.length,
       controlCount: activeInputs.length,
       cappedControls,
+      omittedControlLabels: controls.slice(maxControls).map((gate) => gateLabel(gate)),
+      fullCompactRowCount: Math.pow(2, compactVisibleControls.length + projectedStateVars.length),
+      reducedCompactRowCount: Math.pow(2, reducedVisibleControls.length + 1),
     };
 
     if (activeInputs.length + 1 > 8) {

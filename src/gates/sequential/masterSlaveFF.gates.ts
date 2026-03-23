@@ -17,7 +17,7 @@ const qqnOutputs = [
 // Master latch is transparent while CLK=1
 gateRegistry.register({
   typeId: 'MS_JK_FF',
-  label: 'MS-JK',
+  label: 'MS-JK (transp.)',
   category: 'flipflop',
   width: 80, height: 90,
   inputs: [
@@ -95,7 +95,7 @@ gateRegistry.register({
     ].join('\n');
   },
   shapeComponent: FlipFlopShape,
-  description: 'Master-Slave JK FF: Q ändert sich nur auf fallender CLK-Flanke',
+  description: 'Master-Slave JK FF mit transparentem Master: Master ist bei CLK=1 pegeltransparent, Slave übernimmt auf fallender CLK-Flanke',
   isSynchronous: true,
   stateKeys: ['qS'],
   hiddenStateKeys: ['qM', 'prevClk'],

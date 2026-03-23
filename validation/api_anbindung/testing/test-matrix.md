@@ -13,6 +13,7 @@ Pflichtfaelle:
 - Kontextreduktion
 - Provider-Fehlernormalisierung
 - Redaktionsfilter
+- Broker-UI-Stateflow fuer `Key -> Chat -> Reset -> Delete`
 
 ## Contract Tests
 
@@ -39,6 +40,8 @@ Pflichtfaelle:
 - Session-Reset
 - Timeout- und Retry-Pfade
 - Limit-Verletzungen
+- App-seitige Session-Invalidierung ueber Chat, Reset und Delete mit
+  konsistenter UI-Fehlerabbildung
 
 ## Sicherheitstests
 

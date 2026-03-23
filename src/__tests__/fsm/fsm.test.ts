@@ -5,10 +5,11 @@ import { parseCondition, evalCondition, exprVars, getMinterms } from '../../fsm/
 import type { Expr } from '../../fsm/conditionParser';
 import { fsmReducer, createDefaultFsm, type FsmAction } from '../../fsm/fsmReducer';
 import type { FsmMachine } from '../../fsm/types';
-import { synthesizeFsm, detectOverlappingTransitions } from '../../fsm/synthesis/synthesize';
+import { analyzeFsmSynthesisGuardrail, synthesizeFsm, detectOverlappingTransitions } from '../../fsm/synthesis/synthesize';
 import type { Circuit } from '../../core/types';
 import { analyzeFsmStructure } from '../../fsm/analysis/structure';
 import { FsmStateTableContent } from '../../components/fsm/FsmStateTable';
+import wideReducedFixture from '../../../validation/manual-fixtures/fsm-wide/fsm0_wide_reduced_fixture.fsm.json';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1077,6 +1078,47 @@ describe('FSM Audit - Synthesis edge cases', () => {
       states,
     });
     expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow('Maximum: 15');
+  });
+
+  it('FSM0-3: blocks wide raw SOP synthesis before it floods the canvas', () => {
+    const fsm = wideReducedFixture as FsmMachine;
+    const structure = analyzeFsmStructure(fsm);
+    const guardrail = analyzeFsmSynthesisGuardrail(fsm);
+
+    expect(fsm.inputCount).toBe(6);
+    expect(structure.effectiveBitWidth).toBe(3);
+    expect(structure.effectiveStateCount).toBe(5);
+    expect(guardrail.blocked).toBe(true);
+    expect(guardrail.message).toMatch(/Breite FSM-Synthese ist aktuell bewusst blockiert/);
+    expect(guardrail.message).toMatch(/Quine-McCluskey|Bool-Minimierung/);
+
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow(
+      /Breite FSM-Synthese ist aktuell bewusst blockiert/,
+    );
+    expect(() => synthesizeFsm(fsm, emptyCircuit())).toThrow(
+      /Quine-McCluskey|Bool-Minimierung/,
+    );
+  });
+
+  it('FSM0-6: keeps small FSM synthesis guardrail feedback quiet for normal editor cases', () => {
+    const fsm = makeFsm({
+      states: {
+        s0: { id: 's0', label: 'S0', x: 0, y: 0, isInitial: true, output: 0 },
+        s1: { id: 's1', label: 'S1', x: 100, y: 0, isInitial: false, output: 1 },
+      },
+      transitions: [
+        { id: 't1', fromId: 's0', toId: 's1', conditionText: 'A', mealyOutput: 0 },
+        { id: 't2', fromId: 's0', toId: 's0', conditionText: '!A', mealyOutput: 0 },
+        { id: 't3', fromId: 's1', toId: 's0', conditionText: 'A', mealyOutput: 0 },
+        { id: 't4', fromId: 's1', toId: 's1', conditionText: '!A', mealyOutput: 0 },
+      ],
+    });
+
+    const guardrail = analyzeFsmSynthesisGuardrail(fsm);
+
+    expect(guardrail.blocked).toBe(false);
+    expect(guardrail.message).toBeNull();
+    expect(guardrail.estimate?.gateCount).toBeGreaterThan(0);
   });
 
   it('M7: synthesis rejects unknown variables in conditions', () => {

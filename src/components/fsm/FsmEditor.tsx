@@ -1,11 +1,35 @@
-import { useEffect, useRef, useState } from 'react';
-import { FsmProvider } from '../../fsm/FsmContext';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { FsmProvider, useFsm } from '../../fsm/FsmContext';
 import { FsmCanvas } from './FsmCanvas';
 import type { CanvasMode } from './FsmCanvas';
 import { FsmSidePanel } from './FsmSidePanel';
 import { FsmToolbar } from './FsmToolbar';
+import { analyzeFsmSynthesisGuardrail } from '../../fsm/synthesis/synthesize';
 
 interface Props { onBack: () => void; }
+
+function FsmEditorGuardrailBanner() {
+  const { fsm } = useFsm();
+  const guardrail = useMemo(() => analyzeFsmSynthesisGuardrail(fsm), [fsm]);
+
+  if (!guardrail.blocked || !guardrail.message) return null;
+
+  return (
+    <div
+      style={{
+        padding: '8px 12px',
+        borderBottom: '1px solid #7c2d12',
+        background: '#431407',
+        color: '#fdba74',
+        fontSize: 11,
+        fontFamily: 'monospace',
+        flexShrink: 0,
+      }}
+    >
+      {guardrail.message}
+    </div>
+  );
+}
 
 function FsmEditorInner({ onBack }: Props) {
   const [mode, setMode] = useState<CanvasMode>('select');
@@ -45,6 +69,7 @@ function FsmEditorInner({ onBack }: Props) {
         isInspectorOpen={isInspectorOpen}
         onToggleInspector={() => setIsInspectorOpen((prev) => !prev)}
       />
+      <FsmEditorGuardrailBanner />
       <div ref={editorBodyRef} style={{ display:'flex', flex:1, minHeight:0, position:'relative' }}>
         <div style={{ flex:1, minWidth:0, position:'relative' }}>
           <FsmCanvas mode={mode} onModeChange={setMode} />

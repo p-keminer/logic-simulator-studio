@@ -1,0 +1,132 @@
+{
+  "id": "fsm0-wide-reduced",
+  "name": "FSM0 Wide Reduced Fixture",
+  "archType": "moore",
+  "inputCount": 6,
+  "inputNames": [
+    "A0",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5"
+  ],
+  "outputCount": 1,
+  "outputNames": [
+    "Y"
+  ],
+  "states": {
+    "state-s0": {
+      "id": "state-s0",
+      "label": "S0",
+      "x": 120,
+      "y": 220,
+      "isInitial": true,
+      "output": 0
+    },
+    "state-s1": {
+      "id": "state-s1",
+      "label": "S1",
+      "x": 320,
+      "y": 100,
+      "isInitial": false,
+      "output": 0
+    },
+    "state-s2": {
+      "id": "state-s2",
+      "label": "S2",
+      "x": 560,
+      "y": 180,
+      "isInitial": false,
+      "output": 0
+    },
+    "state-s3": {
+      "id": "state-s3",
+      "label": "S3",
+      "x": 520,
+      "y": 420,
+      "isInitial": false,
+      "output": 0
+    },
+    "state-s4": {
+      "id": "state-s4",
+      "label": "S4",
+      "x": 240,
+      "y": 460,
+      "isInitial": false,
+      "output": 1
+    }
+  },
+  "transitions": [
+    {
+      "id": "t-s0-next",
+      "fromId": "state-s0",
+      "toId": "state-s1",
+      "conditionText": "A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s0-prev",
+      "fromId": "state-s0",
+      "toId": "state-s4",
+      "conditionText": "!A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s1-next",
+      "fromId": "state-s1",
+      "toId": "state-s2",
+      "conditionText": "A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s1-prev",
+      "fromId": "state-s1",
+      "toId": "state-s0",
+      "conditionText": "!A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s2-next",
+      "fromId": "state-s2",
+      "toId": "state-s3",
+      "conditionText": "A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s2-prev",
+      "fromId": "state-s2",
+      "toId": "state-s1",
+      "conditionText": "!A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s3-next",
+      "fromId": "state-s3",
+      "toId": "state-s4",
+      "conditionText": "A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s3-prev",
+      "fromId": "state-s3",
+      "toId": "state-s2",
+      "conditionText": "!A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s4-next",
+      "fromId": "state-s4",
+      "toId": "state-s0",
+      "conditionText": "A0",
+      "mealyOutput": 0
+    },
+    {
+      "id": "t-s4-prev",
+      "fromId": "state-s4",
+      "toId": "state-s3",
+      "conditionText": "!A0",
+      "mealyOutput": 0
+    }
+  ]
+}

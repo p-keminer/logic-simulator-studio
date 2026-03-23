@@ -25,8 +25,10 @@ Aktive Steuerdateien:
   kanonischer Einstiegspunkt in Reports, Runner und Validation-Artefakte
 - `validation/api_anbindung/work-package.md`
   aktiver API-/Broker-Strang
+- `validation/ux-feinschliff/work-package.md`
+  aktiver UX-Feinschliff-/Intake-Strang fuer kleine sichtbare Nacharbeiten
 - `validation/fsm0/work-package.md`
-  aktiver FSM-Strang
+  FSM-Strang; aktueller Scope abgeschlossen, Folgeausbau dokumentiert
 - `validation/race-panel-fixes/work-package.md`
   aktiver Race-/Panel-Strang
 
@@ -241,6 +243,9 @@ Manuell validieren:
 
 ### Phase 1 - FSM-Projektion weiter absichern
 
+Status:
+- aktueller Scope abgeschlossen
+
 Quelle:
 - validation/fsm0/work-package.md
 
@@ -250,6 +255,28 @@ Reihenfolge:
 3. Timing- und STT-Systemgrenzen konsistent halten.
 4. Copy/Paste-/Duplicate-Pfade absichern.
 5. Mehrfach-FSM- und getrennte Rohsysteme sauber behandelbar halten.
+
+Abgeschlossener Scope:
+- Analyse-Subsysteme tragen jetzt explizit `clean`, `legacy`, `modified` und
+  gemischte projizierte Sequential-Semantik
+- STT und Timing beziehen Legacy-/Modified-/Mixed- und Isolationshinweise
+  jetzt aus derselben Helper-Schicht statt aus getrennten Panel-Spezialtexten
+- breite FSM-Faelle bleiben im Editor ueber reduzierte STT nutzbar; die
+  unverdichtete Canvas-Synthese ist fuer browserkritische Gate-/Leitungswolken
+  jetzt bewusst blockiert, bis eine spaetere Bool-Minimierung den Pfad sauber
+  uebernehmen kann
+- diese Semantik ist jetzt auch frueher sichtbar: der FSM-Editor surfacet
+  breite Guardrail-Faelle bereits vor der eigentlichen Canvas-Synthese, und
+  der Hauptcanvas zeigt `legacy`-, `modified`-, `mixed`- sowie Mehrsystem-
+  Hinweise schon vor STT/Timing
+- Boundary-/Fixture-Wall deckt jetzt ausserdem direkte Ketten,
+  `projected + raw`, Observer-Splits, Mixed-Islands, Shared-Observer und
+  Shared-Helper-Faelle als gespeicherte Repros mit Regression ab
+
+Bewusste Folgearbeit ausserhalb des abgeschlossenen Scope:
+- `FSM0-8` Netzlisten-Minimierung / Bool-Minimierung / Mapping fuer breite
+  FSM-Synthese
+- optionale weitere Legacy-Breadth oder spaetere UI-/Visual-Politur
 
 Automatisch validieren:
 - gezielte FSM- und STT-Tests
@@ -525,12 +552,15 @@ Zusaetzlich bei groesserer Tragweite:
 
 ## Aktuelle offene Hauptpakete
 
-1. den laufenden lokalen UI-Responsive-/Timing-Slice sauber abschliessen und
-   dann dokumentationsseitig nachziehen
-2. FSM-Projektion in gemischten und direkt verketteten Netzen weiter haerten
+1. API-/Broker-App-Integration fuer `Key -> Chat -> Reset -> Delete`
+   weiter haerten und sichtbar verifizieren
+2. kleinen UX-Feinschliff-Strang separat pflegen und erst dokumentiert sammeln,
+   dann bewusst in kleinen Slices umsetzen
 3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen
 4. Golden-, Focused- und Contract-Validierung weiter verbreitern
 5. CI- und Release-Haertung abschliessen
+6. spaetere Folgepfade bewusst getrennt halten: `FSM0-8`,
+   tiefere/nestbare Hierarchie, API-Staging/Rollout
 
 ## Verweise
 

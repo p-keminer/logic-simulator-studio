@@ -106,6 +106,9 @@ export const toBackendBrokerUiError = (
       typeof error.details?.retryAfterSeconds === 'number'
         ? error.details.retryAfterSeconds
         : undefined;
+    const staleSessionNotFound =
+      error.code === 'NOT_FOUND' &&
+      error.message.trim().toLowerCase() === 'session was not found.';
 
     switch (error.code) {
       case 'RATE_LIMITED':
@@ -122,6 +125,17 @@ export const toBackendBrokerUiError = (
         };
       case 'UNAUTHORIZED':
       case 'CONFLICT':
+      case 'NOT_FOUND':
+        if (!staleSessionNotFound && error.code === 'NOT_FOUND') {
+          return {
+            kind: 'request',
+            title: 'Broker-Anfrage wurde abgelehnt',
+            message: error.message,
+            code: error.code,
+            requestId: error.requestId,
+          };
+        }
+
         return {
           kind: 'session',
           title: 'Broker-Sitzung ist nicht mehr gueltig',
@@ -142,7 +156,6 @@ export const toBackendBrokerUiError = (
       case 'BAD_REQUEST':
       case 'UNPROCESSABLE_ENTITY':
       case 'FORBIDDEN':
-      case 'NOT_FOUND':
         return {
           kind: 'request',
           title: 'Broker-Anfrage wurde abgelehnt',
