@@ -61,7 +61,7 @@ Dokumente: 64
 | `validation/api_anbindung/security/threat-model.md` | `API/validation__api_anbindung__security__threat-model_COPY.md` | api | supporting | - |
 | `validation/api_anbindung/testing/README.md` | `API/validation__api_anbindung__testing__README_COPY.md` | api | readme | - |
 | `validation/api_anbindung/testing/test-matrix.md` | `API/validation__api_anbindung__testing__test-matrix_COPY.md` | api | supporting | - |
-| `validation/api_anbindung/work-package.md` | `API/validation__api_anbindung__work-package_COPY.md` | api | work-package | 2026-03-23 |
+| `validation/api_anbindung/work-package.md` | `API/validation__api_anbindung__work-package_COPY.md` | api | work-package | 2026-03-24 |
 | `validation/archive/pre-p0/current-fix-verification-report.md` | `validation__archive__pre-p0__current-fix-verification-report_COPY.md` | root | verification | teilweise erreicht |
 | `validation/archive/pre-p0/README.md` | `validation__archive__pre-p0__README_COPY.md` | root | readme | - |
 | `validation/fsm0/work-package.md` | `FSM/validation__fsm0__work-package_COPY.md` | fsm | work-package | abgeschlossen im aktuellen Scope |

@@ -12,7 +12,7 @@ aktuell bleibt.
 
 ## Aktueller Integrationsstand
 
-Stand: 2026-03-23
+Stand: 2026-03-24
 
 - `API0` ist im Sandbox- und Frontend-Vorbau weitgehend angelegt:
   Session-Key-Registrierung, Chat-Request, Chat-Reset, Circuit-Context-
@@ -123,6 +123,18 @@ Stand: 2026-03-23
 - app-seitige Regressionsabdeckung existiert jetzt nicht mehr nur fuer Client,
   Error-Mapping und Circuit-Context, sondern auch fuer den gemeinsamen
   Broker-UI-Stateflow
+- `API1-02` Staging-Access-Gate ist jetzt als Fastify-`onRequest`-Hook
+  implementiert: alle `/v1/*`-Routen erfordern in `APP_ENV=staging` den
+  Header `X-Staging-Token` mit dem konfigurierten `STAGING_ACCESS_TOKEN`;
+  `/health` und `/ready` sowie OPTIONS-Preflight-Requests sind vom Gate
+  ausgenommen, damit Render-Health-Checks und CORS-Preflight weiterhin
+  funktionieren; bei fehlendem oder falschem Token antwortet das Gate mit
+  `401 { error: "staging_access_denied" }`; der Token wird ausschliesslich
+  als Render-Secret-Env-Var konfiguriert (`sync: false`) und darf nicht
+  ins Repo; `staging-runtime-defaults.mjs` exportiert jetzt zusaetzlich
+  `getStagingAccessToken`; der URL-Smoke uebergibt den Token an alle
+  `/v1/*`-Requests und prueft zusaetzlich, dass ein Request ohne Token
+  korrekt mit 401 abgelehnt wird
 
 Automatisch validiert:
 
@@ -131,22 +143,17 @@ Automatisch validiert:
 
 Naechster Kernslice:
 
-- den jetzt vorhandenen staging-lokalen Runtime-Pfad ueber das echte
-  Render-Ziel per `backend-sandbox npm run smoke:staging-url` bestaetigen
-- danach den Staging-Zugangsschutz haerten, bevor der Remote-Broker-Pfad in
-  der App ueber Loopback hinaus geoeffnet wird:
-  1. vorgeschalteten Staging-Access-Gate oder vergleichbare Auth-Barriere
-     vor den oeffentlichen Service setzen
-  2. Session-Key-Registrierung nicht mehr als frei oeffentlichen Endpoint
-     belassen, sondern an Staging-Access oder eine explizite
-     Betreiberfreigabe koppeln
-  3. `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen und
-     Platzhalterwerte aus der Laufzeit entfernen
-  4. abuse-orientierte Observability fuer Session-Key-Spikes,
-     CORS-Ablehnungen und Provider-/Upstream-Fehler aktivieren
-  5. den sichtbaren App-Client erst danach bewusst fuer Remote-Staging-Ziele
-     freigeben
-- erst nach diesem Security-Checkpoint `API1-03` Observability/Alarmierung
+- `STAGING_ACCESS_TOKEN` als Render-Secret setzen und Service neu deployen
+- URL-Smoke mit Token gegen das echte Render-Ziel fahren:
+  `STAGING_BASE_URL=https://logic-simulator-broker-staging.onrender.com STAGING_ALLOWED_ORIGIN=<origin> STAGING_ACCESS_TOKEN=<token> npm run smoke:staging-url`
+- danach verbleibende Pflichtpunkte vor Frontend-Freigabe:
+  1. `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen
+     (kein Platzhalter)
+  2. abuse-orientierte Observability fuer Session-Key-Spikes,
+     CORS-Ablehnungen und Provider-/Upstream-Fehler aktivieren (API1-03)
+  3. den sichtbaren App-Client erst danach bewusst fuer Remote-Staging-Ziele
+     freigeben (Loopback-Beschraenkung aufheben)
+- erst nach diesen Schritten `API1-03` Observability/Alarmierung
   und `API1-04` Pilot-/Rollout-Vorbedingungen angehen
 
 ## Scope-Abschlussbewertung fuer API1-01
@@ -168,6 +175,28 @@ Begruendung:
 - der verbleibende Ausbau ist jetzt primaer betrieblicher Natur
   (`API1-02` bis `API1-04`), nicht mehr fehlende Grundsemantik des
   sichtbaren App-Flows
+
+## Scope-Abschlussbewertung fuer API1-02
+
+Bewertung: **abgeschlossen im aktuellen Scope**
+
+Begruendung:
+
+- staging-nahes Runtime-Profil ist vollstaendig konfiguriert:
+  `APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`, deaktivierte
+  Dev-Fault-Routen, explizite Environment-Metadaten auf `/health`/`/ready`
+- staging-lokaler Start- und Smoke-Pfad steht (`dev:staging-local`,
+  `smoke:staging-runtime`, `smoke:staging-url`)
+- Render-Blueprint (`render.yaml`) liegt vor fuer spaeteres Deployment
+- Staging-Access-Gate ist als Fastify-`onRequest`-Hook implementiert:
+  alle `/v1/*`-Routen erfordern `X-Staging-Token`; `/health`, `/ready` und
+  OPTIONS-Preflight sind ausgenommen; bei fehlendem Token: `401 staging_access_denied`
+- lokal verifiziert: `smoke:staging-url` gruen, `stagingAccessGate: ok`
+- das Projekt bleibt eine lokale Anwendung; ein externer Deploy ist bewusst
+  zurueckgestellt bis ein externer Betrieb konkret geplant wird
+- spaetere Folgepfade (`API1-03` Observability, `API1-04` Pilot-/Rollout,
+  exakte `ALLOWED_ORIGINS`-Domain) sind dokumentiert und werden erst
+  angegangen wenn der Betrieb nach aussen konkret wird
 
 ## Arbeitspaket 1: Scope absichern
 

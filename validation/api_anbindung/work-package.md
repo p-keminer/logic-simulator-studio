@@ -176,6 +176,28 @@ Begruendung:
   (`API1-02` bis `API1-04`), nicht mehr fehlende Grundsemantik des
   sichtbaren App-Flows
 
+## Scope-Abschlussbewertung fuer API1-02
+
+Bewertung: **abgeschlossen im aktuellen Scope**
+
+Begruendung:
+
+- staging-nahes Runtime-Profil ist vollstaendig konfiguriert:
+  `APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`, deaktivierte
+  Dev-Fault-Routen, explizite Environment-Metadaten auf `/health`/`/ready`
+- staging-lokaler Start- und Smoke-Pfad steht (`dev:staging-local`,
+  `smoke:staging-runtime`, `smoke:staging-url`)
+- Render-Blueprint (`render.yaml`) liegt vor fuer spaeteres Deployment
+- Staging-Access-Gate ist als Fastify-`onRequest`-Hook implementiert:
+  alle `/v1/*`-Routen erfordern `X-Staging-Token`; `/health`, `/ready` und
+  OPTIONS-Preflight sind ausgenommen; bei fehlendem Token: `401 staging_access_denied`
+- lokal verifiziert: `smoke:staging-url` gruen, `stagingAccessGate: ok`
+- das Projekt bleibt eine lokale Anwendung; ein externer Deploy ist bewusst
+  zurueckgestellt bis ein externer Betrieb konkret geplant wird
+- spaetere Folgepfade (`API1-03` Observability, `API1-04` Pilot-/Rollout,
+  exakte `ALLOWED_ORIGINS`-Domain) sind dokumentiert und werden erst
+  angegangen wenn der Betrieb nach aussen konkret wird
+
 ## Arbeitspaket 1: Scope absichern
 
 Ziel:

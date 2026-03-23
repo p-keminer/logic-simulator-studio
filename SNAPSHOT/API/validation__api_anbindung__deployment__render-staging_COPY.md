@@ -33,12 +33,16 @@ Vor dem ersten Deploy muessen in Render mindestens diese Werte stehen:
 - `HOST=0.0.0.0`
 - `LOG_LEVEL=info`
 - `ALLOWED_ORIGINS=<Frontend-Staging-Origin>`
+- `STAGING_ACCESS_TOKEN=<zufaelliges Secret, mind. 32 Zeichen>`
 
-Hinweis:
+Hinweise:
 
-- `ALLOWED_ORIGINS` bleibt absichtlich `sync: false`, weil die tatsaechliche
-  Frontend-Staging-Domain nicht fest in den Repo-Stand eingebrannt werden
-  soll
+- `ALLOWED_ORIGINS` und `STAGING_ACCESS_TOKEN` bleiben absichtlich
+  `sync: false`, weil diese Werte nicht fest in den Repo-Stand eingebrannt
+  werden sollen
+- `STAGING_ACCESS_TOKEN` muss in Render als Secret Environment Variable
+  gesetzt werden (niemals im Repo, niemals in Logs)
+- empfohlene Token-Erzeugung: `openssl rand -hex 32`
 
 ## Blueprint-Link nach Push
 
@@ -54,7 +58,10 @@ ausgerollte URL gefahren werden:
 
 ```bash
 cd ~/projects/uni/logic-gate-simulator/validation/api_anbindung/backend-sandbox
-STAGING_BASE_URL=https://<render-service-host> STAGING_ALLOWED_ORIGIN=https://<frontend-staging-host> npm run smoke:staging-url
+STAGING_BASE_URL=https://<render-service-host> \
+  STAGING_ALLOWED_ORIGIN=https://<frontend-staging-host> \
+  STAGING_ACCESS_TOKEN=<token> \
+  npm run smoke:staging-url
 ```
 
 Erwartung:
@@ -63,6 +70,8 @@ Erwartung:
 - `/ready` liefert `devEndpointsEnabled: false`
 - die konfigurierte Frontend-Origin wird per CORS akzeptiert
 - `/v1/dev/provider-fault` bleibt deaktiviert
+- `POST /v1/session/key` ohne `x-staging-token` liefert `401 staging_access_denied`
+- `POST /v1/session/key` mit korrektem `x-staging-token` passiert das Gate
 
 ## Sicherheitsgrenze des ersten externen Ziels
 
@@ -76,16 +85,16 @@ Aktuell bereits gegeben:
 - explizites `APP_ENV=staging`
 - verpflichtende `ALLOWED_ORIGINS`
 - deaktivierte Dev-Fault-Routen
+- `X-Staging-Token`-Gate auf allen `/v1/*`-Routen (API1-02 Staging-Access-Slice)
 
 Vor spaeterer breiterer Frontend-Nutzung weiterhin Pflicht:
 
-- vorgeschalteter Access-Schutz vor dem oeffentlichen Staging-Service
-- haertere Barriere fuer `POST /v1/session/key`
 - `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen
+  (kein Platzhalter, exakte Domain)
 - abuse-orientierte Alarmierung fuer Session-Key-Spikes, CORS-Ablehnungen und
-  Provider-/Upstream-Fehler
+  Provider-/Upstream-Fehler (API1-03)
 - Oeffnung des sichtbaren App-Clients fuer Remote-Broker-Ziele erst nach
-  diesem Sicherheits-Checkpoint
+  diesen Schritten
 
 ## Naechster Folgepunkt
 

@@ -557,17 +557,16 @@ Zusaetzlich bei groesserer Tragweite:
    stale-Session-Recovery-, Session-Key-/Chat-/Reset-Rate-Limit-,
    Konfigurationsfehler-, Policy-Block- und Provider-/Upstream-Fehler-Smoke
    stehen, dazu die manuelle Verifikation des sichtbaren Flows.
-   `API1-02` ist jetzt mit einem ersten staging-nahen Runtime-Profil
-   angelaufen (`APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`,
-   deaktivierte Dev-Routen ausserhalb von Development, Profil-Smoke).
-   Zusaetzlich existieren jetzt ein staging-lokaler Startpfad
-   (`backend-sandbox npm run dev:staging-local`), ein staging-lokaler
-   Runtime-Smoke (`backend-sandbox npm run smoke:staging-runtime`) und ein
-   staging-URL-Smoke (`backend-sandbox npm run smoke:staging-url`).
-   Zusaetzlich liegt jetzt der erste externe Zielpfad als Render-Blueprint in
-   `render.yaml` vor. Naechster Folgepfad: diesen Zielpfad real deployen und
-   den URL-Smoke gegen die echte Staging-URL bestaetigen, danach `API1-03`
-   Observability und `API1-04` Pilot-/Rollout
+   `API1-02` ist jetzt im aktuellen Scope abgeschlossen: staging-nahes
+   Runtime-Profil (`APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`,
+   deaktivierte Dev-Routen), staging-lokaler Start- und Smoke-Pfad,
+   Render-Blueprint (`render.yaml`) sowie Staging-Access-Gate ueber
+   `X-Staging-Token`-Header auf allen `/v1/*`-Routen (lokal verifiziert,
+   `smoke:staging-url` gruen, `stagingAccessGate: ok`).
+   Das Projekt bleibt eine lokale Anwendung; ein externer Deploy ist
+   bewusst zurueckgestellt. Spaetere Folgepfade (`API1-03` Observability,
+   `API1-04` Pilot-/Rollout) bleiben dokumentiert, werden aber erst
+   angegangen wenn ein externer Betrieb konkret geplant wird.
 2. kleinen UX-Feinschliff-Strang separat pflegen und erst dokumentiert sammeln,
    dann bewusst in kleinen Slices umsetzen
 3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen
