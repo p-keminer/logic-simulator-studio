@@ -30,9 +30,10 @@ export function createEmptyCircuit(): Circuit {
 export function circuitReducer(state: Circuit, action: CircuitAction): Circuit {
   switch (action.type) {
     case 'GATE_ADD': {
-      const { typeId, x, y } = action.payload;
+      const { typeId, x, y, id: payloadId } = action.payload;
       const def = gateRegistry.get(typeId);
-      const id = generateId();
+      // payloadId ermöglicht dem Executor, die ID vorab zu kennen (für CONNECT-Auflösung).
+      const id = payloadId ?? generateId();
 
       const outputSignals: GateInstance['outputSignals'] = {};
       for (const output of def.outputs) {

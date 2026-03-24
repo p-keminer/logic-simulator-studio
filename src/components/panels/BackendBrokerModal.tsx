@@ -5,6 +5,10 @@ import {
 } from '../../core/io/backendSandboxSnapshot';
 import { shouldClearBackendBrokerUiErrorOnUserEdit } from '../../core/backendBroker/errors';
 import { getBackendBrokerModalControlState } from '../../core/backendBroker/modalState';
+import {
+  executeCircuitActions,
+  stripCircuitActionsBlock,
+} from '../../core/backendBroker/circuitActionsExecutor';
 import { useBackendBroker } from '../../hooks/useBackendBroker';
 import { useCircuitContext } from '../../store/CircuitContext';
 
@@ -30,7 +34,7 @@ function formatIsoTimestamp(value: string | undefined): string {
 }
 
 export function BackendBrokerModal({ onClose }: Props) {
-  const { circuit } = useCircuitContext();
+  const { circuit, dispatch: circuitDispatch } = useCircuitContext();
   const {
     brokerBaseUrl,
     setBrokerBaseUrl,
@@ -102,7 +106,10 @@ export function BackendBrokerModal({ onClose }: Props) {
   };
 
   const handleSend = async () => {
-    await sendMessage(draftMessage, snapshot, snapshotSummary);
+    const response = await sendMessage(draftMessage, snapshot, snapshotSummary);
+    // circuit-actions-Block aus der Antwort parsen und ausführen (API2-03).
+    // Fehler landen in der Console – der Chat zeigt den bereinigten Text.
+    executeCircuitActions(response.message, circuitDispatch);
     setDraftMessage('');
   };
 
@@ -401,7 +408,9 @@ export function BackendBrokerModal({ onClose }: Props) {
                         </span>
                       </div>
                       <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-100">
-                        {message.content}
+                        {message.role === 'assistant'
+                          ? stripCircuitActionsBlock(message.content)
+                          : message.content}
                       </p>
                       {message.model && (
                         <p className="mt-2 font-mono text-[11px] text-cyan-300/80">

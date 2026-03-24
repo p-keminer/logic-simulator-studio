@@ -1,7 +1,7 @@
 import type { Circuit, GateInstance, GateTypeId, SimulationResult, Wire, WireEndpoint } from '../core/types';
 
 export type CircuitAction =
-  | { type: 'GATE_ADD'; payload: { typeId: GateTypeId; x: number; y: number } }
+  | { type: 'GATE_ADD'; payload: { typeId: GateTypeId; x: number; y: number; id?: string } }
   | { type: 'GATE_MOVE'; payload: { gateId: string; dx: number; dy: number } }
   | { type: 'GATE_MOVE_TO'; payload: { gateId: string; x: number; y: number } }
   | { type: 'GATE_DELETE'; payload: { gateId: string } }
