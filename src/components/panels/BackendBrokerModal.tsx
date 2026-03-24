@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import Markdown from 'react-markdown';
 import {
   createBackendSandboxCurrentCircuitSnapshot,
   summarizeBackendSandboxCurrentCircuitSnapshot,
@@ -416,11 +417,19 @@ export function BackendBrokerModal({ onClose }: Props) {
                           {formatIsoTimestamp(message.createdAt)}
                         </span>
                       </div>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-100">
-                        {message.role === 'assistant'
-                          ? stripCircuitActionsBlock(message.content)
-                          : message.content}
-                      </p>
+                      {message.role === 'assistant' ? (
+                        <div className="prose prose-invert prose-sm mt-2 max-w-none leading-relaxed text-slate-100
+                          prose-headings:text-slate-200 prose-headings:font-semibold
+                          prose-code:rounded prose-code:bg-slate-800 prose-code:px-1 prose-code:text-cyan-300
+                          prose-pre:bg-slate-800 prose-pre:text-cyan-300
+                          prose-a:text-cyan-400 prose-strong:text-slate-100">
+                          <Markdown>{stripCircuitActionsBlock(message.content)}</Markdown>
+                        </div>
+                      ) : (
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-100">
+                          {message.content}
+                        </p>
+                      )}
                       {message.model && (
                         <p className="mt-2 font-mono text-[11px] text-cyan-300/80">
                           model: {message.model}
