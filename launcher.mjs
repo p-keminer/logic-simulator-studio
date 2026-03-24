@@ -93,11 +93,14 @@ function startProcess(service) {
     const text = data.toString();
     pushLog(service, text);
 
-    // Bereit-Erkennung: Prozess meldet sich auf seinem Port
+    // Bereit-Erkennung: Prozess meldet sich auf seinem Port.
+    // ANSI-Farbcodes entfernen, damit Pattern-Matching zuverlaessig greift
+    // (Vite gibt z.B. \x1b[1mLocal\x1b[22m: aus → "Local:" ohne Strip unsichtbar).
     if (state[service].status === 'starting') {
+      const clean = text.replace(/\x1b\[[0-9;]*m/g, '');
       const ready = is_app
-        ? text.includes('Local:') || text.includes(':' + APP_PORT)
-        : text.includes(':' + BROKER_PORT) || text.includes('listening') || text.includes('Server listening');
+        ? clean.includes('Local:') || clean.includes(':' + APP_PORT)
+        : clean.includes(':' + BROKER_PORT) || clean.includes('listening') || clean.includes('Server listening');
       if (ready) state[service].status = 'running';
     }
   };
