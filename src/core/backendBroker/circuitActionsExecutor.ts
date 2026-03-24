@@ -66,10 +66,24 @@ const ORIGIN_X   = 320; // Startposition X (Canvas-Koordinate, Mittelpunkt)
 const ORIGIN_Y   = 280; // Startposition Y
 const COLS       = 3;   // Gates pro Zeile
 
-function autoPos(index: number): { x: number; y: number } {
+/**
+ * Berechnet die Y-Startposition für neue Gates basierend auf der Bounding-Box
+ * der bereits vorhandenen Gates. Neue Gates beginnen eine Zeile unterhalb des
+ * niedrigsten bestehenden Gates (B3-Fix: Bounding-Box-Layout).
+ */
+function computeLayoutStartY(existingGates: ReadonlyArray<{ y: number }>): number {
+  if (existingGates.length === 0) return ORIGIN_Y;
+  const maxY = Math.max(...existingGates.map((g) => g.y));
+  return maxY + ROW_HEIGHT;
+}
+
+function autoPos(
+  newGateIndex: number,
+  layoutStartY: number,
+): { x: number; y: number } {
   return {
-    x: ORIGIN_X + (index % COLS) * COL_WIDTH,
-    y: ORIGIN_Y + Math.floor(index / COLS) * ROW_HEIGHT,
+    x: ORIGIN_X + (newGateIndex % COLS) * COL_WIDTH,
+    y: layoutStartY + Math.floor(newGateIndex / COLS) * ROW_HEIGHT,
   };
 }
 
@@ -111,14 +125,14 @@ export function stripCircuitActionsBlock(responseText: string): string {
  * Parst den circuit-actions-Block aus responseText und dispatcht alle Befehle
  * an den Circuit-Store. Gibt ein Ergebnisobjekt mit cleanText zurück.
  *
- * @param responseText      - Roher Antworttext des Modells (kann Block enthalten)
- * @param dispatch          - Circuit-Store-Dispatch-Funktion
- * @param existingGateCount - Anzahl der bereits im Store vorhandenen Gates (für B3-Layout-Offset)
+ * @param responseText  - Roher Antworttext des Modells (kann Block enthalten)
+ * @param dispatch      - Circuit-Store-Dispatch-Funktion
+ * @param existingGates - Bereits vorhandene Gates mit Positionsdaten (für Bounding-Box-Layout)
  */
 export function executeCircuitActions(
   responseText: string,
   dispatch: (action: CircuitAction) => void,
-  existingGateCount = 0,
+  existingGates: ReadonlyArray<{ y: number }> = [],
 ): CircuitActionsExecutionResult {
   const cleanText = stripCircuitActionsBlock(responseText);
   const block = parseBlock(responseText);
@@ -140,8 +154,9 @@ export function executeCircuitActions(
   const refMap = new Map<string, string>();
   const errors: Array<{ index: number; message: string }> = [];
   let executed = 0;
-  // Neue Gates werden nach den bereits vorhandenen platziert (B3-Fix).
-  let layoutIndex = existingGateCount;
+  // Bounding-Box-Layout: neue Gates starten unterhalb der bestehenden (B3-Fix).
+  let layoutStartY = computeLayoutStartY(existingGates);
+  let newGateIndex = 0;
 
   const resolveId = (
     endpoint: { ref?: string; id?: string },
@@ -182,7 +197,7 @@ export function executeCircuitActions(
           const gateType =
             action.type === 'ADD_GATE' ? action.gateType : action.nodeType;
           const gateId = generateId();
-          const pos = autoPos(layoutIndex++);
+          const pos = autoPos(newGateIndex++, layoutStartY);
 
           refMap.set(action.ref, gateId);
           dispatch({
@@ -232,8 +247,9 @@ export function executeCircuitActions(
 
         case 'CLEAR': {
           dispatch({ type: 'CIRCUIT_RESET' });
-          // Nach CLEAR ist der Canvas leer → Layout-Index zurücksetzen (B3-Fix).
-          layoutIndex = 0;
+          // Nach CLEAR ist der Canvas leer → Layout zurücksetzen (B3-Fix).
+          layoutStartY = ORIGIN_Y;
+          newGateIndex = 0;
           executed++;
           break;
         }

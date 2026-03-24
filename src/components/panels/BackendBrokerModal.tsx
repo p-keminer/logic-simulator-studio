@@ -114,8 +114,8 @@ export function BackendBrokerModal({ onClose }: Props) {
   const handleSend = async () => {
     const response = await sendMessage(draftMessage, snapshot, snapshotSummary);
     // circuit-actions-Block aus der Antwort parsen und ausführen (API2-03).
-    // existingGateCount: Layout-Offset damit neue Gates nicht über bestehende gelegt werden (B3-Fix).
-    const result = executeCircuitActions(response.message, circuitDispatch, circuit.gates.length);
+    // existingGates: Bounding-Box-Layout damit neue Gates unterhalb bestehender erscheinen (B3-Fix).
+    const result = executeCircuitActions(response.message, circuitDispatch, circuit.gates);
     // UI-Feedback nur anzeigen wenn tatsächlich Befehle im Block waren.
     if (result.executed > 0 || result.errors.length > 0) {
       setLastExecution({ executed: result.executed, errorCount: result.errors.length });
