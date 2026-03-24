@@ -12,6 +12,7 @@ import { spawn, execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { platform } from 'node:os';
+import { existsSync, copyFileSync } from 'node:fs';
 
 // ── Konfiguration ────────────────────────────────────────────────────────────
 
@@ -23,8 +24,9 @@ const MAX_LOG_LINES = 300;
 const __dirname   = dirname(fileURLToPath(import.meta.url));
 const BROKER_DIR  = join(__dirname, 'validation', 'api_anbindung', 'backend-sandbox');
 
+const IS_WIN = platform() === 'win32';
 // npm heißt auf Windows npm.cmd
-const NPM = platform() === 'win32' ? 'npm.cmd' : 'npm';
+const NPM = IS_WIN ? 'npm.cmd' : 'npm';
 
 // ── Interner Zustand ─────────────────────────────────────────────────────────
 
@@ -66,13 +68,24 @@ function startProcess(service) {
   state[service].status = 'starting';
   pushLog(service, `[launcher] Starte ${service === 'app' ? 'Frontend-App' : 'KI-Broker'}…`);
 
-  const proc = spawn(NPM, ['run', 'dev'], {
-    cwd,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    // Auf Windows muss shell: true gesetzt sein, damit .cmd-Dateien (npm.cmd)
-    // ueber den Shell-Interpreter ausgefuehrt werden koennen.
-    shell: platform() === 'win32',
-  });
+  // Broker: .env aus .env.example erstellen falls fehlend
+  if (!is_app) {
+    const env_path     = join(BROKER_DIR, '.env');
+    const example_path = join(BROKER_DIR, '.env.example');
+    if (!existsSync(env_path) && existsSync(example_path)) {
+      copyFileSync(example_path, env_path);
+      pushLog(service, '[launcher] .env aus .env.example erstellt – API-Keys ggf. anpassen.');
+    } else if (!existsSync(env_path)) {
+      pushLog(service, '[launcher] WARNUNG: .env fehlt und keine .env.example vorhanden.');
+    }
+  }
+
+  // Auf Windows: .cmd-Dateien benoetigen shell: true.
+  // Um die Node-24-Warnung DEP0190 (Array-Args + shell) zu vermeiden,
+  // wird der Befehl als einzelner String uebergeben.
+  const proc = IS_WIN
+    ? spawn(`${NPM} run dev`, { cwd, stdio: ['ignore', 'pipe', 'pipe'], shell: true })
+    : spawn(NPM, ['run', 'dev'], { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
 
   state[service].proc = proc;
 
