@@ -123,8 +123,16 @@ export function executeCircuitActions(
 
   if (!block) {
     // Kein Block vorhanden → rein erklärender Antworttext, kein Fehler.
+    console.debug('[circuit-actions] Kein Block in Antwort gefunden.');
     return { executed: 0, errors: [], cleanText };
   }
+
+  // Diagnose: rohen Block-Inhalt ausgeben damit Port-IDs und Gate-Typen
+  // des Modells im nächsten Verifikationsdurchlauf sichtbar sind.
+  console.group('[circuit-actions] Block empfangen');
+  console.debug('version:', block.version);
+  console.debug('actions (%d):', block.actions.length, block.actions);
+  console.groupEnd();
 
   // ref → gateId Mapping: gilt nur innerhalb dieses Blocks.
   const refMap = new Map<string, string>();
@@ -238,8 +246,16 @@ export function executeCircuitActions(
   }
 
   if (errors.length > 0) {
-    console.warn('[circuit-actions] Fehler bei der Ausführung:', errors);
+    console.group(`[circuit-actions] ${errors.length} Fehler bei der Ausführung`);
+    errors.forEach(({ index, message }) => {
+      console.warn(`  [${index}]`, message, '→ action:', block.actions[index]);
+    });
+    console.groupEnd();
   }
+
+  console.debug(
+    `[circuit-actions] Ergebnis: ${executed} ausgeführt, ${errors.length} Fehler`,
+  );
 
   return { executed, errors, cleanText };
 }
