@@ -40,6 +40,8 @@ Entwickelt mit React, TypeScript und Vite.
 ---
 
 > 📖 **Vollständige Bedienungsanleitung:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
+>
+> 🤖 **KI-Anbindung & Sicherheit:** [API_ANBINDUNG.md](API_ANBINDUNG.md)
 
 ## Funktionsübersicht
 
@@ -263,6 +265,8 @@ Built with React, TypeScript, and Vite.
 ---
 
 > 📖 **Full user manual:** [BEDIENUNGSANLEITUNG.md](BEDIENUNGSANLEITUNG.md)
+>
+> 🤖 **AI Integration & Security:** [API_ANBINDUNG.md](API_ANBINDUNG.md)
 
 ## Feature Overview
 
