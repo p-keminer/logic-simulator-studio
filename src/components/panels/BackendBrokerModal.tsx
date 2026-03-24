@@ -55,6 +55,11 @@ export function BackendBrokerModal({ onClose }: Props) {
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [draftMessage, setDraftMessage] = useState('');
   const [draftResetReason, setDraftResetReason] = useState('');
+  // Ergebnis der letzten circuit-actions-Ausführung (null = kein Banner)
+  const [lastExecution, setLastExecution] = useState<{
+    executed: number;
+    errorCount: number;
+  } | null>(null);
   const snapshot = useMemo(
     () => createBackendSandboxCurrentCircuitSnapshot(circuit),
     [circuit],
@@ -108,8 +113,11 @@ export function BackendBrokerModal({ onClose }: Props) {
   const handleSend = async () => {
     const response = await sendMessage(draftMessage, snapshot, snapshotSummary);
     // circuit-actions-Block aus der Antwort parsen und ausführen (API2-03).
-    // Fehler landen in der Console – der Chat zeigt den bereinigten Text.
-    executeCircuitActions(response.message, circuitDispatch);
+    const result = executeCircuitActions(response.message, circuitDispatch);
+    // UI-Feedback nur anzeigen wenn tatsächlich Befehle im Block waren.
+    if (result.executed > 0 || result.errors.length > 0) {
+      setLastExecution({ executed: result.executed, errorCount: result.errors.length });
+    }
     setDraftMessage('');
   };
 
@@ -422,6 +430,30 @@ export function BackendBrokerModal({ onClose }: Props) {
                 </div>
               )}
             </div>
+
+            {lastExecution && (
+              <div
+                className={`mx-4 mb-0 mt-2 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs font-mono ${
+                  lastExecution.errorCount > 0
+                    ? 'border-amber-700/60 bg-amber-950/30 text-amber-200'
+                    : 'border-emerald-700/60 bg-emerald-950/30 text-emerald-200'
+                }`}
+              >
+                <span>
+                  {lastExecution.executed} Befehl
+                  {lastExecution.executed !== 1 ? 'e' : ''} ausgefuehrt
+                  {lastExecution.errorCount > 0
+                    ? ` · ${lastExecution.errorCount} Fehler (siehe Console)`
+                    : ''}
+                </span>
+                <button
+                  onClick={() => setLastExecution(null)}
+                  className="shrink-0 opacity-60 hover:opacity-100"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
 
             <div className="border-t border-slate-800 px-4 py-4">
               <div className="grid gap-3">

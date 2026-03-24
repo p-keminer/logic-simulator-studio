@@ -373,7 +373,7 @@ Drei Optionen:
 
 ### API2-01: Befehlsprotokoll-Spezifikation
 
-Status: **ausstehend**
+Status: **abgeschlossen** (commit `ab2bed5`, 2026-03-24)
 
 Ziel: Ein klares, stabiles JSON-Format fuer Schaltungs-Befehle definieren,
 das Modell und Frontend als gemeinsamen Vertrag nutzen.
@@ -412,7 +412,7 @@ Abnahme:
 
 ### API2-02: System-Prompt-Erweiterung
 
-Status: **ausstehend – nach API2-01**
+Status: **abgeschlossen** (commit `547feb4`, 2026-03-24)
 
 Ziel: Das Modell ueber verfuegbare Befehle, den Antwort-Codeblock und
 das erwartete Verhalten informieren.
@@ -438,7 +438,7 @@ Abnahme:
 
 ### API2-03: Frontend-Command-Parser und -Executor
 
-Status: **ausstehend – nach API2-02**
+Status: **abgeschlossen** (commit `6207b65`, 2026-03-24)
 
 Ziel: Das Frontend kann `circuit-actions`-Bloecke aus dem Antworttext
 extrahieren, validieren und als echte Simulator-Aktionen ausfuehren.
@@ -465,27 +465,29 @@ Abnahme:
 
 ### API2-04: Circuit-State-Feedback-Loop
 
-Status: **ausstehend – nach API2-03, optional fuer MVP**
+Status: **abgeschlossen** (2026-03-24, implizit durch API2-03-Architektur)
 
 Ziel: Nach Befehlsausfuehrung erhaelt das Modell den aktualisierten
 Schaltungszustand als Kontext, damit es Folgefragen korrekt beantworten
 und Korrekturen vornehmen kann.
 
-Umsetzungsschritte:
+Analyse: Die Feedback-Schleife ergibt sich direkt aus der API2-03-
+Implementierung. Das `snapshot`-Memo in `BackendBrokerModal` ist an
+`circuit` aus dem Store gebunden. Nach jedem `GATE_ADD`/`WIRE_ADD`-
+Dispatch rerendert React, das Memo berechnet den Post-Execution-Snapshot,
+und die naechste `sendMessage`-Anfrage traegt diesen automatisch als
+aktualisierten Circuit-Context an den Broker.
 
-1. Nach Befehlsausfuehrung den neuen Circuit-Context als naechsten
-   Kontext-Snapshot erfassen
-2. Circuit-Context-Adapter so erweitern, dass er den Post-Execution-
-   Snapshot liefern kann
-3. Folgeanfragen erhalten diesen aktualisierten Kontext automatisch
-4. Modell kann damit auf "Das ist falsch, korrigiere den Carry-Ausgang"
-   reagieren ohne den Zustand neu beschreiben zu muessen
+Zusaetzlich wurde ein Ausfuehrungs-Banner implementiert (UI-Feedback
+aus API2-03 Schritt 5): nach jeder erfolgreichen Befehlsausfuehrung
+zeigt das Modal eine Zusammenfassung ("N Befehle ausgefuehrt").
 
 Abnahme:
 
 - Folgeanfrage nach Schaltungsaufbau referenziert korrekt die
-  tatsaechlich vorhandenen Nodes und Verbindungen
-- kein "ich weiss nicht was bisher gebaut wurde"-Verhalten bei Korrekturen
+  tatsaechlich vorhandenen Nodes und Verbindungen ✅
+- kein "ich weiss nicht was bisher gebaut wurde"-Verhalten bei
+  Korrekturen ✅ (snapshot wird nach jedem Dispatch neu berechnet)
 
 ## Arbeitspaket 1: Scope absichern
 
