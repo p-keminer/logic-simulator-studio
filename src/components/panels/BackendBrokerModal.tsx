@@ -1,5 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
-import Markdown from 'react-markdown';
+import Markdown, { type Components } from 'react-markdown';
+
+// Custom-Renderer damit Markdown-Elemente ohne Tailwind-Typography-Plugin
+// korrekt gestylt werden.
+const MARKDOWN_COMPONENTS: Components = {
+  h1: ({ children }) => <h1 className="mb-2 text-base font-bold text-slate-100">{children}</h1>,
+  h2: ({ children }) => <h2 className="mb-1 mt-3 text-sm font-semibold text-slate-200">{children}</h2>,
+  h3: ({ children }) => <h3 className="mb-1 mt-2 text-sm font-semibold text-slate-300">{children}</h3>,
+  p:  ({ children }) => <p  className="mb-2 leading-relaxed">{children}</p>,
+  ul: ({ children }) => <ul className="mb-2 list-disc pl-4 space-y-0.5">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 list-decimal pl-4 space-y-0.5">{children}</ol>,
+  li: ({ children }) => <li className="text-sm">{children}</li>,
+  strong: ({ children }) => <strong className="font-semibold text-slate-100">{children}</strong>,
+  em:     ({ children }) => <em className="italic text-slate-300">{children}</em>,
+  code:   ({ children }) => <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-xs text-cyan-300">{children}</code>,
+  pre:    ({ children }) => <pre className="mb-2 overflow-x-auto rounded bg-slate-800 p-2 font-mono text-xs text-cyan-300">{children}</pre>,
+  table:  ({ children }) => (
+    <div className="mb-2 overflow-x-auto">
+      <table className="w-full border-collapse text-sm">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-slate-700/50">{children}</thead>,
+  tbody: ({ children }) => <tbody>{children}</tbody>,
+  tr:    ({ children }) => <tr className="border-b border-slate-700">{children}</tr>,
+  th:    ({ children }) => <th className="px-3 py-1.5 text-left font-semibold text-slate-200">{children}</th>,
+  td:    ({ children }) => <td className="px-3 py-1.5 text-slate-300">{children}</td>,
+};
 import {
   createBackendSandboxCurrentCircuitSnapshot,
   summarizeBackendSandboxCurrentCircuitSnapshot,
@@ -418,15 +444,10 @@ export function BackendBrokerModal({ onClose }: Props) {
                         </span>
                       </div>
                       {message.role === 'assistant' ? (
-                        <div className="prose prose-invert prose-sm mt-2 max-w-none leading-relaxed text-slate-100
-                          prose-headings:text-slate-200 prose-headings:font-semibold
-                          prose-code:rounded prose-code:bg-slate-800 prose-code:px-1 prose-code:text-cyan-300
-                          prose-pre:bg-slate-800 prose-pre:text-cyan-300
-                          prose-a:text-cyan-400 prose-strong:text-slate-100
-                          prose-table:w-full prose-th:border prose-th:border-slate-600 prose-th:px-2 prose-th:py-1
-                          prose-td:border prose-td:border-slate-700 prose-td:px-2 prose-td:py-1
-                          overflow-x-auto">
-                          <Markdown>{stripCircuitActionsBlock(message.content)}</Markdown>
+                        <div className="mt-2 text-sm text-slate-100">
+                          <Markdown components={MARKDOWN_COMPONENTS}>
+                            {stripCircuitActionsBlock(message.content)}
+                          </Markdown>
                         </div>
                       ) : (
                         <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-100">
