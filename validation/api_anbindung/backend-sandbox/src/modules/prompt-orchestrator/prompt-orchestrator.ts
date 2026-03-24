@@ -32,6 +32,9 @@ RULES
 - Use "id" (from the active-circuit-payload) when referencing gates that already exist in the circuit.
 - Omit the block entirely for purely explanatory responses.
 
+CRITICAL – REF SCOPE
+"ref" labels are strictly block-scoped and ephemeral. They exist ONLY within the block where the matching ADD_GATE/ADD_INPUT/ADD_OUTPUT command appears. They are NOT saved and are NOT accessible in any subsequent turn or block. If you need to reference a gate that was added in a previous turn, you MUST look up its real "id" in the active-circuit-payload (see CIRCUIT section) and use { "id": "<gate-id>", "port": "..." } – NEVER { "ref": "..." }.
+
 COMMANDS
 
   ADD_GATE     { "type": "ADD_GATE",    "gateType": "<GateTypeId>",  "ref": "<label>" }
@@ -78,7 +81,38 @@ FEW-SHOT EXAMPLE – Half Adder
     { "type": "CONNECT", "from": { "ref": "AND_CARRY", "port": "out" }, "to": { "ref": "CARRY",     "port": "in" } }
   ]
 }
-\`\`\``,
+\`\`\`
+
+FEW-SHOT EXAMPLE 2 – Extending an existing circuit (second turn)
+
+After the previous block executed, all refs ("A", "B", "XOR_SUM", "AND_CARRY",
+"SUM", "CARRY") are GONE. To reference those gates in a later turn, look up
+their real ids in the active-circuit-payload.
+Suppose the payload contains (ids illustrative – always read the actual payload):
+  { "id": "g_xor_001", "typeId": "XOR" }          ← was ref "XOR_SUM"
+  { "id": "g_and_002", "typeId": "AND" }          ← was ref "AND_CARRY"
+  { "id": "g_cin_003", "typeId": "INPUT_SWITCH" } ← carry-in already on canvas
+
+Extending the half adder to a full adder:
+
+\`\`\`circuit-actions
+{
+  "version": 1,
+  "actions": [
+    { "type": "ADD_GATE",   "gateType": "XOR", "ref": "XOR2" },
+    { "type": "ADD_GATE",   "gateType": "AND", "ref": "AND2" },
+    { "type": "ADD_GATE",   "gateType": "OR",  "ref": "OR_CARRY" },
+    { "type": "CONNECT", "from": { "id":  "g_xor_001", "port": "out" }, "to": { "ref": "XOR2",     "port": "a" } },
+    { "type": "CONNECT", "from": { "id":  "g_cin_003", "port": "out" }, "to": { "ref": "XOR2",     "port": "b" } },
+    { "type": "CONNECT", "from": { "id":  "g_xor_001", "port": "out" }, "to": { "ref": "AND2",     "port": "a" } },
+    { "type": "CONNECT", "from": { "id":  "g_cin_003", "port": "out" }, "to": { "ref": "AND2",     "port": "b" } },
+    { "type": "CONNECT", "from": { "id":  "g_and_002", "port": "out" }, "to": { "ref": "OR_CARRY", "port": "a" } },
+    { "type": "CONNECT", "from": { "ref": "AND2",      "port": "out" }, "to": { "ref": "OR_CARRY", "port": "b" } }
+  ]
+}
+\`\`\`
+
+Rule: existing gates use "id" (looked up from active-circuit-payload); new gates in this block use "ref".`,
 };
 
 const summarizeCircuitContext = (circuitContext: CircuitContext): string => {
