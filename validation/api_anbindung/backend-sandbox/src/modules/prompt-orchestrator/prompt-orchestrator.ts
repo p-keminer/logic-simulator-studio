@@ -114,7 +114,20 @@ const summarizeCircuitContext = (circuitContext: CircuitContext): string => {
   return lines.join('\n');
 };
 
+const RESPONSE_FORMAT_RULES: PromptSection = {
+  title: 'response-format',
+  content:
+    'STRICT OUTPUT RULES – these override any other formatting instinct:\n' +
+    '1. NEVER output Markdown tables (no pipe | characters). ' +
+    'Tables do not render in this UI. ' +
+    'If you would normally show a truth table, instead write one sentence ' +
+    'telling the user to use the "W-Tabelle" button in the simulator toolbar. ' +
+    'For any other tabular data use bullet points or plain numbered lists.\n' +
+    '2. Keep responses concise. Avoid lengthy preambles.',
+};
+
 const buildSystemSections = (): PromptSection[] => [
+  RESPONSE_FORMAT_RULES,
   {
     title: 'sandbox-boundary',
     content:
