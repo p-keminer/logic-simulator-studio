@@ -23,6 +23,7 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
     circuit, dispatch,
     isClockPaused, setIsClockPaused, stepOneClock,
     races,
+    undo, redo, canUndo, canRedo,
   } = useCircuitContext();
   const { hasActiveSession, phase: brokerPhase } = useBackendBroker();
   const headerRef = useRef<HTMLElement | null>(null);
@@ -176,6 +177,14 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
         <div className="flex items-center gap-1.5">
           <button onClick={handleLoad} className="px-2.5 py-1 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded transition-colors font-mono">Laden</button>
           <button onClick={handleSave} className="px-2.5 py-1 text-xs font-medium text-slate-900 bg-green-500 hover:bg-green-400 rounded transition-colors font-mono">Speichern</button>
+          <button onClick={undo} disabled={!canUndo} title="Rückgängig (Strg+Z)"
+            className={"px-2.5 py-1 text-xs font-medium border rounded transition-colors font-mono " + (canUndo ? "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600" : "text-slate-600 bg-slate-800 border-slate-700 cursor-not-allowed")}>
+            ↩
+          </button>
+          <button onClick={redo} disabled={!canRedo} title="Wiederholen (Strg+R)"
+            className={"px-2.5 py-1 text-xs font-medium border rounded transition-colors font-mono " + (canRedo ? "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600" : "text-slate-600 bg-slate-800 border-slate-700 cursor-not-allowed")}>
+            ↪
+          </button>
           <div className="h-4 w-px bg-slate-700" />
           <button onClick={() => setShowExport(true)} title="Verilog/VHDL exportieren"
             className="px-2.5 py-1 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded transition-colors font-mono">
@@ -263,6 +272,14 @@ export function Toolbar({ showTiming, onToggleTiming, onShowBroker, onShowFsm }:
               <div className="grid gap-1">
                 <button ref={firstOverflowItemRef} role="menuitem" onClick={async () => { closeOverflowMenu(); await handleLoad(); }} className="rounded border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs font-medium text-slate-300 hover:bg-slate-700 font-mono">Laden</button>
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); handleSave(); }} className="rounded bg-green-500 px-3 py-2 text-left text-xs font-medium text-slate-900 hover:bg-green-400 font-mono">Speichern</button>
+                <button role="menuitem" onClick={() => { closeOverflowMenu(); undo(); }} disabled={!canUndo} title="Rückgängig (Strg+Z)"
+                  className={"rounded border px-3 py-2 text-left text-xs font-medium font-mono transition-colors " + (canUndo ? "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600" : "text-slate-600 bg-slate-800 border-slate-700 cursor-not-allowed")}>
+                  ↩ Rückgängig
+                </button>
+                <button role="menuitem" onClick={() => { closeOverflowMenu(); redo(); }} disabled={!canRedo} title="Wiederholen (Strg+R)"
+                  className={"rounded border px-3 py-2 text-left text-xs font-medium font-mono transition-colors " + (canRedo ? "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600" : "text-slate-600 bg-slate-800 border-slate-700 cursor-not-allowed")}>
+                  ↪ Wiederholen
+                </button>
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); setShowExport(true); }} className="rounded border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs font-medium text-slate-300 hover:bg-slate-700 font-mono">HDL</button>
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); setShowTruth(true); }} className="rounded border border-slate-700 bg-slate-800 px-3 py-2 text-left text-xs font-medium text-slate-300 hover:bg-slate-700 font-mono">W-Tabelle</button>
                 <button role="menuitem" onClick={() => { closeOverflowMenu(); onToggleTiming(); }} className={"rounded border px-3 py-2 text-left text-xs font-medium font-mono transition-colors " + (showTiming ? "text-blue-300 bg-blue-900/40 border-blue-700" : "text-slate-300 bg-slate-800 hover:bg-slate-700 border-slate-600")}>Timing</button>

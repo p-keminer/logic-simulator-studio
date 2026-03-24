@@ -12,6 +12,8 @@ const SHORTCUTS: Array<{ key: string; action: string }> = [
   { key: 'Rechtsklick Gate',      action: 'Kontextmenü (Kopieren, Drehen, Löschen, …)' },
   { key: 'Rechtsklick Canvas',    action: 'Einfügen (wenn Zwischenablage gefüllt)' },
   { key: 'R',                     action: 'Ausgewählte Gatter drehen' },
+  { key: 'Strg+Z',                action: 'Rückgängig (Undo)' },
+  { key: 'Strg+R',                action: 'Wiederholen (Redo)' },
   { key: 'Strg+C',                action: 'Ausgewählte Gatter kopieren' },
   { key: 'Strg+V',                action: 'Gatter aus Zwischenablage einfügen (+24 px versetzt)' },
   { key: '↑ ↓ ← →',               action: 'Ausgewählte Gatter bewegen (Shift: 5× Schritt)' },

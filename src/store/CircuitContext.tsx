@@ -22,6 +22,23 @@ import type { FanoutMap } from '../core/simulation/eventScheduler';
 const MAX_HISTORY  = 1000;
 const AUTOSAVE_KEY = 'lgsim_autosave';
 
+const MAX_UNDO = 100;
+
+/** Actions that only affect simulation or selection — never pushed to undo stack. */
+const NON_UNDOABLE_TYPES = new Set<string>([
+  'SIMULATION_APPLY',
+  'VIEWPORT_PAN', 'VIEWPORT_ZOOM', 'VIEWPORT_SET',
+  'GATE_CLOCK_TICK', 'GATE_BTN_RELEASE',
+  'SELECTION_CLEAR', 'GATE_SELECT', 'GATES_SELECT_SET', 'WIRE_SELECT',
+]);
+
+/**
+ * Actions that don't belong on the undo stack but also don't clear it.
+ * CIRCUIT_LOAD: handled specially — we skip the snapshot but rely on the
+ * circuit.id-change useEffect to clear stacks after a real file load.
+ */
+const HISTORY_SKIP_TYPES = new Set<string>([...Array.from(NON_UNDOABLE_TYPES), 'CIRCUIT_LOAD', 'CIRCUIT_RESET']);
+
 /**
  * Take one timing-diagram snapshot per N event-batches.
  * Value 1 = maximum resolution — every distinct simulation-time with a net
@@ -84,6 +101,12 @@ interface CircuitContextValue {
    * Allows O(1) input-signal resolution in resolveInputSignals / CanvasGate.
    */
   portToWireIdMap: ReadonlyMap<string, string>;
+  /** Macht die letzte undoable Aktion rückgängig. */
+  undo: () => void;
+  /** Wiederholt die zuletzt rückgängig gemachte Aktion. */
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 const CircuitContext = createContext<CircuitContextValue | null>(null);
@@ -135,6 +158,58 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
   /** Tracks last-seen gate / wire ID sets to distinguish structural vs switch-only settles. */
   const prevGateKeysRef  = useRef<Set<string>>(new Set());
   const prevWireKeysRef  = useRef<Set<string>>(new Set());
+
+  // ── Undo / Redo ──────────────────────────────────────────────────────────
+  // Stacks speichern vollständige Circuit-Snapshots (vor der Aktion).
+  // useRef statt useState — kein extra Re-Render nötig; der Re-Render durch
+  // dispatch (der den Circuit ändert) liest canUndo/canRedo korrekt.
+  const undoStackRef = useRef<Circuit[]>([]);
+  const redoStackRef = useRef<Circuit[]>([]);
+  // canUndo / canRedo als State, damit Toolbar-Buttons reagieren können.
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  /**
+   * Wrapper um dispatch: speichert den aktuellen Circuit-Snapshot auf dem
+   * Undo-Stack, bevor die Aktion ausgeführt wird.
+   * Bei HISTORY_CLEAR_TYPES werden beide Stacks geleert.
+   * Bei NON_UNDOABLE_TYPES wird direkt dispatcht ohne Stack-Operation.
+   */
+  const dispatchWithHistory = useCallback((action: CircuitAction) => {
+    if (!HISTORY_SKIP_TYPES.has(action.type)) {
+      const snapshot = circuitRef.current;
+      undoStackRef.current = [
+        ...undoStackRef.current.slice(-MAX_UNDO + 1),
+        snapshot,
+      ];
+      redoStackRef.current = [];
+      setCanUndo(true);
+      setCanRedo(false);
+    }
+    dispatch(action);
+  }, [dispatch]);
+
+  const undo = useCallback(() => {
+    const stack = undoStackRef.current;
+    if (stack.length === 0) return;
+    const previous = stack[stack.length - 1];
+    undoStackRef.current = stack.slice(0, -1);
+    redoStackRef.current = [circuitRef.current, ...redoStackRef.current];
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(true);
+    dispatch({ type: 'CIRCUIT_LOAD', payload: { circuit: previous } });
+  }, [dispatch]);
+
+  const redo = useCallback(() => {
+    const stack = redoStackRef.current;
+    if (stack.length === 0) return;
+    const next = stack[0];
+    redoStackRef.current = stack.slice(1);
+    undoStackRef.current = [...undoStackRef.current, circuitRef.current];
+    setCanUndo(true);
+    setCanRedo(redoStackRef.current.length > 0);
+    dispatch({ type: 'CIRCUIT_LOAD', payload: { circuit: next } });
+  }, [dispatch]);
 
   const clearTimingHistory = useCallback(() => setTimingHistory([]), []);
   const clearRaceMonitor = useCallback(() => {
@@ -493,11 +568,15 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     return () => cancelAnimationFrame(rafRef.current);
   }, []); // Nur einmal starten — alle Werte kommen aus Refs
 
-  // ── Circuit-ID change: clear race state on CIRCUIT_LOAD / CIRCUIT_RESET ──
+  // ── Circuit-ID change: clear race state and undo/redo history ────────────
   // circuit.id changes whenever a new circuit is loaded or the canvas is reset.
-  // Stale race entries from the previous circuit must not leak into the new one.
+  // Stale race entries and undo history from the previous circuit must not leak.
   useEffect(() => {
     clearRaceMonitor();
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
     // The scheduler will be re-seeded automatically on the next settle.
   }, [circuit.id, clearRaceMonitor]);
 
@@ -511,9 +590,30 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
     setRaceNetIds(next.netIds);
   }, [gateKeys, wireKeys]);
 
+  // ── Globale Tastaturkürzel: Ctrl+Z = Undo, Ctrl+R = Redo ─────────────────
+  // Greift auch wenn kein Canvas-Element den Fokus hat.
+  // Kein Trigger wenn Fokus in einem Text-Eingabefeld liegt.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const isCtrl = e.ctrlKey || e.metaKey;
+      if (isCtrl && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      } else if (isCtrl && e.key === 'r') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
+
   return (
     <CircuitContext.Provider value={{
-      circuit, dispatch,
+      circuit,
+      dispatch: dispatchWithHistory,
       timingHistory, clearTimingHistory,
       isClockPaused, setIsClockPaused,
       stepOneClock,
@@ -521,6 +621,7 @@ export function CircuitProvider({ children, initialCircuit }: ProviderProps) {
       clearRaceMonitor,
       raceNetIds,
       portToWireIdMap,
+      undo, redo, canUndo, canRedo,
     }}>
       {children}
     </CircuitContext.Provider>
