@@ -111,12 +111,14 @@ export function stripCircuitActionsBlock(responseText: string): string {
  * Parst den circuit-actions-Block aus responseText und dispatcht alle Befehle
  * an den Circuit-Store. Gibt ein Ergebnisobjekt mit cleanText zurück.
  *
- * @param responseText - Roher Antworttext des Modells (kann Block enthalten)
- * @param dispatch     - Circuit-Store-Dispatch-Funktion
+ * @param responseText      - Roher Antworttext des Modells (kann Block enthalten)
+ * @param dispatch          - Circuit-Store-Dispatch-Funktion
+ * @param existingGateCount - Anzahl der bereits im Store vorhandenen Gates (für B3-Layout-Offset)
  */
 export function executeCircuitActions(
   responseText: string,
   dispatch: (action: CircuitAction) => void,
+  existingGateCount = 0,
 ): CircuitActionsExecutionResult {
   const cleanText = stripCircuitActionsBlock(responseText);
   const block = parseBlock(responseText);
@@ -138,7 +140,8 @@ export function executeCircuitActions(
   const refMap = new Map<string, string>();
   const errors: Array<{ index: number; message: string }> = [];
   let executed = 0;
-  let layoutIndex = 0;
+  // Neue Gates werden nach den bereits vorhandenen platziert (B3-Fix).
+  let layoutIndex = existingGateCount;
 
   const resolveId = (
     endpoint: { ref?: string; id?: string },

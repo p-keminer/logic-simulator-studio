@@ -239,7 +239,7 @@ export class BackendBrokerClient {
     );
     this.fetchFn =
       options.fetchFn ?? (globalThis.fetch.bind(globalThis) as typeof fetch);
-    this.timeoutMs = options.timeoutMs ?? 30_000;
+    this.timeoutMs = options.timeoutMs ?? 90_000; // 90 s > Backend-Provider-Timeout (60 s)
   }
 
   private async requestJson<TResponse>(
