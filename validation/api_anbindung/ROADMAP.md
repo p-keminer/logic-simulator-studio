@@ -24,6 +24,33 @@ Die Roadmap gilt nicht fuer:
 - sensible Daten nie in Logs oder Frontend-Fehlern exponieren
 - jede Phase endet mit einem klaren Abnahmekriterium
 
+## Umsetzungsstand (Stand 2026-03-24)
+
+Die Phasen 1–9 dieser Roadmap sind ueber die Self-Hosted-Implementierung in
+`backend-sandbox/` vollstaendig umgesetzt. Phase 10 (Staging-Hardening, Pilot
+und Rollout im klassischen Sinne) entfaellt, da das Architekturziel
+Self-Hosted ist: jeder Nutzer betreibt den Broker lokal mit eigenem API-Key.
+
+Abgeschlossene Phasen (1–9):
+
+| Phase | Inhalt | Status |
+|---|---|---|
+| 1 | Architektur-Freeze und Scope-Sicherung | **abgeschlossen** (ADRs, decisions/, security/) |
+| 2 | API-Vertraege und Datenmodell | **abgeschlossen** (chatRequestSchema, sessionSchema, circuitContextSchema, Zod .strict()) |
+| 3 | Backend-Grundgeruest | **abgeschlossen** (Fastify 5, Modulstruktur, Config-Schicht, Health/Ready) |
+| 4 | Session- und Secret-Schicht | **abgeschlossen** (POST /v1/session/key, DELETE, TTL, Key-Redaktion) |
+| 5 | Circuit-Context-Pipeline | **abgeschlossen** (Feld-Whitelist, Groessenpruefung, Normalisierung) |
+| 6 | Guardrails und Prompt-Orchestrierung | **abgeschlossen** (Policy-Pruefung, Prompt-Template, Token-Budgeting) |
+| 7 | Provider-Gateway | **abgeschlossen** (AnthropicProviderClient, OpenAICompatibleProviderClient, SSRF-Schutz) |
+| 8 | Audit, Observability und Abuse-Schutz | **abgeschlossen** (strukturierte Logs, Redaktion, Rate-Limits, Audit-Events) |
+| 9 | App-Integration und End-to-End-Validierung | **abgeschlossen** (UI-Smoke-Ring, H1–H5-Haertung, live-verifiziert via smoke-verify.mjs) |
+| 10 | Staging-Hardening, Pilot und Rollout | **entfaellt** – Self-Hosted-Architektur |
+
+Naechster offener Schritt: **API2-01** AI-Action-Protocol
+(KI soll Schaltungsbefehle ausgeben koennen, nicht nur Text).
+
+---
+
 ## Gesamtphasen
 
 1. Architektur-Freeze und Scope-Sicherung

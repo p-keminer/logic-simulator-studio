@@ -1,6 +1,6 @@
 # Industry-Lite EDA Roadmap
 
-Datum: 2026-03-20
+Datum: 2026-03-24
 Repo: `<repo-root>`
 
 ## Zweck
@@ -19,9 +19,9 @@ Zielbild:
 
 ### Positiv bestaetigt
 
-- `npm test` ist gruen: **868** Tests bestanden.
+- `npm test` ist gruen: **1020** Tests bestanden.
 - `npm run build` ist gruen.
-- `npm run lint` ist gruen.
+- `npm run lint` ist gruen bis auf Restpunkte im Broker-Pfad (`src/hooks/useBackendSandboxDebugBridge.ts` und `validation/api_anbindung/backend-sandbox/src/modules/provider-gateway/*`).
 - Contract Runner v1: **447 pass, 0 fail, 0 unsupported** (447 total) - in CI als eigenes Gate.
 - Golden Corpus v1 Runner: **28 pass, 0 fail, 2 expected_limit** (30 total) - in CI als eigenes Gate.
 - Focused-Nine Core: **12/12** funktional gruen, 0 HDL-Fails, 0 Tooling-Warnungen - in CI als eigenes Gate.
@@ -286,7 +286,7 @@ Definition of Done:
 - kein bekannter `Z`-Downstream-Mismatch mehr  ERREICHT
 - echte Mehrtreiberfaelle modelliert  ERREICHT (Konflikte loesen zu `X` auf)
 
-### Phase C  In Arbeit
+### Phase C  Weitgehend abgeschlossen
 
 Ziel:
 - UI und Export auf die neue Semantik hart ausrichten
@@ -296,9 +296,9 @@ Umfang:
 
 Status:
 - UI-Timing-Semantik ist fokussiert in CI abgesichert; naechster Schritt ist ein breiterer Waveform-/Visual-Diff
-- Hierarchie/Custom-IC-Absicherung hat mit `GC-V2-6` und `GC-V2-9` zwei one-level-Pfade; naechster Schritt ist tiefere/nestbare Absicherung
-- Fuer FSM-Exporte ist zusaetzlich das Struktur-Arbeitspaket offen: semantische Projektion fuer STT/Timing statt Roh-Gate-Anzeige, inklusive read-only Sequential-Projection-Layer und statischer/verkuerzter STT
-- Fuer Race-/Hazard-Monitoring ist das Struktur-Arbeitspaket fuer den aktuellen Scope abgeschlossen; spaetere Erweiterungen waeren nur noch optionale Vertiefung
+- Hierarchie/Custom-IC-Absicherung hat mit `GC-V2-6`, `GC-V2-9`, `GC-V2-10`, `GC-V2-11`, `GC-V2-12` mehrere one-level-Pfade sowie einen expliziten Nested-Boundary-Fall; naechster Schritt waere tiefere/nestbare Absicherung als bewusster Folgeausbau
+- FSM-Projektionspfad ist fuer den aktuellen Scope abgeschlossen (FSM0-1 bis FSM0-7 vollstaendig); bewusster Folgepfad ist FSM0-8 (Netzlisten-Minimierung / Bool-Minimierung / Mapping)
+- Race-/Hazard-Monitoring-Lifecycle ist fuer den aktuellen Scope abgeschlossen; spaetere Erweiterungen waeren nur noch optionale Vertiefung
 
 ### Phase D  Teilweise erreicht
 
@@ -342,7 +342,7 @@ Ein Bereich gilt nur dann als wirklich gruen, wenn:
 - UI und HDL keinen Widerspruch dazu zeigen
 - die bekannte Modellgrenze nicht einfach nur unerkannt geblieben ist
 
-## Naechster empfohlener Fokus (Stand 2026-03-20)
+## Naechster empfohlener Fokus (Stand 2026-03-24)
 
 1. **P2:** Funktionale Schaltungssimulation im Golden Corpus weiter vertiefen (Trace-Depth-Hardening ist jetzt ueber alle gelandeten `GC-V2-*`-Seeds verbreitert; als Naechstes besonders grosse oder stateful Seeds weiter verdichten)
 2. **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster)

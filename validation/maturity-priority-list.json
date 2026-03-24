@@ -1,6 +1,6 @@
 {
     "_meta":  {
-                  "generated":  "2026-03-20",
+                  "generated":  "2026-03-24",
                   "description":  "Machine-readable prioritized action list derived from maturity-gap-dashboard.md. Each item corresponds to a confirmed or strongly-inferred gap with evidence links.",
                   "schemaVersion":  "1.0",
                   "priorityLevels":  {
@@ -326,27 +326,48 @@
                   },
                   {
                       "id":  "P1-9",
-                      "title":  "Race panel lifecycle semantics missing for reset, pruning, and dedupe",
+                      "title":  "Race panel lifecycle semantics for reset, pruning, and dedupe",
                       "priority":  "P1",
                       "area":  "ui, simulation-store, validation",
-                      "status":  "partial",
+                      "status":  "done",
+                      "resolvedAt":  "2026-03-23",
+                      "resolutionNote":  "Race-panel lifecycle is structurally complete for the current scope. Store-side pruning removes stale incidents when affected nets or gates disappear, clearRaceMonitor() clears panel state and wire markings through a single central path, repeated identical incidents are coalesced by normalized signature, RacePanel exposes an explicit manual reset button, incident metadata (count, firstSeen, lastSeen) is tracked, and conservative structure-fingerprint pruning for glitch causes is implemented and verified. Further work would only be optional deepening, not missing ground structure. Details: validation/race-panel-fixes/work-package.md.",
                       "evidence":  [
-                                       "validation/race-panel-fixes/work-package.md: documented requirements plus the first implemented/verifizierter lifecycle slice",
+                                       "validation/race-panel-fixes/work-package.md: current-scope closure with Abschlussbewertung",
                                        "src/store/raceLifecycle.ts: central race signature, prune, dedupe, and active-net helpers",
                                        "src/store/CircuitContext.tsx: store-side append dedupe, structure-prune effect, and clearRaceMonitor() reset path",
-                                       "src/components/panels/RacePanel.tsx: panel exposes Monitor reset and focuses the first still-existing affected gate",
-                                       "src/__tests__/core/raceLifecycle.test.ts: helper regressions for dedupe, signature stability, prune, and max-limit behavior"
+                                       "src/components/panels/RacePanel.tsx: panel exposes Monitor reset",
+                                       "src/__tests__/core/raceLifecycle.test.ts and raceMonitorState.test.ts: helper regressions"
                                    ],
-                      "symptom":  "Before the first lifecycle slice, stale race incidents could survive structural deletes, the panel had no manual reset path, and repeated identical race detections could keep filling the incident list. A first store-side fix now addresses the core UX failures, but deeper incident semantics and integration coverage are still open.",
                       "affectedGates":  [
                                             "all circuits that can emit race or hazard incidents in gate-delay mode"
                                         ],
-                      "recommendedNextStep":  "Build on the implemented first slice in validation/race-panel-fixes/work-package.md: keep the store-side lifecycle helpers, then add deeper incident metadata/integration coverage and decide whether manual reset should remain a pure clear action or gain optional short-term suppression semantics for still-active hazards.",
+                      "recommendedNextStep":  "RESOLVED for current scope. Reopen only if deeper incident metadata or integration coverage becomes a prioritized follow-up workstream.",
                       "dependsOn":  [
 
                                     ],
-                      "riskIfUnfixed":  "Without the remaining integration hardening, the race monitor can still regress toward a noisy event log instead of a robust incident monitor. Future UI or scheduler changes could silently weaken prune/reset semantics without deeper coverage.",
-                      "partialResolutionNote":  "First slice implemented and verified: store-side pruning removes stale incidents when affected nets or all referenced gates disappear, clearRaceMonitor() clears panel state and wire markings through a single central path, repeated identical incidents are coalesced by normalized signature, and RacePanel exposes an explicit manual reset button. Remaining work is narrower: deeper incident metadata, integration tests around provider/reset paths, and any future policy about immediate rediscovery of still-active hazards after a manual reset."
+                      "riskIfUnfixed":  "N/A - current scope closed."
+                  },
+                  {
+                      "id":  "P1-API",
+                      "title":  "API-/Broker-Strang API1-01 through API1-05",
+                      "priority":  "P1",
+                      "area":  "api, broker, security",
+                      "status":  "done",
+                      "resolvedAt":  "2026-03-24",
+                      "resolutionNote":  "All API1 milestones completed. API1-01: visible broker dialog (Key->Chat->Reset->Delete) with full UI smoke ring. API1-02: staging profile (APP_ENV=staging), mandatory ALLOWED_ORIGINS, X-Staging-Token access gate, Render Blueprint. API1-03 and original API1-04 dropped - Self-Hosted architecture, no central deployment. API1-04 (renumbered): real provider clients (AnthropicProviderClient + OpenAICompatibleProviderClient), live-verified with OpenRouter. API1-05: hardening H1-H5 (32KB prompt limit, model-lock via .strict(), 32-turn sliding window, allowedHosts SSRF protection, dispatchMode live/mock/noop), verified via smoke-verify.mjs. Next: API2-01 AI-Action-Protocol specification.",
+                      "evidence":  [
+                                       "validation/api_anbindung/backend-sandbox/smoke-verify.mjs: 7/7 PASS live verification",
+                                       "validation/api_anbindung/README.md: Aktueller Integrationsstand 2026-03-24",
+                                       "validation/api_anbindung/work-package.md: Naechster Kernslice API2-01"
+                                   ],
+                      "affectedGates":  [
+                                        ],
+                      "recommendedNextStep":  "API2-01: specify the AI-Action-Protocol so the AI can issue circuit commands (not just text).",
+                      "dependsOn":  [
+
+                                    ],
+                      "riskIfUnfixed":  "N/A - resolved."
                   },
                   {
                       "id":  "P2-1",
@@ -529,13 +550,13 @@
                   }
               ],
     "summary":  {
-                    "totalItems":  21,
+                    "totalItems":  22,
                     "byPriority":  {
                                        "P0":  0,
-                                       "P1":  2,
-                                       "P2":  8
+                                       "P1":  0,
+                                       "P2":  5
                                    },
-                    "resolved":  13,
+                    "resolved":  19,
                     "resolvedItems":  [
                                           "P0-1",
                                           "P0-2",
@@ -547,18 +568,21 @@
                                           "P1-5",
                                           "P1-6",
                                           "P1-7",
+                                          "P1-8",
+                                          "P1-9",
+                                          "P1-API",
+                                          "P2-1",
                                           "P2-2",
                                           "P2-4",
+                                          "P2-7",
                                           "P2-8"
                                       ],
-                    "lastUpdated":  "2026-03-19",
+                    "lastUpdated":  "2026-03-24",
                     "criticalPath":  [
-                                         "P1-9",
-                                         "P1-8",
-                                         "P2-7",
                                          "P2-6",
-                                         "P2-3"
+                                         "P2-3",
+                                         "P2-5"
                                      ],
-                      "note":  "All P0 blockers and P1-1 through P1-7 remain resolved. As of 2026-03-22, Contract Runner v1 is operational at 447 pass, 0 fail, 0 unsupported; Golden Corpus v1 is operational at 28 pass, 0 fail, 2 expected_limit across 30 circuits with live export-determinism plus external HDL syntax/lint and scenario-based simulation enabled. Focused-Nine UI audit remains a CI gate (12 smoke PASS, 5 semantic PASS). CI has 6 jobs. Current investment areas: canonical FSM export projection semantics, structured race-panel lifecycle semantics, Golden Corpus acceptance/report hardening, branch protection, CI performance, and deeper hierarchy/custom-IC verification."
+                      "note":  "All P0 blockers and all P1 items are resolved as of 2026-03-24. Contract Runner v1: 447 pass, 0 fail, 0 unsupported. Golden Corpus v1: 28 pass, 0 fail, 2 expected_limit across 30 circuits with live export-determinism plus external HDL syntax/lint and scenario-based simulation. Focused-Nine UI audit: 12 smoke PASS, 5 semantic PASS, in CI. API-/Broker-Strang: API1-01 through API1-05 complete (Self-Hosted, H1-H5 hardening verified). FSM0 current scope closed (FSM0-8 consciously deferred). Race-panel lifecycle current scope closed. Remaining open work: branch protection (P2-6), custom IC static contracts (P2-3), documentation gaps (P2-5), CI performance, deeper hierarchy/Golden Corpus v2 expansion. Next feature milestone: API2-01 AI-Action-Protocol."
                 }
 }
