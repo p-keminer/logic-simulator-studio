@@ -422,7 +422,10 @@ export function BackendBrokerModal({ onClose }: Props) {
                           prose-headings:text-slate-200 prose-headings:font-semibold
                           prose-code:rounded prose-code:bg-slate-800 prose-code:px-1 prose-code:text-cyan-300
                           prose-pre:bg-slate-800 prose-pre:text-cyan-300
-                          prose-a:text-cyan-400 prose-strong:text-slate-100">
+                          prose-a:text-cyan-400 prose-strong:text-slate-100
+                          prose-table:w-full prose-th:border prose-th:border-slate-600 prose-th:px-2 prose-th:py-1
+                          prose-td:border prose-td:border-slate-700 prose-td:px-2 prose-td:py-1
+                          overflow-x-auto">
                           <Markdown>{stripCircuitActionsBlock(message.content)}</Markdown>
                         </div>
                       ) : (

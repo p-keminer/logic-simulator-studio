@@ -232,6 +232,8 @@ export function executeCircuitActions(
 
         case 'CLEAR': {
           dispatch({ type: 'CIRCUIT_RESET' });
+          // Nach CLEAR ist der Canvas leer → Layout-Index zurücksetzen (B3-Fix).
+          layoutIndex = 0;
           executed++;
           break;
         }
