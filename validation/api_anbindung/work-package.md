@@ -345,7 +345,7 @@ Client-Namen anpassen.
 
 ## API2: AI-Action-Protocol
 
-Status: **geplant – naechster Hauptstrang nach API1-05**
+Status: **abgeschlossen** (2026-03-24)
 
 ### Kontext und Problem
 
@@ -488,6 +488,111 @@ Abnahme:
   tatsaechlich vorhandenen Nodes und Verbindungen ✅
 - kein "ich weiss nicht was bisher gebaut wurde"-Verhalten bei
   Korrekturen ✅ (snapshot wird nach jedem Dispatch neu berechnet)
+
+### API2-BF: Bugfixes und Prompt-Haertung
+
+Status: **abgeschlossen** (commits `488a910`–`3a0e6e4`, 2026-03-24)
+
+Nach der Erstimplementierung von API2 wurden bei manueller Verifikation
+fuenf Klassen von Fehlern (B1–B5) identifiziert. B5 (Rollback bei hoher
+Fehlerrate) wurde als nicht notwendig eingestuft und nicht umgesetzt.
+Die uebrigen vier Bugs sowie mehrere Prompt-Probleme wurden vollstaendig
+behoben.
+
+#### B1 – Frontend-Timeout zu kurz
+
+**Problem:** Der HTTP-Client im Frontend verwendete einen Timeout von
+30 s, waehrend der Backend-Provider-Timeout 60 s betrug. Bei langsamen
+Modellen wurde die Verbindung vorzeitig abgebrochen.
+
+**Loesung:** Default-Timeout in `backendBroker/client.ts` von
+`30_000` auf `90_000` ms angehoben (90 s > 60 s Backend-Timeout).
+
+**Commit:** `e16726f`
+
+#### B2 – ref:-Label aus Vorblock unrechtmaessig wiederverwendet
+
+**Problem:** Das Modell verwendete in Folge-Turns `ref:`-Labels aus
+frueheren `circuit-actions`-Bloecken, obwohl `ref` ausschliesslich
+block-scoped und ephemer ist. Korrekt waere `id:` mit der persistenten
+Gate-ID aus dem aktiven Circuit-Payload.
+
+**Loesung:** Neuer System-Prompt-Abschnitt `CRITICAL – REF SCOPE` im
+`PromptOrchestrator`, der erklaert, dass `ref`-Labels nur innerhalb
+desselben Blocks existieren und in Folgeturns zwingend `id` aus dem
+`active-circuit-payload` verwendet werden muss.
+
+**Commit:** `488a910`
+
+#### B3 – Auto-Layout startete stets bei (320, 280)
+
+**Problem:** Jeder neue `circuit-actions`-Block legte Gates beginnend
+an der fixen Ursprungsposition `(320, 280)` ab, unabhaengig von bereits
+vorhandenen Gates. Ergebnis: neue Gates ueberlagerten bestehende.
+
+**Loesung:** Bounding-Box-Ansatz in `circuitActionsExecutor.ts`.
+Funktion `computeLayoutStartY` berechnet das maximale `y` aller
+vorhandenen Gates und startet neue Gates bei `maxY + ROW_HEIGHT`.
+`CLEAR`-Aktion setzt `layoutStartY` auf `ORIGIN_Y` zurueck.
+Dabei wurde auch ein Typfehler behoben: `circuit.gates` ist ein
+`Record<string, GateInstance>`, kein Array – korrigiert auf
+`Object.values(circuit.gates)` beim Uebergeben der Gate-Liste.
+
+**Commits:** `e16726f` (Offset-Logik), `c852d37` (Bounding-Box),
+`c1e3107` (Object.values-Fix)
+
+#### B4 – Markdown nicht gerendert im Chat
+
+**Problem:** Die Chat-Ausgabe des Modells wurde als reiner Text
+dargestellt; Markdown-Formatierung (`**fett**`, Aufzaehlungen, Codeblock)
+war als Rohtext sichtbar.
+
+**Loesung:** `react-markdown` mit expliziten `Components`-Renderern
+in `BackendBrokerModal.tsx` integriert. Statt des `@tailwindcss/typography`
+Prose-Plugins (in Tailwind v4 unzuverlaessig) werden alle relevanten
+HTML-Elemente (`h1`–`h3`, `p`, `ul`, `ol`, `li`, `strong`, `em`,
+`code`, `pre`, `table`, `th`, `td`, `thead`, `tbody`, `tr`) als
+explizite JSX-Renderer deklariert und direkt gestylt.
+
+**Commits:** `e66b40d` (react-markdown Basis), `c1e3107`
+(Typography-Plugin), `c61df13` (Custom-Renderer-Finalisierung)
+
+#### Prompt-Haertung: Schaltungs-Extension verboten
+
+**Problem:** Das Modell versuchte, bestehende Schaltungen turn-uebergreifend
+zu erweitern. Dabei wurden vorhandene Gates per `DELETE_NODE` geloescht,
+die gleichzeitig in `CONNECT`-Befehlen referenziert wurden, was zu
+abgetrennten LEDs und unvollstaendigen Schaltungen fuehrte.
+
+**Loesung:** Zwei Regeln im RULES-Abschnitt des `circuit-actions-capability`
+Prompts:
+1. `DELETE_NODE` darf nicht auf ein Gate angewendet werden, das
+   im selben Block auch verbunden wird.
+2. Inkrementelle Erweiterung ueber Turns hinweg ist komplett verboten.
+   Das Modell bietet stattdessen einen vollstaendigen Neuaufbau an
+   (`CLEAR` gefolgt von der vollstaendigen Schaltung in einem Block).
+
+**Commit:** `3cb39ac`
+
+#### Prompt-Haertung: Wahrheitstabellen und Markdown-Tabellen
+
+**Problem:** Das Modell gab proaktiv Wahrheitstabellen als Markdown
+aus, obwohl Markdown-Tabellen in der Chat-UI nicht korrekt gerendert
+wurden.
+
+**Loesung:** Zweistufig:
+1. Regel im `circuit-actions-capability`-Abschnitt: absolutes Verbot
+   von Markdown-Tabellen (`|`-Syntax) in jeder Antwort; bei
+   Wahrheitstabellen-Anfragen Verweis auf den eingebauten "W-Tabelle"-
+   Button des Simulators.
+2. Neuer Top-Level-Abschnitt `response-format` als erster Eintrag in
+   `buildSystemSections()`, der als uebersteuernde Direktive gilt und
+   die Tabellen-Regel sowie ein Kuerzlichkeitsgebot wiederholt. Durch
+   die hohe Position im System-Prompt wird die Regel zuverlaessiger
+   befolgt als tief verschachtelte Anweisungen.
+
+**Commits:** `3909562` (W-Tabelle-Regel), `f0060a5` (absolutes
+Tabellenverbot), `3a0e6e4` (response-format Top-Level-Abschnitt)
 
 ## Arbeitspaket 1: Scope absichern
 
