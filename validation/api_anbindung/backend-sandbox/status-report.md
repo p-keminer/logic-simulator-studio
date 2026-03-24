@@ -65,33 +65,33 @@
   plus Deploy-Doku in
   [render-staging.md](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
 
-## Bewusst nur Stub
+## Integrationsstand (Stand 2026-03-24)
 
-- keine aktive Verdrahtung zur bestehenden App
-- keine produktiven Provider- oder Netzwerkaufrufe
-- keine produktive Session-, Key-, Prompt- oder Policy-Logik ausserhalb der Sandbox-Regeln
-- keine finale Persistenz- oder produktionsnahe Observability-Integration
-- Rate-Limits, Audit-Sinks und Metrics bleiben absichtlich lokal, fluechtig und pro Sandbox-Prozess
-- keine dauerhafte Chat-Historie, Provider-Dispatch-Logik oder produktive Reset-Semantik
-- Key-Verwaltung bleibt absichtlich auf fluechtigen Sandbox-Speicher begrenzt
-- Circuit-Reduktion bleibt absichtlich heuristisch und priorisiert noch keine semantisch relevanten Teilnetze
+Die Sandbox ist vollstaendig in die App integriert. Alle hier urspruenglich als
+Stub oder TODO markierten Punkte sind abgeschlossen:
 
-## TODO vor echter Integration
+- Aktive Verdrahtung zur App: Broker-Modal in `BackendBrokerModal.tsx`,
+  Frontend-Client in `src/core/backendBroker/client.ts`
+- Echte Provider-Anbindung: `AnthropicProviderClient` und
+  `OpenAICompatibleProviderClient` (live verifiziert mit OpenRouter)
+- Session-, Key-, Prompt- und Policy-Logik produktiv implementiert und
+  gehaertet (H1–H5, live verifiziert via `smoke-verify.mjs`)
+- Conversation-History mit 32-Turn-Sliding-Window
+- Chat-Reset, Delete-Key und stale-Session-Recovery vollstaendig
+- Circuit-Kontext-Serialisierung und Reduktion produktiv
+- AI-Action-Protocol (API2): Die KI kann `circuit-actions`-JSON-Bloecke
+  ausgeben, die das Frontend parst und als echte Simulator-Aktionen
+  ausfuehrt (ADD_GATE, CONNECT, CLEAR usw.)
+- Prompt-Haertung: no-extension-Regel, kein Markdown-Tabellenverbot,
+  W-Tabelle-Verweis, response-format Top-Level-Abschnitt
+- Bounding-Box-Layout fuer automatisch positionierte Gates (keine
+  Ueberlappung mit bestehenden Gates)
+- Frontend-Timeout 90 s (groesser als Backend-Provider-Timeout 60 s)
 
-- Contracts mit dem realen Frontend-State und UI-Flow synchronisieren
-- Session- und Secret-Strategie final waehlen und sicher implementieren
-- Prompt-, Guardrail- und Providerpfade mit echten Laufzeitregeln ausarbeiten
-- Chat-Reset, History-Speicher und Prompt-Templates von lokalem Sandbox-Verhalten auf echte Produktregeln heben
-- Debug-Trail fuer die spaetere Live-Anbindung uebernehmen und an echte Provider-IDs, Timeouts und Egress-Daten anschliessen
-- lokalen App-Bridge-Harness spaeter durch einen echten Adapter auf den offenen App-State ersetzen
-- spaeteren Live-App-Zugriff ausschliesslich als Adapter gegen `CurrentCircuitSnapshotProvider` anbinden
-- filebasierten Sandbox-Adapter spaeter durch einen echten Live-App-Adapter ersetzen, ohne File-I/O in Chat- oder Routenlogik zu ziehen
-- Rate-Limits, Audit-Sinks und Metrics von lokaler In-Memory-Strategie auf echte Laufzeitdienste heben
-- Integrations- und End-to-End-Validierung gegen die App erst nach Architekturfreigabe aufsetzen
-- Groessenstrategie fuer uebergrosse Circuit-Payloads final entscheiden: kuerzen, zusammenfassen oder ablehnen
-- lokales ESM/Runtime-Setup fuer spaetere produktionsnahe Ausfuehrung finalisieren
-- semantische Circuit-Zusammenfassung fuer sehr grosse Schaltungen spaeter als Folgeschritt ausarbeiten
-- Mapping auf den echten offenen App-State erst in einem getrennten Integrationsschritt anbinden
+Optionale offene Folgeschritte:
+- Streaming-Antworten (inkrementelle Befehlsausfuehrung)
+- Kontext-Zusammenfassung fuer sehr grosse Schaltungen verbessern
+- Secret-Rotation und erweiterte Betriebshaertung dokumentieren
 
 ## Tests
 

@@ -193,7 +193,7 @@ Der Broker ist Self-Hosted: er läuft auf `127.0.0.1:8787` – ausschließlich a
 
 | Dokument | Inhalt |
 |---|---|
-| `validation/api_anbindung/README.md` | Aktueller Integrationsstand (API1-01 bis API1-05) |
+| `validation/api_anbindung/README.md` | Aktueller Integrationsstand (API1-01 bis API2-BF) |
 | `validation/api_anbindung/HELP.md` | Alle Start- und Smoke-Befehle |
 | `validation/api_anbindung/backend-sandbox/.env.example` | Vollständige Konfigurationsreferenz |
 | `validation/api_anbindung/BACKLOG.md` | Abgeschlossene und offene Arbeitspakete |

@@ -46,8 +46,10 @@ Abgeschlossene Phasen (1–9):
 | 9 | App-Integration und End-to-End-Validierung | **abgeschlossen** (UI-Smoke-Ring, H1–H5-Haertung, live-verifiziert via smoke-verify.mjs) |
 | 10 | Staging-Hardening, Pilot und Rollout | **entfaellt** – Self-Hosted-Architektur |
 
-Naechster offener Schritt: **API2-01** AI-Action-Protocol
-(KI soll Schaltungsbefehle ausgeben koennen, nicht nur Text).
+**API2 AI-Action-Protocol** ist ebenfalls abgeschlossen (API2-01 bis API2-04
+plus API2-BF Bugfixes und Prompt-Haertung, Stand 2026-03-24).
+Alle Kernpfade der Roadmap sind damit umgesetzt. Optionale Folgeschritte
+sind im BACKLOG unter API2 beschrieben.
 
 ---
 

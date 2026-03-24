@@ -13,9 +13,11 @@ Alle `API0`-Pakete und die folgenden `API1`-Pakete sind abgeschlossen:
 | `API1-04` (original) | **entfaellt** | Self-Hosted-Architektur: kein Pilot-/Rollout im klassischen Sinne |
 | `API1-04` (neu) | **abgeschlossen** | Echte Provider-Clients: AnthropicProviderClient + OpenAICompatibleProviderClient, live verifiziert mit OpenRouter |
 | `API1-05` | **abgeschlossen** | Haertung H1–H5: Prompt-Limit 32 KB, Model-Lock, History-Limit 32 Turns, SSRF-Schutz, dispatchMode |
+| `API2` (AI-Action-Protocol) | **abgeschlossen** | API2-01 Protokoll-Spezifikation, API2-02 Prompt-Orchestrator, API2-03 Frontend-Parser/Executor, API2-04 Circuit-Feedback-Loop, API2-BF Bugfixes und Prompt-Haertung |
 
-Naechster offener Schritt: **`API2-01`** AI-Action-Protocol (KI gibt Schaltungsbefehle aus).
-Details: `validation/api_anbindung/work-package.md`.
+Alle Kernpfade sind abgeschlossen. Optionale Folgeschritte sind in den API2-Abschnitten
+dieses Backlogs beschrieben (Mehrprovider-Haertung, Kontext-Zusammenfassung,
+Secret-Rotation). Details: `validation/api_anbindung/work-package.md`.
 
 ---
 

@@ -62,7 +62,7 @@ Audit-Ereignisse kontrolliert.
 
 ## Aktueller Integrationsstand (Stand 2026-03-24)
 
-`API1-01` bis `API1-05` sind abgeschlossen:
+`API1-01` bis `API1-05` sowie `API2` sind abgeschlossen:
 
 - **API1-01** – Sichtbarer Broker-Dialog (`Key -> Chat -> Reset -> Delete`)
   mit vollstaendigem UI-Smoke-Ring fuer Happy Path, stale-Session-Recovery,
@@ -88,6 +88,7 @@ Audit-Ereignisse kontrolliert.
 Das Architekturziel ist Self-Hosted: jeder Nutzer betreibt den Broker
 lokal mit eigenem API-Key.
 
-Naechster Schritt: `API2-01` AI-Action-Protocol Protokoll-Spezifikation
-(KI soll Schaltungs-Befehle ausgeben koennen, nicht nur Text).
+**API2 AI-Action-Protocol** ist ebenfalls abgeschlossen (API2-01 bis API2-04
+plus API2-BF Bugfixes und Prompt-Haertung). Die KI kann jetzt strukturierte
+Schaltungs-Befehle ausgeben, die das Frontend direkt ausfuehrt.
 Details: `validation/api_anbindung/work-package.md`.
