@@ -50,10 +50,29 @@ const cloneRecord = (
   turns: record.turns.map(cloneTurn),
 });
 
+export interface InMemoryConversationHistoryStoreOptions {
+  // H3 History-Limit: Maximale Anzahl gespeicherter Turns pro Konversation.
+  // Ueberschreitet ein Append diesen Wert, werden die aeltesten Turns verworfen
+  // (gleitendes Fenster). Verhindert unkontrollierten Speicherwachstum bei langen
+  // Konversationen.
+  maxStoredTurnsPerConversation?: number;
+}
+
+// Standardwert: 32 Turns = 16 vollstaendige Austausche (user + assistant).
+// Liegt bewusst ueber dem Standard-Prompt-Fenster des Handlers (8 Turns), damit
+// ein kuerzlich erfolgter Reset nicht sofort alle Turns verliert.
+const DEFAULT_MAX_STORED_TURNS = 32;
+
 export class InMemoryConversationHistoryStore
   implements ConversationHistoryStore
 {
   private readonly records = new Map<string, ConversationHistoryRecord>();
+  private readonly maxStoredTurnsPerConversation: number;
+
+  constructor(options: InMemoryConversationHistoryStoreOptions = {}) {
+    this.maxStoredTurnsPerConversation =
+      options.maxStoredTurnsPerConversation ?? DEFAULT_MAX_STORED_TURNS;
+  }
 
   async get(
     sessionId: string,
@@ -72,12 +91,21 @@ export class InMemoryConversationHistoryStore
     const key = createStoreKey(sessionId, conversationId);
     const existing = this.records.get(key);
     const appendedTurns = turns.map(cloneTurn);
+    const mergedTurns = existing
+      ? [...existing.turns.map(cloneTurn), ...appendedTurns]
+      : appendedTurns;
+
+    // H3 History-Limit: Älteste Turns kappen, neueste behalten.
+    const cappedTurns =
+      mergedTurns.length > this.maxStoredTurnsPerConversation
+        ? mergedTurns.slice(-this.maxStoredTurnsPerConversation)
+        : mergedTurns;
+
     const nextRecord: ConversationHistoryRecord = existing
       ? {
           ...existing,
-          updatedAt:
-            appendedTurns.at(-1)?.createdAt ?? existing.updatedAt,
-          turns: [...existing.turns.map(cloneTurn), ...appendedTurns],
+          updatedAt: appendedTurns.at(-1)?.createdAt ?? existing.updatedAt,
+          turns: cappedTurns,
         }
       : {
           sessionId,
@@ -87,7 +115,7 @@ export class InMemoryConversationHistoryStore
             appendedTurns.at(-1)?.createdAt ??
             appendedTurns[0]?.createdAt ??
             new Date(0).toISOString(),
-          turns: appendedTurns,
+          turns: cappedTurns,
         };
 
     this.records.set(key, nextRecord);

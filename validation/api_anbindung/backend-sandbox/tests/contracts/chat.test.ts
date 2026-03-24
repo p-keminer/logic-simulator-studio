@@ -86,4 +86,28 @@ describe('chat contracts', () => {
       }).success,
     ).toBe(false);
   });
+
+  // H2 Model-Lock: Der Client darf das Modell nicht ueberschreiben.
+  // Das Feld `model` existiert nicht im Request-Schema (nur im Response-Schema).
+  // `.strict()` erzwingt, dass ein solcher Override-Versuch mit einem Validierungsfehler
+  // abgebrochen wird, bevor er den Handler erreicht.
+  it('rejects chat request with a model override field (H2 model-lock)', () => {
+    expect(
+      chatRequestSchema.safeParse({
+        sessionId: '11111111-1111-4111-8111-111111111111',
+        message: 'Explain the open circuit.',
+        circuitContext: activeCircuitContext,
+        model: 'gpt-4o',
+      }).success,
+    ).toBe(false);
+
+    expect(
+      chatRequestSchema.safeParse({
+        sessionId: '11111111-1111-4111-8111-111111111111',
+        message: 'Explain the open circuit.',
+        circuitContext: activeCircuitContext,
+        model: 'claude-opus-4-5',
+      }).success,
+    ).toBe(false);
+  });
 });

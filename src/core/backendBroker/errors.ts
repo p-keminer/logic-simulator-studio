@@ -202,6 +202,15 @@ export const toBackendBrokerUiError = (
           code: error.code,
           requestId: error.requestId,
         };
+      case 'PROMPT_TOO_LARGE':
+        return {
+          kind: 'request',
+          title: 'Nachricht zu lang fuer den Broker',
+          message:
+            'Der Prompt ueberschreitet das erlaubte Maximum von 32 KB. Kuerze die Konversationshistorie oder vereinfache die aktuelle Schaltung.',
+          code: error.code,
+          requestId: error.requestId,
+        };
       case 'UPSTREAM_UNAVAILABLE':
         return {
           kind: 'provider',

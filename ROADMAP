@@ -1,6 +1,6 @@
 # Logic Simulator Studio Roadmap
 
-Stand: 2026-03-21
+Stand: 2026-03-24
 Repo: logic-gate-simulator
 
 ## Zweck
@@ -552,24 +552,25 @@ Zusaetzlich bei groesserer Tragweite:
 
 ## Aktuelle offene Hauptpakete
 
-1. API-/Broker-App-Integration fuer `Key -> Chat -> Reset -> Delete`
-   ist im aktuellen Scope geschlossen; lokaler Happy-Path-,
-   stale-Session-Recovery-, Session-Key-/Chat-/Reset-Rate-Limit-,
-   Konfigurationsfehler-, Policy-Block- und Provider-/Upstream-Fehler-Smoke
-   stehen, dazu die manuelle Verifikation des sichtbaren Flows.
-   `API1-02` ist jetzt im aktuellen Scope abgeschlossen: staging-nahes
-   Runtime-Profil (`APP_ENV=staging`, verpflichtende `ALLOWED_ORIGINS`,
-   deaktivierte Dev-Routen), staging-lokaler Start- und Smoke-Pfad,
-   Render-Blueprint (`render.yaml`) sowie Staging-Access-Gate ueber
-   `X-Staging-Token`-Header auf allen `/v1/*`-Routen (lokal verifiziert,
-   `smoke:staging-url` gruen, `stagingAccessGate: ok`).
-   Architekturziel: Self-Hosted. Die App wird von jedem Nutzer lokal
-   betrieben; jeder Nutzer traegt seinen eigenen API-Key ein. Es gibt
-   keinen zentralen Server und keinen Betrieb ueber den Autor des Repos.
-   Die Render-Infrastruktur und das Staging-Gate bleiben als
-   Entwicklungs-/Testwerkzeug im Repo, nicht als Produktionspfad.
-   `API1-03` Observability und `API1-04` Pilot-/Rollout entfallen als
-   Planungspunkte, da kein zentraler Betrieb vorgesehen ist.
+1. API-/Broker-Strang: `API1-01` bis `API1-05` sind abgeschlossen.
+   `API1-01`: sichtbarer Broker-Dialog (`Key -> Chat -> Reset -> Delete`)
+   mit lokalem Smoke-Ring. `API1-02`: Staging-Profil, Staging-Access-Gate,
+   Render-Blueprint. `API1-04`: echte Provider-Anbindung (Anthropic,
+   OpenAI-kompatibel, OpenRouter) live verifiziert mit MiniMax M2.7.
+   `API1-05`: Broker-Nachhärtung abgeschlossen (Prompt-Limit 32 KB,
+   Model-Lock via .strict(), History-Limit 32 Turns Sliding-Window,
+   allowedHosts-SSRF-Schutz in beiden Provider-Clients, dispatchMode
+   live/mock/noop ohne irreführenden Fallback).
+   Architekturziel: Self-Hosted – kein zentraler Server, jeder Nutzer
+   betreibt den Broker lokal mit eigenem API-Key.
+   `API1-03` Observability und urspruengliches `API1-04` Pilot-/Rollout
+   entfallen, da kein zentraler Betrieb vorgesehen ist.
+   Naechster Schritt: `API2-01` Protokoll-Spezifikation.
+2. `API2` AI-Action-Protocol: KI soll Schaltungs-Befehle ausgeben koennen
+   statt nur Text. Vier Arbeitspakete: API2-01 Protokoll-Spezifikation,
+   API2-02 System-Prompt-Erweiterung, API2-03 Frontend-Parser/Executor,
+   API2-04 Circuit-State-Feedback-Loop. Reihenfolge nach API1-05.
+   Details: validation/api_anbindung/work-package.md.
 2. kleinen UX-Feinschliff-Strang separat pflegen und erst dokumentiert sammeln,
    dann bewusst in kleinen Slices umsetzen
 3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen

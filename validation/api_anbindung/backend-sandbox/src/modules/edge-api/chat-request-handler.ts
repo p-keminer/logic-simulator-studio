@@ -268,6 +268,15 @@ export class SandboxChatRequestHandler implements ChatRequestHandler {
           429,
           safeProviderDetails,
         );
+      case 'config':
+        // Konfigurationsfehler des Gateways – z. B. Prompt-Groessenlimit ueberschritten.
+        // Wird als 400 zurueckgegeben damit das Frontend einen erkennbaren Nutzerfehler anzeigt.
+        return createSandboxError(
+          'PROMPT_TOO_LARGE',
+          'Der gesendete Prompt ueberschreitet das erlaubte Maximum des Brokers.',
+          400,
+          safeProviderDetails,
+        );
       case 'timeout':
       case 'unavailable':
         return createSandboxError(

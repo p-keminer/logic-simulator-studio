@@ -135,6 +135,35 @@ Stand: 2026-03-24
   `getStagingAccessToken`; der URL-Smoke uebergibt den Token an alle
   `/v1/*`-Requests und prueft zusaetzlich, dass ein Request ohne Token
   korrekt mit 401 abgelehnt wird
+- `API1-04` Provider-Integration ist abgeschlossen: der Broker kann jetzt
+  echte KI-Provider anbinden; implementiert sind `AnthropicProviderClient`
+  (direkte Anthropic API ueber native fetch, kein npm-Paket) und
+  `OpenAICompatibleProviderClient` (OpenAI-Format, konfigurierbare Base-URL
+  fuer OpenAI, OpenRouter, Ollama und jede kompatible API); die Provider-
+  Auswahl laeuft ueber `PROVIDER`, `PROVIDER_BASE_URL`,
+  `PROVIDER_DEFAULT_MODEL`, `PROVIDER_TIMEOUT_MS` und
+  `PROVIDER_MAX_ATTEMPTS` in `.env`; das `dev`-Script laedt `.env` jetzt
+  ueber `node --env-file=.env`; `create-app.ts` baut den passenden Client
+  und uebergibt korrekte `ProviderGatewayRuntime`-Overrides (Provider-Name,
+  Modell, `allowedHosts` aus der Base-URL, Timeout, MaxAttempts); der
+  API-Key wird ausschliesslich zur Laufzeit aus der Session geholt, nie in
+  Logs oder Config; `.env.example` ist auf den neuen Stand gebracht;
+  `.gitignore` deckt `.env.staging`, `.env.production` und `.env.*.local`
+  ab; live verifiziert mit OpenRouter + `minimax/minimax-m2.7` (zwei
+  erfolgreiche Chat-Requests, History-Tracking, korrekte Token-Zaehlung)
+- `API1-05` Broker-Nachhärtung ist abgeschlossen: alle fuenf Haertungspunkte
+  H1–H5 sind implementiert und durch 76 Tests abgesichert; H1 Prompt-Limit
+  (32 768 Bytes, `PROMPT_TOO_LARGE`-Fehlerpfad bis zur dismissiblen
+  UI-Fehlermeldung), H2 Model-Lock (`.strict()` auf `chatRequestSchema`
+  plus expliziter Contract-Test), H3 History-Limit
+  (`InMemoryConversationHistoryStore` mit `maxStoredTurnsPerConversation=32`,
+  gleitendes Fenster, älteste Turns werden gedroppt), H4 allowedHosts-
+  Durchsetzung (beide echten Provider-Clients pruefen den Ziel-Hostnamen
+  gegen `request.runtime.allowedHosts` vor jedem Netzwerkzugriff – SSRF-
+  Schutz, Key-Zugriff findet erst nach bestandenem Check statt), H5
+  dispatchMode (`inferDispatchMode` gibt jetzt `'live'` statt `'disconnected'`
+  fuer echte Provider-Clients zurueck, Audit-Logs und Metrics sind
+  eindeutig)
 
 Automatisch validiert:
 
@@ -143,18 +172,7 @@ Automatisch validiert:
 
 Naechster Kernslice:
 
-- `STAGING_ACCESS_TOKEN` als Render-Secret setzen und Service neu deployen
-- URL-Smoke mit Token gegen das echte Render-Ziel fahren:
-  `STAGING_BASE_URL=https://logic-simulator-broker-staging.onrender.com STAGING_ALLOWED_ORIGIN=<origin> STAGING_ACCESS_TOKEN=<token> npm run smoke:staging-url`
-- danach verbleibende Pflichtpunkte vor Frontend-Freigabe:
-  1. `ALLOWED_ORIGINS` auf die echte Frontend-Staging-Domain festziehen
-     (kein Platzhalter)
-  2. abuse-orientierte Observability fuer Session-Key-Spikes,
-     CORS-Ablehnungen und Provider-/Upstream-Fehler aktivieren (API1-03)
-  3. den sichtbaren App-Client erst danach bewusst fuer Remote-Staging-Ziele
-     freigeben (Loopback-Beschraenkung aufheben)
-- erst nach diesen Schritten `API1-03` Observability/Alarmierung
-  und `API1-04` Pilot-/Rollout-Vorbedingungen angehen
+- `API2-01` Befehlsprotokoll-Spezifikation beginnen
 
 ## Scope-Abschlussbewertung fuer API1-01
 
@@ -195,8 +213,279 @@ Begruendung:
 - Architekturziel ist Self-Hosted: Nutzer laden die App herunter, starten
   den Broker lokal und tragen ihren eigenen API-Key ein; es gibt keinen
   zentralen Server und keinen Betrieb ueber den Autor des Repos
-- `API1-03` Observability und `API1-04` Pilot-/Rollout entfallen als
-  Planungspunkte, da kein zentraler Betrieb vorgesehen ist
+- `API1-03` Observability und urspruengliches `API1-04` Pilot-/Rollout
+  entfallen als Planungspunkte, da kein zentraler Betrieb vorgesehen ist
+- `API1-04` Provider-Integration ist abgeschlossen (siehe Integrationsstand)
+
+## Scope-Abschlussbewertung fuer API1-04
+
+Bewertung: **abgeschlossen im aktuellen Scope**
+
+Begruendung:
+
+- `AnthropicProviderClient` und `OpenAICompatibleProviderClient` sind
+  implementiert; beide nutzen ausschliesslich Node-20-native `fetch`,
+  kein zusaetzliches npm-Paket
+- Provider-Auswahl, Runtime-Overrides und `.env`-Laden sind vollstaendig
+  verdrahtet
+- API-Key-Sicherheitsprinzip eingehalten: Key nur im RAM der Session,
+  nie in Logs, Config oder Antworten
+- live verifiziert mit OpenRouter + MiniMax M2.7: zwei aufeinanderfolgende
+  Chat-Requests, History-Tracking (sectionCounts history 1→2), korrekte
+  Token-Zaehlung, keine Fehler in 66 Unit-Tests
+
+Offene Folgearbeit:
+
+- `API1-05` Broker-Nachhärtung (Prompt-Limit, Model-Lock, History-Limit)
+- `API2` AI-Action-Protocol (KI soll Schaltungs-Befehle ausgeben koennen)
+
+## Scope-Abschlussbewertung fuer API1-05
+
+Bewertung: **abgeschlossen im aktuellen Scope**
+
+Begruendung:
+
+- H1 Prompt-Limit: 32 768-Byte-Grenze im Gateway, `ProviderGatewayError('config')`
+  → `SandboxError('PROMPT_TOO_LARGE', 400)` → `BackendBrokerApiError` →
+  dismissible UI-Fehlerbanner; `PROMPT_TOO_LARGE` in beiden Error-Code-Typen
+  (Backend + Frontend) verankert
+- H2 Model-Lock: `chatRequestSchema` hat `.strict()` und kein `model`-Feld;
+  Modell kommt ausschliesslich aus `PROVIDER_DEFAULT_MODEL` / Gateway-Runtime;
+  Contract-Test verifiziert, dass `model` im Request zu Validierungsfehler fuehrt
+- H3 History-Limit: `InMemoryConversationHistoryStore` mit
+  `maxStoredTurnsPerConversation=32`; gleitendes Fenster, älteste Turns werden
+  nach FIFO gedroppt; 3 Unit-Tests decken Happy Path, Overflow und
+  Konversations-Isolation ab
+- H4 allowedHosts-Durchsetzung: `AnthropicProviderClient` und
+  `OpenAICompatibleProviderClient` pruefen den Ziel-Hostnamen vor dem ersten
+  Netzwerkzugriff und Key-Aufruf gegen `request.runtime.allowedHosts`;
+  Mismatch → `ProviderGatewayError('host-denied', ..., retryable=false)`;
+  6 neue Tests beweisen Ablehnung und korrekte Reihenfolge (kein Key-Zugriff
+  bei host-denied)
+- H5 dispatchMode: `inferDispatchMode` gibt `'live'` statt `'disconnected'`
+  fuer echte Provider-Clients; Typ-Union in `provider-types.ts` und
+  `provider-gateway.ts` aktualisiert; `'disconnected'` vollstaendig entfernt
+- Gesamtabdeckung: 76 Tests, 22 Test-Files, alle gruen; Typecheck sauber
+
+## API1-05: Broker-Nachhärtung
+
+Status: **abgeschlossen**
+
+Ziel:
+
+Den Broker gegen Missbrauch, unkontrollierte Kosten und Informationslecks
+haerten, ohne die Self-Hosted-Architektur zu brechen.
+
+### Haertungspunkte
+
+**H1 – Prompt-Groessenlimit**
+
+Aktuell kein Maximum auf `promptRenderedBytes`. Ein kaputt konfigurierter
+oder boesartiger Client kann beliebig grosse Prompts schicken und dadurch
+unerwartete Token-Kosten erzeugen.
+
+Massnahme: Hardlimit im Gateway (z. B. 32 768 Bytes). Ueberschreitung
+wirft `ProviderGatewayError('config', ...)` bevor der Provider-Call
+abgeht.
+
+**H2 – Model-Lock**
+
+Das aktive Modell kommt aus `PROVIDER_DEFAULT_MODEL` in der Config.
+Derzeit nicht geprueft ob ein Frontend-Request ein abweichendes Modell
+uebergeben kann. Muss sichergestellt werden, dass ausschliesslich das
+konfigurierte Modell verwendet wird.
+
+Massnahme: Im Gateway vor dem Provider-Call validieren, dass
+`request.runtime.model` mit dem konfigurierten Modell uebereinstimmt.
+
+**H3 – Conversation-History-Limit**
+
+Unbegrenzte Turns pro Conversation fuehren zu unbegrenzten Token-Kosten
+pro Session.
+
+Massnahme: Maximal-Turns-Grenze in `ConversationHistoryStore` (z. B. 50
+Turns). Aeltere Turns werden nach FIFO gedropped.
+
+**H4 – allowedHosts echte Durchsetzung**
+
+Der `allowedHosts`-Check im Gateway prueft nur ob die Liste nicht leer
+ist, nicht ob `fetch()` wirklich nur zu diesen Hosts geht. Da `base_url`
+aus der Config kommt (nicht User-kontrolliert) ist das Risiko gering,
+aber die Luecke sollte dokumentiert und spaeter geschlossen werden.
+
+Massnahme (Phase 1): Explizit dokumentieren, dass Host-Enforcement
+ausschliesslich ueber Config-Kontrolle laeuft. Phase 2 koennte
+URL-Validierung vor dem `fetch()`-Call einfuehren.
+
+**H5 – dispatchMode fuer echte Provider**
+
+`inferDispatchMode` erkennt `openai-compatible-provider-client` und
+`anthropic-provider-client` nicht und faellt auf `'disconnected'` zurueck.
+Audit-Logs sind dadurch leicht irrefuehrend (kein Sicherheitsproblem,
+aber Diagnoseproblem).
+
+Massnahme: `inferDispatchMode` um `'live'`-Fall erweitern oder
+Client-Namen anpassen.
+
+### Umsetzungsreihenfolge
+
+1. H1 Prompt-Limit (hoechste Prioritaet – direkte Kosten-Kontrolle)
+2. H2 Model-Lock (verhindert unerwartete Modell-Substitution)
+3. H3 History-Limit (Token-Budget-Kontrolle pro Session)
+4. H5 dispatchMode (Diagnose-Qualitaet)
+5. H4 allowedHosts (dokumentieren, spaeter haerten)
+
+### Abnahme
+
+- alle 66 bestehenden Unit-Tests weiterhin gruen
+- `typecheck` sauber
+- manueller Smoke: Prompt ueber Limit → klare Fehlermeldung im Frontend
+- manueller Smoke: History waechst bis Limit, dann werden aelteste Turns
+  gedropped ohne Fehler
+
+## API2: AI-Action-Protocol
+
+Status: **geplant – naechster Hauptstrang nach API1-05**
+
+### Kontext und Problem
+
+Der Broker kommuniziert jetzt erfolgreich mit echten KI-Providern.
+Das Modell antwortet jedoch nur mit erklaerenden Textnachrichten, weil
+es nicht weiss, dass es aktiv Befehle an den Schaltungs-Simulator
+ausgeben kann. Ein Benutzer, der "Baue mir einen Volladdierer" schreibt,
+erhaelt eine Schritt-fuer-Schritt-Bauanleitung statt einer ausgefuehrten
+Schaltungsaktion.
+
+Ziel dieses Milestones: Das Modell kann strukturierte Befehle ausgeben,
+die Frontend-seitig in echte Simulator-Aktionen uebersetzt werden.
+
+### Architektur-Entscheidung: Wo wird geparst?
+
+Drei Optionen:
+
+- **Option A (gewaehlt fuer MVP)**: Broker leitet den Antworttext
+  unveraendert ans Frontend durch; das Frontend parst selbst JSON-Bloecke
+  aus dem Antworttext. Minimaler Broker-Eingriff, schnell umsetzbar.
+- Option B: Broker parst Befehle und gibt strukturiertes
+  `{ text, commands[] }` zurueck. Sauberere Trennung, mehr Broker-Logik.
+- Option C: Streaming-Protokoll mit inkrementeller Befehlsausfuehrung.
+  Spaetere Erweiterung, nicht MVP.
+
+### API2-01: Befehlsprotokoll-Spezifikation
+
+Status: **ausstehend**
+
+Ziel: Ein klares, stabiles JSON-Format fuer Schaltungs-Befehle definieren,
+das Modell und Frontend als gemeinsamen Vertrag nutzen.
+
+Umsetzungsschritte:
+
+1. Befehlstypen definieren. Kandidaten:
+   - `ADD_GATE` – Gattertyp und optionale Position
+   - `CONNECT` – Quell-Node/Port zu Ziel-Node/Port
+   - `DELETE_NODE` – Node per ID oder Label entfernen
+   - `CLEAR` – gesamte Schaltung leeren
+   - `SET_LABEL` – Label eines Nodes setzen
+   - `ADD_INPUT` / `ADD_OUTPUT` – Ein-/Ausgaenge hinzufuegen
+2. JSON-Schema fuer einen Befehlsblock festlegen:
+   ```json
+   {
+     "actions": [
+       { "type": "ADD_GATE", "gateType": "XOR", "label": "XOR_1" },
+       { "type": "CONNECT", "from": "XOR_1.out", "to": "XOR_2.in0" }
+     ]
+   }
+   ```
+3. Einbettungsformat im Antworttext festlegen: Markdown-Codeblock mit
+   Sprach-Tag `circuit-actions` als eindeutiger Delimiter
+4. Fehlerverhalten spezifizieren: Was passiert wenn ein Befehl ungueltg
+   ist oder ein referenzierter Node nicht existiert?
+5. Versionierung: Protokollversion in den Block einbauen (`"version": 1`)
+   damit spaetere Breaking Changes erkennbar sind
+
+Abnahme:
+
+- Protokoll-Spezifikation als Markdown-Dokument unter
+  `validation/api_anbindung/action-protocol/spec.md`
+- mindestens Volladdierer, Halbaddierer und SR-Latch als
+  Beispiel-Befehlssequenzen dokumentiert
+
+### API2-02: System-Prompt-Erweiterung
+
+Status: **ausstehend – nach API2-01**
+
+Ziel: Das Modell ueber verfuegbare Befehle, den Antwort-Codeblock und
+das erwartete Verhalten informieren.
+
+Umsetzungsschritte:
+
+1. Neuen System-Prompt-Abschnitt im `PromptOrchestrator` anlegen, der
+   alle verfuegbaren Befehlstypen beschreibt
+2. Anweisungsformat: wann soll das Modell Befehle ausgeben (nur wenn
+   der Nutzer explizit eine Schaltungsaktion anfragt), wann nur Text
+3. Beispiel-Befehlssequenz in den Prompt einbauen (Few-Shot-Format)
+4. Kontext-Beschreibung: das Modell bekommt den aktuellen Schaltungs-
+   zustand als lesbaren Text (Nodes, Verbindungen) und kann darauf
+   aufbauen
+5. Prompt gegen mindestens zwei verschiedene Modelle testen
+   (Anthropic und OpenRouter/MiniMax) und Anpassungen dokumentieren
+
+Abnahme:
+
+- Prompt erzeugt bei "Baue einen Volladdierer" zuverlassig einen
+  gueltigen `circuit-actions`-Block
+- Prompt erzeugt bei "Erklaer mir XOR" nur Text, keinen Befehlsblock
+
+### API2-03: Frontend-Command-Parser und -Executor
+
+Status: **ausstehend – nach API2-02**
+
+Ziel: Das Frontend kann `circuit-actions`-Bloecke aus dem Antworttext
+extrahieren, validieren und als echte Simulator-Aktionen ausfuehren.
+
+Umsetzungsschritte:
+
+1. Parser implementieren: Markdown-Codeblock mit Tag `circuit-actions`
+   aus dem Antworttext extrahieren (Regex oder Markdown-Parser)
+2. JSON-Schema-Validierung der extrahierten Befehle
+3. Command-Executor: jeden validierten Befehl in die entsprechende
+   Simulator-Store-Aktion uebersetzen
+4. Sequentielle Ausfuehrung mit Rollback-Faehigkeit bei Teilfehler
+5. UI-Feedback: nach Ausfuehrung kurze Zusammenfassung anzeigen
+   ("3 Gates hinzugefuegt, 4 Verbindungen erstellt")
+6. Fehlerfeedback: ungueltige oder nicht ausfuehrbare Befehle sauber
+   abfangen und dem Nutzer erklaeren
+
+Abnahme:
+
+- "Baue einen Volladdierer" fuehrt in der App zu einer vollstaendigen
+  Volladdierer-Schaltung ohne manuellen Eingriff
+- ungueltige Befehlsbloecke erzeugen eine klare Fehlermeldung, kein
+  stilles Fehlschlagen
+
+### API2-04: Circuit-State-Feedback-Loop
+
+Status: **ausstehend – nach API2-03, optional fuer MVP**
+
+Ziel: Nach Befehlsausfuehrung erhaelt das Modell den aktualisierten
+Schaltungszustand als Kontext, damit es Folgefragen korrekt beantworten
+und Korrekturen vornehmen kann.
+
+Umsetzungsschritte:
+
+1. Nach Befehlsausfuehrung den neuen Circuit-Context als naechsten
+   Kontext-Snapshot erfassen
+2. Circuit-Context-Adapter so erweitern, dass er den Post-Execution-
+   Snapshot liefern kann
+3. Folgeanfragen erhalten diesen aktualisierten Kontext automatisch
+4. Modell kann damit auf "Das ist falsch, korrigiere den Carry-Ausgang"
+   reagieren ohne den Zustand neu beschreiben zu muessen
+
+Abnahme:
+
+- Folgeanfrage nach Schaltungsaufbau referenziert korrekt die
+  tatsaechlich vorhandenen Nodes und Verbindungen
+- kein "ich weiss nicht was bisher gebaut wurde"-Verhalten bei Korrekturen
 
 ## Arbeitspaket 1: Scope absichern
 

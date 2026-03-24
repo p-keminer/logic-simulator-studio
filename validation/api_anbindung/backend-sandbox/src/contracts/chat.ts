@@ -8,6 +8,11 @@ export const chatMessageSchema = z
   .min(1)
   .max(20_000);
 
+// H2 Model-Lock: Kein `model`-Feld im Request erlaubt.
+// Das Modell wird ausschliesslich serverseitig ueber die Gateway-Runtime-Config gesteuert
+// (PROVIDER_DEFAULT_MODEL bzw. ProviderGatewayRuntime.model).
+// `.strict()` stellt sicher, dass unbekannte Felder – inkl. eines moeglichen `model`-Overrides
+// vom Client – zum Validierungsfehler fuehren und nie den Handler erreichen.
 export const chatRequestSchema = z
   .object({
     sessionId: sessionIdSchema,

@@ -57,9 +57,12 @@ const noopLogger: ProviderGatewayLogger = {
 const isHostAllowedShape = (host: string) =>
   host.length > 0 && !host.includes('://') && !host.includes('/');
 
+// H5 dispatchMode: Zeigt in Audit-Logs und Metrics an, welche Art von Client
+// den Dispatch ausfuehrt. 'live' bedeutet echter Netzwerkaufruf an einen Provider.
+// 'noop' und 'mock' sind Entwicklungs-/Test-Stubs ohne echte HTTP-Calls.
 const inferDispatchMode = (
   clientName: string,
-): 'noop' | 'mock' | 'disconnected' => {
+): 'noop' | 'mock' | 'live' => {
   const normalized = clientName.toLowerCase();
 
   if (normalized.includes('noop')) {
@@ -70,7 +73,9 @@ const inferDispatchMode = (
     return 'mock';
   }
 
-  return 'disconnected';
+  // Alle anderen Clients (z.B. anthropic-provider-client, openai-compatible-provider-client)
+  // fuehren echte HTTP-Calls durch → 'live'.
+  return 'live';
 };
 
 const createPromptFingerprint = (prompt: string) =>
@@ -102,7 +107,7 @@ export class DefaultProviderGateway implements ProviderGateway {
   private readonly logger: ProviderGatewayLogger;
   private readonly clock: () => Date;
   private readonly runtime: ProviderGatewayRuntime;
-  private readonly dispatchMode: 'noop' | 'mock' | 'disconnected';
+  private readonly dispatchMode: 'noop' | 'mock' | 'live';
   private readonly auditSink?: AuditSink;
   private readonly metricsSink?: MetricsSink;
 
@@ -166,6 +171,22 @@ export class DefaultProviderGateway implements ProviderGateway {
   async send(input: ProviderGatewaySendInput): Promise<ProviderGatewayResponse> {
     this.validateRuntime();
     const request = createRequest(input, this.runtime);
+
+    // Prompt-Groessenlimit: verhindert unkontrollierten Token-Verbrauch beim Provider.
+    // Der Check greift nach createRequest damit renderedBytes bereits berechnet ist.
+    const PROMPT_MAX_BYTES = 32_768;
+    if (request.debug.renderedBytes > PROMPT_MAX_BYTES) {
+      throw new ProviderGatewayError(
+        'config',
+        `Prompt exceeds maximum size of ${PROMPT_MAX_BYTES} bytes (got ${request.debug.renderedBytes} bytes).`,
+        400,
+        false,
+        {
+          limit: PROMPT_MAX_BYTES,
+          serializedBytes: request.debug.renderedBytes,
+        },
+      );
+    }
 
     this.auditSink?.record({
       type: 'provider.requested',

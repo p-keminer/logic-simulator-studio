@@ -6,6 +6,7 @@ export type SandboxErrorCode =
   | 'CONFLICT'
   | 'UNPROCESSABLE_ENTITY'
   | 'RATE_LIMITED'
+  | 'PROMPT_TOO_LARGE'
   | 'UPSTREAM_UNAVAILABLE'
   | 'INTERNAL_ERROR';
 

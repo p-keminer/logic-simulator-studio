@@ -58,6 +58,8 @@ import {
 } from '../modules/provider-gateway/provider-gateway.js';
 import { InMemoryDevProviderFaultController } from '../modules/provider-gateway/dev-provider-fault-controller.js';
 import { NoopProviderClient } from '../modules/provider-gateway/provider-client.js';
+import { AnthropicProviderClient } from '../modules/provider-gateway/anthropic-provider-client.js';
+import { OpenAICompatibleProviderClient } from '../modules/provider-gateway/openai-compatible-provider-client.js';
 import { isSandboxError } from '../shared/errors.js';
 import { loadConfig } from '../shared/config.js';
 import { createLoggerOptions } from '../shared/logger.js';
@@ -117,8 +119,11 @@ export const createApp = (
     });
   const promptOrchestrator =
     options.promptOrchestrator ?? new DefaultPromptOrchestrator();
+  // H3 History-Limit: 32 Turns = 16 vollstaendige Austausche.
+  // Haelt den In-Memory-Speicher auch bei langen Sessions kontrolliert.
   const conversationHistoryStore =
-    options.conversationHistoryStore ?? new InMemoryConversationHistoryStore();
+    options.conversationHistoryStore ??
+    new InMemoryConversationHistoryStore({ maxStoredTurnsPerConversation: 32 });
   const auditSink = options.auditSink ?? new InMemoryAuditSink();
   const metricsSink = options.metricsSink ?? new InMemoryMetricsSink();
   const currentCircuitSnapshotProvider =
@@ -201,13 +206,77 @@ export const createApp = (
   }
 
   const devProviderFaultController = new InMemoryDevProviderFaultController();
-  const providerGateway =
-    options.providerGateway ??
-    new DefaultProviderGateway(new NoopProviderClient(), {
+
+  // Erstellt das DefaultProviderGateway mit dem konfigurierten Provider-Client und
+  // den passenden Runtime-Overrides (Modell, Timeout, Hosts).
+  // Wird nur aufgerufen wenn kein Test-Override (options.providerGateway) gesetzt ist.
+  const buildProviderGateway = (): ProviderGateway => {
+    if (config.providerType === 'anthropic') {
+      const base_url = config.providerBaseUrl ?? 'https://api.anthropic.com';
+      console.debug('[create-app] provider selected', {
+        type: 'anthropic',
+        baseUrl: base_url,
+        model: config.providerDefaultModel ?? '(vom Frontend)',
+      });
+      return new DefaultProviderGateway(
+        new AnthropicProviderClient(sessionService, { base_url }),
+        {
+          auditSink,
+          logger: app.log,
+          metricsSink,
+          runtime: {
+            provider: 'anthropic',
+            // Modell aus Config wenn gesetzt, sonst muss das Frontend es uebergeben
+            ...(config.providerDefaultModel ? { model: config.providerDefaultModel } : {}),
+            // Nur den Hostnamen eintragen – nie die volle URL mit Pfad
+            allowedHosts: [new URL(base_url).hostname],
+            timeoutMs: config.providerTimeoutMs,
+            maxAttempts: config.providerMaxAttempts,
+          },
+        },
+      );
+    }
+
+    if (config.providerType === 'openai-compatible') {
+      if (!config.providerBaseUrl) {
+        throw new Error(
+          'PROVIDER_BASE_URL muss gesetzt sein wenn PROVIDER=openai-compatible.',
+        );
+      }
+      console.debug('[create-app] provider selected', {
+        type: 'openai-compatible',
+        baseUrl: config.providerBaseUrl,
+        model: config.providerDefaultModel ?? '(vom Frontend)',
+      });
+      return new DefaultProviderGateway(
+        new OpenAICompatibleProviderClient(sessionService, {
+          base_url: config.providerBaseUrl,
+        }),
+        {
+          auditSink,
+          logger: app.log,
+          metricsSink,
+          runtime: {
+            provider: 'openai-compatible',
+            ...(config.providerDefaultModel ? { model: config.providerDefaultModel } : {}),
+            allowedHosts: [new URL(config.providerBaseUrl).hostname],
+            timeoutMs: config.providerTimeoutMs,
+            maxAttempts: config.providerMaxAttempts,
+          },
+        },
+      );
+    }
+
+    // Standard: noop – kein echter API-Call (sicher fuer Entwicklung)
+    console.debug('[create-app] provider selected', { type: 'noop' });
+    return new DefaultProviderGateway(new NoopProviderClient(), {
       auditSink,
       logger: app.log,
       metricsSink,
     });
+  };
+
+  const providerGateway = options.providerGateway ?? buildProviderGateway();
   const effectiveProviderGateway = new DevFaultInjectingProviderGateway(
     providerGateway,
     devProviderFaultController,

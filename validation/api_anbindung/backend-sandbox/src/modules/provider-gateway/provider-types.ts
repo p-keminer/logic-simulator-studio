@@ -46,7 +46,7 @@ export interface ProviderGatewayResponse {
     readonly latencyMs: number;
     readonly host?: string;
     readonly requestId?: string;
-    readonly dispatchMode?: 'noop' | 'mock' | 'disconnected';
+    readonly dispatchMode?: 'noop' | 'mock' | 'live';
     readonly promptFingerprint?: string;
     readonly renderedBytes?: number;
     readonly templateVersion?: string;
