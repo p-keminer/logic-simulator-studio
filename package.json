@@ -25,6 +25,7 @@
     "golden:test": "vite-node validation/run-golden-corpus-v1.mjs"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "puppeteer": "^24.38.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
