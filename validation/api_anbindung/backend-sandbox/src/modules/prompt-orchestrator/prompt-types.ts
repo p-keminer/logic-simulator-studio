@@ -1,6 +1,6 @@
 import type { CircuitContext } from '../../contracts/circuit-context.js';
 
-export type PromptTemplateVersion = 'sandbox-chat-v1';
+export type PromptTemplateVersion = 'sandbox-chat-v1' | 'sandbox-chat-v2';
 
 export type ConversationTurnRole = 'user' | 'assistant';
 

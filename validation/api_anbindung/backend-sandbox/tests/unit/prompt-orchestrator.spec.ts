@@ -30,9 +30,9 @@ describe('prompt orchestrator', () => {
       userMessage: 'Explain the active circuit timing.',
     });
 
-    expect(prompt.templateVersion).toBe('sandbox-chat-v1');
+    expect(prompt.templateVersion).toBe('sandbox-chat-v2');
     expect(prompt.renderedPrompt).toContain(
-      '# SANDBOX CHAT TEMPLATE sandbox-chat-v1',
+      '# SANDBOX CHAT TEMPLATE sandbox-chat-v2',
     );
     expect(prompt.renderedPrompt).toContain(
       'conversationId=sandbox-conversation-1',
