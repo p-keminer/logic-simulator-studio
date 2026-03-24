@@ -9,8 +9,6 @@
     "build": "tsc -b && vite build",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "preview": "vite preview",
-    "snapshot:sync": "node ./scripts/build-snapshot.mjs",
-    "roadmap:compl": "npm run snapshot:sync",
     "test": "vitest run",
     "test:watch": "vitest",
     "broker:smoke": "node ./validation/api_anbindung/run-broker-ui-smoke.mjs",
