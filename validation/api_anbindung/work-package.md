@@ -187,16 +187,16 @@ Begruendung:
   Dev-Fault-Routen, explizite Environment-Metadaten auf `/health`/`/ready`
 - staging-lokaler Start- und Smoke-Pfad steht (`dev:staging-local`,
   `smoke:staging-runtime`, `smoke:staging-url`)
-- Render-Blueprint (`render.yaml`) liegt vor fuer spaeteres Deployment
+- Render-Blueprint (`render.yaml`) liegt vor als Entwicklungs-/Testwerkzeug
 - Staging-Access-Gate ist als Fastify-`onRequest`-Hook implementiert:
   alle `/v1/*`-Routen erfordern `X-Staging-Token`; `/health`, `/ready` und
   OPTIONS-Preflight sind ausgenommen; bei fehlendem Token: `401 staging_access_denied`
 - lokal verifiziert: `smoke:staging-url` gruen, `stagingAccessGate: ok`
-- das Projekt bleibt eine lokale Anwendung; ein externer Deploy ist bewusst
-  zurueckgestellt bis ein externer Betrieb konkret geplant wird
-- spaetere Folgepfade (`API1-03` Observability, `API1-04` Pilot-/Rollout,
-  exakte `ALLOWED_ORIGINS`-Domain) sind dokumentiert und werden erst
-  angegangen wenn der Betrieb nach aussen konkret wird
+- Architekturziel ist Self-Hosted: Nutzer laden die App herunter, starten
+  den Broker lokal und tragen ihren eigenen API-Key ein; es gibt keinen
+  zentralen Server und keinen Betrieb ueber den Autor des Repos
+- `API1-03` Observability und `API1-04` Pilot-/Rollout entfallen als
+  Planungspunkte, da kein zentraler Betrieb vorgesehen ist
 
 ## Arbeitspaket 1: Scope absichern
 

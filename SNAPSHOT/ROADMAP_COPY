@@ -563,10 +563,13 @@ Zusaetzlich bei groesserer Tragweite:
    Render-Blueprint (`render.yaml`) sowie Staging-Access-Gate ueber
    `X-Staging-Token`-Header auf allen `/v1/*`-Routen (lokal verifiziert,
    `smoke:staging-url` gruen, `stagingAccessGate: ok`).
-   Das Projekt bleibt eine lokale Anwendung; ein externer Deploy ist
-   bewusst zurueckgestellt. Spaetere Folgepfade (`API1-03` Observability,
-   `API1-04` Pilot-/Rollout) bleiben dokumentiert, werden aber erst
-   angegangen wenn ein externer Betrieb konkret geplant wird.
+   Architekturziel: Self-Hosted. Die App wird von jedem Nutzer lokal
+   betrieben; jeder Nutzer traegt seinen eigenen API-Key ein. Es gibt
+   keinen zentralen Server und keinen Betrieb ueber den Autor des Repos.
+   Die Render-Infrastruktur und das Staging-Gate bleiben als
+   Entwicklungs-/Testwerkzeug im Repo, nicht als Produktionspfad.
+   `API1-03` Observability und `API1-04` Pilot-/Rollout entfallen als
+   Planungspunkte, da kein zentraler Betrieb vorgesehen ist.
 2. kleinen UX-Feinschliff-Strang separat pflegen und erst dokumentiert sammeln,
    dann bewusst in kleinen Slices umsetzen
 3. HDL-Export-Schnittstellen fuer fachliche Portnamen konsequent bereinigen
