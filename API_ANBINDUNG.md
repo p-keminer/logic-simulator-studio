@@ -14,27 +14,30 @@ Browser (App)  →  Broker (localhost:8787)  →  KI-Provider (OpenRouter / Anth
 
 Der Broker läuft lokal auf deinem Rechner. Dein API-Key verlässt deinen Rechner ausschließlich in Richtung des von dir konfigurierten Providers – niemals in Richtung eines Drittservers.
 
-**Werkstandard:** `PROVIDER=noop` – der Broker startet ohne echten Provider-Call. Du musst einen Provider aktiv konfigurieren.
+**Werkstandard:** `PROVIDER=openai-compatible` mit OpenRouter und `minimax/minimax-m2.7` – der Broker ist nach dem Klonen sofort einsatzbereit, du musst nur deinen API-Key im Modal eingeben.
 
 ---
 
 ## Schnellstart
 
 ```bash
-# 1. In den Broker-Ordner wechseln
-cd validation/api_anbindung/backend-sandbox
-
-# 2. Konfigurationsdatei anlegen
-cp .env.example .env
-
-# 3. .env öffnen und Provider eintragen (siehe Abschnitt "Provider konfigurieren")
-# 4. Broker starten
-npm run dev
+# 1. Launcher starten (erstellt .env automatisch, installiert Abhängigkeiten)
+node launcher.mjs
+# oder unter Windows: Doppelklick auf "Start Launcher.bat"
 ```
 
 Danach im Simulator-Modal: API-Key eintragen → Verbinden → chatten.
 
-Einfacher: Launcher nutzen (`node launcher.mjs` im Repo-Root) – startet App und Broker gemeinsam per Klick.
+Der Launcher erstellt die `.env` automatisch aus `.env.example` (vorkonfiguriert auf OpenRouter + `minimax/minimax-m2.7`). Du musst nur deinen OpenRouter-API-Key im Modal eingeben.
+
+Alternativ manuell:
+
+```bash
+cd validation/api_anbindung/backend-sandbox
+cp .env.example .env
+# .env ist bereits auf OpenRouter vorkonfiguriert – bei Bedarf anpassen
+npm run dev
+```
 
 ---
 
@@ -52,11 +55,12 @@ OpenRouter ist ein API-Gateway, das Zugang zu Hunderten von Modellen (Anthropic,
 - live verifiziert mit `minimax/minimax-m2.7`
 
 ```ini
-# .env
+# .env (Werkstandard – bereits so in .env.example vorkonfiguriert)
 PROVIDER=openai-compatible
 PROVIDER_BASE_URL=https://openrouter.ai/api
-PROVIDER_DEFAULT_MODEL=anthropic/claude-opus-4-6
-# oder ein kostenloses Modell zum Testen:
+PROVIDER_DEFAULT_MODEL=minimax/minimax-m2.7
+# oder ein anderes Modell, z. B.:
+# PROVIDER_DEFAULT_MODEL=anthropic/claude-opus-4-6
 # PROVIDER_DEFAULT_MODEL=meta-llama/llama-3.1-8b-instruct:free
 ```
 
@@ -101,7 +105,7 @@ Voraussetzung: [ollama.ai](https://ollama.ai) installiert und `ollama pull llama
 
 | `PROVIDER` | `PROVIDER_BASE_URL` | Einsatz |
 |---|---|---|
-| `noop` | – | Entwicklung / Testen ohne echten Call (Werkstandard) |
+| `noop` | – | Entwicklung / Testen ohne echten Call |
 | `anthropic` | – | Direkte Anthropic API |
 | `openai-compatible` | `https://openrouter.ai/api` | OpenRouter (empfohlen) |
 | `openai-compatible` | `https://api.openai.com` | OpenAI direkt |
@@ -219,27 +223,30 @@ Browser (App)  →  Broker (localhost:8787)  →  AI Provider (OpenRouter / Anth
 
 The broker runs locally on your machine. Your API key leaves your machine exclusively towards the provider you configured – never towards a third-party server.
 
-**Default:** `PROVIDER=noop` – the broker starts without making real provider calls. You must actively configure a provider.
+**Default:** `PROVIDER=openai-compatible` with OpenRouter and `minimax/minimax-m2.7` – the broker is ready to use after cloning, you only need to enter your API key in the modal.
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Change into the broker directory
-cd validation/api_anbindung/backend-sandbox
-
-# 2. Create the configuration file
-cp .env.example .env
-
-# 3. Open .env and set your provider (see section "Configuring a Provider")
-# 4. Start the broker
-npm run dev
+# 1. Start the launcher (creates .env automatically, installs dependencies)
+node launcher.mjs
+# or on Windows: double-click "Start Launcher.bat"
 ```
 
 Then in the simulator modal: enter your API key → Connect → chat.
 
-Easier: use the launcher (`node launcher.mjs` in the repo root) – starts both app and broker with a single click.
+The launcher creates `.env` automatically from `.env.example` (preconfigured for OpenRouter + `minimax/minimax-m2.7`). You only need to enter your OpenRouter API key in the modal.
+
+Alternatively, manually:
+
+```bash
+cd validation/api_anbindung/backend-sandbox
+cp .env.example .env
+# .env is already preconfigured for OpenRouter – adjust if needed
+npm run dev
+```
 
 ---
 
@@ -257,11 +264,12 @@ OpenRouter is an API gateway giving access to hundreds of models (Anthropic, Ope
 - Live verified with `minimax/minimax-m2.7`
 
 ```ini
-# .env
+# .env (default – already preconfigured in .env.example)
 PROVIDER=openai-compatible
 PROVIDER_BASE_URL=https://openrouter.ai/api
-PROVIDER_DEFAULT_MODEL=anthropic/claude-opus-4-6
-# or a free model for testing:
+PROVIDER_DEFAULT_MODEL=minimax/minimax-m2.7
+# or another model, e.g.:
+# PROVIDER_DEFAULT_MODEL=anthropic/claude-opus-4-6
 # PROVIDER_DEFAULT_MODEL=meta-llama/llama-3.1-8b-instruct:free
 ```
 
@@ -306,7 +314,7 @@ Prerequisite: [ollama.ai](https://ollama.ai) installed and `ollama pull llama3.2
 
 | `PROVIDER` | `PROVIDER_BASE_URL` | Use case |
 |---|---|---|
-| `noop` | – | Development / testing without real API calls (default) |
+| `noop` | – | Development / testing without real API calls |
 | `anthropic` | – | Direct Anthropic API |
 | `openai-compatible` | `https://openrouter.ai/api` | OpenRouter (recommended) |
 | `openai-compatible` | `https://api.openai.com` | OpenAI direct |
@@ -398,7 +406,7 @@ The broker is self-hosted: it runs on `127.0.0.1:8787` – exclusively on your m
 
 | Document | Content |
 |---|---|
-| `validation/api_anbindung/README.md` | Current integration status (API1-01 through API1-05) |
+| `validation/api_anbindung/README.md` | Current integration status (API1-01 through API2-BF) |
 | `validation/api_anbindung/HELP.md` | All start and smoke commands |
 | `validation/api_anbindung/backend-sandbox/.env.example` | Full configuration reference |
 | `validation/api_anbindung/BACKLOG.md` | Completed and open work packages |
