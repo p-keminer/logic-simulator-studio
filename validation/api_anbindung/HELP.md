@@ -1,5 +1,20 @@
 # HELP
 
+## Launcher starten (empfohlen)
+
+Startet eine Web-Oberflaeche auf `http://localhost:4321` mit Buttons fuer App und Broker:
+
+```bash
+cd ~/projects/uni/logic-gate-simulator
+node launcher.mjs        # oder: npm run launch
+```
+
+Alternativ per Doppelklick:
+
+- `Start Launcher.bat` – Windows (WSL-Detection + nativer Node-Fallback)
+- `Start Launcher.command` – macOS (Finder-Doppelklick)
+- `start-launcher.sh` – Linux
+
 ## Dev-App mit Broker-UI starten
 
 Im Repo-Root:
@@ -130,6 +145,26 @@ ls render.yaml
 Sobald dieser Stand gepusht ist, kann die Blueprint-Erstellung ueber den in
 [`render-staging.md`](/home/p-keminer/projects/uni/logic-gate-simulator/validation/api_anbindung/deployment/render-staging.md)
 dokumentierten Link gestartet werden.
+
+## Live-Haertungsverifikation ausfuehren (API1-05 H1–H5)
+
+Startet den Broker automatisch im `noop`-Modus und prueft alle fuenf Haertungsmassnahmen live:
+
+```bash
+cd ~/projects/uni/logic-gate-simulator/validation/api_anbindung/backend-sandbox
+bash run-smoke-verify.sh
+```
+
+Deckt ab: Prompt-Groessenlimit 32 KB (H1), Model-Lock (H2), normaler noop-Request (H3-Basis), dispatchMode-Bereinigung (H5).
+
+Alternativ manuell gegen einen bereits laufenden Broker:
+
+```bash
+cd ~/projects/uni/logic-gate-simulator/validation/api_anbindung/backend-sandbox
+node smoke-verify.mjs
+```
+
+Hinweis: `PROVIDER=noop npm run dev` ueberschreibt den Wert aus `.env`, weil Node.js `--env-file` keine bereits gesetzten Umgebungsvariablen ueberschreibt.
 
 ## Lokalen Broker-UI-Smoke ausfuehren
 

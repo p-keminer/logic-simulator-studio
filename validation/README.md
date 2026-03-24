@@ -1,7 +1,7 @@
 # validation/ - Kanonischer Einstiegspunkt
 
 **Projekt:** logic-gate-simulator
-**Stand:** 2026-03-23
+**Stand:** 2026-03-24
 **Qualitaetsstand:** 1020/1020 Tests gruen - Contract Runner und Golden Corpus verifiziert; UI-Timing-Audit in CI semantisch gruen; `lint` ist aktuell noch nicht voll gruen wegen Restpunkten im Broker-/Sandbox-Pfad
 
 ---
@@ -211,7 +211,7 @@ Siehe `archive/pre-p0/README.md` fuer Details.
 ## Naechste Phase
 
 Die naechsten sinnvollen Schritte sind jetzt:
-- **P1/P2:** API-/Broker-Strang (`validation/api_anbindung/work-package.md`): `API1-01` ist im aktuellen Scope abgeschlossen. `API1-02` besitzt jetzt neben dem staging-nahen Profil-Schnitt auch einen staging-lokalen Startpfad (`backend-sandbox npm run dev:staging-local`), einen staging-lokalen Runtime-Smoke (`backend-sandbox npm run smoke:staging-runtime`), einen staging-URL-Smoke (`backend-sandbox npm run smoke:staging-url`) und den ersten externen Zielpfad via Render-Blueprint in [render.yaml](/home/p-keminer/projects/uni/logic-gate-simulator/render.yaml). Als Naechstes diesen Zielpfad real deployen und den URL-Smoke gegen die echte Staging-URL bestaetigen, danach den dokumentierten Staging-Sicherheits-Checkpoint fuer Access-Schutz, Session-Key-Barriere, exakte Origin und abuse-orientierte Alarmierung abarbeiten und erst dann `API1-03` Observability sowie `API1-04` Pilot-/Rollout-Vorbereitung angehen
+- **Abgeschlossen:** API-/Broker-Strang `API1-01` bis `API1-05` sind vollstaendig umgesetzt. Das Backend laeuft self-hosted: jeder Nutzer betreibt den Broker lokal mit eigenem API-Key. `API1-01`: Sichtbarer Broker-Dialog mit UI-Smoke-Ring. `API1-02`: Staging-Profil, ALLOWED_ORIGINS, Staging-Access-Gate. `API1-04`: Echte Provider-Clients (Anthropic, OpenAI-compatible/OpenRouter). `API1-05`: Haertungsmassnahmen H1–H5 (Prompt-Limit, Model-Lock, History-Limit, SSRF-Schutz, dispatchMode), live verifiziert via `smoke-verify.mjs`. `API1-03` (Observability) und urspruengliches `API1-04` (Pilot/Rollout) entfallen wegen Self-Hosted-Architektur. **Naechster Schritt:** `API2-01` AI-Action-Protocol – KI soll Schaltungsbefehle ausgeben koennen, nicht nur Text (`validation/api_anbindung/work-package.md`)
 - **P2 klein und separat:** UX-Feinschliff-Strang pflegen (`validation/ux-feinschliff/work-package.md`): kleine Bedienungsnacharbeiten zuerst dokumentiert sammeln, dann in bewusst kleinen Slices umsetzen
 - **P2 bewusst nachgelagert:** Falls der FSM-Strang wieder aufgenommen wird, dann ueber `FSM0-8` (`validation/fsm0/work-package.md`): Netzlisten-Minimierung / Bool-Minimierung / Mapping fuer breite FSM-Synthese statt neuer Grundsemantik-Arbeit am bereits abgeschlossenen aktuellen Scope
 - **P2:** Contract-Runner-Abdeckung weiter verbreitern (komplexere circuit-level Muster und tiefere Invarianten)

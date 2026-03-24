@@ -22,6 +22,7 @@ Entwickelt mit React, TypeScript und Vite.
 - Timing-Analyse und Race-Condition-Erkennung
 - FSM-Workflows und Zustandsmodellierung
 - Verilog-/VHDL-Export
+- KI-gestützter Chat über die aktuell geöffnete Schaltung (lokaler Broker, eigener API-Key)
 - Fokus auf Lehre, Übungsaufgaben und Prüfungsvorbereitung
 
 > Dieses Projekt wurde maßgeblich mit KI entwickelt und wird fachlich sowie funktional iterativ getestet und weiterentwickelt.
@@ -147,6 +148,16 @@ npm run dev
 
 Öffne [http://localhost:5173](http://localhost:5173) im Browser.
 
+### App + KI-Broker per Launcher starten (empfohlen)
+
+```bash
+node launcher.mjs   # oder: npm run launch
+```
+
+Öffnet automatisch eine Web-Oberfläche auf [http://localhost:4321](http://localhost:4321) mit Buttons zum Starten von App (Port 5173) und KI-Broker (Port 8787). Alternativ Doppelklick auf `Start Launcher.bat` (Windows), `Start Launcher.command` (macOS) oder `start-launcher.sh` (Linux).
+
+Der KI-Broker ist ein optionaler lokaler Backend-Prozess. Er wird nur benötigt wenn du die KI-Chat-Funktion im Broker-Modal der App nutzen möchtest. Der Simulator selbst läuft vollständig clientseitig ohne den Broker.
+
 ---
 
 ## Validierung & QA-Artefakte
@@ -180,8 +191,9 @@ Praktische Nutzung:
 | Linting | ESLint 9 + typescript-eslint |
 | Zustandsverwaltung | React Context + useReducer |
 | Persistenz | sessionStorage (Auto-Save, sitzungsgebunden) + JSON-Export |
+| KI-Broker (optional) | Fastify 5, Node.js 20+, TypeScript, Zod |
 
-Kein Backend, keine externen Dienste – alles läuft clientseitig.
+Der Simulator selbst läuft vollständig clientseitig. Der KI-Broker ist ein optionaler lokaler Prozess für die KI-Chat-Funktion – kein zentraler Server, kein Cloud-Backend.
 
 ---
 
@@ -232,6 +244,7 @@ Built with React, TypeScript, and Vite.
 - Timing analysis and race-condition detection
 - FSM workflows and state modelling
 - Verilog/VHDL export
+- AI-assisted chat about the currently open circuit (local broker, user-supplied API key)
 - Support for lab work, practice exercises, and exam preparation
 
 > This project was developed primarily with AI and is being iteratively tested and refined from both a technical and functional perspective.
@@ -356,6 +369,16 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+### Start App + AI Broker via Launcher (recommended)
+
+```bash
+node launcher.mjs   # or: npm run launch
+```
+
+Automatically opens a web UI at [http://localhost:4321](http://localhost:4321) with buttons to start the App (port 5173) and AI Broker (port 8787). Alternatively double-click `Start Launcher.bat` (Windows), `Start Launcher.command` (macOS), or `start-launcher.sh` (Linux).
+
+The AI Broker is an optional local backend process only needed for the AI chat feature in the broker modal. The simulator itself runs fully client-side without it.
+
 ---
 
 ## Validation and QA Artefacts
@@ -389,8 +412,9 @@ Practical usage:
 | Linting | ESLint 9 + typescript-eslint |
 | State management | React Context + useReducer |
 | Persistence | sessionStorage (auto-save, session-scoped) + JSON export |
+| AI Broker (optional) | Fastify 5, Node.js 20+, TypeScript, Zod |
 
-No backend, no external services – everything runs client-side.
+The simulator runs fully client-side. The AI Broker is an optional local process for the AI chat feature — no central server, no cloud backend.
 
 ---
 

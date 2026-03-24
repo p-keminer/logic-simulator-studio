@@ -1,5 +1,24 @@
 # BACKLOG
 
+## Umsetzungsstand (Stand 2026-03-24)
+
+Alle `API0`-Pakete und die folgenden `API1`-Pakete sind abgeschlossen:
+
+| Paket | Status | Anmerkung |
+|---|---|---|
+| `API0-01` bis `API0-08` | **abgeschlossen** | Scope, Contracts, Backend-Skelett, Session, Circuit-Context, Policy, Provider-Gateway, Rate-Limits |
+| `API1-01` | **abgeschlossen** | Sichtbarer Broker-Dialog, vollstaendiger UI-Smoke-Ring |
+| `API1-02` | **abgeschlossen** | Staging-Profil, ALLOWED_ORIGINS, Staging-Access-Gate, Render-Blueprint |
+| `API1-03` | **entfaellt** | Self-Hosted-Architektur: kein zentraler Betrieb, daher keine zentrale Observability noetig |
+| `API1-04` (original) | **entfaellt** | Self-Hosted-Architektur: kein Pilot-/Rollout im klassischen Sinne |
+| `API1-04` (neu) | **abgeschlossen** | Echte Provider-Clients: AnthropicProviderClient + OpenAICompatibleProviderClient, live verifiziert mit OpenRouter |
+| `API1-05` | **abgeschlossen** | Haertung H1–H5: Prompt-Limit 32 KB, Model-Lock, History-Limit 32 Turns, SSRF-Schutz, dispatchMode |
+
+Naechster offener Schritt: **`API2-01`** AI-Action-Protocol (KI gibt Schaltungsbefehle aus).
+Details: `validation/api_anbindung/work-package.md`.
+
+---
+
 ## Zweck
 
 Dieses Backlog uebersetzt die Roadmap in konkrete Arbeitspakete. Die Prioritaeten heissen absichtlich `API0`, `API1` und `API2`.
