@@ -69,7 +69,9 @@ function startProcess(service) {
   const proc = spawn(NPM, ['run', 'dev'], {
     cwd,
     stdio: ['ignore', 'pipe', 'pipe'],
-    // shell: false ist sicherer und ausreichend wenn npm.cmd auf Windows verwendet wird
+    // Auf Windows muss shell: true gesetzt sein, damit .cmd-Dateien (npm.cmd)
+    // ueber den Shell-Interpreter ausgefuehrt werden koennen.
+    shell: platform() === 'win32',
   });
 
   state[service].proc = proc;
