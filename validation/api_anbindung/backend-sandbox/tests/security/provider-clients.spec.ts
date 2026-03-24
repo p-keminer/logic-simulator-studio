@@ -14,9 +14,10 @@ import type { ProviderGatewayRequest } from '../../src/modules/provider-gateway/
 // Minimaler SessionService-Mock: resolveActiveSessionKey sollte bei diesen
 // Tests NICHT aufgerufen werden, da der Host-Check davor abbrechen muss.
 const createSessionServiceMock = (): SessionService => ({
-  registerSession: vi.fn(),
+  registerSessionKey: vi.fn(),
   assertActiveSession: vi.fn(),
-  deleteSession: vi.fn(),
+  deleteSessionKey: vi.fn(),
+  resetSession: vi.fn(),
   resolveActiveSessionKey: vi.fn().mockRejectedValue(
     new Error('resolveActiveSessionKey should NOT be called during H4 host-denied test'),
   ),

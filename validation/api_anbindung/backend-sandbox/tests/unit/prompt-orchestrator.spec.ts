@@ -66,8 +66,8 @@ describe('conversation history store (H3 history-limit)', () => {
 
     const record = await store.get('session-1', 'conv-1');
     expect(record?.turns).toHaveLength(4);
-    expect(record?.turns[0].content).toBe('Turn 0');
-    expect(record?.turns[3].content).toBe('Turn 3');
+    expect(record!.turns[0]!.content).toBe('Turn 0');
+    expect(record!.turns[3]!.content).toBe('Turn 3');
   });
 
   it('drops oldest turns once the cap is exceeded (H3 model-lock, sliding window)', async () => {
@@ -89,8 +89,8 @@ describe('conversation history store (H3 history-limit)', () => {
 
     const record = await store.get('session-1', 'conv-1');
     expect(record?.turns).toHaveLength(4);
-    expect(record?.turns[0].content).toBe('Turn 2');
-    expect(record?.turns[3].content).toBe('Turn 5');
+    expect(record!.turns[0]!.content).toBe('Turn 2');
+    expect(record!.turns[3]!.content).toBe('Turn 5');
   });
 
   it('does not mix turns from different conversations', async () => {
@@ -105,8 +105,8 @@ describe('conversation history store (H3 history-limit)', () => {
     const recordB = await store.get('session-1', 'conv-B');
 
     expect(recordA?.turns).toHaveLength(2);
-    expect(recordA?.turns[0].content).toBe('Turn 0');
+    expect(recordA!.turns[0]!.content).toBe('Turn 0');
     expect(recordB?.turns).toHaveLength(2);
-    expect(recordB?.turns[0].content).toBe('Turn 2');
+    expect(recordB!.turns[0]!.content).toBe('Turn 2');
   });
 });
