@@ -2,29 +2,66 @@
 setlocal enabledelayedexpansion
 title Logic Simulator Studio – Launcher
 echo.
-echo  Logic Simulator Studio – Launcher
-echo  Browser oeffnet sich automatisch auf http://localhost:4321
+echo   Logic Simulator Studio – Launcher
+echo   Browser oeffnet sich automatisch auf http://localhost:4321
 echo.
 
-:: Pruefe ob WSL verfuegbar ist (bevorzugt, da Node.js dort installiert ist)
-where wsl >nul 2>&1
-if %errorlevel% == 0 (
-    :: WSL gefunden – Windows-Pfad in WSL-Pfad umrechnen und Launcher starten
-    for /f "delims=" %%i in ('wsl wslpath -u "%~dp0."') do set WSL_DIR=%%i
-    wsl bash --login -c "cd '!WSL_DIR!' && node launcher.mjs"
-) else (
-    :: Kein WSL – direkte Node.js-Installation nutzen (muss im PATH sein)
-    where node >nul 2>&1
+:: ── Arbeitsverzeichnis auf Skript-Ordner setzen ──────────────────────────
+cd /d "%~dp0"
+
+:: ── Node.js pruefen ──────────────────────────────────────────────────────
+where node >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   FEHLER: Node.js nicht gefunden.
+    echo   Bitte installieren: https://nodejs.org
+    echo.
+    pause
+    exit /b 1
+)
+
+:: ── Abhaengigkeiten pruefen und ggf. installieren ───────────────────────
+if not exist "node_modules" (
+    echo   node_modules nicht gefunden – installiere Abhaengigkeiten...
+    echo.
+    call npm install
     if %errorlevel% neq 0 (
-        echo  FEHLER: Weder WSL noch Node.js gefunden.
-        echo  Bitte Node.js installieren: https://nodejs.org
+        echo.
+        echo   FEHLER: npm install fehlgeschlagen.
         pause
         exit /b 1
     )
-    cd /d "%~dp0"
-    node launcher.mjs
+    echo.
 )
 
+:: ── Broker-Abhaengigkeiten pruefen ──────────────────────────────────────
+set BROKER_DIR=validation\api_anbindung\backend-sandbox
+if exist "%BROKER_DIR%\package.json" (
+    if not exist "%BROKER_DIR%\node_modules" (
+        echo   Broker node_modules nicht gefunden – installiere...
+        echo.
+        pushd "%BROKER_DIR%"
+        call npm install
+        popd
+        echo.
+    )
+)
+
+:: ── Broker .env pruefen (aus .env.example erstellen falls fehlend) ──────
+if exist "%BROKER_DIR%\package.json" (
+    if not exist "%BROKER_DIR%\.env" (
+        if exist "%BROKER_DIR%\.env.example" (
+            echo   Broker .env nicht gefunden – erstelle aus .env.example...
+            copy "%BROKER_DIR%\.env.example" "%BROKER_DIR%\.env" >nul
+            echo   HINWEIS: Passe validation\api_anbindung\backend-sandbox\.env
+            echo            mit deinen eigenen API-Keys an.
+            echo.
+        )
+    )
+)
+
+:: ── Launcher starten ────────────────────────────────────────────────────
+node launcher.mjs
+
 echo.
-echo  Launcher beendet.
+echo   Launcher beendet.
 pause
