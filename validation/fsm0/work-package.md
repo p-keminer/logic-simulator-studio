@@ -76,8 +76,6 @@ Haertungspfad.
   aktiver Planungs- und Fortschrittsstrang
 - `validation/fsm-export-fixes/cases/`
   echte Legacy-Repros und gespeicherte Altfall-Fixtures
-- `validation/ui-manual-verification-plan.md`
-  manuelle End-to-End-Pruefschiene fuer UI-, STT- und Timing-Verhalten
 
 Pflegeregel:
 

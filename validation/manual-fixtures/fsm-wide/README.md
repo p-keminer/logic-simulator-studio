@@ -30,6 +30,3 @@ Automatische Regression:
   bindet diese Datei direkt ein und prueft, dass sie weiter breit genug ist,
   um den aktuellen Synthese-Guard auszulösen
 
-Manuelle Verifikation:
-
-- `validation/ui-manual-verification-plan.md`, Abschnitt H

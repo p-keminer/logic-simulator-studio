@@ -52,6 +52,5 @@ Negativ:
 
 ## Folgeschritte
 
-1. `contracts/circuit-context-payload.md` auf diese Scope-Grenze ausrichten
-2. `security/threat-model.md` um Missbrauch durch zu grosse oder falsche Kontexte erweitern
-3. `backend-modules/circuit-context/README.md` strikt auf diese Entscheidung auslegen
+1. `security/threat-model.md` um Missbrauch durch zu grosse oder falsche Kontexte erweitern
+2. `backend-modules/circuit-context/README.md` strikt auf diese Entscheidung auslegen

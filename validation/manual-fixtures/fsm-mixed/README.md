@@ -33,6 +33,3 @@ Automatische Regression:
   prueft, dass genau diese gespeicherte Fixture im Analysepfad auf
   `modified_projected_fsm` faellt
 
-Manuelle Verifikation:
-
-- `validation/ui-manual-verification-plan.md`, Abschnitt G

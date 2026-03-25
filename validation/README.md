@@ -29,10 +29,6 @@ Bewusst getrennt, nicht redundant:
   langfristige Reifegrad- und Ausbau-Roadmap
 - `validation/verification-matrix.md`
   feste Pruefmuster und Freigaberegeln
-- `validation/golden-corpus-plan.md`
-  Ausbauplan fuer Referenzschaltungen
-- `validation/ui-manual-verification-plan.md`
-  manuelle End-to-End-Pruefung sichtbarer UI-Slices
 
 Historisch bzw. nachweisorientiert:
 
@@ -45,8 +41,6 @@ Pflegeregel:
 
 - neue aktive Planung nicht parallel in mehreren Dokus nachziehen
 - Verlauf, Repros und Altstaende bewusst von aktiven Plaenen trennen
-- bei neuen sichtbaren UI-Faellen immer auch `ui-manual-verification-plan.md`
-  mitziehen
 - nach jeder Aenderung an Doku-Quellen `npm run snapshot:sync` ausfuehren,
   damit `SNAPSHOT/` aktuell bleibt
 
@@ -132,14 +126,11 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | `golden-corpus-v1.md` | Reale Golden-Corpus-v1-Suite mit 30 Referenzschaltungen |
 | `golden-corpus-v1.json` | Maschinenlesbarer Index fuer Golden-Corpus v1 |
 | `golden-corpus-v1-acceptance.md` | Akzeptanzkriterien und kanonischer fachlicher Baseline-Text fuer Golden Corpus v1 |
-| `golden-corpus-plan.md` | Plan fuer 25 Referenzschaltungen in 5 Tracks |
 | `industry-lite-roadmap.md` | Arbeitsstrom-Roadmap (W1-W6, Phasen A-D) |
 | `fsm0/work-package.md` | FSM-Strang als ein einziges Arbeitspaket-Dokument. `FSM0-1` bis `FSM0-7` sind im aktuellen Scope abgeschlossen; `FSM0-8` bleibt bewusst als Folgepfad zurueckgestellt. |
 | `ux-feinschliff/work-package.md` | Kleiner UX-Feinschliff-/Intake-Strang fuer offene Bedienungsnacharbeiten wie Flipflop-Startzustand und pausierten Simulationsstart. |
 | `race-panel-fixes/work-package.md` | Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik; fuer den aktuellen Scope abgeschlossen und nur noch optional vertiefbar |
-| `race-panel-fixes/README.md` | Einstiegspunkt fuer die Race-Fix-Hierarchie |
 | `verification-matrix.md` | Pflichtpruefmuster je Gate-Klasse und Freigaberegeln |
-| `ui-manual-verification-plan.md` | Manueller UI-Pruefplan fuer FSM-Projektion, STT, Timing und Panel-Persistenz |
 | `claude-integration-review.md` | Bewertung der Claude-Integration im Projekt |
 | `audit-determinism-report.md` | Determinismus-/CI-Tauglichkeitsbericht fuer focused-nine core und UI |
 | `audit-determinism-summary.json` | Maschinenlesbare Determinismus-Zusammenfassung |
@@ -162,7 +153,6 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 |---|---|
 | `focused-nine-audit.mjs` | Simulations-Audit-Runner |
 | `focused-nine-summary.json` | Rohdaten: 12 Schaltungen x Simulation + Toolchain |
-| `focused-nine-report.md` | Aufbereiteter Bericht des Simulations-Audits |
 | `focused-nine-ui-audit.mjs` | UI-Audit-Runner |
 | `focused-nine-ui-summary.json` | Rohdaten: UI-Audit-Ergebnisse |
 | `focused-nine-ui-report.md` | Aufbereiteter Bericht des UI-Audits |

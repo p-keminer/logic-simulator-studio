@@ -32,6 +32,3 @@ Automatische Regression:
   `mixed_projected_subsystem` faellt und keine projizierten Einzel-FSM-
   Optionen mehr anbietet
 
-Manuelle Verifikation:
-
-- `validation/ui-manual-verification-plan.md`, Abschnitt F

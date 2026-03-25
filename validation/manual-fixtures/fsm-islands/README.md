@@ -47,6 +47,3 @@ Automatische Regression:
   Observer- sowie der Shared-Helper-Repro ebenfalls in zwei getrennte
   technische Systeme zerfallen
 
-Manuelle Verifikation:
-
-- `validation/ui-manual-verification-plan.md`, Abschnitt G2

@@ -61,4 +61,3 @@ Negativ:
 
 1. Secret-Handhabung in `security/secret-handling.md` ausarbeiten
 2. `backend-modules/provider-gateway/README.md` als einzige Provider-Ausleitung definieren
-3. `contracts/frontend-backend.md` auf brokerzentrierte API ausrichten

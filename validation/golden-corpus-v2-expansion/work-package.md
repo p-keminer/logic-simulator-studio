@@ -399,7 +399,6 @@ Definition of Done:
 - `validation/golden-corpus-v1.md`
 - `validation/golden-corpus-v1-summary.json`
 - `validation/golden-corpus-v1-report.md`
-- `validation/golden-corpus-plan.md`
 - `validation/generated-circuits-golden/`
 - `validation/generated-exports-golden/`
 - `validation/custom-ic-golden.mjs`

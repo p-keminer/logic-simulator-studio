@@ -32,6 +32,3 @@ Automatische Regression:
   prueft, dass genau diese gespeicherte Fixture im Analysepfad zwei getrennte
   projizierte FSM-Optionen behaelt
 
-Manuelle Verifikation:
-
-- `validation/ui-manual-verification-plan.md`, Abschnitt G1
