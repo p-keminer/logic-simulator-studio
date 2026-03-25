@@ -2,7 +2,7 @@
 
 **Project:** logic-gate-simulator
 **Generated:** 2026-03-24
-**Basis:** focused-nine-summary.json, focused-nine-ui-summary.json, contract-runner-summary.json, golden-corpus-v1-summary.json, gate-gap-analysis.md, gate-inventory.json, testability-mapping.json, all 86 gate contracts
+**Basis:** focused-nine-summary.json, focused-nine-ui-summary.json, contract-runner-summary.json, golden-corpus-v1-summary.json, gate-inventory.json, testability-mapping.json, all 86 gate contracts
 
 ---
 
@@ -40,8 +40,8 @@ The simulator now uses a four-valued signal algebra: `SignalValue = 0 | 1 | 2 | 
 |---|---|---|
 | ~~**HI_Z (Z=2) is sanitized to 0 before downstream evaluate()**~~ | **RESOLVED P0 2026-03-07**  `tri_not_sanitized` PASS, triY=2, invOut=3 | ~~P0 blocker~~ done |
 | No setup/hold violation modeling  metastability produces 0 not X | [INFERRED from type definition] | model-limit |
-| MS_JK_FF: master state `qM` not in stateKeys  partially observable only | gate-gap-analysis.md 6 | core-risk |
-| BIN_CTR7S/BIN_CTR_99: dual-write of `count` + `cnt0..cnt3`  inconsistency risk | gate-gap-analysis.md 6 | core-risk |
+| MS_JK_FF: master state `qM` not in stateKeys  partially observable only | | core-risk |
+| BIN_CTR7S/BIN_CTR_99: dual-write of `count` + `cnt0..cnt3`  inconsistency risk | | core-risk |
 
 ### Resolved Blockers
 
@@ -79,12 +79,12 @@ The four-value signal model (0/1/Z/X) is now consistent across simulation and HD
 | ~~**Multi-driver HDL export generates duplicate port declarations**~~ | **RESOLVED P0 2026-03-07**  `multi_driver_same_input` all tools PASS, conflict resolves to X | ~~P0 blocker~~ done |
 | ~~VHDL `&` operator on STD_LOGIC is ambiguous~~ | **RESOLVED P1a 2026-03-07** | ~~P0~~ done |
 | ~~**74HC373 Verilog always@(*) latch triggers Verilator LATCH warning-as-error**~~ | **RESOLVED P1-1 2026-03-07**  Verilog-2001 export with `/* verilator lint_off LATCH */`...`/* verilator lint_on LATCH */` inline comments; all tools PASS | ~~P1~~ done |
-| MS_JK_FF HDL export uses `negedge clk` only  does not model master-slave behavior | gate-gap-analysis.md 4.2 | synthesis-risk |
-| D_LATCH Verilog `always @(*)` causes latch inference warnings in synthesis tools | gate-gap-analysis.md 4.4 | synthesis-risk |
+| MS_JK_FF HDL export uses `negedge clk` only  does not model master-slave behavior | | synthesis-risk |
+| D_LATCH Verilog `always @(*)` causes latch inference warnings in synthesis tools | | synthesis-risk |
 | Der aktuelle FSM0-Projektionspfad ist fuer den aktuellen Scope geschlossen; spaetere Folgearbeit bleibt Netzlisten-Minimierung / Bool-Minimierung fuer breite Synthese statt weiterer Grundsemantik | `validation/fsm0/work-package.md` | P2 |
 | Race-Panel-Eintraege und Race-Markierungen sind fuer den aktuellen Produktumfang strukturell abgesichert: Incident-Store mit `count`/`firstSeen`/`lastSeen`, gemeinsamer Monitor-State, Reset-/Prune-/Dedupe-Pfad und Struktur-Fingerprint-Pruning sind verifiziert; spaetere Vertiefung bleibt optional | `validation/race-panel-fixes/work-package.md` | abgeschlossen im aktuellen Scope |
 | ~~17 basic gates (AND/OR/NOT/NAND/NOR/XOR/XNOR/BUFFER + multi-input variants) have no toVerilog/toVHDL~~ | **RESOLVED P0 2026-03-07**  all logic_basic and logic_multi gates now export | ~~P0 blocker~~ done |
-| AND_C/OR_C/XOR_C output naming (`q`, `q_n`) inverted vs NAND_C/NOR_C  inconsistency | gate-gap-analysis.md 7.3 | documentation-gap |
+| AND_C/OR_C/XOR_C output naming (`q`, `q_n`) inverted vs NAND_C/NOR_C  inconsistency | | documentation-gap |
 
 ### Resolved Blockers
 
@@ -124,8 +124,8 @@ Verification covers 884/884 vitest tests, 12/12 focused-nine simulation + toolch
 |---|---|---|
 | Truth-table / step-sequence automation exists only for contracted gates and golden-corpus structure checks, not for the full gate inventory | contract-runner-summary.json, golden-corpus-v1-summary.json | P2 |
 | Forbidden-input-combination not tested for SR_LATCH S=R=1 | testability-mapping.json | P2 |
-| 26 documentation-gap entries  gate behavior partially undocumented | gate-gap-analysis.md 10 | P2 |
-| Custom ICs remain outside the static contract model | gate-gap-analysis.md 8 | P2 |
+| 26 documentation-gap entries  gate behavior partially undocumented | | P2 |
+| Custom ICs remain outside the static contract model | | P2 |
 
 ### Resolved Blockers
 
@@ -201,7 +201,7 @@ Custom ICs exist (`category=custom`) but were explicitly excluded from the gate 
 
 | Issue | Evidence | Severity |
 |---|---|---|
-| Custom ICs: no contracts, no static analysis possible | gate-gap-analysis.md 8 | P2 |
+| Custom ICs: no contracts, no static analysis possible | | P2 |
 | Golden Corpus v1 covers 30 circuits and now includes fifteen broader v2 pilot seeds, but hierarchy/custom-IC coverage still remains intentionally narrow beyond the landed direct nested combinational case and the newly documented deeper hierarchy boundary | `golden-corpus-v1.json`  30 reference circuits including `gc_v2_1_mux_fabric` through `gc_v2_15_ram_decode_capture_bus`; four one-level custom-IC HDL paths, a first direct nested combinational custom-IC pass path, one explicit deeper exporter boundary, a promoted larger state-heavy mixed datapath, and a first integrated RAM/decode/bit-select/hold/capture system case are covered, but broader deeper hierarchy remains open | P2 |
 | ~~STT variable limit (max 8) blocks state inspection for all ICs with >8 inputs+state~~ | **PARTIALLY RESOLVED (post-P0):** STT now renders a "Reduzierte Ansicht" (reduced view) for wide sequentials  8-64 rows of meaningful data instead of error message | P2 (residual) |
 | FSM-Editor-Synthese skaliert strukturell; der aktuelle Projektions-/Boundary-Scope ist abgeschlossen, aber breite Synthese braucht spaeter weiterhin eine verdichtete Netzlistenstufe statt der heutigen Guardrail-Blockade | `validation/fsm0/work-package.md` | P2 |
@@ -256,7 +256,7 @@ Contract Runner, Golden Corpus, Focused-Nine UI, and Focused-Nine Core are real 
 |---|---|---|
 | Branch protection / required status checks not configured in GitHub Settings | External manual step needed | P2 |
 | Golden Corpus HDL verification is scenario-based, not exhaustive across arbitrary traces or large designs | golden-corpus-v1-report.md | P2 |
-| Known issues not linked to issue tracker | gate-gap-analysis.md, focused-nine-summary.json | P2 |
+| Known issues not linked to issue tracker | focused-nine-summary.json | P2 |
 | ~~4 defaultInputValues unsafe /OE defaults~~ | **RESOLVED P1b 2026-03-07** | ~~P1~~ done |
 | ~~Golden-Corpus v1 exists as artifacts, but no executable runner or CI gate~~ | **RESOLVED P1-6 2026-03-08**  Golden Corpus v1 Runner built and wired into CI | ~~P1~~ done |
 | ~~Only focused-nine core in CI; no contract or corpus regression~~ | **RESOLVED P1-6 2026-03-08**  core/contract/corpus regression gates established (later expanded to 6 CI jobs total) | ~~P1~~ done |
@@ -295,10 +295,10 @@ The simulator now has strong technical depth for combinational, sequential, and 
 
 | Issue | Evidence | Severity |
 |---|---|---|
-| SCHMITT trigger has no hysteresis  modeled as inverting buffer only | gate-gap-analysis.md 7.3 | model-limit |
+| SCHMITT trigger has no hysteresis  modeled as inverting buffer only | | model-limit |
 | No metastability, setup/hold violation modeling  violations produce 0, not X | [INFERRED  no X state for timing violations] | model-limit |
-| SR_LATCH S=R=1  Q=0, Qn=0 (both low)  real hardware is undefined/race | gate-gap-analysis.md 4.1 | model-limit |
-| 74HC74 /PRE=/CLR=0  Q=1, Qn=1 (both high)  real hardware is undefined | gate-gap-analysis.md 4.1 | model-limit |
+| SR_LATCH S=R=1  Q=0, Qn=0 (both low)  real hardware is undefined/race | | model-limit |
+| 74HC74 /PRE=/CLR=0  Q=1, Qn=1 (both high)  real hardware is undefined | | model-limit |
 | ~~TRIBUF, 74HC373, 74HC374, 74HC595 have unsafe /OE defaults~~ | **RESOLVED P1b 2026-03-07** | ~~core-risk~~ done |
 | ~~Z propagation broken  bus architectures produce wrong results~~ | **RESOLVED P0 2026-03-07**  Z propagates; NOT(Z)X confirmed | ~~P0~~ done |
 | ~~17 basic gates have no HDL export  cannot synthesize any real circuit~~ | **RESOLVED P0 2026-03-07**  toVerilog/toVHDL added to all logic_basic and logic_multi | ~~P0~~ done |
@@ -364,7 +364,7 @@ The simulator now has strong technical depth for combinational, sequential, and 
 | `validation/golden-corpus-v1-summary.json` | Golden Corpus v1 results (28 pass, 0 fail, 2 expected_limit, 30 total) |
 | `validation/golden-corpus-v1.json` | 24 Golden-Corpus-v1 reference circuits with class, checkpoints, rationale |
 | `validation/golden-corpus-v1.md` | Human-readable description of the 24 Golden-Corpus-v1 circuits |
-| `validation/gate-gap-analysis.md` | Full gap analysis (11 sections, 323 lines) |
+| `validation/` | Full gap analysis (11 sections, 323 lines) |
 | `validation/gate-inventory.json` | All 83 gate entries with metadata |
 | `validation/testability-mapping.json` | 18 gate classes, 14 test patterns, 124 slots |
 | `validation/contracts/*.json` | 86 gate contracts |

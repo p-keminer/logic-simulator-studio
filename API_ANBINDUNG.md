@@ -198,9 +198,7 @@ Der Broker ist Self-Hosted: er läuft auf `127.0.0.1:8787` – ausschließlich a
 | Dokument | Inhalt |
 |---|---|
 | `validation/api_anbindung/README.md` | Aktueller Integrationsstand (API1-01 bis API2-BF) |
-| `validation/api_anbindung/HELP.md` | Alle Start- und Smoke-Befehle |
 | `validation/api_anbindung/backend-sandbox/.env.example` | Vollständige Konfigurationsreferenz |
-| `validation/api_anbindung/BACKLOG.md` | Abgeschlossene und offene Arbeitspakete |
 | `validation/api_anbindung/backend-sandbox/smoke-verify.mjs` | Live-Verifikation der Härtungsmaßnahmen H1–H5 |
 
 ---
@@ -407,7 +405,5 @@ The broker is self-hosted: it runs on `127.0.0.1:8787` – exclusively on your m
 | Document | Content |
 |---|---|
 | `validation/api_anbindung/README.md` | Current integration status (API1-01 through API2-BF) |
-| `validation/api_anbindung/HELP.md` | All start and smoke commands |
 | `validation/api_anbindung/backend-sandbox/.env.example` | Full configuration reference |
-| `validation/api_anbindung/BACKLOG.md` | Completed and open work packages |
 | `validation/api_anbindung/backend-sandbox/smoke-verify.mjs` | Live verification of hardening measures H1–H5 |

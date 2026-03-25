@@ -149,4 +149,4 @@ Die konkreten Regeln stehen in [debugging-guidelines.md](./docs/debugging-guidel
   Staging-Umgebung mit externer URL, Runtime-Config und nachgelagerten
   Staging-Smokes erweitern
 
-Weitere Details und Validierungsschritte stehen in `docs/` und im `status-report.md`.
+Weitere Details und Validierungsschritte stehen in `docs/`.

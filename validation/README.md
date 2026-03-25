@@ -10,7 +10,6 @@
 
 Aktive kanonische Steuerdokumente:
 
-- `../ROADMAP`
   zentrale Reihenfolge-, Slice- und Pflichtvalidierungssteuerung
 - `validation/README.md`
   Einstiegspunkt in Reports, Runner und Validation-Artefakte
@@ -131,7 +130,6 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 | `ux-feinschliff/work-package.md` | Kleiner UX-Feinschliff-/Intake-Strang fuer offene Bedienungsnacharbeiten wie Flipflop-Startzustand und pausierten Simulationsstart. |
 | `race-panel-fixes/work-package.md` | Struktur-Arbeitspaket fuer Race-Panel-Reset, Pruning, Dedupe und Lifecycle-Logik; fuer den aktuellen Scope abgeschlossen und nur noch optional vertiefbar |
 | `verification-matrix.md` | Pflichtpruefmuster je Gate-Klasse und Freigaberegeln |
-| `claude-integration-review.md` | Bewertung der Claude-Integration im Projekt |
 | `audit-determinism-report.md` | Determinismus-/CI-Tauglichkeitsbericht fuer focused-nine core und UI |
 | `audit-determinism-summary.json` | Maschinenlesbare Determinismus-Zusammenfassung |
 
@@ -174,7 +172,6 @@ Alle fachlichen Jobs laden ihre Reports als CI-Artefakte hoch. Branch-Protection
 |---|---|
 | `gate-contract-schema.json` | JSON Schema (Draft-07) fuer Gate-Contracts |
 | `gate-inventory.json` | Alle 83 Gate-Eintraege mit Metadaten |
-| `gate-gap-analysis.md` | Gap-Analyse (11 Abschnitte): HDL-Luecken, Timing-Risiken, Tri-State, UI |
 | `testability-mapping.json` | 18 Gate-Klassen, 14 Testmuster, 124 Slots |
 | `contracts/` | 86 Gate-Contracts mit Schema-validierten Gate-Spezifikationen |
 
