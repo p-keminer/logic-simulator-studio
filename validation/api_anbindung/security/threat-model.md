@@ -1,103 +1,32 @@
-# Threat Model
+# Bedrohungsmodell des lokalen KI-Brokers
 
-## Scope
+## Scope und Vertrauensgrenzen
 
-Das Bedrohungsmodell gilt fuer eine Backend-Anwendung, die Chat-Anfragen ueber die aktuell geoeffnete Schaltung an einen KI-Provider vermittelt.
+Betrachtet werden Browser, lokal oder selbst gehosteter Broker und der
+konfigurierte KI-Provider. Geschützt werden Provider-Key, Session-ID,
+Schaltungs- und Chatkontext sowie das Kostenbudget des Nutzers.
 
-## Schutzgueter
+## Bedrohungen und Kontrollen
 
-- Benutzer-API-Key
-- interne Service-Secrets
-- Session-Zuordnungen
-- Schaltungskontext
-- Chat-Historie
-- Audit-Logs
-- Kosten- und Verfuegbarkeitsbudget
+| Risiko | Kontrollen |
+|---|---|
+| Key-Abfluss über Speicher, Logs oder Fehler | kurzlebiger In-Memory-Key, opake Session-ID, Redaction, expliziter Widerruf |
+| Ungeprüfte Provider-Parameter oder SSRF | strikte Schemas, serverseitige Modellwahl, URL-Prüfung und Host-Allowlist |
+| Übermäßige Kosten oder Verfügbarkeitsschaden | Rate-, Payload-, History- und Zeitlimits sowie begrenzte Retries |
+| Unnötiger Datenabfluss | Current-Circuit-Only, Feldreduktion und kein Klartext-Prompt-Logging |
+| Session-Verwechslung | UUID-Sessions, serverseitige Bindung, TTL und getrennte Historien |
+| Schädliche Modellaktionen | enge Aktions-Whitelist, vollständige Vorabvalidierung, Vorschau, Bestätigung und atomarer Batch |
+| Unerwünschter Netzwerkzugriff auf den Broker | Loopback-Standard, explizite CORS-Origin-Liste und deaktivierte Dev-Routen in Produktion |
 
-## Vertrauensgrenzen
+## Restrisiken
 
-- Browser zu Backend
-- Backend zu Secret-Speicher
-- Backend zu Provider
-- internes Logging zu Monitoring und Alerting
+- Der Broker-Prozess sieht den Provider-Key während einer aktiven Session.
+- Ein kompromittiertes Hostsystem oder ein kompromittierter Provider liegt
+  außerhalb des Schutzbereichs der Anwendung.
+- Selbst gehosteter Netzwerkbetrieb ist nur so sicher wie TLS-, Firewall- und
+  Origin-Konfiguration des Betreibers.
+- Provider-Ausfälle und providerseitige Datennutzung lassen sich lokal nicht
+  vollständig kontrollieren.
 
-## Relevante Bedrohungen
-
-### T1: Key-Exfiltration
-
-Angreiferziel:
-
-- Auslesen von Benutzer-API-Keys ueber Logs, Debug-Ausgaben, Fehlerantworten oder unsichere Speicherung
-
-Gegenmassnahmen:
-
-- keine Key-Rueckgabe an das Frontend
-- Redaktionsfilter fuer Logs
-- Verschluesselung ruhender Secrets
-- enge Berechtigungen fuer Secret-Speicher
-- kurze Lebensdauer und explizite Loeschpfade
-
-### T2: Provider-Missbrauch ueber ungefilterte Requests
-
-Angreiferziel:
-
-- Einschleusen beliebiger Provider-Parameter oder unzulaessiger Modelloptionen
-
-Gegenmassnahmen:
-
-- feste Request-Schemas
-- Allowlist fuer Provider, Modelle und Optionen
-- Guardrails vor Provider Gateway
-- keine unkontrollierten Passthrough-Felder
-
-### T3: Kosten- oder Verfuegbarkeitsangriff
-
-Angreiferziel:
-
-- Ausloesen uebergrosser, haeufiger oder absichtlich teurer Requests
-
-Gegenmassnahmen:
-
-- Rate-Limits pro Session und pro IP
-- Payload- und Token-Limits
-- Timeouts und begrenzte Retries
-- Budgets pro Nutzerkontext
-
-### T4: Datenabfluss ueber Prompt oder Logs
-
-Angreiferziel:
-
-- Offenlegung sensibler oder ueberfluessiger Schaltungsdaten
-
-Gegenmassnahmen:
-
-- Kontextminimierung
-- definierte Feld-Whitelist
-- Redaktion sensibler Metadaten
-- kein Prompt-Logging im Klartext in Produktion
-
-### T5: Session-Verwechslung
-
-Angreiferziel:
-
-- Nutzung eines fremden Key- oder Chat-Kontexts
-
-Gegenmassnahmen:
-
-- serverseitige Session-Bindung
-- signierte oder opake Session-IDs
-- Rotation bei Sicherheitsereignissen
-- strenge Trennung zwischen Session und Key-Referenz
-
-## Rest-Risiken
-
-- ein BYO-Key bleibt ein nutzerseitig eingebrachtes Secret und erfordert Vertrauensvorschuss in den Broker
-- grosse oder komplexe Schaltungen koennen Prompt-Zusammenfassungen noetig machen
-- Provider-seitige Richtlinien oder Ausfaelle bleiben nicht voll kontrollierbar
-
-## Spaetere Implementierungsschritte
-
-1. fuer jede Bedrohung konkrete technische Controls definieren
-2. Risiken in Testfaelle uebersetzen
-3. Alarmierung fuer Key-Leaks, Rate-Limit-Spitzen und Provider-Ausfaelle einrichten
-4. Threat Model bei neuen Providern oder neuen Chat-Faehigkeiten aktualisieren
+Neue Provider oder neue Aktionsarten erfordern eine erneute Prüfung dieser
+Tabelle und passende automatisierte Regressionen.

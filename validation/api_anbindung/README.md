@@ -1,94 +1,85 @@
-# API-Anbindung Plan
+<a id="top"></a>
 
-## Ziel
+<div align="center">
 
-Dieser Bereich beschreibt die vollstaendige Implementierungsplanung fuer eine separate Backend-Anwendung, die einzig dazu dient, eine sichere KI-API-Anbindung fuer den Logic Simulator bereitzustellen.
+[![Deutsch](https://img.shields.io/badge/🇩🇪_Deutsch-24292f?style=for-the-badge)](#deutsch)
+[![English](https://img.shields.io/badge/🇬🇧_English-24292f?style=for-the-badge)](#english)
 
-Die Backend-Anwendung soll:
+</div>
 
-- nur Anfragen zur aktuell geoeffneten Schaltung bearbeiten
-- vom Frontend entkoppelt sein und als sicherer Broker zwischen App und KI-Provider dienen
-- benutzerspezifische API-Keys unter klaren Sicherheitsregeln annehmen
-- Kontext aus der aktuell geladenen Schaltung in ein kontrolliertes Chat-Format ueberfuehren
-- keine Projektbibliothek, keinen Dateisystemzugriff und keine allgemeine Remote-Steuerung bereitstellen
+---
 
-## Warum dieser Ordner existiert
+<a id="deutsch"></a>
 
-Die App ist heute frontend-zentriert. Fuer eine sichere KI-Anbindung reicht ein einfacher Dialog mit direktem Browser-API-Key nicht aus. Dieser Ordner schafft deshalb eine belastbare Planungsgrundlage fuer:
+# KI-Broker: Validierung und Designnachweise
 
-- Architektur
-- Sicherheitsentscheidungen
-- API-Vertraege
-- Modulzuschnitte
-- Betriebsmodell
-- Teststrategie
-- Rollout
+Der ausführbare Broker liegt unter [`broker/`](../../broker/). Dieser Ordner
+enthält nur die dazugehörigen, weiterhin gepflegten Entscheidungen, Sicherheits-
+und Protokollnachweise.
 
-## Scope
+<div align="center">
 
-Im Scope:
+[![Protokoll](https://img.shields.io/badge/Action--Protokoll-24292f?style=for-the-badge)](action-protocol/spec.md)
+[![Sicherheit](https://img.shields.io/badge/Sicherheit-24292f?style=for-the-badge)](security/threat-model.md)
+[![Tests](https://img.shields.io/badge/Tests-24292f?style=for-the-badge)](testing/test-matrix.md)
 
-- KI-Chat nur fuer die aktuell geoeffnete Schaltung
-- Backend als Security-Gateway und Provider-Broker
-- Nutzerseitig eingetragener API-Key mit serverseitiger Schutzlogik
-- kontrollierte Serialisierung der Schaltung in ein Chat-konformes Kontextobjekt
+</div>
 
-Nicht im Scope:
+## Gültiger Umfang
 
-- automatische Erkennung aller lokalen Projekte
-- Dateisystem-Scanning auf Nutzerrechnern
-- Multi-Projekt-Wissensbasis
-- Agenten mit Schreibzugriff auf Schaltungen
-- allgemeine Plugin-Plattform
+- Chat und bestätigte Schaltungsaktionen beziehen sich ausschließlich auf die
+  aktuell geöffnete Schaltung.
+- Der Browser überträgt den Provider-Schlüssel einmal an den lokalen Broker und
+  verwendet danach nur die sitzungsgebundene Referenz. Der Broker reduziert den
+  Kontext und setzt Limits sowie Host-Allowlisting durch.
+- Aktionen werden vollständig validiert, in der Oberfläche als Vorschau
+  bestätigt und anschließend als genau ein atomarer Batch ausgeführt.
+- Allgemeiner oder vom Modell steuerbarer Dateisystemzugriff, Projekt-Scanning
+  und eine allgemeine Remote-Steuerung sind nicht Teil der Schnittstelle.
 
-## Struktur
+## Kanonische Dokumente
 
-- `decisions/`: Architektur- und Produktentscheidungen als ADRs
-- `architecture/`: Zielbild, Datenfluesse und Modulgrenzen
-- `security/`: Sicherheitsmodell, Bedrohungen und Schutzmassnahmen
-- `contracts/`: Frontend-Backend- und Provider-Vertraege
-- `backend-modules/`: einzelne Backend-Bausteine mit klarer Verantwortung
-- `deployment/`: Umgebungen, Betrieb und Secrets-Management
-- `testing/`: Teststrategie und Sicherheitsverifikation
-- `rollout/`: Meilensteine, offene Fragen und Einfuehrungsreihenfolge
+| Dokument | Inhalt |
+|---|---|
+| [`broker/README.md`](../../broker/README.md) | Installation, Konfiguration und Betrieb |
+| [`action-protocol/spec.md`](action-protocol/spec.md) | striktes v1-Aktionsformat und atomare Ausführung |
+| [`decisions/adr-001-current-circuit-only.md`](decisions/adr-001-current-circuit-only.md) | Begrenzung auf die offene Schaltung |
+| [`decisions/adr-002-byo-key-via-backend-broker.md`](decisions/adr-002-byo-key-via-backend-broker.md) | BYO-Key über lokalen Broker |
+| [`security/threat-model.md`](security/threat-model.md) | Bedrohungen und Gegenmaßnahmen |
+| [`security/secret-handling.md`](security/secret-handling.md) | Umgang mit Provider-Schlüsseln |
+| [`testing/test-matrix.md`](testing/test-matrix.md) | Testklassen und Pflichtpfade |
 
-## Umsetzungsstand
+Der Browser-Smoke-Runner schreibt ausschließlich nach
+`.artifacts/validation/broker-ui/`.
 
-Die Backend-Anwendung existiert vollstaendig unter `backend-sandbox/`.
-Sie nimmt Chat-Anfragen fuer die offene Schaltung entgegen, validiert und
-reduziert den Schaltungskontext, wendet Policy-Guardrails an, fuehrt
-Provider-Anfragen stellvertretend aus und behandelt Antworten, Limits und
-Audit-Ereignisse kontrolliert.
+[Validierungsübersicht](../README.md) · [Nach oben](#top)
 
-## Aktueller Integrationsstand (Stand 2026-03-24)
+---
 
-`API1-01` bis `API1-05` sowie `API2` sind abgeschlossen:
+<a id="english"></a>
 
-- **API1-01** – Sichtbarer Broker-Dialog (`Key -> Chat -> Reset -> Delete`)
-  mit vollstaendigem UI-Smoke-Ring fuer Happy Path, stale-Session-Recovery,
-  Session-Key-/Chat-/Reset-Rate-Limits, Konfigurationsfehler, Policy-Block
-  und Provider-/Upstream-Fehler (`npm run broker:smoke:*`)
-- **API1-02** – Staging-Profil (`APP_ENV=staging`), verpflichtende
-  `ALLOWED_ORIGINS`, Staging-Access-Gate via `X-Staging-Token`,
-  deaktivierte Dev-Routen, Render-Blueprint fuer externes Staging-Ziel
-- **API1-04** – Echte Provider-Anbindung: `AnthropicProviderClient` und
-  `OpenAICompatibleProviderClient` (native fetch, kein SDK); live verifiziert
-  mit OpenRouter + minimax/minimax-m2.7; unterstuetzt OpenAI, OpenRouter,
-  Ollama und jede OpenAI-kompatible API
-- **API1-05** – Broker-Naechhärtung:
-  - H1: Prompt-Groessenlimit 32 KB (`PROMPT_TOO_LARGE`, HTTP 400)
-  - H2: Model-Lock via `.strict()` auf Schema (kein Client-Override moeglich)
-  - H3: Conversation-History-Limit 32 Turns (Sliding-Window)
-  - H4: allowedHosts-SSRF-Schutz in beiden Provider-Clients vor jedem
-    Netzwerkzugriff
-  - H5: `dispatchMode` differenziert `live`/`mock`/`noop`
+# AI Broker: Validation and Design Records
 
-`API1-03` (Observability/Alarmierung) und urspruengliches `API1-04`
-(Pilot-/Rollout) entfallen, da kein zentraler Betrieb vorgesehen ist.
-Das Architekturziel ist Self-Hosted: jeder Nutzer betreibt den Broker
-lokal mit eigenem API-Key.
+The executable broker lives in [`broker/`](../../broker/README.md#english).
+This directory keeps only its maintained decisions, security notes, protocol
+specification, and test matrix.
 
-**API2 AI-Action-Protocol** ist ebenfalls abgeschlossen (API2-01 bis API2-04
-plus API2-BF Bugfixes und Prompt-Haertung). Die KI kann jetzt strukturierte
-Schaltungs-Befehle ausgeben, die das Frontend direkt ausfuehrt.
-Details: `validation/api_anbindung/work-package.md`.
+## Supported scope
+
+- Chat and confirmed circuit actions operate on the currently open circuit only.
+- The browser sends the provider key to the local broker once and then uses only
+  its session-bound reference. The broker reduces context and enforces limits
+  and outbound-host allowlisting.
+- Actions are fully validated, previewed for explicit confirmation, and then
+  dispatched as one atomic batch.
+- General or model-controlled file-system access, project scanning, and remote
+  control are outside the interface.
+
+The canonical documents are the [broker operations guide](../../broker/README.md#english),
+[action protocol](action-protocol/spec.md), [architecture decisions](decisions/),
+[threat model](security/threat-model.md),
+[secret-handling rules](security/secret-handling.md), and
+[test matrix](testing/test-matrix.md). Browser smoke output is generated only
+below `.artifacts/validation/broker-ui/`.
+
+[Validation overview](../README.md#english) · [Back to top](#top)

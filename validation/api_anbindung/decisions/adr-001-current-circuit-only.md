@@ -1,56 +1,31 @@
-# ADR-001: Current Circuit Only
+# ADR-001: Nur die aktuell geöffnete Schaltung
 
 ## Status
 
-Accepted
-
-## Kontext
-
-Die bestehende App arbeitet mit lokal geladener oder aktuell bearbeiteter Schaltung. Sie besitzt keine belastbare serverseitige Projektbibliothek und keinen sicheren Mechanismus, um beliebige lokale Dateien eines Nutzers zu indexieren.
-
-Die geplante KI-Anbindung soll deshalb nicht zu einer allgemeinen Projekt- oder Dateisuche ausufern.
+Akzeptiert und umgesetzt.
 
 ## Entscheidung
 
-Die Backend-Anwendung verarbeitet ausschliesslich Kontext der aktuell geoeffneten Schaltung.
+Der KI-Broker verarbeitet ausschließlich den vom Frontend übergebenen,
+reduzierten Zustand der aktuell geöffneten Schaltung sowie die zugehörige kurze
+Chat-Historie.
 
-Das bedeutet:
+- keine Projektbibliothek im Broker
+- kein Scannen lokaler Verzeichnisse
+- kein Zugriff auf andere Schaltungsdateien
+- keine projektübergreifende Erinnerung
 
-- das Frontend uebergibt nur den Zustand der offenen Schaltung
-- das Backend speichert keine dauerhafte Projektbibliothek
-- das Backend durchsucht keine lokalen Verzeichnisse
-- der Chat bezieht sich nur auf den uebergebenen Schaltungszustand plus kurze Chat-Historie
+## Begründung
 
-## Begruendung
-
-- reduziert Datenschutz- und Sicherheitsrisiken
-- vermeidet impliziten Dateisystemzugriff
-- begrenzt Payload-Groesse und Kosten
-- passt zum aktuellen App-Modell
-- ermoeglicht klare und pruefbare API-Vertraege
+Der enge Kontext reduziert Datenabfluss, Payload-Größe, Kosten und das Risiko
+einer Session-Verwechslung. Er passt außerdem zum lokalen Dateimodell der App
+und lässt sich durch feste Request-Schemas prüfen.
 
 ## Konsequenzen
 
-Positiv:
+Fragen zu anderen Entwürfen erfordern, dass der Nutzer diese selbst öffnet.
+Schaltungsaktionen werden zusätzlich durch das
+[Action-Protokoll](../action-protocol/spec.md) begrenzt, validiert und bestätigt.
 
-- klarer, enger Scope
-- einfacher testbare Schnittstelle
-- weniger sensible Persistenz
-- geringere Wahrscheinlichkeit fuer Kontextvermischung
-
-Negativ:
-
-- kein Chat ueber nicht geladene Projekte
-- kein automatisches Projektgedaechtnis
-- Kontext muss bei jeder Anfrage erneut oder inkrementell uebermittelt werden
-
-## Verwerfene Alternativen
-
-- automatische Indexierung aller lokalen Projekte
-- serverseitige Projektsammlung pro Nutzer
-- Hintergrund-Synchronisation mehrerer Schaltungen
-
-## Folgeschritte
-
-1. `security/threat-model.md` um Missbrauch durch zu grosse oder falsche Kontexte erweitern
-2. `backend-modules/circuit-context/README.md` strikt auf diese Entscheidung auslegen
+Verworfene Alternativen sind automatische Dateiindexierung, Hintergrund-Sync
+und eine serverseitige Projektsammlung.

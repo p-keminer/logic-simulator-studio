@@ -1,6 +1,9 @@
+<a id="top"></a>
+
 <div align="center">
 
-[🇩🇪 Deutsch](#deutsch) &nbsp;·&nbsp; [🇬🇧 English](#english)
+[![Deutsch](https://img.shields.io/badge/🇩🇪_Deutsch-24292f?style=for-the-badge)](#deutsch)
+[![English](https://img.shields.io/badge/🇬🇧_English-24292f?style=for-the-badge)](#english)
 
 </div>
 
@@ -8,1068 +11,517 @@
 
 <a id="deutsch"></a>
 
-# LogicSim – Bedienungsanleitung
+# Logic Simulator Studio – Bedienungsanleitung
 
-> **Version:** aktueller Stand (März 2026)
-> **Sprache:** Deutsch
-> Englische Version → [jump to English](#english)
+Diese Anleitung führt vom lokalen Start bis zu Simulation, Analyse und Export.
+Die KI-Funktion ist optional und separat dokumentiert.
 
----
+<div align="center">
 
-## Inhaltsverzeichnis
+[![Start](https://img.shields.io/badge/Start-24292f?style=for-the-badge)](#de-start)
+[![Oberfläche](https://img.shields.io/badge/Oberfl%C3%A4che-24292f?style=for-the-badge)](#de-oberflaeche)
+[![Schaltungen](https://img.shields.io/badge/Schaltungen-24292f?style=for-the-badge)](#de-schaltungen)
+[![Analyse](https://img.shields.io/badge/Analyse-24292f?style=for-the-badge)](#de-analyse)
+[![FSM & IC](https://img.shields.io/badge/FSM_&_IC-24292f?style=for-the-badge)](#de-fsm-ic)
+[![Dateien](https://img.shields.io/badge/Dateien-24292f?style=for-the-badge)](#de-dateien)
+[![Kurzbefehle](https://img.shields.io/badge/Kurzbefehle-24292f?style=for-the-badge)](#de-kurzbefehle)
+[![Hilfe](https://img.shields.io/badge/Hilfe-24292f?style=for-the-badge)](#de-hilfe)
 
-0. [Installation & Start](#0-installation--start)
-1. [Oberfläche im Überblick](#1-oberfläche-im-überblick)
-2. [Gatter platzieren](#2-gatter-platzieren)
-3. [Kabel zeichnen](#3-kabel-zeichnen)
-4. [Canvas navigieren (Zoom & Pan)](#4-canvas-navigieren-zoom--pan)
-5. [Selektion & Bewegung](#5-selektion--bewegung)
-6. [Gatter anpassen (Kontextmenü)](#6-gatter-anpassen-kontextmenü)
-7. [Schalter & Taster bedienen](#7-schalter--taster-bedienen)
-8. [Taktgenerator & Pause/Einzelschritt](#8-taktgenerator--pauseeinzelschritt)
-9. [Wahrheitstabelle & Zustandsübergangstabelle](#9-wahrheitstabelle--zustandsübergangstabelle)
-10. [Timing-Diagramm](#10-timing-diagramm)
-11. [FSM-Editor](#11-fsm-editor)
-12. [Custom IC](#12-custom-ic)
-13. [ROM-Editor](#13-rom-editor)
-14. [Speichern & Laden](#14-speichern--laden)
-15. [Export (Verilog / VHDL / JSON)](#15-export-verilog--vhdl--json)
-16. [Tastenkürzel](#16-tastenkürzel)
-17. [Häufige Fehler & Lösungen](#17-häufige-fehler--lösungen)
-18. [Baustein-Referenz: ALU4](#18-baustein-referenz-alu4)
-19. [Der Ordner validation/](#19-der-ordner-validation)
+</div>
 
----
+<a id="de-start"></a>
 
-## 0. Installation & Start
+## 1. Installation und Start
 
-### Voraussetzungen
+| Voraussetzung | Wert |
+|---|---|
+| Node.js | `^22.13` oder `>=24`; Version 24 empfohlen |
+| npm | mit Node.js installiert |
+| Browser | aktuelle Chromium-, Firefox- oder Safari-Version |
 
-| Software | Mindestversion | Download |
-|---|---|---|
-| **Node.js** | 18 | [nodejs.org](https://nodejs.org) |
-| **npm** | 9 | (wird mit Node.js mitgeliefert) |
-
-Version prüfen:
-```bash
-node --version   # z. B. v20.11.0
-npm --version    # z. B. 10.2.4
-```
-
-### Erstmalige Installation
+### Nur den Simulator starten
 
 ```bash
-# 1. Repository klonen
 git clone https://github.com/p-keminer/logic-simulator-studio.git
-
-# 2. In den Projektordner wechseln
 cd logic-simulator-studio
-
-# 3. Abhängigkeiten installieren (einmalig)
 npm install
-```
-
-### Entwicklungsserver starten
-
-```bash
 npm run dev
 ```
 
-Öffne anschließend **[http://localhost:5173](http://localhost:5173)** im Browser.
-Der Simulator lädt sofort – kein Backend, keine Anmeldung erforderlich.
+Die App ist anschließend unter `http://localhost:5173` erreichbar. Sie läuft
+ohne Konto und ohne Broker.
 
-> **Tipp:** Der Entwicklungsserver unterstützt **Hot Module Replacement** – Änderungen am Quellcode werden sofort im Browser sichtbar.
+### App und Broker über den Launcher starten
 
-### Produktions-Build (optional)
+- **Windows:** `Start Launcher.bat` doppelklicken. Das Skript installiert
+  fehlende Abhängigkeiten und öffnet den Launcher.
+- **Terminal:** Abhängigkeiten einmal installieren und dann den Node-Launcher
+  starten:
 
 ```bash
-npm run build       # Erstellt den Build in ./dist/
-npm run preview     # Lokale Vorschau des fertigen Builds
+npm install
+npm --prefix broker install
+npm run launch
 ```
 
-Die `dist/`-Ausgabe kann auf jedem statischen Webserver gehostet werden – kein Node.js auf dem Server nötig.
+Gleichwertig startet `node launcher.mjs` denselben Launcher. Er läuft auf
+`http://localhost:4321`. App und Broker lassen sich dort
+getrennt starten und stoppen. Details zum Broker stehen in
+[`API_ANBINDUNG.md`](API_ANBINDUNG.md#deutsch).
 
-### Simulation beenden
+### Build
 
-Den Browser-Tab schließen oder `Ctrl + C` im Terminal.
-
-> **Auto-Save:** Die aktuelle Schaltung wird automatisch im `sessionStorage` gespeichert (mit bis zu 500 ms Verzögerung) und beim erneuten Laden innerhalb derselben Browser-Sitzung wiederhergestellt. Für dauerhafte Sicherung → manuell als JSON speichern.
-
----
-
-## 1. Oberfläche im Überblick
-
+```bash
+npm run build
+npm run preview
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Toolbar  (Speichern, Laden, Export, Analyse, Takt-Pause, …)    │
-├──────────────┬──────────────────────────────────────────────────┤
-│              │                                                   │
-│  Gate-       │                                                   │
-│  Palette     │           Circuit Canvas                         │
-│  (links)     │           (Mitte/Rechts)                         │
-│              │                                                   │
-│  Suchleiste  │                                                   │
-│  Kategorien: │                                                   │
-│  • Basis     │                                                   │
-│  • Kombi.    │                                                   │
-│  • Sequenz.  ├──────────────────────────────────────────────────┤
-│  • E/A       │  Timing-Diagramm-Panel  (unten, anpassbar)       │
-│  • IC        │                                                   │
-└──────────────┴──────────────────────────────────────────────────┘
-```
+
+`npm run build` erzeugt den statischen Build unter `dist/`.
+
+<a id="de-oberflaeche"></a>
+
+## 2. Oberfläche
 
 | Bereich | Funktion |
 |---|---|
-| **Toolbar** | Speichern, Laden, Export, Analyse öffnen, Takt steuern |
-| **Gate-Palette** | Alle verfügbaren Gatter; per Drag & Drop auf den Canvas ziehen; Suchfeld zum Filtern |
-| **Circuit Canvas** | Unendliche Zeichenfläche für Gatter, Kabel und Annotationen |
-| **Timing-Diagramm** | Signalverläufe aller angeschlossenen Leitungen über die Zeit |
+| Toolbar | Name, Laden, Speichern, Undo/Redo, HDL, Tabellen, Timing, IC, Broker, FSM und Hilfe |
+| Palette | Bauteile suchen und per Drag & Drop platzieren |
+| Canvas | Gatter, Leitungen, Wegpunkte und Notizen bearbeiten |
+| Timing-Bereich | Signalverläufe, Zoom und ausgewählte Spuren |
+| Race-Monitor | erkannte Timing-, Glitch-, Schleifen- und Konfliktereignisse |
 
----
+Auf schmalen Fenstern liegen Toolbar-Funktionen im Menü `Menü ▾`.
 
-## 2. Gatter platzieren
+<a id="de-schaltungen"></a>
 
-### Methode: Drag & Drop
-1. Linke Maustaste auf ein Gatter in der **Gate-Palette** halten.
-2. Auf den Canvas ziehen.
-3. Loslassen – das Gatter rastet automatisch am nächsten Rasterpunkt ein.
+## 3. Schaltungen bauen und bedienen
 
-### Suche in der Palette
-Im **Suchfeld** oben in der Palette nach Name, Typ-ID oder Beschreibung filtern. Das × schließt die Suche.
+### Bauteile platzieren
 
-### Gatter-Kategorien in der Palette
+1. Bauteil in der Palette suchen.
+2. Auf den Canvas ziehen; die Position rastet am Raster ein.
+3. Doppelklick oder Kontextmenü nutzen, um Name, Farbe, Drehung oder
+   bauteilspezifische Werte zu ändern.
 
-| Kategorie | Enthält |
+| Kategorie | Beispiele |
 |---|---|
-| **Basis** | AND, OR, NOT, NAND, NOR, XOR, XNOR, Buffer, Schmitt-Trigger, Tri-State |
-| **Kombinatorisch** | MUX, DEMUX, Komparator, ALU, Bus-Splitter/-Kombinator |
-| **Sequenziell** | D/T/SR/JK-Flip-Flops, Master-Slave-FF, Schieberegister, Zähler, RAM, ROM |
-| **Ein-/Ausgabe** | Schalter, Taster, Taktgenerator, Konstant HIGH/LOW, LED, 7-Segment, ADC, Schrittmotor |
-| **74xx ICs** | 74xx-Serie (74HC00, 74HC04, 74HC595 u. a.) |
-| **Benutzerdefiniert** | Gespeicherte Custom ICs |
+| Logik | AND, OR, NOT, NAND, NOR, XOR, XNOR, Buffer, Schmitt und Tri-State |
+| Kombinatorisch | MUX/DEMUX, Komparator, ALU4 und Bus-Splitter/-Kombinator |
+| Sequenziell | Latches, Flip-Flops, Register, Schieberegister, Zähler, RAM und ROM |
+| Ein-/Ausgabe | Schalter, Taster, Takt, Konstanten, LED, 7-Segment, Matrix und ADC |
+| ICs | 74xx-Bausteine und selbst definierte Custom ICs |
 
-### Eingänge einstellen
-Einige Gatter (AND, OR, NAND, NOR, XOR, XNOR) sind in Varianten mit 2–8 Eingängen verfügbar.
+### Leitungen
 
----
+1. Ausgangsport anklicken.
+2. Optional auf freien Canvas klicken, um Wegpunkte zu setzen.
+3. Ziel-Eingangsport anklicken.
+4. Mit `Escape` abbrechen.
 
-## 3. Kabel zeichnen
+Rechtsklick öffnet die Aktionen für Gatter, Leitungen und Wegpunkte.
+`Strg+Klick` auf eine Leitung löscht sie direkt. Rückkopplungen sind erlaubt;
+der Simulator meldet instabile oder konkurrierende Signalpfade im Race-Monitor.
 
-### Verbindung herstellen
-1. **Linksklick auf einen Ausgangsport** – Zeichnen beginnt.
-2. Optional: **Linksklick auf freie Canvasfläche** – fügt einen Wegpunkt ein.
-3. **Linksklick auf einen Eingangsport** – Verbindung wird gespeichert.
+### Auswahl und Navigation
 
-> **Hinweis:** Ein Eingangsport kann nur **eine** Verbindung empfangen. Ausgänge unterstützen Fan-Out.
-
-### Verbindung abbrechen
-- `Escape` während ein Kabel in Bearbeitung ist.
-
-### Rückkopplungsschleifen
-Zyklen sind ausdrücklich **erlaubt** – die Engine behandelt sie korrekt.
-
-### Kabel löschen
-- Rechtsklick → **Löschen**, oder Kabel selektieren und `Delete` drücken.
-
-### Kabel einfärben
-- Rechtsklick → **Farbe setzen**.
-
----
-
-## 4. Canvas navigieren (Zoom & Pan)
-
-| Aktion | Eingabe |
+| Bedienung | Ergebnis |
 |---|---|
-| **Zoomen** | Mausrad scrollen |
-| **Pan** | `Alt` gedrückt halten + Maus ziehen; oder Mitteltaste + Ziehen |
+| Klick / `Shift+Klick` | Einzel- oder Mehrfachauswahl |
+| Rechteck auf leerem Canvas ziehen | Lasso-Auswahl |
+| Mausrad | Zoom |
+| `Alt` + Ziehen oder Mitteltaste + Ziehen | Canvas verschieben |
+| Pfeiltasten | Auswahl verschieben; mit `Shift` fünffacher Schritt |
+| `Strg+C` / `Strg+V` | Auswahl samt internen Leitungen kopieren/einfügen |
+| `Strg+Z` / `Strg+R` | letzte Schaltungsänderung rückgängig machen/wiederholen |
 
----
+Undo/Redo gilt für Änderungen an der Schaltung, nicht für reine Auswahl- oder
+Simulationszustände. Die Toolbar zeigt an, ob ein Schritt verfügbar ist.
 
-## 5. Selektion & Bewegung
+### Eingaben und spezielle Bauteile
 
-### Einzelnes Element selektieren
-- Linksklick auf ein Gatter oder Kabel.
-
-### Mehrere Elemente selektieren (Lasso)
-- Linksklick und Ziehen auf freier Canvasfläche → Auswahlrechteck; alle Gatter darin werden selektiert.
-
-### Selektierte Gatter verschieben
-- **Maus:** Linksklick + Ziehen.
-- **Tastatur:** Pfeiltasten (ein Rasterschritt); `Shift` + Pfeiltasten (5× Schritt).
-
-### Kopieren & Einfügen
-- `Strg+C` kopiert alle selektierten Gatter und die Kabel, die ausschließlich zwischen ihnen verlaufen.
-- `Strg+V` fügt mit +24 px Versatz ein; die eingefügten Gatter sind direkt selektiert.
-- **Rechtsklick auf leeren Canvas** → „Einfügen (Strg+V)" wenn Zwischenablage gefüllt (Einfügen an Mausposition).
-- **Gate-Kontextmenü → „Kopieren"** kopiert das rechts geklickte Gatter zusammen mit der bestehenden Selektion.
-
-### Löschen
-- `Delete` oder `Backspace` löscht alle selektierten Elemente (Gatter **und** angehängte Kabel).
-
----
-
-## 6. Gatter anpassen (Kontextmenü)
-
-Rechtsklick auf ein Gatter öffnet das Kontextmenü:
-
-| Option | Verfügbar bei | Beschreibung |
-|---|---|---|
-| **Kopieren** | Alle Gatter | Gatter (+ Selektion) in Zwischenablage kopieren |
-| **Umbenennen** | Alle Gatter | Freitext-Beschriftung vergeben (erscheint im Gate-Header und HDL-Export) |
-| **Drehen (90°)** | Alle Gatter | Gatter um 90° drehen (Anschlüsse rotieren mit) |
-| **LED-Farbe** | OUTPUT_LED | Leuchtfarbe der Ausgangs-LED wählen |
-| **Frequenz** | CLOCK | Taktfrequenz in Hz einstellen (0,1–100 Hz) |
-| **Hex-Wert** | ADC8 | Analogen Eingabewert als Hex-Zahl (00–FF) setzen |
-| **ROM-Inhalt bearbeiten** | ROM256 | Hex-Editor für den ROM-Speicher öffnen |
-| **Hilfe (Op-Codes)** | ALU4 | Zeigt alle 8 Op-Code-Belegungen direkt im Menü |
-| **Löschen** | Alle Gatter | Gatter und alle angebundenen Kabel entfernen |
-
----
-
-## 7. Schalter & Taster bedienen
-
-### Eingabe-Schalter (`INPUT_SWITCH`)
-- **Linksklick**: Wechselt zwischen **HIGH (1)** und **LOW (0)**.
-
-### Taster (`PUSH_BTN`)
-- **Linksklick**: Setzt Ausgang kurzzeitig auf **HIGH (1)** für ~150 ms, dann automatisch zurück auf **LOW (0)**.
-
-### Konstante Quellen
-- **CONST_HIGH** / **CONST_LOW** liefern dauerhaft 1 bzw. 0.
-
----
-
-## 8. Taktgenerator & Pause/Einzelschritt
-
-### Taktgenerator (`CLOCK`)
-- Liefert ein periodisches HIGH/LOW-Signal.
-- Frequenz einstellbar per Rechtsklick → **Frequenz** (0,1–100 Hz).
-
-### Takt pausieren
-- **Toolbar-Button „Pause"** (⏸): Alle Taktgeneratoren eingefroren; kombinatorische Logik propagiert weiter.
-
-### Einzelschritt
-- Im Pause-Modus: **Toolbar-Button „Schritt"** (⏭): Alle Taktgeneratoren toggeln genau einmal.
-
----
-
-## 9. Wahrheitstabelle & Zustandsübergangstabelle
-
-Öffnen über **Toolbar → „W-Tabelle"**.
-
-### Automatische Moduswahl
-
-| Schaltungstyp | Modus |
+| Bauteil | Bedienung |
 |---|---|
-| Keine Rückkopplungen und keine sequenziellen Zustandsbausteine | **Wahrheitstabelle** |
-| Rückkopplungen oder sequenzielle Zustandsbausteine (Flip-Flops, Latches) | **Zustandsübergangstabelle** |
+| Eingangsschalter | Doppelklick schaltet zwischen 0 und 1 |
+| Taster | Doppelklick erzeugt einen kurzen HIGH-Impuls von etwa 150 ms |
+| Takt | Frequenz über Kontextmenü einstellen |
+| Konstanten | liefern dauerhaft LOW oder HIGH |
+| ROM | Kontextmenü öffnen und Bytes als Hexwerte `00`–`FF` bearbeiten |
+| ALU4 | `000` ADD, `001` SUB, `010` AND, `011` OR, `100` XOR, `101` NOT A, `110` SHL, `111` SHR |
 
-### Wahrheitstabelle (kombinatorisch)
-- Listet alle **2ⁿ** Eingangskombinationen.
-- Zeigt Zwischenwerte aller Gatter-Ausgänge.
+Bei ALU4 sind `A0/B0/S0` die niederwertigsten Bits. `ZERO` wird bei Ergebnis
+`0000` gesetzt; `COUT` trägt je nach Operation Übertrag, Borrow oder das
+herausgeschobene Bit.
 
-**Farblegende:** 🔵 Blau = Eingaben · 🟢 Grün = Ausgaben · Grau = Interne Werte
+<a id="de-analyse"></a>
 
-### Zustandsübergangstabelle (sequenziell)
+## 4. Simulation und Analyse
 
-| Spaltengruppe | Farbe | Inhalt |
-|---|---|---|
-| Externe Eingaben | 🔵 Blau | Werte der Eingabe-Schalter |
-| Aktueller Zustand Q(t) | 🟡 Amber | Ausgänge der Feedback-Gatter |
-| Nächster Zustand Q(t+1) | 🟣 Lila | Zustand nach genau einem Simulations-Tick |
-| Ausgaben | 🟢 Grün | Werte der angeschlossenen LEDs |
+Die Simulation läuft kontinuierlich. Über `⏸` wird sie pausiert; `⏭` führt im
+pausierten Zustand einen Takt aus. Gatterlaufzeiten fließen in den
+Discrete-Event-Scheduler ein.
 
-**Stabile Zeilen** (Q(t) = Q(t+1)) werden mit Amber-Hintergrund hervorgehoben.
-
-**Beispiel SR-Latch:**
-
-| S | R | Q(t) | Q̄(t) | Q(t+1) | Q̄(t+1) |
-|---|---|------|--------|---------|---------|
-| 0 | 0 | 0 | 1 | 0 | 1 | ← stabil |
-| 0 | 0 | 1 | 0 | 1 | 0 | ← stabil |
-| 0 | 1 | 1 | 0 | 0 | 1 | ← RESET aktiv |
-| 1 | 0 | 0 | 1 | 1 | 0 | ← SET aktiv |
-| 1 | 1 | – | – | – | – | ← verboten |
-
----
-
-## 10. Timing-Diagramm
-
-| Aktion | Beschreibung |
+| Werkzeug | Verwendung |
 |---|---|
-| **Panelgröße ändern** | Obere Kante des Panels ziehen |
-| **Signal ausblenden** | Signal-Label anklicken |
-| **Verlauf löschen** | Timing-Panel schließen (×) |
+| W-Tabelle | vollständige Wahrheitstabelle für kombinatorische Schaltungen mit höchstens zwölf Eingängen |
+| Zustandsübergangstabelle | Ein-Takt-Sicht `Q(t) -> Q(t+1)` für sequenzielle oder rückgekoppelte Schaltungen |
+| Timing | Signalverläufe und Laufzeitverhalten über mehrere Takte |
+| Race-Monitor | Ereignisse prüfen und betroffene Netze auf dem Canvas fokussieren |
 
-Maximal **1000 Snapshots** im Speicher (ältere werden verworfen).
+Die Tabellenansicht wählt anhand von Zyklen und zustandsbehafteten Bauteilen
+automatisch zwischen Wahrheits- und Zustandsübergangstabelle. Größere Fälle
+werden reduziert oder bewusst begrenzt, statt eine unkontrolliert große Tabelle
+zu erzeugen.
 
-### Propagationsverzögerung
+<a id="de-fsm-ic"></a>
 
-Gatterausgaben werden erst nach der konfigurierten
-Propagationsverzögerung (`propagationDelay`) wirksam.
+## 5. FSM und Custom IC
 
-Das Timing-Diagramm nimmt pro Ereignis-Batch einen Snapshot auf.
-Eine Kette aus 20 NOT-Gattern erzeugt damit eine 20-stufige Verzögerungstreppe —
-jede Stufe entspricht einer Gate-Ebene.
+### FSM
 
-### Race-Condition-Panel
+1. `FSM` in der Toolbar öffnen.
+2. Zustände anlegen, Startzustand festlegen und Übergänge zeichnen.
+3. Bedingungen mit `!`, `&`, `|`, `^` oder `1` formulieren.
+4. Den Graphen prüfen und auf den Canvas synthetisieren.
 
-Der Simulator erkennt automatisch Hazards und Race Conditions.
-Wenn Races erkannt wurden, erscheint ein **⚠-Button** in der Toolbar.
-Klick darauf öffnet das Race-Panel mit der Race-Historie (bis zu 50 Einträge).
+Mindestens zwei sinnvoll verbundene Zustände und gültige Bedingungen werden
+benötigt. Breite FSMs können in der Analyse reduziert dargestellt werden; eine
+zu große unverdichtete Canvas-Synthese kann bewusst blockiert sein.
 
-**Schweregradklassen:**
+### Custom IC
 
-| Farbe | Schweregrad | Bedeutung |
-|---|---|---|
-| Rot | KRITISCH | Wertekonflikt: zwei Treiber liefern verschiedene Werte |
-| Orange | GLITCH | Rekonvergenter Glitch (mehrfacher Pegelwechsel) |
-| Lila | TIMING | Setup/Hold-Risiko an Flip-Flop-Eingängen |
-| Gelb | WARNUNG | Mehrtreiber mit gleichem Wert (Spezialfall) |
-| Pink | SCHLEIFE | Kombinatorische Schleife (Ereignis-Budget überschritten) |
+1. Kombinatorische Teilschaltung aufbauen. Schalter werden Eingangsports,
+   LEDs Ausgangsports.
+2. `IC` öffnen, Namen und Ports festlegen und das IC erstellen.
+3. Das neue Bauteil aus der Kategorie `Benutzerdefiniert` platzieren.
 
-**TTL-Markierung:** Kabel bleiben 400 ms farblich hervorgehoben,
-damit kurzlebige Glitches lesbar bleiben.
+Custom ICs sind für kombinatorische Logik bestimmt. Flache und einzelne direkt
+verschachtelte kombinatorische Hierarchien sind unterstützt. Tiefer
+verschachtelte oder zustandsbehaftete Innenlogik ist nicht allgemein
+freigegeben; für HDL-Export kann sie mit einer Diagnose abgelehnt werden.
 
-**Bekannte Grenzen des Race-Detektors:**
-- Tri-State-Busse werden nicht erkannt
-- Taktdomänenwechsel (CDC) werden nicht modelliert
-- Nur einstufige Latch-Erkennung (keine Kaskadierung)
+<a id="de-dateien"></a>
 
----
+## 6. Speichern, Laden und Export
 
-## 11. FSM-Editor
-
-### Zustand erstellen
-1. FSM-Editor über die Toolbar öffnen.
-2. **„+ Zustand"-Button** in der Toolbar klicken → neuer Zustand wird hinzugefügt.
-3. Doppelklick auf einen Zustand → Zustand-Editor öffnet sich zum Umbenennen oder zum Festlegen des Anfangszustands.
-
-### Übergang zeichnen
-1. Linksklick auf **Quell-Zustand** → Linksklick auf **Ziel-Zustand**.
-2. Übergangslabel eingeben (z. B. `a & !b`).
-
-### Bedingungsoperatoren
-`!a` (NOT) · `a & b` (AND) · `a | b` (OR) · `a ^ b` (XOR) · `1` (immer wahr)
-
-### Synthese
-- **Toolbar-Button „Synthetisieren"**: FSM-Graph → Logikgatter auf dem Canvas.
-
----
-
-## 12. Custom IC
-
-> **Einschränkung:** Custom ICs werden bei jedem Simulations-Tick neu evaluiert,
-> ohne internen Zustand zu persistieren. Nur **kombinatorische** Teilschaltungen
-> (keine Flip-Flops, Latches oder Rückkopplungsschleifen) werden korrekt simuliert.
-
-### Custom IC erstellen
-1. Kombinatorische Teilschaltung auf dem Canvas aufbauen. Eingabe-Schalter werden zu Eingangsports, Ausgangs-LEDs zu Ausgangsports des IC.
-2. Toolbar → **„Custom IC erstellen"** → IC-Name eingeben → **„Weiter →"** → Port-Namen anpassen → **„IC erstellen"**.
-3. Das neue Bauteil erscheint in der Palette unter **„Benutzerdefiniert"**.
-
-### Custom IC verwenden
-- Drag & Drop aus der Palette (Kategorie **„Benutzerdefiniert"**); nur definierte Ports sind von außen sichtbar.
-
----
-
-## 13. ROM-Editor
-
-1. ROM-Gatter aus der Palette ziehen.
-2. Rechtsklick → **„ROM-Inhalt bearbeiten"**.
-3. Werte direkt als Hex (00–FF) eintippen.
-
----
-
-## 14. Speichern & Laden
-
-### Auto-Save
-Automatisch nach Änderungen im `sessionStorage` gespeichert (mit bis zu 500 ms Verzögerung). Wird beim erneuten Laden der Seite in derselben Browser-Sitzung wiederhergestellt — **nicht** nach einem Browser-Neustart. Für dauerhafte Speicherung → JSON-Datei manuell speichern.
-
-### Manuelles Speichern
-Toolbar → **„Speichern"** (💾) → `.json`-Datei wird heruntergeladen.
-
-### Laden
-Toolbar → **„Laden"** (📂) → `.json`-Datei auswählen.
-
-> **Warnung:** Beim Laden wird die aktuelle Schaltung überschrieben.
-
----
-
-## 15. Export (Verilog / VHDL / JSON)
-
-Öffnen über **Toolbar → „Export"**.
-
-| Format | Hinweise |
+| Funktion | Verhalten |
 |---|---|
-| **JSON** | Vollständiges Round-Trip-Format |
-| **Verilog** | Synthesefähig (IEEE 1364); geeignet für Vivado, Quartus |
-| **VHDL** | Synthesefähig (IEEE 1076) |
+| Auto-Save | speichert verzögert im `sessionStorage` derselben Browser-Sitzung |
+| Speichern | lädt die vollständige Schaltung als `.lgsc.json` herunter |
+| Laden | ersetzt die aktuelle Schaltung durch eine ausgewählte `.lgsc.json` |
+| JSON | kanonisches Round-Trip-Format für den Simulator |
+| Verilog/VHDL | HDL-Ausgabe für unterstützte Schaltungspfade |
 
----
+Vor `Neu` und vor experimentellen KI-Aktionen sollte eine JSON-Datei gespeichert
+werden. Bestätigte `circuit-actions` werden gemeinsam als ein Undo-Schritt
+übernommen. Multi-Driver-Tri-State-Busse und tiefere Custom-IC-Hierarchien
+gehören zu den dokumentierten HDL-Grenzen und können bewusst blockiert werden.
 
-## 16. Tastenkürzel
+<a id="de-kurzbefehle"></a>
 
-| Taste / Kombination | Aktion |
+## 7. Kurzbefehle
+
+| Taste | Aktion |
 |---|---|
-| `Delete` / `Backspace` | Ausgewählte Gatter und Kabel löschen |
-| `↑` `↓` `←` `→` | Ausgewählte Gatter um einen Rasterschritt verschieben |
-| `Shift` + Pfeiltasten | Verschieben mit 5× Schritt |
-| `Strg+C` | Ausgewählte Gatter kopieren (inkl. interner Kabel) |
-| `Strg+V` | Zwischenablage einfügen (+24 px versetzt) |
-| `Escape` | Kabelzeichnen abbrechen · Menüs schließen |
-| `R` | Ausgewählte Gatter um 90° drehen |
-| `W` | Verdrahtungsmodus ein/aus (Fadenkreuz-Cursor) |
-| `X` | Snap-to-Port-Modus ein/aus (gelber Rahmen) |
-| `Mausrad` | Canvas zoomen |
-| `Alt` + Linksklick-Ziehen | Canvas verschieben (Pan) |
-| Mitteltaste + Ziehen | Canvas verschieben (Pan) |
-| Linksklick auf Ausgangsport | Kabelzeichnen starten |
-| Linksklick auf Eingangsport | Kabel fertigstellen |
-| Linksklick auf Canvas (beim Zeichnen) | Wegpunkt einfügen |
-| Ziehen auf leerem Canvas | Lasso-Auswahl → Pfeiltasten zum Verschieben |
-| Rechtsklick auf Gatter | Kontextmenü (Kopieren, Drehen, Umbenennen, Farbe, Löschen, …) |
-| Rechtsklick auf Kabel | Kontextmenü (Farbe, Knotenpunkt, Löschen) |
-| Rechtsklick auf Wegpunkt | Kontextmenü (Wegpunkt entfernen, In Knotenpunkt umwandeln) |
-| Rechtsklick auf leeren Canvas | Einfügen (wenn Zwischenablage gefüllt) |
+| `Strg+Z` / `Strg+R` | rückgängig / wiederholen |
+| `Strg+C` / `Strg+V` | kopieren / versetzt einfügen |
+| `Delete` / `Backspace` | Auswahl löschen |
+| `R` | ausgewählte Gatter drehen |
+| `W` | Verdrahtungsmodus umschalten |
+| `X` | Snap-to-Port umschalten |
+| `Escape` | Zeichnen abbrechen oder Menüs schließen |
+| Pfeiltasten | Auswahl verschieben; `Shift` = fünffacher Schritt |
+| `Shift+Klick` | Mehrfachauswahl |
+| `Strg+Klick` auf Leitung | Leitung löschen |
+| Mausrad | Zoom |
+| `Alt` + Ziehen / Mitteltaste + Ziehen | Pan |
 
----
+Die vollständige aktuelle Liste steht auch hinter `?` in der Toolbar.
 
-## 17. Häufige Fehler & Lösungen
+<a id="de-hilfe"></a>
 
-### Signal ändert sich nicht obwohl Schalter umgelegt
-**Ursache:** Kabel nicht korrekt verbunden.
-**Lösung:** Kabel anklicken – ist es selektierbar, ist es korrekt verbunden. Andernfalls neu ziehen.
+## 8. Fehlerbehebung und Grenzen
 
-### Rückkopplungsschaltung zeigt keine Schwingung
-**Ursache:** Geradzahlige Rückkopplungsschleifen werden durch Phasenkompensation stabilisiert; die Ausgänge wechseln intern, sind aber im Canvas bei 500 Ticks/s nicht immer sichtbar.
-**Lösung:** Timing-Diagramm öffnen – die Schwingung ist dort als alternierende 0/1-Werte sichtbar.
+| Problem | Prüfen |
+|---|---|
+| Signal ändert sich nicht | Ports und Leitungsverbindung prüfen; Quelle direkt testen |
+| Rückkopplung wirkt statisch | Timing-Ansicht und Race-Monitor öffnen |
+| Wahrheitstabelle fehlt | Ein- und Ausgänge prüfen; maximal zwölf Eingänge |
+| Zustandsfolge bleibt gleich | Takt, Reset und tatsächlich geschlossenen Rückkopplungspfad prüfen |
+| FSM-Synthese bleibt leer | Startzustand, Übergänge und Bedingungsausdrücke prüfen |
+| Datei lädt nicht | gültiges `.lgsc.json` und vorhandene Gate-Typen verwenden |
+| Broker verbindet nicht | Prozess auf :8787, Base-URL und Provider-Konfiguration prüfen |
 
-### Zustandsübergangstabelle zeigt Q(t+1) = Q(t) für alle Zeilen
-**Ursache:** Keine Feedback-Gatter erkannt.
-**Lösung:** Prüfen ob Kabel tatsächlich einen Zyklus bilden (Ausgang → zurück zu einem Eingang auf demselben Pfad).
+KI-generierte `circuit-actions` sind experimentell und immer
+bestätigungspflichtig. Die App zeigt den vollständigen Aktionsblock zuerst als
+Vorschau; erst die ausdrückliche Bestätigung übernimmt ihn atomar als einen
+Undo-Schritt. Verwerfen lässt die Schaltung unverändert.
 
-### Wahrheitstabelle friert den Browser ein
-**Ursache:** Mehr als ~12 Eingabe-Schalter (> 4096 Zeilen).
-**Lösung:** Timing-Diagramm oder manuelle Tests verwenden.
+Für den aktuellen QA-Aufbau zuerst
+[`validation/README.md`](validation/README.md) lesen. Weitere Einstiege:
+[Projektübersicht](README.md#deutsch) ·
+[KI-Broker](API_ANBINDUNG.md#deutsch) ·
+[Broker-Details](broker/README.md).
 
-### FSM-Synthese erzeugt keine sichtbare Schaltung
-**Ursache:** Keine validen Übergänge definiert.
-**Lösung:** Mindestens zwei Zustände und einen Übergang mit gültigem Ausdruck (z. B. `1`) anlegen.
+<div align="center">
 
-### Gespeicherte Schaltung lässt sich nicht laden
-**Ursache:** JSON-Datei aus inkompatiblem Simulator-Stand.
-**Lösung:** Gate-Typ-IDs in der JSON-Datei manuell prüfen und anpassen.
+[![Nach oben](https://img.shields.io/badge/⬆_Nach_oben-24292f?style=for-the-badge)](#top)
 
----
-
-## 18. Baustein-Referenz: ALU4
-
-### Anschlüsse
-
-| Port | Richtung | Beschreibung |
-|---|---|---|
-| **A0–A3** | Eingang | 4-Bit Operand A (A0 = LSB) |
-| **B0–B3** | Eingang | 4-Bit Operand B (B0 = LSB) |
-| **Op0–Op2** | Eingang | Operation auswählen (Op0 = LSB) |
-| **CIN** | Eingang | Carry-Eingang |
-| **S0–S3** | Ausgang | 4-Bit Ergebnis (S0 = LSB) |
-| **COUT** | Ausgang | Carry-Ausgang / Shift-Ausschuss |
-| **ZERO** | Ausgang | 1 wenn Ergebnis = 0000 |
-
-### Op-Code-Tabelle
-
-| Op2 | Op1 | Op0 | Operation | Formel | COUT |
-|---|---|---|---|---|---|
-| 0 | 0 | 0 | **ADD** | S = A + B + CIN | Übertrag Bit 4 |
-| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borrow-Ausgang |
-| 0 | 1 | 0 | **AND** | S = A & B | 0 |
-| 0 | 1 | 1 | **OR** | S = A \| B | 0 |
-| 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
-| 1 | 0 | 1 | **NOT A** | S = ~A | 0 |
-| 1 | 1 | 0 | **SHL** | S = A << 1 | A[3] |
-| 1 | 1 | 1 | **SHR** | S = A >> 1 | A[0] |
-
-> **Tipp:** Rechtsklick auf ALU4 → **❓ Hilfe (Op-Codes)** zeigt diese Tabelle direkt im Simulator.
-
-### Kaskadierung
-Für 8-Bit-Addition: COUT der niederwertigen ALU mit CIN der höherwertigen ALU verbinden (Ripple-Carry).
-
----
-
-## 19. Der Ordner validation/
-
-> Dieser Abschnitt ist vor allem für Entwicklung, Verifikation und Dokumentation relevant. Für das normale Bauen und Simulieren von Schaltungen kann der Ordner ignoriert werden.
-
-Der Ordner [`validation/`](validation/) sammelt die QA-, Audit- und Regressionsartefakte des Projekts.
-
-### Was dort liegt
-
-| Bereich | Inhalt | Wann nutzen? |
-|---|---|---|
-| [`validation/README.md`](validation/README.md) | Einstiegspunkt, Lesereihenfolge, kanonische Dateien | Immer zuerst |
-| `focused-nine-*` | Hochrisiko-Suite mit Berichten und Rohdaten | Wenn du den aktuellen Kernzustand prüfen willst |
-| `golden-corpus-v1.*` | Basis-Regressionskorpus mit 12 Referenzschaltungen | Wenn du Integrationsfälle oder Exportartefakte vergleichen willst |
-| `generated-circuits-*` | gespeicherte Testschaltungen | Zur Reproduktion im Simulator |
-| `generated-exports-*` | generierte Verilog-/VHDL-Dateien | Für externe HDL-Checks |
-| `generated-ui-*` | Screenshots aus UI-Audits | Für visuelle Nachweise |
-| `contracts/` | maschinenlesbare Gate-Contracts | Für Spezifikation und spätere Test-Generierung |
-| `maturity-*`, `industry-lite-roadmap.md`, `verification-matrix.md` | Reifegrad, Prioritäten, Prüfstrategie | Für Planung und Einordnung |
-| `archive/` | alte, historisch aufgehobene Stände | Nur bei Bedarf; nicht die aktuelle Wahrheit |
-
-### Wie man damit umgeht
-
-- Für den aktuellen Projektstand immer zuerst [`validation/README.md`](validation/README.md) lesen.
-- Die `.md`-Dateien sind für Menschen gedacht; die `.json`-Dateien für automatisierte Auswertung.
-- `focused-nine-summary.json` und `focused-nine-ui-summary.json` beschreiben den aktuellen fokussierten Prüfstand.
-- `golden-corpus-v1.*` ist der Basiskorpus für wiederholbare Referenzfälle, aber nicht automatisch Teil der Laufzeit der App.
-- Die `generated-*`-Ordner enthalten Nachweise und Reproduktionsmaterial; sie werden typischerweise nicht von Hand editiert.
-- Inhalte unter `archive/` sind historische Snapshots und sollen nicht mit dem aktuellen kanonischen Stand verwechselt werden.
-
-### Für normale Nutzung des Simulators
-
-Wenn du nur Schaltungen bauen, simulieren, speichern oder exportieren möchtest, kannst du den Ordner `validation/` vollständig ignorieren.
-
----
-
-*Bedienungsanleitung für LogicSim – Browser-basierter Logikgatter-Simulator*
-
----
+</div>
 
 ---
 
 <a id="english"></a>
 
-# LogicSim – User Manual
+# Logic Simulator Studio – User Manual
 
-> **Version:** current state (March 2026)
-> **Language:** English
-> Deutsche Version → [zurück zu Deutsch](#deutsch)
+This guide covers local startup, simulation, analysis, and export. The AI
+feature is optional and documented separately.
 
----
+<div align="center">
 
-## Table of Contents
+[![Start](https://img.shields.io/badge/Start-24292f?style=for-the-badge)](#en-start)
+[![Interface](https://img.shields.io/badge/Interface-24292f?style=for-the-badge)](#en-interface)
+[![Circuits](https://img.shields.io/badge/Circuits-24292f?style=for-the-badge)](#en-circuits)
+[![Analysis](https://img.shields.io/badge/Analysis-24292f?style=for-the-badge)](#en-analysis)
+[![FSM & IC](https://img.shields.io/badge/FSM_&_IC-24292f?style=for-the-badge)](#en-fsm-ic)
+[![Files](https://img.shields.io/badge/Files-24292f?style=for-the-badge)](#en-files)
+[![Shortcuts](https://img.shields.io/badge/Shortcuts-24292f?style=for-the-badge)](#en-shortcuts)
+[![Help](https://img.shields.io/badge/Help-24292f?style=for-the-badge)](#en-help)
 
-0. [Installation & Getting Started](#0-installation--getting-started)
-1. [Interface Overview](#1-interface-overview)
-2. [Placing Gates](#2-placing-gates)
-3. [Drawing Wires](#3-drawing-wires)
-4. [Canvas Navigation (Zoom & Pan)](#4-canvas-navigation-zoom--pan)
-5. [Selection & Movement](#5-selection--movement)
-6. [Gate Customisation (Context Menu)](#6-gate-customisation-context-menu)
-7. [Switches & Push Buttons](#7-switches--push-buttons)
-8. [Clock Generator & Pause / Single-Step](#8-clock-generator--pause--single-step)
-9. [Truth Table & State Transition Table](#9-truth-table--state-transition-table)
-10. [Timing Diagram](#10-timing-diagram)
-11. [FSM Editor](#11-fsm-editor)
-12. [Custom IC](#12-custom-ic)
-13. [ROM Editor](#13-rom-editor)
-14. [Save & Load](#14-save--load)
-15. [Export (Verilog / VHDL / JSON)](#15-export-verilog--vhdl--json)
-16. [Keyboard Shortcuts](#16-keyboard-shortcuts)
-17. [Common Errors & Solutions](#17-common-errors--solutions)
-18. [Component Reference: ALU4](#18-component-reference-alu4)
-19. [The validation/ Folder](#19-the-validation-folder)
+</div>
 
----
+<a id="en-start"></a>
 
-## 0. Installation & Getting Started
+## 1. Installation and Startup
 
-### Prerequisites
+| Requirement | Value |
+|---|---|
+| Node.js | `^22.13` or `>=24`; version 24 recommended |
+| npm | installed with Node.js |
+| Browser | current Chromium, Firefox, or Safari version |
 
-| Software | Minimum version | Download |
-|---|---|---|
-| **Node.js** | 18 | [nodejs.org](https://nodejs.org) |
-| **npm** | 9 | (bundled with Node.js) |
-
-Check versions:
-```bash
-node --version   # e.g. v20.11.0
-npm --version    # e.g. 10.2.4
-```
-
-### First-time installation
+### Start Only the Simulator
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/p-keminer/logic-simulator-studio.git
-
-# 2. Enter the project folder
 cd logic-simulator-studio
-
-# 3. Install dependencies (once)
 npm install
-```
-
-### Start the development server
-
-```bash
 npm run dev
 ```
 
-Then open **[http://localhost:5173](http://localhost:5173)** in your browser.
-The simulator loads immediately – no backend, no login required.
+The app is then available at `http://localhost:5173`. It runs without an
+account or broker.
 
-> **Tip:** The development server supports **Hot Module Replacement** – source code changes appear instantly without a manual reload.
+### Start App and Broker Through the Launcher
 
-### Production build (optional)
+- **Windows:** double-click `Start Launcher.bat`. The script installs missing
+  dependencies and opens the launcher.
+- **Terminal:** install dependencies once and then run the Node launcher:
 
 ```bash
-npm run build       # Creates the build in ./dist/
-npm run preview     # Local preview of the finished build
+npm install
+npm --prefix broker install
+npm run launch
 ```
 
-The `dist/` output can be hosted on any static web server (GitHub Pages, Netlify, Vercel, Apache, Nginx, …) – no Node.js required on the server.
+Equivalently, `node launcher.mjs` starts the same launcher. It runs at
+`http://localhost:4321`. The app and broker can be started
+and stopped independently. Broker details are in
+[`API_ANBINDUNG.md`](API_ANBINDUNG.md#english).
 
-### Stopping the simulator
+### Build
 
-Close the browser tab or press `Ctrl + C` in the terminal.
-
-> **Auto-Save:** The current circuit is automatically saved to `sessionStorage` (with up to 500 ms delay) and restored when the page is reloaded within the same browser session. For persistent storage, use **manual save** as JSON.
-
----
-
-## 1. Interface Overview
-
+```bash
+npm run build
+npm run preview
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Toolbar  (Save, Load, Export, Analysis, Clock-Pause, …)        │
-├──────────────┬──────────────────────────────────────────────────┤
-│              │                                                   │
-│  Gate        │                                                   │
-│  Palette     │           Circuit Canvas                         │
-│  (left)      │           (centre / right)                       │
-│              │                                                   │
-│  Search bar  │                                                   │
-│  Categories: │                                                   │
-│  • Basic     │                                                   │
-│  • Combi.    │                                                   │
-│  • Sequential├──────────────────────────────────────────────────┤
-│  • I/O       │  Timing Diagram Panel  (bottom, resizable)       │
-│  • ICs       │                                                   │
-└──────────────┴──────────────────────────────────────────────────┘
-```
+
+`npm run build` creates the static build in `dist/`.
+
+<a id="en-interface"></a>
+
+## 2. Interface
 
 | Area | Function |
 |---|---|
-| **Toolbar** | Save, load, export, open analysis tools, control clock |
-| **Gate Palette** | All available gates; drag & drop onto the canvas; search field to filter |
-| **Circuit Canvas** | Infinite drawing area for gates, wires and annotations |
-| **Timing Diagram** | Signal waveforms of all connected wires over time |
+| Toolbar | name, load, save, undo/redo, HDL, tables, timing, IC, broker, FSM, and help |
+| Palette | search components and place them by drag and drop |
+| Canvas | edit gates, wires, waypoints, and notes |
+| Timing area | signal traces, zoom, and selected tracks |
+| Race monitor | detected timing, glitch, loop, and conflict events |
 
----
+On narrow windows, toolbar functions are grouped under `Menü ▾`.
 
-## 2. Placing Gates
+<a id="en-circuits"></a>
 
-### Method: Drag & Drop
-1. Hold the left mouse button on a gate in the **Gate Palette**.
-2. Drag it onto the canvas.
-3. Release – the gate snaps to the nearest grid point.
+## 3. Building and Operating Circuits
 
-### Searching the palette
-Type in the **search box** at the top of the palette to filter gates by name, type ID or description. Press × to clear the filter.
+### Place Components
 
-### Gate categories
+1. Find a component in the palette.
+2. Drag it onto the canvas; its position snaps to the grid.
+3. Use double-click or the context menu to change its name, colour, rotation,
+   or component-specific values.
 
-| Category | Contains |
+| Category | Examples |
 |---|---|
-| **Basic** | AND, OR, NOT, NAND, NOR, XOR, XNOR, Buffer, Schmitt Trigger, Tri-State |
-| **Combinational** | MUX, DEMUX, Comparator, ALU, Bus Splitter / Combiner |
-| **Sequential** | D/T/SR/JK flip-flops, Master-Slave FF, shift register, counter, RAM, ROM |
-| **I/O** | Switch, Push button, Clock, Constant HIGH/LOW, LED, 7-segment, ADC, Stepper |
-| **74xx ICs** | 74xx series (74HC00, 74HC04, 74HC595, etc.) |
-| **Custom** | Saved Custom ICs |
+| Logic | AND, OR, NOT, NAND, NOR, XOR, XNOR, buffer, Schmitt, and tri-state |
+| Combinational | MUX/DEMUX, comparator, ALU4, and bus splitter/combiner |
+| Sequential | latches, flip-flops, registers, shift registers, counters, RAM, and ROM |
+| Input/output | switch, push button, clock, constants, LED, 7-segment, matrix, and ADC |
+| ICs | 74xx components and user-defined Custom ICs |
 
-### Number of inputs
-Some gates (AND, OR, NAND, NOR, XOR, XNOR) are available in variants with 2–8 inputs.
+### Wires
 
----
+1. Click an output port.
+2. Optionally click empty canvas space to add waypoints.
+3. Click the target input port.
+4. Press `Escape` to cancel.
 
-## 3. Drawing Wires
+Right-click opens actions for gates, wires, and waypoints. `Ctrl+click` a wire
+to delete it directly. Feedback is supported; the race monitor reports
+unstable or competing signal paths.
 
-### Making a connection
-1. **Left-click on an output port** (small circle on the right edge) – drawing begins.
-2. Optional: **left-click on empty canvas** – inserts a waypoint (bend).
-3. **Left-click on an input port** (small circle on the left edge) – connection saved.
+### Selection and Navigation
 
-> **Note:** An input port can receive only **one** connection. Outputs support fan-out.
-
-### Cancelling a wire
-- Press `Escape` while a wire is in progress.
-
-### Feedback loops
-Cycles are explicitly **allowed** – the simulation engine handles them correctly.
-
-### Deleting a wire
-- Right-click → **Delete**, or select and press `Delete`.
-
-### Colouring wires
-- Right-click → **Set colour**.
-
----
-
-## 4. Canvas Navigation (Zoom & Pan)
-
-| Action | Input |
+| Control | Result |
 |---|---|
-| **Zoom** | Scroll mouse wheel |
-| **Pan** | Hold `Alt` + drag; or middle-button drag |
+| Click / `Shift+click` | single or multiple selection |
+| Drag a rectangle on empty canvas | lasso selection |
+| Mouse wheel | zoom |
+| `Alt` + drag or middle-button drag | pan the canvas |
+| Arrow keys | move selection; `Shift` uses five times the step |
+| `Ctrl+C` / `Ctrl+V` | copy/paste selection including internal wires |
+| `Ctrl+Z` / `Ctrl+R` | undo/redo the latest circuit change |
 
----
+Undo/redo covers circuit changes, not selection-only or simulation state. The
+toolbar indicates whether a step is available.
 
-## 5. Selection & Movement
+### Inputs and Special Components
 
-### Select a single element
-- Left-click on a gate or wire.
-
-### Lasso selection
-- Left-click and drag on empty canvas → selection rectangle; all gates inside are selected.
-
-### Move selected gates
-- **Mouse:** left-click + drag any selected gate.
-- **Keyboard:** Arrow keys (one grid step); `Shift` + arrow keys (5× step).
-
-### Copy & Paste
-- `Ctrl+C` copies all selected gates and any wires that connect exclusively between them.
-- `Ctrl+V` pastes with a +24 px offset; pasted gates become the new selection.
-- **Right-click on empty canvas** → "Paste (Ctrl+V)" when clipboard is non-empty, pasting at the cursor position.
-- **Gate context menu → "Copy"** copies the right-clicked gate together with any other currently selected gates.
-
-### Delete
-- `Delete` or `Backspace` removes all selected elements (gates **and** attached wires).
-
----
-
-## 6. Gate Customisation (Context Menu)
-
-Right-click on a gate to open the context menu:
-
-| Option | Available for | Description |
-|---|---|---|
-| **Copy** | All gates | Copy this gate (+ selection) to clipboard |
-| **Rename** | All gates | Assign a free-text label (shown in gate header and HDL export) |
-| **Rotate (90°)** | All gates | Rotate gate by 90° (ports rotate with it) |
-| **LED colour** | OUTPUT_LED | Choose the LED's glow colour |
-| **Frequency** | CLOCK | Set clock frequency in Hz (0.1–100 Hz) |
-| **Hex value** | ADC8 | Set analogue input value as hex (00–FF) |
-| **Edit ROM content** | ROM256 | Open the ROM hex editor |
-| **Help (Op-Codes)** | ALU4 | Shows all 8 op-code assignments in the menu |
-| **Delete** | All gates | Remove gate and all attached wires |
-
----
-
-## 7. Switches & Push Buttons
-
-### Input Switch (`INPUT_SWITCH`)
-- **Left-click**: toggles between **HIGH (1)** and **LOW (0)**.
-
-### Push Button (`PUSH_BTN`)
-- **Left-click**: sets output to **HIGH (1)** for ~150 ms, then returns to **LOW (0)**.
-
-### Constant sources
-- **CONST_HIGH** / **CONST_LOW** permanently output 1 / 0.
-
----
-
-## 8. Clock Generator & Pause / Single-Step
-
-### Clock generator (`CLOCK`)
-- Produces a periodic HIGH/LOW signal.
-- Frequency configurable via right-click → **Frequency** (0.1–100 Hz).
-
-### Pausing the clock
-- **Toolbar "Pause"** (⏸): all clocks frozen; combinational logic continues to propagate.
-
-### Single-step
-- In pause mode: **Toolbar "Step"** (⏭): all clocks toggle exactly once.
-
----
-
-## 9. Truth Table & State Transition Table
-
-Open via **Toolbar → "W-Table"**.
-
-### Automatic mode selection
-
-| Circuit type | Mode shown |
+| Component | Control |
 |---|---|
-| No feedback loops and no sequential state elements | **Truth Table** |
-| Feedback loops or sequential state elements (flip-flops, latches) | **State Transition Table** |
+| Input switch | double-click toggles between 0 and 1 |
+| Push button | double-click produces a short HIGH pulse of about 150 ms |
+| Clock | configure frequency through the context menu |
+| Constants | continuously produce LOW or HIGH |
+| ROM | open the context menu and edit bytes as `00`–`FF` hexadecimal values |
+| ALU4 | `000` ADD, `001` SUB, `010` AND, `011` OR, `100` XOR, `101` NOT A, `110` SHL, `111` SHR |
 
-### Truth Table (combinational)
-- Lists all **2ⁿ** input combinations (n = number of input switches).
-- Shows intermediate values of all gate outputs.
+For ALU4, `A0/B0/S0` are the least significant bits. `ZERO` is set when the
+result is `0000`; depending on the operation, `COUT` carries the carry, borrow,
+or shifted-out bit.
 
-**Colour legend:** 🔵 Blue = inputs · 🟢 Green = outputs · Grey = internal values
+<a id="en-analysis"></a>
 
-### State Transition Table (sequential)
+## 4. Simulation and Analysis
 
-| Column group | Colour | Contents |
-|---|---|---|
-| External inputs | 🔵 Blue | Current values of input switches |
-| Current state Q(t) | 🟡 Amber | Outputs of feedback gates |
-| Next state Q(t+1) | 🟣 Purple | State after exactly one simulation tick |
-| Outputs | 🟢 Green | Values of connected LEDs |
+Simulation runs continuously. `⏸` pauses it; `⏭` advances one clock while
+paused. Gate delays feed the discrete-event scheduler.
 
-**Stable rows** (Q(t) = Q(t+1)) are highlighted with an amber background.
-
-**Example SR Latch:**
-
-| S | R | Q(t) | Q̄(t) | Q(t+1) | Q̄(t+1) |
-|---|---|------|--------|---------|---------|
-| 0 | 0 | 0 | 1 | 0 | 1 | ← stable |
-| 0 | 0 | 1 | 0 | 1 | 0 | ← stable |
-| 0 | 1 | 1 | 0 | 0 | 1 | ← RESET active |
-| 1 | 0 | 0 | 1 | 1 | 0 | ← SET active |
-| 1 | 1 | – | – | – | – | ← forbidden |
-
----
-
-## 10. Timing Diagram
-
-| Action | Description |
+| Tool | Use |
 |---|---|
-| **Resize panel** | Drag the top edge of the panel |
-| **Hide signal** | Click the signal label |
-| **Clear history** | Close the Timing panel (×) |
+| Truth table | complete table for combinational circuits with at most twelve inputs |
+| State-transition table | one-tick view `Q(t) -> Q(t+1)` for sequential or feedback circuits |
+| Timing | signal traces and delay behaviour over multiple ticks |
+| Race monitor | inspect events and focus affected nets on the canvas |
 
-Maximum **1000 snapshots** kept in memory (older ones are discarded).
+The table view automatically selects a truth or state-transition table from
+cycles and stateful components. Larger cases are reduced or deliberately
+limited instead of producing an uncontrolled table.
 
-### Propagation Delay
+<a id="en-fsm-ic"></a>
 
-Gate outputs are committed only after the configured propagation delay
-(`propagationDelay`).
+## 5. FSM and Custom IC
 
-The timing diagram records one snapshot per event batch.
-A chain of 20 NOT gates produces a 20-step delay staircase —
-each step corresponds to one gate level.
+### FSM
 
-### Race Condition Panel
+1. Open `FSM` in the toolbar.
+2. Add states, choose the initial state, and draw transitions.
+3. Write conditions with `!`, `&`, `|`, `^`, or `1`.
+4. Check the graph and synthesise it onto the canvas.
 
-The simulator automatically detects hazards and race conditions.
-When races are detected, a **⚠ button** appears in the toolbar.
-Clicking it opens the Race Panel with the race history (up to 50 entries).
+At least two meaningfully connected states and valid conditions are needed.
+Wide FSMs may use a reduced analysis view; an excessively large unminimised
+canvas synthesis may be deliberately blocked.
 
-**Severity classes:**
+### Custom IC
 
-| Colour | Severity | Meaning |
-|---|---|---|
-| Red | CRITICAL | Value conflict: two drivers supply different values |
-| Orange | GLITCH | Reconvergent glitch (multiple level changes) |
-| Purple | TIMING | Setup/hold risk at flip-flop inputs |
-| Yellow | WARNING | Multiple drivers with the same value (special case) |
-| Pink | LOOP | Combinational loop (event budget exceeded) |
+1. Build a combinational subcircuit. Switches become input ports and LEDs
+   become output ports.
+2. Open `IC`, set its name and ports, and create the IC.
+3. Place the new component from the `Benutzerdefiniert` category.
 
-**TTL marking:** wires remain colour-highlighted for 400 ms
-so short-lived glitches remain readable.
+Custom ICs target combinational logic. Shallow and single directly nested
+combinational hierarchies are supported. Deeper nesting or stateful internal
+logic is not generally approved and may be rejected with a diagnostic during
+HDL export.
 
-**Known limitations of the race detector:**
-- Tri-state buses are not detected
-- Clock domain crossings (CDC) are not modelled
-- Only single-level latch detection (no cascading)
+<a id="en-files"></a>
 
----
+## 6. Save, Load, and Export
 
-## 11. FSM Editor
-
-### Creating a state
-1. Open the FSM editor via the toolbar.
-2. Click the **"+ State"** button in the toolbar → a new state is added.
-3. Double-click a state → the state editor opens for renaming or marking it as the initial state.
-
-### Drawing a transition
-1. Left-click the **source state** → left-click the **target state**.
-2. Enter a transition label (e.g. `a & !b`).
-
-### Condition operators
-`!a` (NOT) · `a & b` (AND) · `a | b` (OR) · `a ^ b` (XOR) · `1` (always true)
-
-### Synthesis
-- **Toolbar "Synthesise"**: FSM graph → combinational + sequential logic gates placed on the canvas.
-
----
-
-## 12. Custom IC
-
-> **Limitation:** Custom ICs are re-evaluated from scratch on every simulation tick
-> without persisting internal state. Only **combinational** sub-circuits
-> (no flip-flops, latches, or feedback loops) are simulated correctly.
-
-### Creating a Custom IC
-1. Build a combinational sub-circuit on the canvas. Input switches become input ports, output LEDs become output ports of the IC.
-2. Toolbar → **"Create Custom IC"** → enter a name → **"Next →"** → adjust port names → **"Create IC"**.
-3. The new component appears in the palette under **"Custom"**.
-
-### Using a Custom IC
-- Drag & drop from palette; only defined ports are visible from outside.
-
----
-
-## 13. ROM Editor
-
-1. Drag the ROM gate from the palette.
-2. Right-click → **"Edit ROM content"**.
-3. Type values directly as hex (00–FF).
-
----
-
-## 14. Save & Load
-
-### Auto-save
-Automatically saved to `sessionStorage` after changes (with up to 500 ms delay). Restored when the page is reloaded in the same browser session — **not** after a browser restart. For persistent storage, manually save as JSON.
-
-### Manual save
-Toolbar → **"Save"** (💾) → downloads a `.json` file.
-
-### Load
-Toolbar → **"Load"** (📂) → select a `.json` file. The current circuit is replaced.
-
-> **Warning:** Loading overwrites the current unsaved circuit.
-
----
-
-## 15. Export (Verilog / VHDL / JSON)
-
-Open via **Toolbar → "Export"**.
-
-| Format | Notes |
+| Function | Behaviour |
 |---|---|
-| **JSON** | Full round-trip format for sharing and backup |
-| **Verilog** | Synthesisable (IEEE 1364); suitable for Vivado, Quartus |
-| **VHDL** | Synthesisable (IEEE 1076) |
+| Auto-save | saves after a short delay in the same browser session's `sessionStorage` |
+| Save | downloads the complete circuit as `.lgsc.json` |
+| Load | replaces the current circuit with a selected `.lgsc.json` |
+| JSON | canonical round-trip format for the simulator |
+| Verilog/VHDL | HDL output for supported circuit paths |
 
----
+Save a JSON file before using `Neu` or experimental AI actions. Confirmed
+`circuit-actions` are applied together as one undo step. Multi-driver tri-state
+buses and deeper Custom IC hierarchies are documented HDL limits and may be
+deliberately blocked.
 
-## 16. Keyboard Shortcuts
+<a id="en-shortcuts"></a>
 
-| Key / Combination | Action |
+## 7. Shortcuts
+
+| Key | Action |
 |---|---|
-| `Delete` / `Backspace` | Delete selected gates and wires |
-| `↑` `↓` `←` `→` | Move selected gates by one grid step |
-| `Shift` + arrow keys | Move selected gates by 5× grid step |
-| `Ctrl+C` | Copy selected gates (and internal wires) |
-| `Ctrl+V` | Paste clipboard (+24 px offset) |
-| `Escape` | Cancel wire drawing · close menus |
-| `R` | Rotate selected gate(s) by 90° |
-| `W` | Toggle wire-draw mode (crosshair cursor) |
-| `X` | Toggle snap-to-port mode (yellow outline) |
-| Mouse wheel | Zoom canvas in / out |
-| `Alt` + left-click drag | Pan viewport |
-| Middle-button drag | Pan viewport |
-| Left-click output port | Start wire |
-| Left-click input port | Finish wire |
-| Left-click canvas (while drawing) | Insert waypoint |
-| Drag on empty canvas | Lasso selection → use arrow keys to move |
-| Right-click gate | Context menu (copy, rotate, rename, colour, delete, …) |
-| Right-click wire | Context menu (colour, junction, delete) |
-| Right-click waypoint | Context menu (remove waypoint, convert to junction) |
-| Right-click empty canvas | Paste at cursor (if clipboard non-empty) |
+| `Ctrl+Z` / `Ctrl+R` | undo / redo |
+| `Ctrl+C` / `Ctrl+V` | copy / paste with offset |
+| `Delete` / `Backspace` | delete selection |
+| `R` | rotate selected gates |
+| `W` | toggle wiring mode |
+| `X` | toggle snap-to-port |
+| `Escape` | cancel drawing or close menus |
+| Arrow keys | move selection; `Shift` = five times the step |
+| `Shift+click` | multiple selection |
+| `Ctrl+click` a wire | delete wire |
+| Mouse wheel | zoom |
+| `Alt` + drag / middle-button drag | pan |
 
----
+The complete current list is also available through `?` in the toolbar.
 
-## 17. Common Errors & Solutions
+<a id="en-help"></a>
 
-### Signal does not change even though the switch was toggled
-**Cause:** Wire not connected correctly (port not hit exactly).
-**Solution:** Click the wire – if it can be selected, it is correctly connected. Otherwise redraw.
+## 8. Troubleshooting and Limits
 
-### Feedback circuit shows no oscillation
-**Cause:** Even-length loops (e.g. NOT-NOT ring) are stabilised by the even-period fix.
-**Solution:** Open the timing diagram – the oscillation is visible there as alternating 0/1 values.
+| Problem | Check |
+|---|---|
+| Signal does not change | verify ports and wire connection; test the source directly |
+| Feedback appears static | open the timing view and race monitor |
+| Truth table is unavailable | verify inputs and outputs; use at most twelve inputs |
+| State sequence does not change | verify clock, reset, and the actual closed feedback path |
+| FSM synthesis stays empty | verify initial state, transitions, and condition expressions |
+| File does not load | use valid `.lgsc.json` and available gate type IDs |
+| Broker does not connect | verify process on :8787, base URL, and provider configuration |
 
-### State transition table shows Q(t+1) = Q(t) for all rows
-**Cause:** No feedback gates detected; circuit treated as combinational.
-**Solution:** Verify that wires actually form a cycle (output port → input port on the same logic path).
+AI-generated `circuit-actions` are experimental and always require
+confirmation. The app first shows the complete action block as a preview;
+explicit confirmation applies it atomically as one undo step. Discarding it
+leaves the circuit unchanged.
 
-### Truth table freezes the browser
-**Cause:** More than ~12 input switches (> 4096 rows).
-**Solution:** Use the timing diagram or manual switch tests for larger circuits.
+For the current QA structure, read
+[`validation/README.md`](validation/README.md#english) first. Further entry points:
+[Project overview](README.md#english) ·
+[AI broker](API_ANBINDUNG.md#english) ·
+[Broker details](broker/README.md#english).
 
-### FSM synthesis produces no visible circuit
-**Cause:** No valid transitions defined.
-**Solution:** Create at least two states and one transition with a valid expression (e.g. `1`).
+<div align="center">
 
-### Saved circuit cannot be loaded
-**Cause:** JSON file from an incompatible simulator version.
-**Solution:** Rebuild manually or inspect the gate type IDs in the JSON file.
+[![Back to top](https://img.shields.io/badge/⬆_Back_to_top-24292f?style=for-the-badge)](#top)
 
----
-
-## 18. Component Reference: ALU4
-
-### Ports
-
-| Port | Direction | Description |
-|---|---|---|
-| **A0–A3** | Input | 4-bit operand A (A0 = LSB) |
-| **B0–B3** | Input | 4-bit operand B (B0 = LSB) |
-| **Op0–Op2** | Input | Select operation (Op0 = LSB) |
-| **CIN** | Input | Carry input (for ADD/SUB cascading) |
-| **S0–S3** | Output | 4-bit result (S0 = LSB) |
-| **COUT** | Output | Carry output / shifted-out bit |
-| **ZERO** | Output | 1 when result = 0000 |
-
-### Op-code table
-
-| Op2 | Op1 | Op0 | Operation | Formula | COUT |
-|---|---|---|---|---|---|
-| 0 | 0 | 0 | **ADD** | S = A + B + CIN | Carry bit 4 |
-| 0 | 0 | 1 | **SUB** | S = A − B − CIN | Borrow bit |
-| 0 | 1 | 0 | **AND** | S = A & B | 0 |
-| 0 | 1 | 1 | **OR** | S = A \| B | 0 |
-| 1 | 0 | 0 | **XOR** | S = A ^ B | 0 |
-| 1 | 0 | 1 | **NOT A** | S = ~A | 0 |
-| 1 | 1 | 0 | **SHL** | S = A << 1 (left shift) | A[3] (shifted-out MSB) |
-| 1 | 1 | 1 | **SHR** | S = A >> 1 (right shift) | A[0] (shifted-out LSB) |
-
-> **Tip:** Right-click any ALU4 instance → **❓ Help (Op-Codes)** shows this table directly in the simulator.
-
-### Examples
-
-**Addition 5 + 3:**  A = 0101, B = 0011, Op = 000, CIN = 0 → S = 1000 (= 8), COUT = 0
-
-**Left-shift of 6 (= 0110):**  A = 0110, Op = 110 → S = 1100 (= 12), COUT = 0
-
-**Left-shift of 9 (= 1001):**  A = 1001, Op = 110 → S = 0010 (= 2), COUT = 1
-
-### Cascading multiple ALUs
-For an 8-bit addition: connect COUT of the lower-order ALU to CIN of the higher-order ALU (ripple-carry).
-
----
-
-## 19. The validation/ Folder
-
-> This section is mainly relevant for development, verification, and documentation. If you only want to build and simulate circuits, you can ignore this folder.
-
-The [`validation/`](validation/) folder contains the project's QA, audit, and regression artefacts.
-
-### What it contains
-
-| Area | Contents | When to use it |
-|---|---|---|
-| [`validation/README.md`](validation/README.md) | Entry point, reading order, canonical files | Always start here |
-| `focused-nine-*` | High-risk suite with reports and raw data | When checking the current core status |
-| `golden-corpus-v1.*` | Baseline regression corpus with 12 reference circuits | When comparing integration cases or export artefacts |
-| `generated-circuits-*` | saved test circuits | To reproduce scenarios in the simulator |
-| `generated-exports-*` | generated Verilog/VHDL files | For external HDL checks |
-| `generated-ui-*` | screenshots from UI audits | For visual evidence |
-| `contracts/` | machine-readable gate contracts | For specification and future test generation |
-| `maturity-*`, `industry-lite-roadmap.md`, `verification-matrix.md` | maturity tracking, priorities, validation strategy | For planning and project status |
-| `archive/` | older historical snapshots | Only when needed; not the current source of truth |
-
-### How to use it
-
-- Read [`validation/README.md`](validation/README.md) first for the current project status.
-- `.md` files are primarily human-facing; `.json` files are intended for automation and downstream tooling.
-- `focused-nine-summary.json` and `focused-nine-ui-summary.json` describe the current focused validation baseline.
-- `golden-corpus-v1.*` is the seed corpus for repeatable reference cases, but it is not part of the app's runtime.
-- The `generated-*` directories contain evidence and reproduction material; they are usually not edited by hand.
-- Files under `archive/` are historical snapshots and should not be mistaken for the current canonical state.
-
-### For normal simulator use
-
-If you only want to design, simulate, save, or export circuits, you can safely ignore the `validation/` folder.
-
----
-
-*User Manual for LogicSim – Browser-based Logic Gate Simulator*
+</div>

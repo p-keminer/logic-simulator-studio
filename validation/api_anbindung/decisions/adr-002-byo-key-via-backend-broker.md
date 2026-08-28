@@ -1,63 +1,37 @@
-# ADR-002: BYO-Key nur ueber Backend-Broker
+# ADR-002: BYO-Key über den lokalen Broker
 
 ## Status
 
-Accepted
-
-## Kontext
-
-Ein Benutzer soll fuer die KI-Nutzung optional einen eigenen API-Key hinterlegen koennen. Eine direkte Provider-Anbindung aus dem Browser waere funktional moeglich, aber sicherheitlich schwach:
-
-- Browsercode ist fuer Nutzer einsehbar
-- Provider-Endpunkte waeren direkt exponiert
-- Richtlinien, Rate-Limits und Auditierung waeren schwer zentral durchsetzbar
-- Fehlkonfigurationen koennten Keys oder sensible Kontexte offenlegen
+Akzeptiert und umgesetzt.
 
 ## Entscheidung
 
-Auch bei einem benutzereigenen API-Key spricht das Frontend niemals direkt mit dem KI-Provider. Stattdessen laeuft jede Anfrage ueber ein dediziertes Backend als Broker.
+Provider-Anfragen laufen nie direkt aus dem React-Frontend. Der Nutzer gibt
+seinen eigenen API-Key im Broker-Dialog ein; der lokal oder selbst gehostet
+betriebene Broker bindet ihn an eine kurzlebige Session und führt die
+Provider-Anfrage aus.
 
-Der Broker uebernimmt:
+Der Broker erzwingt dabei:
 
-- Annahme und Schutz des API-Keys
-- Session-Bindung
-- Request-Validierung
-- Kontextreduktion
-- Guardrails
-- Provider-Auswahl
-- Egress-Kontrolle
-- Fehlernormalisierung
-- Audit und Missbrauchsschutz
+- validierte Requests und reduzierte Schaltungskontexte
+- feste Provider- und Modellkonfiguration
+- Rate-, Payload-, History- und Zeitlimits
+- Host-Allowlisting vor ausgehenden Provider-Requests
+- normalisierte, redigierte Fehler- und Auditdaten
+- explizites Löschen und automatisches Ablaufen der Session
 
-## Begruendung
+## Begründung
 
-- Sicherheitskontrollen bleiben zentral erzwingbar
-- der Browser kennt keinen direkten Provider-Workflow
-- Response- und Error-Formate koennen stabil gehalten werden
-- spaetere Providerwechsel bleiben moeglich
-- Kosten- und Abuse-Schutz wird technisch durchsetzbar
+Der Browser benötigt nach dem Verbindungsaufbau nur die opake Session-ID und
+kennt keinen direkten Provider-Workflow. Sicherheitsregeln bleiben an einer
+prüfbaren Stelle, ohne einen zentralen Cloud-Dienst vorauszusetzen.
 
 ## Konsequenzen
 
-Positiv:
+Der Broker ist ein zusätzlicher lokaler Prozess und muss bei externer
+Bereitstellung mit TLS sowie einer engen Origin-Liste betrieben werden. Der Key
+ist während der Session im Speicher des Broker-Prozesses vorhanden; die Regeln
+dazu stehen in [`secret-handling.md`](../security/secret-handling.md).
 
-- bessere Kontrolle ueber Sicherheit und Betrieb
-- klare Trennung zwischen Produkt-UI und Provider-spezifischer Logik
-- einfachere Observability
-
-Negativ:
-
-- zusaetzlicher Betriebsaufwand fuer das Backend
-- mehr Architekturkomplexitaet
-- BYO-Key ist nicht rein lokal, sondern laeuft ueber den Broker
-
-## Verwerfene Alternativen
-
-- direkter Provider-Call aus React
-- Speicherung des API-Keys nur in `localStorage`
-- unkontrolliertes Durchreichen beliebiger Provider-Parameter
-
-## Folgeschritte
-
-1. Secret-Handhabung in `security/secret-handling.md` ausarbeiten
-2. `backend-modules/provider-gateway/README.md` als einzige Provider-Ausleitung definieren
+Verworfen sind direkte Browser-Provider-Calls, Key-Speicherung in
+`localStorage` und das ungeprüfte Durchreichen beliebiger Provider-Parameter.

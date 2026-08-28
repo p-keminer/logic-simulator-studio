@@ -1,57 +1,34 @@
-# Secret Handling
+# Umgang mit Provider-Schlüsseln
 
-## Ziel
+## Aktuelles Modell
 
-Dieses Dokument beschreibt, wie Benutzer-API-Keys und interne Backend-Secrets spaeter sicher behandelt werden muessen.
+Der Nutzer gibt den Provider-Key zur Laufzeit im Broker-Dialog ein. Der Broker
+legt ihn ausschließlich im Arbeitsspeicher ab und gibt dem Frontend eine opake
+Session-ID mit Ablaufzeit zurück. Der Key gehört weder in `.env` noch in die
+Git-Historie.
 
-## Secret-Kategorien
+Die laufende Implementierung:
 
-- Benutzer-API-Keys fuer externe KI-Provider
-- interne Signier- oder Session-Secrets
-- Verschluesselungsschluessel oder KMS-Referenzen
+- hält Session und Key-Referenz in begrenzten In-Memory-Stores
+- speichert zusätzlich nur einen gekürzten SHA-256-Fingerprint zur Zuordnung
+- beendet Sessions nach der konfigurierten TTL
+- ersetzt Key-Material bei Löschen, Ablauf oder Verdrängung durch `[REDACTED]`
+- entfernt widerrufene Einträge nach einer kurzen Aufbewahrungsfrist
+- redigiert sensible Feldnamen und Key-Muster in Logs und Fehlerdaten
 
-## Grundregeln
+## Verbotene Ablagen
 
-- der Browser speichert einen Benutzer-Key nicht dauerhaft im Klartext
-- das Backend schreibt Benutzer-Keys niemals in Logs
-- Secrets werden im Speicher nur so kurz wie noetig gehalten
-- persistierte Secrets muessen verschluesselt sein
-- jede Secret-Verwendung ist an eine Session oder einen klaren Zweck gebunden
+- Repository, `.env`, URL oder Query-Parameter
+- `localStorage` oder andere dauerhafte Browser-Speicher
+- Klartext-Logs, Metriken, Fehlerobjekte oder Screenshots
+- allgemeine Persistenz außerhalb des laufenden Broker-Prozesses
 
-## Bevorzugtes Zielmodell
+## Betrieb
 
-Variante A:
+Auf Loopback bleibt der Verkehr lokal. Wer den Broker über ein Netzwerk
+bereitstellt, muss TLS, eine explizite `ALLOWED_ORIGINS`-Liste und den Schutz des
+Hostsystems sicherstellen. Ein Neustart verwirft alle Sessions und Keys; das ist
+beabsichtigt.
 
-- Benutzer-Key wird an das Backend uebermittelt
-- Backend prueft Format und Provider
-- Backend speichert den Key verschluesselt mit kurzer TTL
-- das Frontend arbeitet anschliessend nur noch mit einer opaken Session-Referenz
-
-Variante B:
-
-- Benutzer-Key wird nicht dauerhaft gespeichert
-- Backend erzeugt nur eine In-Memory-Bindung fuer eine kurze Session
-- bei Session-Ende wird der Key verworfen
-
-## Verbotene Muster
-
-- Key in `localStorage`
-- Key in URL-Parametern
-- Key in Klartext-Logs
-- Key als Teil allgemeiner Fehlerobjekte
-- Weitergabe des Keys an andere interne Module ohne Zweckbindung
-
-## Technische Schutzmassnahmen
-
-- TLS fuer jede Uebertragung
-- strukturierte Log-Redaktion
-- Verschluesselung ruhender Secrets mit KMS oder vergleichbarem Schluesselmanagement
-- dedizierte Secret-Access-Schicht
-- explizite Loeschpfade bei Logout, Session-Reset oder Timeout
-
-## Spaetere Implementierungsschritte
-
-1. Secret-Speicherstrategie zwischen TTL-Speicher und rein fluechtiger Session waehlen
-2. Datenmodell fuer Key-Referenz statt Key-Wiederanzeige definieren
-3. Rotations- und Loeschprozesse spezifizieren
-4. Secret-Zugriffe auditierbar machen
+Die automatischen Sicherheitsprüfungen stehen in der
+[Testmatrix](../testing/test-matrix.md).
