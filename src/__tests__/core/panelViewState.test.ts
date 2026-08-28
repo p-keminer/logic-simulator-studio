@@ -1,7 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json';
+import legacyFsmExportFixture from '../../../validation/fixtures/fsm/legacy-export.lgsc.json';
 import { buildAnalysisSubsystemOptions } from '../../core/analysis/sequentialProjection';
 import type { GateInstance, SignalState, Wire } from '../../core/types';
 import type { AnalysisSubsystemOption } from '../../core/analysis/sequentialProjection';

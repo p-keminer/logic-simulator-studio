@@ -173,7 +173,7 @@ const VHDL_PRIM: Record<string, string> = {
 
 export function generateVHDL(circuit: Circuit): string {
   const entityName = sanitizeVHDL(circuit.name || 'circuit', 'entity');
-  let exportCircuit = circuit;
+  let exportCircuit: Circuit;
   try {
     exportCircuit = flattenCustomICs(circuit);
   } catch (error) {

@@ -3,6 +3,7 @@ set -euo pipefail
 
 tools=(
   iverilog
+  vvp
   ghdl
   yosys
   verilator

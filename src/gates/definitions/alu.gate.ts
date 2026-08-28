@@ -42,7 +42,7 @@ gateRegistry.register({
     const op = ((op0 ?? 0) as number) | (((op1 ?? 0) as number) << 1) | (((op2 ?? 0) as number) << 2);
     const c  = (cin ?? 0) as number;
 
-    let result = 0;
+    let result: number;
     let cout   = 0;
 
     switch (op) {

@@ -41,6 +41,10 @@ nul
 # Security
 .env
 .env.*
+!broker/.env.example
+
+# Generated validation output (local and CI)
+.artifacts/
 
 # Validation / HDL tool artifacts
 validation/**/work-obj08.cf

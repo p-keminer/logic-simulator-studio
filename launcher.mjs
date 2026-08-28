@@ -14,15 +14,38 @@ import { dirname, join } from 'node:path';
 import { platform } from 'node:os';
 import { existsSync, copyFileSync } from 'node:fs';
 
+const [NODE_MAJOR, NODE_MINOR] = process.versions.node.split('.').map(Number);
+const NODE_RUNTIME_SUPPORTED = (
+  (NODE_MAJOR === 22 && NODE_MINOR >= 13)
+  || NODE_MAJOR >= 24
+);
+
+if (!NODE_RUNTIME_SUPPORTED) {
+  console.error(
+    `Logic Simulator Studio benötigt Node.js ^22.13 oder >=24; gefunden wurde ${process.versions.node}.`,
+  );
+  process.exit(1);
+}
+
+if (process.argv.includes('--check-runtime')) process.exit(0);
+
 // ── Konfiguration ────────────────────────────────────────────────────────────
 
 const LAUNCHER_PORT = 4321;
 const APP_PORT      = 5173;
 const BROKER_PORT   = 8787;
 const MAX_LOG_LINES = 300;
+const LAUNCHER_ORIGINS = new Set([
+  `http://localhost:${LAUNCHER_PORT}`,
+  `http://127.0.0.1:${LAUNCHER_PORT}`,
+]);
+const LAUNCHER_HOSTS = new Set([
+  `localhost:${LAUNCHER_PORT}`,
+  `127.0.0.1:${LAUNCHER_PORT}`,
+]);
 
 const __dirname   = dirname(fileURLToPath(import.meta.url));
-const BROKER_DIR  = join(__dirname, 'validation', 'api_anbindung', 'backend-sandbox');
+const BROKER_DIR  = join(__dirname, 'broker');
 
 const IS_WIN = platform() === 'win32';
 // npm heißt auf Windows npm.cmd
@@ -74,7 +97,7 @@ function startProcess(service) {
     const example_path = join(BROKER_DIR, '.env.example');
     if (!existsSync(env_path) && existsSync(example_path)) {
       copyFileSync(example_path, env_path);
-      pushLog(service, '[launcher] .env aus .env.example erstellt – API-Keys ggf. anpassen.');
+      pushLog(service, '[launcher] .env aus .env.example erstellt – Provider und Modell können dort optional angepasst werden.');
     } else if (!existsSync(env_path)) {
       pushLog(service, '[launcher] WARNUNG: .env fehlt und keine .env.example vorhanden.');
     }
@@ -153,13 +176,22 @@ function openBrowser(url) {
 // ── HTTP-Hilfsfunktionen ─────────────────────────────────────────────────────
 
 function json(res, data, status = 200) {
-  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.writeHead(status, {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+  });
   res.end(JSON.stringify(data));
 }
 
 // ── HTTP-Server ──────────────────────────────────────────────────────────────
 
 const server = createServer((req, res) => {
+  const host = req.headers.host?.toLowerCase();
+  if (!host || !LAUNCHER_HOSTS.has(host)) {
+    return json(res, { error: 'untrusted host' }, 403);
+  }
+
   const { pathname } = new URL(req.url, `http://localhost:${LAUNCHER_PORT}`);
 
   // GET /api/status – aktueller Zustand beider Services
@@ -169,6 +201,9 @@ const server = createServer((req, res) => {
 
   // POST /api/<service>/<start|stop>
   if (req.method === 'POST') {
+    if (!LAUNCHER_ORIGINS.has(req.headers.origin ?? '')) {
+      return json(res, { error: 'untrusted origin' }, 403);
+    }
     const match = pathname.match(/^\/api\/(app|broker)\/(start|stop)$/);
     if (match) {
       const [, service, action] = match;
@@ -186,6 +221,7 @@ const server = createServer((req, res) => {
         'Content-Type':  'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection':    'keep-alive',
+        'X-Content-Type-Options': 'nosniff',
       });
       // Vorhandene Logs sofort schicken (damit Browser nach Reload nicht leer startet)
       for (const line of state[service].logs) {
@@ -199,7 +235,14 @@ const server = createServer((req, res) => {
 
   // GET / – HTML-Dashboard ausliefern
   if (req.method === 'GET' && pathname === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Content-Security-Policy': "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+      'Cross-Origin-Resource-Policy': 'same-origin',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+    });
     return res.end(HTML);
   }
 

@@ -8,6 +8,12 @@
   "additionalProperties": false,
   "properties": {
 
+    "$schema": {
+      "type": "string",
+      "const": "../gate-contract-schema.json",
+      "description": "Relative link used by editors and validators."
+    },
+
     "typeId": {
       "type": "string",
       "description": "Unique gate type identifier, matches GateDefinition.typeId in the registry."

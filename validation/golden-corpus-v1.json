@@ -1,7 +1,7 @@
 {
   "version": "1.9.0",
   "createdAt": "2026-03-07",
-  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, now including fourteen Golden Corpus v2 pilot seeds",
+  "description": "Golden Corpus v1 - regression suite for LogicSim HDL export and simulation correctness, including fifteen Golden Corpus v2 pilot seeds",
   "circuits": [
     {
       "slug": "gc_c1_basic_gates",

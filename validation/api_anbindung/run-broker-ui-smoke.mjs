@@ -4,14 +4,27 @@ import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const OUT_DIR = path.join(ROOT, 'validation', 'api_anbindung', 'generated');
+const OUT_DIR = path.join(ROOT, '.artifacts', 'validation', 'broker-ui');
 const BASE_URL = process.env.LOGICSIM_BASE_URL ?? 'http://127.0.0.1:5173';
 const BROKER_BASE_URL = process.env.BROKER_BASE_URL ?? 'http://127.0.0.1:8787';
 const BROKER_TEST_API_KEY =
   process.env.BROKER_TEST_API_KEY ?? 'sk-broker-test-1234567890';
 const BROKER_RECOVERY_TEST_API_KEY =
   process.env.BROKER_RECOVERY_TEST_API_KEY ?? BROKER_TEST_API_KEY;
-const SCENARIO = process.env.BROKER_UI_SMOKE_SCENARIO ?? 'happy-path';
+function readCliOption(name) {
+  const index = process.argv.indexOf(name);
+  if (index === -1) return undefined;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith('--')) {
+    throw new Error(`${name} requires a value`);
+  }
+  return value;
+}
+
+const SCENARIO =
+  readCliOption('--scenario') ??
+  process.env.BROKER_UI_SMOKE_SCENARIO ??
+  'happy-path';
 const INVALID_BROKER_BASE_URL =
   process.env.BROKER_UI_SMOKE_INVALID_BASE_URL ?? 'ftp://127.0.0.1:8787';
 const BLOCKED_CHAT_MESSAGE =
@@ -25,7 +38,8 @@ const CIRCUIT_FILE =
   path.join(
     ROOT,
     'validation',
-    'generated-circuits-golden',
+    'fixtures',
+    'golden-corpus',
     'gc_c1_basic_gates.lgsc.json',
   );
 

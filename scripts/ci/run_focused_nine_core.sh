@@ -15,7 +15,7 @@ echo "==> Validate focused-nine summary"
 node <<'EOF'
 const fs = require('node:fs');
 
-const summary = JSON.parse(fs.readFileSync('validation/focused-nine-summary.json', 'utf8'));
+const summary = JSON.parse(fs.readFileSync('.artifacts/validation/focused-nine/summary.json', 'utf8'));
 const failures = [];
 
 if ((summary.codeAudit?.hardBlockers ?? []).length > 0) {

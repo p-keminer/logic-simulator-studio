@@ -4,10 +4,27 @@ import puppeteer from 'puppeteer';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT_DIR = path.join(ROOT, 'validation');
-const UI_DIR = path.join(OUT_DIR, 'generated-ui-focused');
-const SUMMARY = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'focused-nine-summary.json'), 'utf8'));
-const REPORT_FILE = path.join(OUT_DIR, 'focused-nine-ui-report.md');
+
+function readCliOption(name) {
+  const index = process.argv.indexOf(name);
+  if (index === -1) return undefined;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${name} requires a value`);
+  return value;
+}
+
+const CORE_DIR = path.resolve(
+  ROOT,
+  readCliOption('--input-dir') ?? path.join('.artifacts', 'validation', 'focused-nine'),
+);
+const OUT_DIR = path.resolve(
+  ROOT,
+  readCliOption('--out-dir') ?? path.join('.artifacts', 'validation', 'focused-nine-ui'),
+);
+const UI_DIR = path.join(OUT_DIR, 'screenshots');
+const SUMMARY_FILE = path.join(OUT_DIR, 'summary.json');
+const SUMMARY = JSON.parse(fs.readFileSync(path.join(CORE_DIR, 'summary.json'), 'utf8'));
+const REPORT_FILE = path.join(OUT_DIR, 'report.md');
 const BASE_URL = process.env.LOGICSIM_BASE_URL ?? '<dev-server>';
 const PUBLIC_REPO = '<repo-root>';
 const PUBLIC_SERVER = '<dev-server>';
@@ -16,11 +33,9 @@ const APP_NAME = 'Logic Simulator Studio';
 const LEGACY_FSM_EXPORT = path.join(
   ROOT,
   'validation',
-  'fsm-export-fixes',
-  'cases',
-  'downloads',
-  '2026-03-19',
-  'FSM_EXPORT_19.03.26.lgsc.json',
+  'fixtures',
+  'fsm',
+  'legacy-export.lgsc.json',
 );
 
 fs.mkdirSync(UI_DIR, { recursive: true });
@@ -392,6 +407,11 @@ function buildMixedLegacyFsmFallbackFixtureJson() {
   const circuit = JSON.parse(fs.readFileSync(LEGACY_FSM_EXPORT, 'utf8'));
   const rawInputSource = Object.values(circuit.gates).find((gate) => gate?.label === 'A');
   if (!rawInputSource) throw new Error('legacy FSM fixture missing source input A');
+  const stateInputWire = Object.values(circuit.wires).find((wire) =>
+    circuit.gates[wire?.to?.gateId]?.typeId === 'D_FF_R' && wire?.to?.portId === 'd');
+  if (!stateInputWire) throw new Error('legacy FSM fixture missing state input wire');
+  const originalStateInput = { ...stateInputWire.to };
+  stateInputWire.to = { gateId: 'fsm_mixed_raw_or', portId: 'a' };
 
   circuit.gates.fsm_mixed_raw_btn = {
     id: 'fsm_mixed_raw_btn',
@@ -401,6 +421,15 @@ function buildMixedLegacyFsmFallbackFixtureJson() {
     label: 'RAW_BTN',
     outputSignals: {},
     customState: { value: 0 },
+    isSelected: false,
+  };
+  circuit.gates.fsm_mixed_raw_or = {
+    id: 'fsm_mixed_raw_or',
+    typeId: 'OR',
+    x: (rawInputSource.x ?? 0) + 340,
+    y: (rawInputSource.y ?? 0) + 140,
+    label: 'RAW_OR',
+    outputSignals: {},
     isSelected: false,
   };
   circuit.gates.fsm_mixed_raw_led = {
@@ -414,6 +443,20 @@ function buildMixedLegacyFsmFallbackFixtureJson() {
   };
   circuit.wires.fsm_mixed_raw_btn_wire = {
     id: 'fsm_mixed_raw_btn_wire',
+    from: { gateId: 'fsm_mixed_raw_btn', portId: 'out' },
+    to: { gateId: 'fsm_mixed_raw_or', portId: 'b' },
+    signal: { value: 0, version: 0, lastChangedAt: 0 },
+    isSelected: false,
+  };
+  circuit.wires.fsm_mixed_raw_or_wire = {
+    id: 'fsm_mixed_raw_or_wire',
+    from: { gateId: 'fsm_mixed_raw_or', portId: 'out' },
+    to: originalStateInput,
+    signal: { value: 0, version: 0, lastChangedAt: 0 },
+    isSelected: false,
+  };
+  circuit.wires.fsm_mixed_raw_led_wire = {
+    id: 'fsm_mixed_raw_led_wire',
     from: { gateId: 'fsm_mixed_raw_btn', portId: 'out' },
     to: { gateId: 'fsm_mixed_raw_led', portId: 'in' },
     signal: { value: 0, version: 0, lastChangedAt: 0 },
@@ -586,16 +629,6 @@ function buildPartialOutputFallbackFixtureJson() {
         isSelected: false,
         projection: makeProjectedSignal('state', 'Q0', 'q'),
       },
-      outY: {
-        id: 'outY',
-        typeId: 'OUTPUT_LED',
-        x: 520,
-        y: 120,
-        label: 'Y',
-        outputSignals: {},
-        isSelected: false,
-        projection: makeProjectedSignal('output', 'Y', '_display'),
-      },
       rawLed: {
         id: 'rawLed',
         typeId: 'OUTPUT_LED',
@@ -611,13 +644,6 @@ function buildPartialOutputFallbackFixtureJson() {
         id: 'w1',
         from: { gateId: 'clk', portId: 'clk' },
         to: { gateId: 'q0', portId: 'clk' },
-        signal: { ...defaultSignal },
-        isSelected: false,
-      },
-      w2: {
-        id: 'w2',
-        from: { gateId: 'q0', portId: 'q' },
-        to: { gateId: 'outY', portId: 'in' },
         signal: { ...defaultSignal },
         isSelected: false,
       },
@@ -692,6 +718,8 @@ function buildWideProjectedFsmFixtureJson() {
       label: 'Y',
       projection: makeProjectedSignal('output', 'Y', '_display'),
     }),
+    wideOr4: makeGate('wideOr4', 'OR4', 280, 260),
+    wideOr3: makeGate('wideOr3', 'OR3', 400, 260),
   };
 
   for (let index = 0; index < 6; index += 1) {
@@ -711,9 +739,16 @@ function buildWideProjectedFsmFixtureJson() {
     w2: makeWire('w2', 'clk', 'clk', 'q1', 'clk'),
     w3: makeWire('w3', 'rst', 'out', 'q0', 'rst'),
     w4: makeWire('w4', 'rst', 'out', 'q1', 'rst'),
-    w5: makeWire('w5', 'in0', 'out', 'q0', 'd'),
+    w5: makeWire('w5', 'in0', 'out', 'wideOr4', 'a'),
     w6: makeWire('w6', 'q0', 'q', 'q1', 'd'),
     w7: makeWire('w7', 'q0', 'q', 'outY', 'in'),
+    w8: makeWire('w8', 'in1', 'out', 'wideOr4', 'b'),
+    w9: makeWire('w9', 'in2', 'out', 'wideOr4', 'c'),
+    w10: makeWire('w10', 'in3', 'out', 'wideOr4', 'd'),
+    w11: makeWire('w11', 'wideOr4', 'out', 'wideOr3', 'a'),
+    w12: makeWire('w12', 'in4', 'out', 'wideOr3', 'b'),
+    w13: makeWire('w13', 'in5', 'out', 'wideOr3', 'c'),
+    w14: makeWire('w14', 'wideOr3', 'out', 'q0', 'd'),
   };
 
   for (let index = 0; index < 6; index += 1) {
@@ -1164,12 +1199,12 @@ function renderReport(summary) {
   const totalUiAuditFails = fails.length + fsmModeFails.length + timingSystemFails.length;
 
   return `# Focused High-Risk UI Audit\n\n` +
-    `Datum: 2026-03-07\n` +
+    `Datum: ${summary.generatedAt}\n` +
     `Repo: \`${PUBLIC_REPO}\`\n` +
     `Server: \`${summary.baseUrl}\`\n` +
-    `Rohdaten: \`validation/focused-nine-ui-summary.json\`\n\n` +
+    `Rohdaten: \`.artifacts/validation/focused-nine-ui/summary.json\`\n\n` +
     `## Kurzfazit\n\n` +
-    `Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist gegen den aktuellen P0-Stand gelaufen.\n\n` +
+    `Der separate Browserlauf ueber die 12 fokussierten Hochrisiko-Schaltungen ist gegen den aktuellen Stand gelaufen.\n\n` +
     `- \`${totalUiAuditFails}\` echte UI-/Auditfehler ueber Smoke-, STT-Modus- und Timing-System-Pruefungen\n` +
     `- \`${fails.length}\` davon klassische UI-/Projektionsfehler im Smoke-Lauf\n` +
     `- \`${warns.length}\` erwartete UI-Limit-Faelle bei breiten sequenziellen Zustandsraeumen\n` +
@@ -1376,6 +1411,6 @@ const summary = {
   fsmModeChecks: analyzedFsmModeChecks,
   timingSystemChecks: analyzedTimingSystemChecks,
 };
-fs.writeFileSync(path.join(OUT_DIR, 'focused-nine-ui-summary.json'), JSON.stringify(summary, null, 2));
+fs.writeFileSync(SUMMARY_FILE, `${JSON.stringify(summary, null, 2)}\n`);
 fs.writeFileSync(REPORT_FILE, renderReport(summary));
 console.log(JSON.stringify({ checked: results.length }, null, 2));

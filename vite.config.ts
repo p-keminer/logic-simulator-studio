@@ -7,8 +7,11 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: true, // Bindet an 0.0.0.0 → aus Windows via localhost erreichbar (WSL2)
+    // Loopback by default. For an explicitly trusted LAN session, start with
+    // `npm run dev -- --host 0.0.0.0` instead of exposing every local run.
+    host: '127.0.0.1',
     port: 5173,
+    strictPort: true,
   },
   test: {
     globals: true,

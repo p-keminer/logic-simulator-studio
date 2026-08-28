@@ -176,7 +176,7 @@ function renderBlockedVerilog(moduleName: string, reason: string): string {
 
 export function generateVerilog(circuit: Circuit): string {
   const moduleName = sanitizeVerilog(circuit.name || 'circuit', 'module');
-  let exportCircuit = circuit;
+  let exportCircuit: Circuit;
   try {
     exportCircuit = flattenCustomICs(circuit);
   } catch (error) {

@@ -8,7 +8,7 @@ echo "==> Validate contract-runner summary"
 node <<'EOF'
 const fs = require('node:fs');
 
-const summary = JSON.parse(fs.readFileSync('validation/contract-runner-summary.json', 'utf8'));
+const summary = JSON.parse(fs.readFileSync('.artifacts/validation/contract-runner/summary.json', 'utf8'));
 
 // Invariant: totalCases = passed + failed + unsupported
 const total = summary.totalCases;

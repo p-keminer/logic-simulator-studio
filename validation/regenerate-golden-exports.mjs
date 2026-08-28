@@ -3,8 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CIRCUITS_DIR = path.join(ROOT, 'validation', 'generated-circuits-golden');
-const EXPORTS_DIR = path.join(ROOT, 'validation', 'generated-exports-golden');
+const CIRCUITS_DIR = path.join(ROOT, 'validation', 'fixtures', 'golden-corpus');
+const EXPORTS_DIR = path.join(ROOT, 'validation', 'baselines', 'golden-hdl');
 const { registerGoldenCustomICsForSlugs } = await import(new URL('./custom-ic-golden.mjs', import.meta.url).href);
 
 async function main() {

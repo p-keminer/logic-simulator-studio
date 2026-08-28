@@ -1,12 +1,15 @@
 #!/bin/bash
 # CI wrapper for the focused-nine UI audit.
 #
-# 1. Starts a Vite dev server in the background.
-# 2. Waits until the server is reachable.
+# 1. Generates the focused circuit/HDL prerequisites without external HDL tools.
+# 2. Starts a Vite dev server in the background and waits for readiness.
 # 3. Runs the UI audit (puppeteer) against the dev server.
 # 4. Validates the summary: any fail, warn, or semantic warn fails the job.
 # 5. Shuts down the dev server.
 set -euo pipefail
+
+echo "==> Preparing focused-nine UI fixtures"
+./node_modules/.bin/vite-node validation/focused-nine-audit.mjs --artifacts-only
 
 # ── Start dev server ───────────────────────────────────────────────────────────
 # Use a fixed port to avoid collisions with other services.
@@ -63,7 +66,7 @@ echo "==> Validating focused-nine UI summary"
 node <<'EOF'
 const fs = require('node:fs');
 
-const summary = JSON.parse(fs.readFileSync('validation/focused-nine-ui-summary.json', 'utf8'));
+const summary = JSON.parse(fs.readFileSync('.artifacts/validation/focused-nine-ui/summary.json', 'utf8'));
 const results = summary.results ?? [];
 const failures = [];
 
@@ -96,6 +99,26 @@ if (semanticWarns.length > 0) {
 const hdlMismatch = results.filter(r => r.hdl && (!r.hdl.verilogMatches || !r.hdl.vhdlMatches));
 if (hdlMismatch.length > 0) {
   failures.push(`${hdlMismatch.length} HDL mismatch(es): ${hdlMismatch.map(h => h.slug).join(', ')}`);
+}
+
+// Check all dedicated FSM mode audits, including the expected case count.
+const fsmModeChecks = summary.fsmModeChecks ?? [];
+if (fsmModeChecks.length !== 5) {
+  failures.push(`Expected exactly 5 FSM mode checks, found ${fsmModeChecks.length}`);
+}
+const failedFsmModeChecks = fsmModeChecks.filter(check => check.status !== 'pass');
+if (failedFsmModeChecks.length > 0) {
+  failures.push(`${failedFsmModeChecks.length} FSM mode check failure(s): ${failedFsmModeChecks.map(check => check.slug).join(', ')}`);
+}
+
+// Check the dedicated timing-system audit, including the expected case count.
+const timingSystemChecks = summary.timingSystemChecks ?? [];
+if (timingSystemChecks.length !== 1) {
+  failures.push(`Expected exactly 1 timing system check, found ${timingSystemChecks.length}`);
+}
+const failedTimingSystemChecks = timingSystemChecks.filter(check => check.status !== 'pass');
+if (failedTimingSystemChecks.length > 0) {
+  failures.push(`${failedTimingSystemChecks.length} timing system check failure(s): ${failedTimingSystemChecks.map(check => check.slug).join(', ')}`);
 }
 
 if (failures.length > 0) {

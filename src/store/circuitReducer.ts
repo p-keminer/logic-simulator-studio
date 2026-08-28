@@ -494,6 +494,21 @@ export function circuitReducer(state: Circuit, action: CircuitAction): Circuit {
     case 'CIRCUIT_RESET':
       return createEmptyCircuit();
 
+    case 'CIRCUIT_CLEAR_CONTENT':
+      // Broker CLEAR is an undoable canvas mutation, not a new-circuit action.
+      // Keeping the circuit id prevents the id-change effect from clearing the
+      // undo stack after an approved broker batch.
+      return { ...state, gates: {}, wires: {} };
+
+    case 'CIRCUIT_ACTIONS_APPLY_BATCH':
+      // The broker validates the complete proposal before dispatch. Reducing the
+      // approved mutations inside one reducer call makes the update atomic from
+      // React's and the history wrapper's perspective: one dispatch, one undo.
+      return action.payload.actions.reduce(
+        (nextState, mutation) => circuitReducer(nextState, mutation),
+        state,
+      );
+
     case 'SELECTION_CLEAR': {
       const clearedGates = Object.fromEntries(
         Object.entries(state.gates).map(([id, g]) => [id, { ...g, isSelected: false }])

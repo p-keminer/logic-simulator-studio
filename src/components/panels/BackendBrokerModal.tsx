@@ -13,6 +13,22 @@ const MARKDOWN_COMPONENTS: Components = {
   li: ({ children }) => <li className="text-sm">{children}</li>,
   strong: ({ children }) => <strong className="font-semibold text-slate-100">{children}</strong>,
   em:     ({ children }) => <em className="italic text-slate-300">{children}</em>,
+  a: ({ children, href }) => (
+    <a
+      className="text-cyan-300 underline decoration-cyan-700 underline-offset-2"
+      href={href}
+      rel="noreferrer noopener"
+      target="_blank"
+    >
+      {children}
+    </a>
+  ),
+  // Provider-controlled Markdown must not trigger external image requests.
+  img: ({ alt }) => (
+    <span className="text-xs italic text-slate-500">
+      {alt ? `[Bild blockiert: ${alt}]` : '[Externes Bild blockiert]'}
+    </span>
+  ),
   code:   ({ children }) => <code className="rounded bg-slate-800 px-1 py-0.5 font-mono text-xs text-cyan-300">{children}</code>,
   pre:    ({ children }) => <pre className="mb-2 overflow-x-auto rounded bg-slate-800 p-2 font-mono text-xs text-cyan-300">{children}</pre>,
   table:  ({ children }) => (
@@ -33,8 +49,10 @@ import {
 import { shouldClearBackendBrokerUiErrorOnUserEdit } from '../../core/backendBroker/errors';
 import { getBackendBrokerModalControlState } from '../../core/backendBroker/modalState';
 import {
-  executeCircuitActions,
+  applyCircuitActionsProposal,
+  prepareCircuitActionsProposal,
   stripCircuitActionsBlock,
+  type PreparedCircuitActions,
 } from '../../core/backendBroker/circuitActionsExecutor';
 import { useBackendBroker } from '../../hooks/useBackendBroker';
 import { useCircuitContext } from '../../store/CircuitContext';
@@ -87,6 +105,9 @@ export function BackendBrokerModal({ onClose }: Props) {
     executed: number;
     errorCount: number;
   } | null>(null);
+  const [pendingCircuitActions, setPendingCircuitActions] =
+    useState<PreparedCircuitActions | null>(null);
+  const [circuitActionErrors, setCircuitActionErrors] = useState<string[]>([]);
   const snapshot = useMemo(
     () => createBackendSandboxCurrentCircuitSnapshot(circuit),
     [circuit],
@@ -138,19 +159,48 @@ export function BackendBrokerModal({ onClose }: Props) {
   };
 
   const handleSend = async () => {
+    setCircuitActionErrors([]);
+    setLastExecution(null);
     const response = await sendMessage(draftMessage, snapshot, snapshotSummary);
-    // circuit-actions-Block aus der Antwort parsen und ausführen (API2-03).
-    // existingGates: Bounding-Box-Layout damit neue Gates unterhalb bestehender erscheinen (B3-Fix).
-    const result = executeCircuitActions(response.message, circuitDispatch, Object.values(circuit.gates));
-    // UI-Feedback nur anzeigen wenn tatsächlich Befehle im Block waren.
-    if (result.executed > 0 || result.errors.length > 0) {
-      setLastExecution({ executed: result.executed, errorCount: result.errors.length });
+    const result = prepareCircuitActionsProposal(response.message, circuit);
+    if (result.status === 'ready') {
+      setPendingCircuitActions(result.proposal);
+    } else {
+      setPendingCircuitActions(null);
+      if (result.status === 'invalid') setCircuitActionErrors(result.errors);
     }
     setDraftMessage('');
   };
 
+  const handleApplyCircuitActions = () => {
+    if (!pendingCircuitActions) return;
+
+    // The circuit may have changed while the preview was visible. Revalidate
+    // against the latest state before the single atomic dispatch.
+    const latest = prepareCircuitActionsProposal(
+      pendingCircuitActions.sourceText,
+      circuit,
+    );
+    if (latest.status !== 'ready') {
+      setPendingCircuitActions(null);
+      setCircuitActionErrors(
+        latest.status === 'invalid'
+          ? latest.errors
+          : ['Die vorgeschlagenen Aktionen sind nicht mehr verfuegbar.'],
+      );
+      return;
+    }
+
+    const result = applyCircuitActionsProposal(latest.proposal, circuitDispatch);
+    setPendingCircuitActions(null);
+    setCircuitActionErrors([]);
+    setLastExecution({ executed: result.executed, errorCount: 0 });
+  };
+
   const handleReset = async () => {
     await resetConversation(draftResetReason.trim() || undefined);
+    setPendingCircuitActions(null);
+    setCircuitActionErrors([]);
     setDraftResetReason('');
   };
 
@@ -465,6 +515,89 @@ export function BackendBrokerModal({ onClose }: Props) {
               )}
             </div>
 
+            {circuitActionErrors.length > 0 && (
+              <div
+                data-testid="circuit-actions-validation-error"
+                className="mx-4 mt-2 rounded-lg border border-amber-700/70 bg-amber-950/30 px-3 py-2 text-xs text-amber-100"
+              >
+                <p className="font-mono font-semibold">
+                  Schaltungsvorschlag nicht anwendbar
+                </p>
+                <ul className="mt-1 list-disc space-y-1 pl-4">
+                  {circuitActionErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {pendingCircuitActions && (
+              <div
+                data-testid="circuit-actions-preview"
+                className={`mx-4 mt-2 rounded-lg border px-3 py-3 text-xs ${
+                  pendingCircuitActions.destructive
+                    ? 'border-red-700/70 bg-red-950/30 text-red-100'
+                    : 'border-cyan-700/70 bg-cyan-950/30 text-cyan-100'
+                }`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-mono font-semibold">
+                    Schaltungsaenderungen pruefen
+                  </p>
+                  <span
+                    className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide ${
+                      pendingCircuitActions.destructive
+                        ? 'bg-red-900 text-red-100'
+                        : 'bg-cyan-900 text-cyan-100'
+                    }`}
+                  >
+                    {pendingCircuitActions.destructive
+                      ? 'Destruktive Aktionen enthalten'
+                      : 'Noch nicht angewendet'}
+                  </span>
+                </div>
+                <p className="mt-2 text-slate-300">
+                  Der Modellvorschlag wird erst nach deiner ausdruecklichen
+                  Bestaetigung als ein rueckgaengiger Schritt angewendet.
+                </p>
+                <ol className="mt-2 max-h-40 list-decimal space-y-1 overflow-auto pl-5">
+                  {pendingCircuitActions.preview.map((item) => (
+                    <li key={`${item.index}-${item.type}`}>
+                      <span className="font-mono text-[11px]">{item.type}</span>
+                      {item.destructive && (
+                        <span className="ml-2 rounded bg-red-900/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase text-red-100">
+                          destruktiv
+                        </span>
+                      )}
+                      <span className="ml-2 text-slate-200">{item.description}</span>
+                    </li>
+                  ))}
+                </ol>
+                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                  <button
+                    data-testid="circuit-actions-reject-button"
+                    onClick={() => setPendingCircuitActions(null)}
+                    className="rounded border border-slate-600 bg-slate-900 px-3 py-2 font-mono text-[11px] text-slate-200 transition-colors hover:bg-slate-800"
+                  >
+                    Verwerfen
+                  </button>
+                  <button
+                    data-testid="circuit-actions-confirm-button"
+                    onClick={handleApplyCircuitActions}
+                    className={`rounded px-3 py-2 font-mono text-[11px] font-semibold transition-colors ${
+                      pendingCircuitActions.destructive
+                        ? 'bg-red-500 text-white hover:bg-red-400'
+                        : 'bg-cyan-500 text-slate-950 hover:bg-cyan-400'
+                    }`}
+                  >
+                    {pendingCircuitActions.destructive
+                      ? 'Destruktive Aenderungen anwenden'
+                      : 'Aenderungen anwenden'}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {lastExecution && (
               <div
                 className={`mx-4 mb-0 mt-2 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs font-mono ${
@@ -532,7 +665,9 @@ export function BackendBrokerModal({ onClose }: Props) {
                       onClick={() => {
                         runBrokerAction(handleSend());
                       }}
-                      disabled={controlState.sendDisabled}
+                      disabled={
+                        controlState.sendDisabled || pendingCircuitActions !== null
+                      }
                       className="rounded bg-cyan-500 px-4 py-2 text-xs font-mono font-semibold text-slate-950 transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
                     >
                       {controlState.sendLabel}

@@ -19,12 +19,21 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+node launcher.mjs --check-runtime
+if %errorlevel% neq 0 (
+    echo.
+    echo   Bitte installiere Node.js 22.13 oder mindestens Version 24.
+    echo.
+    pause
+    exit /b 1
+)
+
 :: ── Abhaengigkeiten pruefen und ggf. installieren ───────────────────────
 if not exist "node_modules" (
     echo   node_modules nicht gefunden – installiere Abhaengigkeiten...
     echo.
     call npm install
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo.
         echo   FEHLER: npm install fehlgeschlagen.
         pause
@@ -34,13 +43,20 @@ if not exist "node_modules" (
 )
 
 :: ── Broker-Abhaengigkeiten pruefen ──────────────────────────────────────
-set BROKER_DIR=validation\api_anbindung\backend-sandbox
+set BROKER_DIR=broker
 if exist "%BROKER_DIR%\package.json" (
     if not exist "%BROKER_DIR%\node_modules" (
         echo   Broker node_modules nicht gefunden – installiere...
         echo.
         pushd "%BROKER_DIR%"
         call npm install
+        if !errorlevel! neq 0 (
+            popd
+            echo.
+            echo   FEHLER: Broker npm install fehlgeschlagen.
+            pause
+            exit /b 1
+        )
         popd
         echo.
     )
@@ -52,8 +68,8 @@ if exist "%BROKER_DIR%\package.json" (
         if exist "%BROKER_DIR%\.env.example" (
             echo   Broker .env nicht gefunden – erstelle aus .env.example...
             copy "%BROKER_DIR%\.env.example" "%BROKER_DIR%\.env" >nul
-            echo   HINWEIS: Passe validation\api_anbindung\backend-sandbox\.env
-            echo            mit deinen eigenen API-Keys an.
+            echo   HINWEIS: Provider und Modell kannst du optional
+            echo            in broker\.env konfigurieren.
             echo.
         )
     )

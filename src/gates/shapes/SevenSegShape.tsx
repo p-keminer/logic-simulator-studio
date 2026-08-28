@@ -52,25 +52,23 @@ export function SevenSegShape({ gate, definition, isSelected, inputSignals, onPo
   const H = definition.height;
   const stroke = isSelected ? GATE_SELECTED_STROKE : GATE_STROKE;
 
-  let a = false, b = false, c = false, d = false, e = false, f = false, g = false;
-
-  if (definition.typeId === 'SEG7_BCD') {
-    const d3 = inputSignals['d3']?.value ?? 0;
-    const d2 = inputSignals['d2']?.value ?? 0;
-    const d1 = inputSignals['d1']?.value ?? 0;
-    const d0 = inputSignals['d0']?.value ?? 0;
-    const val = (d3 << 3) | (d2 << 2) | (d1 << 1) | d0;
-    const row = BCD_TABLE[val] ?? BCD_TABLE[0];
-    [a, b, c, d, e, f, g] = row;
-  } else {
-    a = (inputSignals['a']?.value ?? 0) === 1;
-    b = (inputSignals['b']?.value ?? 0) === 1;
-    c = (inputSignals['c']?.value ?? 0) === 1;
-    d = (inputSignals['d']?.value ?? 0) === 1;
-    e = (inputSignals['e']?.value ?? 0) === 1;
-    f = (inputSignals['f']?.value ?? 0) === 1;
-    g = (inputSignals['g']?.value ?? 0) === 1;
-  }
+  const segments = definition.typeId === 'SEG7_BCD'
+    ? BCD_TABLE[
+        ((inputSignals['d3']?.value ?? 0) << 3)
+        | ((inputSignals['d2']?.value ?? 0) << 2)
+        | ((inputSignals['d1']?.value ?? 0) << 1)
+        | (inputSignals['d0']?.value ?? 0)
+      ] ?? BCD_TABLE[0]
+    : [
+        (inputSignals['a']?.value ?? 0) === 1,
+        (inputSignals['b']?.value ?? 0) === 1,
+        (inputSignals['c']?.value ?? 0) === 1,
+        (inputSignals['d']?.value ?? 0) === 1,
+        (inputSignals['e']?.value ?? 0) === 1,
+        (inputSignals['f']?.value ?? 0) === 1,
+        (inputSignals['g']?.value ?? 0) === 1,
+      ];
+  const [a, b, c, d, e, f, g] = segments;
 
   // Display area: 48x84 centered at offset (20, 8)
   const ox = 20; const oy = 8;

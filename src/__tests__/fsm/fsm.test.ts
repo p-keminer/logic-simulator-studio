@@ -9,7 +9,7 @@ import { analyzeFsmSynthesisGuardrail, synthesizeFsm, detectOverlappingTransitio
 import type { Circuit } from '../../core/types';
 import { analyzeFsmStructure } from '../../fsm/analysis/structure';
 import { FsmStateTableContent } from '../../components/fsm/FsmStateTable';
-import wideReducedFixture from '../../../validation/manual-fixtures/fsm-wide/fsm0_wide_reduced_fixture.fsm.json';
+import wideReducedFixture from '../../../validation/fixtures/fsm/wide-reduced.fsm.json';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import '../../core/registry/index';
-import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json';
-import chainedProjectedFixture from '../../../validation/manual-fixtures/fsm-chained/fsm0_direct_chained_batches_fixture.lgsc.json';
-import mixedIslandsFixture from '../../../validation/manual-fixtures/fsm-islands/fsm0_multiple_mixed_islands_fixture.lgsc.json';
-import mixedIslandsSharedObserverFixture from '../../../validation/manual-fixtures/fsm-islands/fsm0_mixed_islands_shared_observer_fixture.lgsc.json';
-import sharedHelperIslandsFixture from '../../../validation/manual-fixtures/fsm-islands/fsm0_shared_helper_islands_fixture.lgsc.json';
-import mixedProjectedRawFixture from '../../../validation/manual-fixtures/fsm-mixed/fsm0_projected_raw_modified_fixture.lgsc.json';
-import observerSplitFixture from '../../../validation/manual-fixtures/fsm-observer/fsm0_observer_split_batches_fixture.lgsc.json';
+import legacyFsmExportFixture from '../../../validation/fixtures/fsm/legacy-export.lgsc.json';
+import chainedProjectedFixture from '../../../validation/fixtures/fsm/chained-batches.lgsc.json';
+import mixedIslandsFixture from '../../../validation/fixtures/fsm/mixed-islands.lgsc.json';
+import mixedIslandsSharedObserverFixture from '../../../validation/fixtures/fsm/mixed-islands-shared-observer.lgsc.json';
+import sharedHelperIslandsFixture from '../../../validation/fixtures/fsm/shared-helper-islands.lgsc.json';
+import mixedProjectedRawFixture from '../../../validation/fixtures/fsm/projected-raw-modified.lgsc.json';
+import observerSplitFixture from '../../../validation/fixtures/fsm/observer-split-batches.lgsc.json';
 import type { Circuit } from '../../core/types';
 import {
   buildAnalysisSubsystemOptions,

@@ -3,8 +3,8 @@
  *
  * Reads all JSON contracts from validation/contracts/, exercises
  * the gate registry's evaluate() + stateUpdate() functions, and produces:
- *   - validation/contract-runner-summary.json  (machine-readable)
- *   - validation/contract-runner-report.md     (human-readable)
+ *   - .artifacts/validation/contract-runner/summary.json  (machine-readable)
+ *   - .artifacts/validation/contract-runner/report.md     (human-readable)
  *
  * Supported pattern families in v1.4:
  *   - truth-table-exhaustive  (combinational gates: full 2^N enumeration)
@@ -33,13 +33,66 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CONTRACTS_DIR = path.join(ROOT, 'validation', 'contracts');
-const SUMMARY_FILE = path.join(ROOT, 'validation', 'contract-runner-summary.json');
-const REPORT_FILE = path.join(ROOT, 'validation', 'contract-runner-report.md');
+const CONTRACT_SCHEMA_FILE = path.join(ROOT, 'validation', 'gate-contract-schema.json');
+const OUTPUT_DIR = path.join(ROOT, '.artifacts', 'validation', 'contract-runner');
+const SUMMARY_FILE = path.join(OUTPUT_DIR, 'summary.json');
+const REPORT_FILE = path.join(OUTPUT_DIR, 'report.md');
 const RUNNER_VERSION = '1.4.0';
 const MAX_EXHAUSTIVE_INPUTS = 16;
 
 function fileHref(...parts) {
   return pathToFileURL(path.join(ROOT, ...parts)).href;
+}
+
+function matchesSchemaType(value, type) {
+  if (type === 'array') return Array.isArray(value);
+  if (type === 'object') return value !== null && typeof value === 'object' && !Array.isArray(value);
+  if (type === 'integer') return Number.isInteger(value);
+  if (type === 'number') return typeof value === 'number' && Number.isFinite(value);
+  if (type === 'null') return value === null;
+  return typeof value === type;
+}
+
+/**
+ * Validate the small JSON-Schema subset used by gate-contract-schema.json.
+ * Keeping this local avoids a runtime dependency for a validation-only runner.
+ */
+function validateAgainstSchema(value, schema, location = '$', errors = []) {
+  if (Object.hasOwn(schema, 'const') && value !== schema.const) {
+    errors.push(`${location}: expected constant ${JSON.stringify(schema.const)}`);
+    return errors;
+  }
+  if (schema.enum && !schema.enum.includes(value)) {
+    errors.push(`${location}: expected one of ${schema.enum.map((item) => JSON.stringify(item)).join(', ')}`);
+    return errors;
+  }
+  const allowedTypes = schema.type
+    ? (Array.isArray(schema.type) ? schema.type : [schema.type])
+    : [];
+  if (allowedTypes.length > 0 && !allowedTypes.some((type) => matchesSchemaType(value, type))) {
+    errors.push(`${location}: expected ${allowedTypes.join(' or ')}`);
+    return errors;
+  }
+
+  if (allowedTypes.includes('object') && matchesSchemaType(value, 'object')) {
+    const properties = schema.properties ?? {};
+    for (const key of schema.required ?? []) {
+      if (!Object.hasOwn(value, key)) errors.push(`${location}.${key}: required property missing`);
+    }
+    if (schema.additionalProperties === false) {
+      for (const key of Object.keys(value)) {
+        if (!Object.hasOwn(properties, key)) errors.push(`${location}.${key}: unknown property`);
+      }
+    }
+    for (const [key, propertySchema] of Object.entries(properties)) {
+      if (Object.hasOwn(value, key)) validateAgainstSchema(value[key], propertySchema, `${location}.${key}`, errors);
+    }
+  }
+
+  if (allowedTypes.includes('array') && Array.isArray(value) && schema.items) {
+    value.forEach((item, index) => validateAgainstSchema(item, schema.items, `${location}[${index}]`, errors));
+  }
+  return errors;
 }
 
 // ── Bootstrap gate registry via vite-node TS import ──────────────────────────
@@ -1786,12 +1839,19 @@ function generateSummary(allResults, contracts) {
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  // Load all contracts
+  const contractSchema = JSON.parse(await fs.readFile(CONTRACT_SCHEMA_FILE, 'utf8'));
+
+  // Load and schema-check all contracts before executing any behavioral case.
   const files = (await fs.readdir(CONTRACTS_DIR)).filter(f => f.endsWith('.json')).sort();
   const contracts = [];
   for (const f of files) {
     const raw = await fs.readFile(path.join(CONTRACTS_DIR, f), 'utf8');
-    contracts.push({ data: JSON.parse(raw), file: f });
+    const data = JSON.parse(raw);
+    const schemaErrors = validateAgainstSchema(data, contractSchema);
+    if (schemaErrors.length > 0) {
+      throw new Error(`Invalid gate contract ${f}:\n- ${schemaErrors.join('\n- ')}`);
+    }
+    contracts.push({ data, file: f });
   }
 
   console.log(`Contract Runner v${RUNNER_VERSION}`);
@@ -1811,6 +1871,7 @@ async function main() {
   const summary = generateSummary(allResults, contracts.map(c => c.data));
   const report = generateReport(allResults, contracts.map(c => c.data));
 
+  await fs.mkdir(OUTPUT_DIR, { recursive: true });
   await fs.writeFile(SUMMARY_FILE, JSON.stringify(summary, null, 2) + '\n');
   await fs.writeFile(REPORT_FILE, report);
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CIRCUITS_DIR = path.join(ROOT, 'validation', 'generated-circuits-golden');
+const CIRCUITS_DIR = path.join(ROOT, 'validation', 'fixtures', 'golden-corpus');
 const MANIFEST_FILE = path.join(ROOT, 'validation', 'golden-custom-ics.json');
 
 let cachedManifest;

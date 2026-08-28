@@ -6,17 +6,30 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT_DIR = path.join(ROOT, 'validation');
-const CIRCUIT_DIR = path.join(OUT_DIR, 'generated-circuits-focused');
-const EXPORT_DIR = path.join(OUT_DIR, 'generated-exports-focused');
-const SUMMARY_FILE = path.join(OUT_DIR, 'focused-nine-summary.json');
-const REPORT_FILE = path.join(OUT_DIR, 'focused-nine-report.md');
+
+function readCliOption(name) {
+  const index = process.argv.indexOf(name);
+  if (index === -1) return undefined;
+  const value = process.argv[index + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${name} requires a value`);
+  return value;
+}
+
+const ARTIFACTS_ONLY = process.argv.includes('--artifacts-only');
+const OUT_DIR = path.resolve(
+  ROOT,
+  readCliOption('--out-dir') ?? path.join('.artifacts', 'validation', 'focused-nine'),
+);
+const CIRCUIT_DIR = path.join(OUT_DIR, 'circuits');
+const EXPORT_DIR = path.join(OUT_DIR, 'hdl');
+const SUMMARY_FILE = path.join(OUT_DIR, 'summary.json');
+const REPORT_FILE = path.join(OUT_DIR, 'report.md');
 const PUBLIC_REPO = '<repo-root>';
 const PUBLIC_SERVER = '<dev-server>';
 const QA_STATUS = {
-  vitest: 'manually re-run 2026-03-07: 713/713 pass',
-  build: 'manually re-run 2026-03-07: tsc -b + vite build pass; bundle-size warning only',
-  lint: 'manually re-run 2026-03-07: pass',
+  vitest: 'covered by the separate quality-gates job',
+  build: 'covered by the separate quality-gates job',
+  lint: 'covered by the separate quality-gates job',
 };
 
 function fileHref(...parts) {
@@ -725,7 +738,7 @@ function renderReport(summary) {
     .map((item) => `- \`${item.slug}\`: externe Toolchain meldet erwartete Warnungen bei Latches/Tri-State.`)
     .join('\n') || '- keine';
   return `# Focused High-Risk Audit\n\n` +
-    `Datum: 2026-03-07\n` +
+    `Datum: ${summary.generatedAt}\n` +
     `Repo: ${PUBLIC_REPO}\n\n` +
     `## QA-Basis\n\n` +
     `- Vitest: ${summary.qa.vitest}\n` +
@@ -754,16 +767,20 @@ async function main() {
     await writeCircuitArtifacts(testCase.slug, circuit, verilog, vhdl);
     const verilogFile = path.join(EXPORT_DIR, `${testCase.slug}.v`);
     const vhdlFile = path.join(EXPORT_DIR, `${testCase.slug}.vhd`);
-    const result = testCase.evaluate(deepClone(circuit));
-    const tools = {
-      verilog: compileVerilogWithSyntax(verilogFile),
-      vhdl: compileVhdlWithSyntax(vhdlFile),
-    };
+    const result = ARTIFACTS_ONLY
+      ? { status: 'not-run', expectation: 'artifact preparation only' }
+      : testCase.evaluate(deepClone(circuit));
+    const tools = ARTIFACTS_ONLY
+      ? { verilog: {}, vhdl: {} }
+      : {
+          verilog: compileVerilogWithSyntax(verilogFile),
+          vhdl: compileVhdlWithSyntax(vhdlFile),
+        };
     results.push({
       slug: testCase.slug,
       kind: testCase.kind,
       result,
-      toolingStatus: summarizeTooling(tools),
+      toolingStatus: ARTIFACTS_ONLY ? 'not-run' : summarizeTooling(tools),
       tools,
       files: {
         circuit: publicPath(path.join(CIRCUIT_DIR, `${testCase.slug}.lgsc.json`)),
@@ -775,6 +792,7 @@ async function main() {
 
   const summary = {
     generatedAt: new Date().toISOString(),
+    mode: ARTIFACTS_ONLY ? 'artifacts-only' : 'full',
     repo: PUBLIC_REPO,
     server: PUBLIC_SERVER,
     qa: {
@@ -787,11 +805,14 @@ async function main() {
     cases: results,
   };
 
-  await fs.writeFile(SUMMARY_FILE, JSON.stringify(summary, null, 2), 'utf8');
-  await fs.writeFile(REPORT_FILE, renderReport(summary), 'utf8');
+  await fs.writeFile(SUMMARY_FILE, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
+  if (!ARTIFACTS_ONLY) {
+    await fs.writeFile(REPORT_FILE, renderReport(summary), 'utf8');
+  }
   console.log(JSON.stringify({
     summaryFile: SUMMARY_FILE,
-    reportFile: REPORT_FILE,
+    reportFile: ARTIFACTS_ONLY ? null : REPORT_FILE,
+    mode: summary.mode,
     cases: results.length,
   }, null, 2));
 }

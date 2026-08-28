@@ -1,4 +1,4 @@
-import legacyFsmExportFixture from '../../../validation/fsm-export-fixes/cases/downloads/2026-03-19/FSM_EXPORT_19.03.26.lgsc.json';
+import legacyFsmExportFixture from '../../../validation/fixtures/fsm/legacy-export.lgsc.json';
 import { describe, expect, it } from 'vitest';
 import '../../core/registry/index';
 import type { Circuit, GateInstance, Wire } from '../../core/types';
